@@ -1,0 +1,64 @@
+---
+interface Props {
+  title?: string
+  description?: string
+}
+
+const {
+  title = 'Flora ONG — Cannabis medicinal en Neuquén',
+  description = 'Club de cultivo legal bajo Ley 27.350. Acceso continuo, sin intermediarios, con la ley a favor. Neuquén, Patagonia.'
+} = Astro.props
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://flora-cinematic.pages.dev" />
+    <meta property="og:locale" content="es_AR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Preconnect Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Flora ONG",
+        "description": "Club de cultivo de cannabis medicinal bajo Ley 27.350",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Neuquén",
+          "addressRegion": "Neuquén",
+          "addressCountry": "AR"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <slot />
+    <script>
+      import '../scripts/main.ts'
+    </script>
+  </body>
+</html>
