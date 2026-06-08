@@ -21,11 +21,33 @@ requestAnimationFrame(raf)
 // ── Split words ──
 function splitWords() {
   document.querySelectorAll<HTMLElement>('.split-words').forEach(el => {
-    const rawText = el.textContent!.trim()
-    const lines = rawText.split('\n')
+    // Preserve <br> and <em> by reading innerHTML and splitting on <br>
+    const raw = el.innerHTML
+    // Split on existing <br> tags (literal line breaks in HTML)
+    const lines = raw.split(/<br\s*\/?>/i)
     el.innerHTML = lines.map(line => {
-      const words = line.trim().split(' ')
-      return words.map(w => `<span class="word"><span class="word-inner">${w}</span></span>`).join(' ')
+      // Split words but keep inline tags like <em> together
+      // Use a temporary div to parse the line HTML into text tokens
+      const tmp = document.createElement('span')
+      tmp.innerHTML = line.trim()
+      // Walk child nodes: text nodes split by space, element nodes kept whole
+      const tokens: string[] = []
+      tmp.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const words = (node.textContent || '').trim().split(/\s+/).filter(Boolean)
+          words.forEach(w => tokens.push(`<span class="word"><span class="word-inner">${w}</span></span>`))
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const elem = node as HTMLElement
+          const words = (elem.textContent || '').trim().split(/\s+/).filter(Boolean)
+          words.forEach(w => {
+            const wrapped = document.createElement(elem.tagName.toLowerCase())
+            wrapped.className = elem.className
+            wrapped.innerHTML = w
+            tokens.push(`<span class="word"><span class="word-inner"><${elem.tagName.toLowerCase()}>${w}</${elem.tagName.toLowerCase()}></span></span>`)
+          })
+        }
+      })
+      return tokens.join(' ')
     }).join('<br>')
   })
 }
