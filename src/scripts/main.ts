@@ -47,6 +47,24 @@ function initHeroImage() {
   }
 }
 
+// ── Embeds de YouTube tipo "facade" (carga el iframe recién al click) ──
+function initYouTubeFacades() {
+  document.querySelectorAll<HTMLButtonElement>('.yt-facade').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id
+      if (!id || btn.dataset.loaded) return
+      btn.dataset.loaded = '1'
+      const title = btn.dataset.title || 'Episodio'
+      const iframe = document.createElement('iframe')
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`
+      iframe.title = title
+      iframe.allow = 'accelerated-sensors; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+      iframe.setAttribute('allowfullscreen', '')
+      btn.replaceChildren(iframe)
+    })
+  })
+}
+
 // ── Video de fondo del hero ──
 // Sólo se carga/reproduce si hay movimiento permitido. Con reduced-motion
 // queda el poster estático (no se descarga el video).
@@ -560,6 +578,7 @@ function init() {
   initMobileDrawer()
   initHeroImage()
   initHeroVideo()
+  initYouTubeFacades()
   initParticles()
   initCursor()
 

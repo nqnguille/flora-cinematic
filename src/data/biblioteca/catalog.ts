@@ -160,10 +160,11 @@ export const modules: ModuleEntry[] = [
   {
     id: 'podcast',
     name: 'Podcast / Espacio libre de prejuicios',
-    desc: 'Contenido de audio del club. Desestigmatización del cannabis medicinal.',
-    status: 'reciclar',
+    desc: 'Programa de YouTube del club: conversaciones sobre cannabis medicinal, acceso y legalidad. 2 episodios reales embebidos.',
+    status: 'activo',
     variants: [
       { version: 'flora-v3', file: 'components/sections/Podcast.tsx' },
+      { version: 'flora-cinematic', file: 'index.astro · .programa-section', note: 'reciclado, embeds YouTube facade' },
     ],
   },
   {
