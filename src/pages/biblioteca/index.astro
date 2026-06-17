@@ -1,0 +1,218 @@
+---
+import '../../styles/global.css'
+import { versions, modules, statusLabels } from '../../data/biblioteca/catalog'
+
+const order = { reciclar: 0, activo: 1, nuevo: 2 } as const
+const sorted = [...modules].sort((a, b) => order[a.status] - order[b.status])
+
+const versionName = (id: string) => versions.find(v => v.id === id)?.name ?? id
+
+const counts = {
+  reciclar: modules.filter(m => m.status === 'reciclar').length,
+  activo: modules.filter(m => m.status === 'activo').length,
+  nuevo: modules.filter(m => m.status === 'nuevo').length,
+}
+---
+
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Biblioteca de módulos — Flora</title>
+</head>
+<body class="biblio">
+  <header class="biblio-head">
+    <a href="/" class="biblio-back">← Flora</a>
+    <h1>Biblioteca de módulos</h1>
+    <p class="biblio-lead">
+      Todo lo que construimos en las cinco versiones del sitio, en un solo lugar.
+      Revisá los módulos, elegí lo que sirva y lo adaptamos al diseño actual.
+    </p>
+    <div class="biblio-stats">
+      <span><strong>{modules.length}</strong> módulos</span>
+      <span><strong>{versions.length}</strong> versiones</span>
+      <span class="dot-reciclar"><strong>{counts.reciclar}</strong> para reciclar</span>
+    </div>
+  </header>
+
+  <!-- ── Versiones ── -->
+  <section class="biblio-section">
+    <h2>Versiones</h2>
+    <div class="versions-grid">
+      {versions.map(v => (
+        <article class={v.current ? 'version-card current' : 'version-card'}>
+          <a href={v.shot} target="_blank" rel="noopener" class="version-shot">
+            <img src={v.shot} alt={`Captura de ${v.name}`} loading="lazy" />
+            {v.current && <span class="badge-current">Actual</span>}
+          </a>
+          <div class="version-meta">
+            <h3>{v.name}</h3>
+            <p class="version-stack">{v.stack}</p>
+            <p class="version-tagline">{v.tagline}</p>
+            <a class="version-live" href={`http://localhost:${v.port}`} target="_blank" rel="noopener">
+              Ver en vivo · localhost:{v.port}
+            </a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- ── Módulos ── -->
+  <section class="biblio-section">
+    <h2>Módulos</h2>
+    <p class="section-hint">
+      Ordenados por prioridad: primero lo que falta en el diseño actual y se puede reciclar.
+    </p>
+    <div class="modules-grid">
+      {sorted.map(m => (
+        <article class={`module-card status-${m.status}`}>
+          <div class="module-top">
+            <h3>{m.name}</h3>
+            <span class={`status-tag status-${m.status}`}>{statusLabels[m.status]}</span>
+          </div>
+          <p class="module-desc">{m.desc}</p>
+          <ul class="variant-list" role="list">
+            {m.variants.map(varnt => (
+              <li>
+                <span class="variant-version">{versionName(varnt.version)}</span>
+                <code class="variant-file">{varnt.file}</code>
+                {varnt.note && <span class="variant-note">{varnt.note}</span>}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <footer class="biblio-foot">
+    <p>Flora · Biblioteca interna de módulos</p>
+    <p>Para adaptar un módulo al diseño actual, elegilo y avisá.</p>
+  </footer>
+
+  <style>
+    .biblio {
+      background: var(--ink);
+      color: var(--bone);
+      font-family: var(--font-ui);
+      padding: clamp(32px, 6vw, 80px) clamp(20px, 5vw, 80px) 80px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .biblio-head { margin-bottom: clamp(48px, 7vw, 88px); }
+    .biblio-back {
+      display: inline-block;
+      font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--leaf); text-decoration: none; margin-bottom: 28px;
+    }
+    .biblio-back:hover { opacity: 0.75; }
+    .biblio-head h1 {
+      font-family: var(--font-display); font-weight: 300;
+      font-size: clamp(40px, 7vw, 84px); line-height: 1; letter-spacing: -0.02em;
+      margin-bottom: 18px;
+    }
+    .biblio-lead {
+      max-width: 56ch; font-size: clamp(15px, 1.8vw, 18px);
+      line-height: 1.6; color: rgba(244,241,230,0.62);
+    }
+    .biblio-stats {
+      display: flex; flex-wrap: wrap; gap: 24px; margin-top: 28px;
+      font-size: 14px; color: rgba(244,241,230,0.5);
+    }
+    .biblio-stats strong { color: var(--bone); font-weight: 600; }
+    .biblio-stats .dot-reciclar strong { color: var(--leaf); }
+
+    .biblio-section { margin-bottom: clamp(56px, 8vw, 96px); }
+    .biblio-section h2 {
+      font-family: var(--font-display); font-weight: 400; font-style: italic;
+      font-size: clamp(28px, 4vw, 44px); margin-bottom: 8px;
+    }
+    .section-hint { color: rgba(244,241,230,0.45); font-size: 14px; margin-bottom: 28px; }
+
+    /* Versiones */
+    .versions-grid {
+      display: grid; gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      margin-top: 28px;
+    }
+    .version-card {
+      background: var(--ink-2); border: 1px solid rgba(244,241,230,0.08);
+      border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .version-card.current { border-color: var(--leaf); }
+    .version-shot {
+      position: relative; display: block; height: 220px; overflow: hidden;
+      background: var(--ink-3);
+    }
+    .version-shot img {
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
+      display: block; transition: transform 0.5s ease; opacity: 0.92;
+    }
+    .version-shot:hover img { transform: scale(1.04); opacity: 1; }
+    .badge-current {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--leaf); color: var(--ink);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 9px; border-radius: 4px;
+    }
+    .version-meta { padding: 18px 18px 20px; display: flex; flex-direction: column; flex: 1; }
+    .version-meta h3 { font-family: var(--font-display); font-size: 24px; font-weight: 500; }
+    .version-stack {
+      font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--leaf); margin: 6px 0 12px;
+    }
+    .version-tagline { font-size: 13.5px; line-height: 1.55; color: rgba(244,241,230,0.6); flex: 1; }
+    .version-live {
+      margin-top: 16px; font-size: 12.5px; color: rgba(244,241,230,0.5);
+      text-decoration: none; border-top: 1px solid rgba(244,241,230,0.08); padding-top: 12px;
+    }
+    .version-live:hover { color: var(--leaf); }
+
+    /* Módulos */
+    .modules-grid {
+      display: grid; gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+    .module-card {
+      background: var(--ink-2); border: 1px solid rgba(244,241,230,0.08);
+      border-left: 3px solid rgba(244,241,230,0.12);
+      border-radius: 10px; padding: 22px 22px 18px;
+    }
+    .module-card.status-reciclar { border-left-color: var(--leaf); }
+    .module-card.status-nuevo { border-left-color: var(--gold); }
+    .module-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; margin-bottom: 10px;
+    }
+    .module-top h3 { font-family: var(--font-display); font-size: 23px; font-weight: 500; line-height: 1.1; }
+    .status-tag {
+      flex-shrink: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 4px 8px; border-radius: 4px;
+      background: rgba(244,241,230,0.08); color: rgba(244,241,230,0.55); white-space: nowrap;
+    }
+    .status-tag.status-reciclar { background: rgba(113,206,106,0.16); color: var(--leaf); }
+    .status-tag.status-nuevo { background: rgba(184,168,120,0.18); color: var(--gold); }
+    .module-desc { font-size: 13.5px; line-height: 1.55; color: rgba(244,241,230,0.6); margin-bottom: 16px; }
+    .variant-list { display: flex; flex-direction: column; gap: 8px; }
+    .variant-list li {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      font-size: 12px; padding-top: 8px; border-top: 1px solid rgba(244,241,230,0.06);
+    }
+    .variant-version {
+      font-weight: 600; color: var(--bone);
+      background: rgba(244,241,230,0.06); padding: 2px 7px; border-radius: 3px;
+    }
+    .variant-file { font-family: ui-monospace, monospace; font-size: 11px; color: rgba(244,241,230,0.5); }
+    .variant-note { font-size: 11px; font-style: italic; color: var(--leaf); }
+
+    .biblio-foot {
+      border-top: 1px solid rgba(244,241,230,0.08); padding-top: 28px;
+      font-size: 13px; color: rgba(244,241,230,0.4); display: flex;
+      justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+  </style>
+</body>
+</html>
