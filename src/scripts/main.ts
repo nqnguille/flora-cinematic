@@ -4,9 +4,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// ── Detectar preferencia de movimiento reducido ──
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 // ── Smooth scroll con Lenis ──
 const lenis = new Lenis({
-  duration: 1.2,
+  duration: 1.1,
   easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   smoothWheel: true,
 })
@@ -18,19 +21,38 @@ function raf(time: number) {
 }
 requestAnimationFrame(raf)
 
+// ── Nav scroll behavior ──
+function initNav() {
+  const nav = document.querySelector<HTMLElement>('.site-nav')
+  if (!nav) return
+
+  ScrollTrigger.create({
+    start: 'top -60px',
+    onEnter: () => nav.classList.add('scrolled'),
+    onLeaveBack: () => nav.classList.remove('scrolled'),
+  })
+}
+
+// ── Imagen hero con fade-in cuando carga ──
+function initHeroImage() {
+  const img = document.getElementById('hero-img') as HTMLImageElement | null
+  if (!img) return
+  if (img.complete) {
+    img.classList.add('loaded')
+  } else {
+    img.addEventListener('load', () => img.classList.add('loaded'))
+  }
+}
+
 // ── Split words ──
+// IMPORTANTE: No ponemos opacity:0 en CSS. GSAP setea el from sólo si hay animaciones.
 function splitWords() {
   document.querySelectorAll<HTMLElement>('.split-words').forEach(el => {
-    // Preserve <br> and <em> by reading innerHTML and splitting on <br>
     const raw = el.innerHTML
-    // Split on existing <br> tags (literal line breaks in HTML)
     const lines = raw.split(/<br\s*\/?>/i)
     el.innerHTML = lines.map(line => {
-      // Split words but keep inline tags like <em> together
-      // Use a temporary div to parse the line HTML into text tokens
       const tmp = document.createElement('span')
       tmp.innerHTML = line.trim()
-      // Walk child nodes: text nodes split by space, element nodes kept whole
       const tokens: string[] = []
       tmp.childNodes.forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -40,10 +62,7 @@ function splitWords() {
           const elem = node as HTMLElement
           const words = (elem.textContent || '').trim().split(/\s+/).filter(Boolean)
           words.forEach(w => {
-            const wrapped = document.createElement(elem.tagName.toLowerCase())
-            wrapped.className = elem.className
-            wrapped.innerHTML = w
-            tokens.push(`<span class="word"><span class="word-inner"><${elem.tagName.toLowerCase()}>${w}</${elem.tagName.toLowerCase()}></span></span>`)
+            tokens.push(`<span class="word"><span class="word-inner"><${elem.tagName.toLowerCase()} class="${elem.className}">${w}</${elem.tagName.toLowerCase()}></span></span>`)
           })
         }
       })
@@ -53,17 +72,21 @@ function splitWords() {
 }
 
 function animateSplitWords() {
+  if (prefersReducedMotion) return
+
   gsap.utils.toArray<HTMLElement>('.split-words').forEach(el => {
     const inners = el.querySelectorAll<HTMLElement>('.word-inner')
-    gsap.from(inners, {
-      yPercent: 110,
-      opacity: 0,
-      duration: 0.9,
-      stagger: 0.06,
+    // Setear estado inicial aquí, no en CSS
+    gsap.set(inners, { yPercent: 110, opacity: 0 })
+    gsap.to(inners, {
+      yPercent: 0,
+      opacity: 1,
+      duration: 0.85,
+      stagger: 0.055,
       ease: 'power3.out',
       scrollTrigger: {
         trigger: el,
-        start: 'top 85%',
+        start: 'top 88%',
       }
     })
   })
@@ -71,11 +94,13 @@ function animateSplitWords() {
 
 // ── Parallax hero ──
 function initHeroParallax() {
+  if (prefersReducedMotion) return
+
   const heroVisual = document.querySelector<HTMLElement>('.hero-visual')
   if (!heroVisual) return
 
   gsap.to(heroVisual, {
-    yPercent: -30,
+    yPercent: -25,
     ease: 'none',
     scrollTrigger: {
       trigger: '.hero',
@@ -88,6 +113,8 @@ function initHeroParallax() {
 
 // ── Contadores ──
 function initCounters() {
+  if (prefersReducedMotion) return
+
   gsap.utils.toArray<HTMLElement>('.count-up').forEach(el => {
     const target = parseInt(el.dataset.target || '0')
     const suffix = el.dataset.suffix || ''
@@ -95,7 +122,7 @@ function initCounters() {
 
     gsap.to(obj, {
       val: target,
-      duration: 1.8,
+      duration: 1.6,
       ease: 'power2.out',
       snap: { val: 1 },
       onUpdate() {
@@ -110,16 +137,39 @@ function initCounters() {
   })
 }
 
-// ── Clip-path reveal ──
+// ── Clip-path reveal — CRÍTICO: estado base VISIBLE en CSS, GSAP setea el from ──
 function initClipReveal() {
+  if (prefersReducedMotion) return
+
   gsap.utils.toArray<HTMLElement>('.clip-reveal').forEach(el => {
-    gsap.from(el, {
-      clipPath: 'inset(100% 0% 0% 0%)',
-      duration: 1.1,
+    // Set initial state con GSAP, no con CSS
+    gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)' })
+    gsap.to(el, {
+      clipPath: 'inset(0% 0% 0% 0%)',
+      duration: 1.0,
       ease: 'power4.out',
       scrollTrigger: {
         trigger: el,
-        start: 'top 80%'
+        start: 'top 82%'
+      }
+    })
+  })
+}
+
+// ── Fade-in genérico ──
+function initFadeIn() {
+  if (prefersReducedMotion) return
+
+  gsap.utils.toArray<HTMLElement>('.fade-in').forEach(el => {
+    gsap.set(el, { opacity: 0, y: 24 })
+    gsap.to(el, {
+      opacity: 1,
+      y: 0,
+      duration: 0.75,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 85%',
       }
     })
   })
@@ -130,16 +180,17 @@ function initHorizontalScroll() {
   const mm = gsap.matchMedia()
 
   mm.add('(min-width: 768px)', () => {
+    if (prefersReducedMotion) return
+
     const track = document.querySelector<HTMLElement>('.cards-track')
     const section = document.querySelector<HTMLElement>('.horizontal-section')
     if (!track || !section) return
 
     const cards = gsap.utils.toArray<HTMLElement>('.membresia-card')
 
-    // Calcular scroll total después de que el layout esté listo
     ScrollTrigger.refresh()
 
-    const getTotal = () => track.scrollWidth - window.innerWidth + 120
+    const getTotal = () => track.scrollWidth - window.innerWidth + 100
 
     const tween = gsap.to(track, {
       x: () => -getTotal(),
@@ -149,24 +200,24 @@ function initHorizontalScroll() {
         start: 'top top',
         end: () => `+=${getTotal() + window.innerHeight}`,
         pin: true,
-        scrub: 1,
+        scrub: 1.2,
         anticipatePin: 1,
         invalidateOnRefresh: true,
       }
     })
 
-    // Hover tilt
+    // Hover tilt suave
     cards.forEach(card => {
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect()
         const x = (e.clientX - rect.left) / rect.width - 0.5
         const y = (e.clientY - rect.top) / rect.height - 0.5
         gsap.to(card, {
-          rotateY: x * 12,
-          rotateX: -y * 12,
-          duration: 0.4,
+          rotateY: x * 8,
+          rotateX: -y * 8,
+          duration: 0.5,
           ease: 'power2.out',
-          transformPerspective: 800
+          transformPerspective: 900
         })
       })
 
@@ -174,7 +225,7 @@ function initHorizontalScroll() {
         gsap.to(card, {
           rotateY: 0,
           rotateX: 0,
-          duration: 0.6,
+          duration: 0.7,
           ease: 'elastic.out(1, 0.5)'
         })
       })
@@ -191,57 +242,112 @@ function initStepLine() {
   const line = document.querySelector<HTMLElement>('.step-line')
   if (!line) return
 
-  gsap.from(line, {
-    scaleY: 0,
+  if (prefersReducedMotion) {
+    // Sin animación: mostrar la línea directamente
+    line.style.transform = 'scaleY(1)'
+    return
+  }
+
+  gsap.to(line, {
+    scaleY: 1,
     transformOrigin: 'top center',
-    duration: 1,
     ease: 'power2.inOut',
     scrollTrigger: {
       trigger: '.steps-section',
-      start: 'top 60%',
-      end: 'bottom 80%',
-      scrub: 0.5,
+      start: 'top 65%',
+      end: 'bottom 75%',
+      scrub: 0.6,
     }
   })
 }
 
+// ── Bento items stagger ──
+function initBentoItems() {
+  if (prefersReducedMotion) return
+
+  const items = gsap.utils.toArray<HTMLElement>('.bento-item')
+  items.forEach((item, i) => {
+    gsap.set(item, { opacity: 0, y: 20 })
+    gsap.to(item, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      delay: i * 0.07,
+      scrollTrigger: {
+        trigger: item,
+        start: 'top 88%',
+      }
+    })
+  })
+
+  // Statement editorial
+  const statement = document.querySelector<HTMLElement>('.bento-statement')
+  if (statement) {
+    gsap.set(statement, { opacity: 0, y: 16 })
+    gsap.to(statement, {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: statement,
+        start: 'top 85%',
+      }
+    })
+  }
+}
+
 // ── Hero entrance ──
 function initHeroEntrance() {
-  const badge = document.querySelector<HTMLElement>('.hero-badge')
-  const title = document.querySelector<HTMLElement>('.hero-title')
-  const subtext = document.querySelector<HTMLElement>('.hero-subtext')
-  const ctas = document.querySelector<HTMLElement>('.hero-ctas')
+  if (prefersReducedMotion) return
+
+  const eyebrow = document.querySelector<HTMLElement>('.hero-eyebrow')
+  const title   = document.querySelector<HTMLElement>('.hero-title')
+  const bottom  = document.querySelector<HTMLElement>('.hero-bottom')
   const scrollInd = document.querySelector<HTMLElement>('.scroll-indicator')
+  const ticker  = document.querySelector<HTMLElement>('.hero-ticker')
 
-  const tl = gsap.timeline({ delay: 0.2 })
+  // Setear estados iniciales con GSAP
+  if (eyebrow) gsap.set(eyebrow, { opacity: 0, y: 12 })
+  if (bottom)  gsap.set(bottom,  { opacity: 0, y: 18 })
+  if (scrollInd) gsap.set(scrollInd, { opacity: 0 })
+  if (ticker)  gsap.set(ticker, { opacity: 0 })
 
-  if (badge) tl.from(badge, { opacity: 0, y: 16, duration: 0.6, ease: 'power2.out' })
+  const tl = gsap.timeline({ delay: 0.15 })
+
+  if (eyebrow) tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' })
 
   if (title) {
     const inners = title.querySelectorAll<HTMLElement>('.word-inner')
     if (inners.length > 0) {
-      tl.from(inners, {
-        yPercent: 110,
-        opacity: 0,
+      // Setear estado inicial
+      gsap.set(inners, { yPercent: 110, opacity: 0 })
+      tl.to(inners, {
+        yPercent: 0,
+        opacity: 1,
         duration: 0.9,
-        stagger: 0.06,
+        stagger: 0.055,
         ease: 'power3.out',
-      }, '-=0.2')
+      }, '-=0.15')
     }
   }
 
-  if (subtext) tl.from(subtext, { opacity: 0, y: 20, duration: 0.7, ease: 'power2.out' }, '-=0.4')
-  if (ctas) tl.from(ctas, { opacity: 0, y: 20, duration: 0.7, ease: 'power2.out' }, '-=0.5')
-  if (scrollInd) tl.from(scrollInd, { opacity: 0, duration: 0.5 }, '-=0.3')
+  if (bottom) tl.to(bottom, { opacity: 1, y: 0, duration: 0.65, ease: 'power2.out' }, '-=0.45')
+  if (scrollInd) tl.to(scrollInd, { opacity: 1, duration: 0.5 }, '-=0.35')
+  if (ticker) tl.to(ticker, { opacity: 1, duration: 0.5 }, '-=0.4')
 }
 
-// ── Why items stagger ──
-function initWhyItems() {
-  gsap.utils.toArray<HTMLElement>('.why-item').forEach((item, i) => {
-    gsap.from(item, {
-      opacity: 0,
-      x: 30,
-      duration: 0.7,
+// ── Stat items ──
+function initStats() {
+  if (prefersReducedMotion) return
+
+  gsap.utils.toArray<HTMLElement>('.stat-item').forEach((item, i) => {
+    gsap.set(item, { opacity: 0, y: 16 })
+    gsap.to(item, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
       ease: 'power2.out',
       delay: i * 0.08,
       scrollTrigger: {
@@ -256,20 +362,39 @@ function initWhyItems() {
 function initLoader() {
   const loader = document.querySelector<HTMLElement>('.page-loader')
   if (!loader) return
-  const logo = loader.querySelector<HTMLElement>('.loader-logo')
-  const bar  = loader.querySelector<HTMLElement>('.loader-progress')
 
-  const tl = gsap.timeline()
-  tl.to(logo, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
-    .to(bar,   { width: '100%', duration: 0.55, ease: 'power1.inOut' }, 0)
-    .to(loader, { yPercent: -100, duration: 0.75, ease: 'power3.inOut', delay: 0.05 })
+  const logo    = loader.querySelector<HTMLElement>('.loader-logo')
+  const tagline = loader.querySelector<HTMLElement>('.loader-tagline')
+  const bar     = loader.querySelector<HTMLElement>('.loader-progress')
+
+  if (prefersReducedMotion) {
+    loader.style.display = 'none'
+    document.body.style.overflow = ''
+    return
+  }
+
+  document.body.style.overflow = 'hidden'
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      document.body.style.overflow = ''
+    }
+  })
+
+  tl.to(logo,    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
+    .to(tagline, { opacity: 1, duration: 0.35, ease: 'power2.out' }, '-=0.1')
+    .to(bar,     { width: '100%', duration: 0.5, ease: 'power1.inOut' }, 0)
+    .to(loader,  { yPercent: -100, duration: 0.7, ease: 'power3.inOut', delay: 0.1 })
     .set(loader, { display: 'none' })
 }
 
 // ── Scroll progress bar ──
 function initScrollProgress() {
+  if (prefersReducedMotion) return
+
   const bar = document.querySelector<HTMLElement>('.scroll-progress')
   if (!bar) return
+
   gsap.to(bar, {
     scaleX: 1,
     ease: 'none',
@@ -277,7 +402,7 @@ function initScrollProgress() {
       trigger: document.body,
       start: 'top top',
       end: 'bottom bottom',
-      scrub: 0.15,
+      scrub: 0.1,
     }
   })
 }
@@ -285,7 +410,7 @@ function initScrollProgress() {
 // ── Custom cursor ──
 function initCursor() {
   const isTouch = window.matchMedia('(hover: none)').matches
-  if (isTouch) return
+  if (isTouch || prefersReducedMotion) return
 
   const dot  = document.createElement('div')
   const ring = document.createElement('div')
@@ -302,8 +427,8 @@ function initCursor() {
   })
 
   ;(function animateRing() {
-    rx += (mx - rx) * 0.11
-    ry += (my - ry) * 0.11
+    rx += (mx - rx) * 0.1
+    ry += (my - ry) * 0.1
     gsap.set(ring, { x: rx, y: ry })
     requestAnimationFrame(animateRing)
   })()
@@ -313,42 +438,47 @@ function initCursor() {
     el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'))
   })
 
-  document.addEventListener('mouseleave', () => gsap.to([dot, ring], { opacity: 0, duration: 0.3 }))
-  document.addEventListener('mouseenter', () => gsap.to([dot, ring], { opacity: 1, duration: 0.3 }))
+  document.addEventListener('mouseleave', () => gsap.to([dot, ring], { opacity: 0, duration: 0.25 }))
+  document.addEventListener('mouseenter', () => gsap.to([dot, ring], { opacity: 1, duration: 0.25 }))
 }
 
 // ── Magnetic buttons ──
 function initMagnetic() {
   const isTouch = window.matchMedia('(hover: none)').matches
-  if (isTouch) return
+  if (isTouch || prefersReducedMotion) return
 
   document.querySelectorAll<HTMLElement>('.btn-primary, .btn-secondary, .footer-cta-band .btn-primary').forEach(btn => {
     btn.addEventListener('mousemove', (e) => {
       const r = btn.getBoundingClientRect()
       const x = (e.clientX - r.left - r.width  / 2)
       const y = (e.clientY - r.top  - r.height / 2)
-      gsap.to(btn, { x: x * 0.28, y: y * 0.28, duration: 0.4, ease: 'power2.out' })
+      gsap.to(btn, { x: x * 0.22, y: y * 0.22, duration: 0.4, ease: 'power2.out' })
     })
     btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, { x: 0, y: 0, duration: 0.65, ease: 'elastic.out(1, 0.45)' })
+      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.45)' })
     })
   })
 }
 
 // ── Partículas flotantes ──
 function initParticles() {
+  if (prefersReducedMotion) return
+
   const container = document.querySelector<HTMLElement>('.hero-particles')
   if (!container) return
-  for (let i = 0; i < 22; i++) {
+
+  for (let i = 0; i < 18; i++) {
     const p = document.createElement('div')
     p.className = 'particle'
-    p.style.setProperty('--dur',   `${7 + Math.random() * 9}s`)
-    p.style.setProperty('--del',   `${Math.random() * 10}s`)
-    p.style.setProperty('--drift', `${(Math.random() - 0.5) * 120}px`)
+    const size = 2 + Math.random() * 2.5
+    p.style.setProperty('--dur',   `${8 + Math.random() * 10}s`)
+    p.style.setProperty('--del',   `${Math.random() * 12}s`)
+    p.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`)
     p.style.left   = `${Math.random() * 100}%`
-    p.style.width  = `${2 + Math.random() * 3}px`
-    p.style.height = p.style.width
-    p.style.opacity = String(0.2 + Math.random() * 0.4)
+    p.style.width  = `${size}px`
+    p.style.height = `${size}px`
+    // Partículas alternadas: verde y dorado tenue
+    p.style.background = i % 5 === 0 ? 'rgba(184, 168, 120, 0.6)' : 'rgba(113, 206, 106, 0.5)'
     container.appendChild(p)
   }
 }
@@ -356,6 +486,8 @@ function initParticles() {
 // ── Init all ──
 function init() {
   initLoader()
+  initNav()
+  initHeroImage()
   initParticles()
   initCursor()
 
@@ -369,7 +501,9 @@ function init() {
   initClipReveal()
   initHorizontalScroll()
   initStepLine()
-  initWhyItems()
+  initBentoItems()
+  initStats()
+  initFadeIn()
   initScrollProgress()
   initMagnetic()
 }

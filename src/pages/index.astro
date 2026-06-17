@@ -87,60 +87,106 @@ const steps = [
 ]
 ---
 
-<Layout>
+<Layout
+  title="Flora ONG — Club de cultivo de cannabis medicinal en Neuquén"
+  description="Club de cultivo bajo Ley 27.350 / REPROCANN. Acceso mensual con trazabilidad por lote, sin intermediarios. Neuquén, Patagonia, Argentina."
+>
+
+  <!-- Skip to content para navegación por teclado -->
+  <a class="skip-link" href="#inicio">Ir al contenido principal</a>
 
   <!-- Page loader -->
-  <div class="page-loader" aria-hidden="true">
+  <div class="page-loader" role="status" aria-label="Cargando Flora ONG">
     <span class="loader-logo">Flora</span>
-    <div class="loader-progress"></div>
+    <span class="loader-tagline">Cannabis medicinal</span>
+    <div class="loader-progress" aria-hidden="true"></div>
   </div>
 
   <!-- Scroll progress bar -->
-  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+
+  <!-- Nav fija -->
+  <nav class="site-nav" aria-label="Navegación principal">
+    <a href="#inicio" class="nav-logo" aria-label="Flora ONG — inicio">Flora</a>
+    <ul class="nav-links" role="list">
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="#flora">Por qué Flora</a></li>
+      <li><a href="#membresias">Membresías</a></li>
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li>
+        <a href={waAsociarse} class="nav-cta" target="_blank" rel="noopener noreferrer">
+          Asociarme
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- HERO                                       -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="hero" id="inicio">
+  <section class="hero" id="inicio" aria-label="Inicio">
+
+    <!-- Imagen de fondo — decorativa, cargada eager para LCP -->
     <div class="hero-visual" aria-hidden="true">
       <img
-        src="https://images.unsplash.com/photo-1448375240519-3bd8da6b7f2e?auto=format&fit=crop&w=1600&q=80"
+        src="https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=1800&q=80"
         alt=""
         loading="eager"
         fetchpriority="high"
+        decoding="async"
+        width="1800"
+        height="1200"
+        id="hero-img"
       />
     </div>
 
-    <!-- Partículas flotantes -->
+    <!-- Viñeta -->
+    <div class="hero-vignette" aria-hidden="true"></div>
+
+    <!-- Partículas -->
     <div class="hero-particles" aria-hidden="true"></div>
 
+    <!-- Número de año decorativo -->
+    <span class="hero-year" aria-hidden="true">Est. 2022</span>
+
+    <!-- Contenido principal -->
     <div class="hero-content">
-      <span class="hero-badge">Cannabis medicinal · Argentina · Ley 27.350</span>
+      <div class="hero-eyebrow">
+        <span class="hero-badge">Ley 27.350 · REPROCANN</span>
+        <span class="hero-badge-sep" aria-hidden="true"></span>
+        <span class="hero-badge-location">Neuquén, Patagonia</span>
+      </div>
 
-      <h1 class="hero-title split-words">Cultivamos lo que<br>la ley <em>te permite.</em></h1>
+      <h1 class="hero-title split-words">
+        Cultivamos<br>lo que la ley<br><em class="accent-word">te permite.</em>
+      </h1>
 
-      <p class="hero-subtext">
-        Acceso continuo. Sin intermediarios. Con la ley a favor.
-      </p>
+      <div class="hero-bottom">
+        <p class="hero-subtext">
+          Acceso continuo. Trazabilidad por lote.<br>Sin intermediarios. Con la ley a favor.
+        </p>
 
-      <div class="hero-ctas">
-        <a href={waAsociarse} class="btn-primary" target="_blank" rel="noopener noreferrer">
-          Quiero asociarme
-        </a>
-        <a href="#membresias" class="btn-secondary">Ver membresías</a>
+        <div class="hero-ctas">
+          <a href={waAsociarse} class="btn-primary" target="_blank" rel="noopener noreferrer">
+            Quiero asociarme
+          </a>
+          <a href="#membresias" class="btn-secondary">Ver membresías</a>
+        </div>
       </div>
     </div>
 
+    <!-- Scroll indicator -->
     <div class="scroll-indicator" aria-hidden="true">
       <div class="scroll-line"></div>
       <span class="scroll-label">scroll</span>
     </div>
 
+    <!-- Ticker -->
     <div class="hero-ticker" aria-hidden="true">
       <div class="ticker-track">
-        <span>CULTIVAMOS CONCIENCIA · DESAFIAMOS LOS ESTIGMAS · CANNABIS MEDICINAL · NEUQUÉN ARGENTINA · </span>
-        <span>CULTIVAMOS CONCIENCIA · DESAFIAMOS LOS ESTIGMAS · CANNABIS MEDICINAL · NEUQUÉN ARGENTINA · </span>
-        <span>CULTIVAMOS CONCIENCIA · DESAFIAMOS LOS ESTIGMAS · CANNABIS MEDICINAL · NEUQUÉN ARGENTINA · </span>
+        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; TRAZABILIDAD POR LOTE &nbsp;·&nbsp; </span>
+        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; TRAZABILIDAD POR LOTE &nbsp;·&nbsp; </span>
+        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; TRAZABILIDAD POR LOTE &nbsp;·&nbsp; </span>
       </div>
     </div>
   </section>
@@ -148,7 +194,7 @@ const steps = [
   <!-- ══════════════════════════════════════════ -->
   <!-- STATS                                      -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="stats-section" id="nosotros">
+  <section class="stats-section" id="nosotros" aria-label="Flora en números">
     <div class="stats-grid">
       <div class="stat-item">
         <span class="stat-number count-up" data-target="200" data-suffix="+">200+</span>
@@ -171,84 +217,115 @@ const steps = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- POR QUÉ FLORA                              -->
+  <!-- POR QUÉ FLORA — BENTO                      -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="why-section" id="flora">
+  <section class="why-section" id="flora" aria-label="Por qué Flora">
     <div class="why-inner">
-      <div class="why-left">
-        <h2 class="split-words">Sabés lo que<br>fumás.</h2>
-        <p>
-          Un club de cultivo no es un negocio de cannabis. Es una forma legal
-          de organizarse para acceder a lo que la ley ya permite. Flora existe
-          para que ese acceso sea real, documentado y sin intermediarios.
+
+      <div class="section-header">
+        <div>
+          <span class="section-label on-light">Por qué Flora</span>
+          <h2 class="section-title split-words">Sabés lo que<br><em>recibís.</em></h2>
+        </div>
+        <p class="section-tagline">
+          Un club de cultivo no es un negocio. Es una forma legal de organizarse para acceder a lo que la ley ya permite.
         </p>
       </div>
 
-      <ul class="why-list">
-        <li class="why-item clip-reveal">
-          <span class="why-num">01</span>
-          <div class="why-item-content">
-            <h3>No es el pibe de Instagram.</h3>
-            <p>Cada lote tiene trazabilidad desde la genética hasta la entrega. Sabés qué recibís antes de recibirlo.</p>
+      <div class="why-bento" role="list">
+
+        <!-- Celda statement editorial grande -->
+        <div class="bento-statement" role="listitem">
+          <div>
+            <p class="bento-statement-text">
+              Flora existe para que ese acceso sea real, documentado y sin intermediarios.
+            </p>
           </div>
-        </li>
-        <li class="why-item clip-reveal">
-          <span class="why-num">02</span>
-          <div class="why-item-content">
-            <h3>Documentado.</h3>
-            <p>Variedad, genética, perfil de cannabinoides. Todo por escrito, por lote, disponible para cada asociado.</p>
+          <div>
+            <p class="bento-statement-sub">
+              Cada lote tiene trazabilidad desde la genética hasta la entrega.
+            </p>
+            <div class="bento-law-badge" aria-label="Marco legal">
+              <span>Ley 27.350 · REPROCANN</span>
+            </div>
           </div>
-        </li>
-        <li class="why-item clip-reveal">
-          <span class="why-num">03</span>
-          <div class="why-item-content">
-            <h3>Legal bajo Ley 27.350.</h3>
-            <p>Operamos dentro del marco REPROCANN. Sin compraventa, sin grises, sin riesgo para vos.</p>
+        </div>
+
+        <!-- Grilla de razones -->
+        <div class="bento-items" role="list">
+          <div class="bento-item" role="listitem">
+            <span class="bento-item-num">01</span>
+            <h3 class="bento-item-title">Trazabilidad completa</h3>
+            <p class="bento-item-desc">Variedad, genética y perfil de cannabinoides. Todo por escrito, por lote, disponible para cada asociado.</p>
           </div>
-        </li>
-        <li class="why-item clip-reveal">
-          <span class="why-num">04</span>
-          <div class="why-item-content">
-            <h3>Calidad verificada.</h3>
-            <p>Análisis de laboratorio en cada lote. Concentración real, no estimada. Sin sorpresas.</p>
+
+          <div class="bento-item" role="listitem">
+            <span class="bento-item-num">02</span>
+            <h3 class="bento-item-title">Análisis de laboratorio</h3>
+            <p class="bento-item-desc">Concentración real, no estimada. Resultados por escrito antes de recibir tu parte del cultivo.</p>
           </div>
-        </li>
-        <li class="why-item clip-reveal">
-          <span class="why-num">05</span>
-          <div class="why-item-content">
-            <h3>Acompañamiento real.</h3>
-            <p>Respondemos por WhatsApp. Una persona, no un bot. Porque tus preguntas merecen respuestas.</p>
+
+          <div class="bento-item" role="listitem">
+            <span class="bento-item-num">03</span>
+            <h3 class="bento-item-title">Marco legal vigente</h3>
+            <p class="bento-item-desc">Operamos bajo Ley 27.350 y marco REPROCANN. Sin compraventa, sin grises, sin riesgo para vos.</p>
           </div>
-        </li>
-      </ul>
+
+          <div class="bento-item" role="listitem">
+            <span class="bento-item-num">04</span>
+            <h3 class="bento-item-title">Acompañamiento real</h3>
+            <p class="bento-item-desc">Respondemos por WhatsApp. Una persona del equipo, no un bot. Porque tus preguntas merecen respuestas.</p>
+          </div>
+
+          <div class="bento-item" role="listitem">
+            <span class="bento-item-num">05</span>
+            <h3 class="bento-item-title">Genética documentada</h3>
+            <p class="bento-item-desc">Cada variedad tiene su historia. Sabés qué recibís antes de recibirlo. Sin sorpresas, sin incertidumbre.</p>
+          </div>
+        </div>
+
+      </div>
     </div>
   </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- MEMBRESÍAS — HORIZONTAL SCROLL             -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="horizontal-section" id="membresias">
+  <section class="horizontal-section" id="membresias" aria-label="Membresías">
     <div class="horizontal-inner">
       <div class="horizontal-header">
-        <span class="section-label">Membresías</span>
+        <span class="section-label on-dark">Membresías</span>
         <h2 class="split-words">Elegí cómo<br>acceder.</h2>
-        <p>Scroll →</p>
+        <div class="horizontal-scroll-hint" aria-hidden="true">
+          <span class="hint-arrow"></span>
+          <span>deslizá</span>
+        </div>
       </div>
 
-      <div class="cards-track-wrapper">
-        <div class="cards-track">
+      <div class="cards-track-wrapper" aria-label="Planes disponibles">
+        <div class="cards-track" role="list">
           {memberships.map((m) => (
-            <div class={m.featured ? 'membresia-card featured' : 'membresia-card'}>
-              {m.badge && <span class="card-badge">{m.badge}</span>}
+            <div
+              class={m.featured ? 'membresia-card featured' : 'membresia-card'}
+              role="listitem"
+              aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
+            >
+              {m.badge && <span class="card-badge" aria-label="Plan más popular">{m.badge}</span>}
               <h3 class="card-title">{m.name}</h3>
-              <div class="card-grams">
-                {m.grams}<span style="font-size:32px;font-weight:400">g</span>
+              <div class="card-grams" aria-label={`${m.grams} gramos`}>
+                {m.grams}<span class="card-grams-unit">g</span>
               </div>
               <p class="card-unit">por mes · cultivo compartido</p>
-              <ul class="card-features">
+              <ul class="card-features" aria-label="Características incluidas">
                 {m.features.map((f) => <li>{f}</li>)}
               </ul>
-              <a href={m.waLink} class="card-cta" target="_blank" rel="noopener noreferrer">
+              <a
+                href={m.waLink}
+                class="card-cta"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Consultar membresía ${m.name} por WhatsApp`}
+              >
                 Consultar por WhatsApp
               </a>
             </div>
@@ -261,27 +338,33 @@ const steps = [
   <!-- ══════════════════════════════════════════ -->
   <!-- CÓMO FUNCIONA                              -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="steps-section" id="como-funciona">
+  <section class="steps-section" id="como-funciona" aria-label="Cómo funciona">
     <div class="steps-inner">
-      <h2 class="split-words">Cuatro pasos.<br>Sin grises.</h2>
 
-      <div class="steps-list">
-        <div class="step-connector">
+      <div class="section-header">
+        <div>
+          <span class="section-label on-light">Proceso</span>
+          <h2 class="section-title split-words">Cuatro pasos.<br><em>Sin grises.</em></h2>
+        </div>
+      </div>
+
+      <ol class="steps-list" aria-label="Pasos para asociarse">
+        <div class="step-connector" aria-hidden="true">
           <div class="step-line"></div>
         </div>
 
         {steps.map((step) => (
-          <div class="step-item">
-            <div class="step-num-wrap">
+          <li class="step-item">
+            <div class="step-num-wrap" aria-hidden="true">
               <span class="step-num">{step.num}</span>
             </div>
             <div class="step-content">
               <h3>{step.title}</h3>
               <p>{step.desc}</p>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </div>
   </section>
 
@@ -291,8 +374,8 @@ const steps = [
   <footer class="footer" id="contacto">
     <div class="footer-cta-band">
       <h3>¿Listo para empezar?</h3>
-      <a href={waFooter} class="btn-primary" target="_blank" rel="noopener noreferrer">
-        Asociarme
+      <a href={waFooter} class="btn-primary" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
+        Asociarme por WhatsApp
       </a>
     </div>
 
@@ -305,7 +388,7 @@ const steps = [
         </p>
       </div>
 
-      <div class="footer-col">
+      <nav class="footer-col" aria-label="Navegación del sitio">
         <h5>Navegación</h5>
         <ul>
           <li><a href="#nosotros">Nosotros</a></li>
@@ -313,9 +396,9 @@ const steps = [
           <li><a href="#membresias">Membresías</a></li>
           <li><a href="#como-funciona">Cómo funciona</a></li>
         </ul>
-      </div>
+      </nav>
 
-      <div class="footer-col">
+      <nav class="footer-col" aria-label="Información legal">
         <h5>Legal</h5>
         <ul>
           <li><a href="#">Ley 27.350</a></li>
@@ -323,7 +406,7 @@ const steps = [
           <li><a href="#">Estatuto ONG</a></li>
           <li><a href="#">Términos de uso</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
 
     <div class="footer-bottom">
