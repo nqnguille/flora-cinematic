@@ -437,6 +437,9 @@ function initCursor() {
   const isTouch = window.matchMedia('(hover: none)').matches
   if (isTouch || prefersReducedMotion) return
 
+  // Recién acá ocultamos el cursor nativo: el custom ya existe
+  document.body.classList.add('custom-cursor')
+
   const dot  = document.createElement('div')
   const ring = document.createElement('div')
   dot.className  = 'cursor-dot'

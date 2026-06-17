@@ -1172,10 +1172,13 @@ body::after {
   opacity: 0.7;
 }
 
-/* Custom cursor (desktop) */
+/* Custom cursor (desktop) — solo cuando main.ts lo activó (body.custom-cursor) */
 @media (hover: hover) and (pointer: fine) {
-  body { cursor: none; }
-  a, button, [role="button"], .membresia-card { cursor: none; }
+  body.custom-cursor { cursor: none; }
+  body.custom-cursor a,
+  body.custom-cursor button,
+  body.custom-cursor [role="button"],
+  body.custom-cursor .membresia-card { cursor: none; }
 }
 
 .cursor-dot {
