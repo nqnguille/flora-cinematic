@@ -5,6 +5,14 @@ import { versions, modules, statusLabels } from '../../data/biblioteca/catalog'
 const order = { reciclar: 0, activo: 1, nuevo: 2 } as const
 const sorted = [...modules].sort((a, b) => order[a.status] - order[b.status])
 
+// Módulos con miniatura capturada de su sección
+const thumbed = new Set([
+  'hero', 'porque', 'membresias', 'como-funciona', 'stats', 'footer',
+  'educacion', 'comunidad', 'podcast', 'legalidad', 'testimonios',
+  'perfiles', 'trust', 'contacto', 'scrollstory', 'productos',
+])
+const thumbOf = (id: string) => thumbed.has(id) ? `/biblioteca/modules/${id}.jpg` : null
+
 const versionName = (id: string) => versions.find(v => v.id === id)?.name ?? id
 
 const counts = {
@@ -69,6 +77,15 @@ const counts = {
     <div class="modules-grid">
       {sorted.map(m => (
         <article class={`module-card status-${m.status}`}>
+          {thumbOf(m.id)
+            ? (
+              <a href={thumbOf(m.id)} target="_blank" rel="noopener" class="module-thumb">
+                <img src={thumbOf(m.id)} alt={`Vista del módulo ${m.name}`} loading="lazy" width="640" height="420" />
+                <span class="thumb-zoom" aria-hidden="true">Ver ↗</span>
+              </a>
+            )
+            : <div class="module-thumb module-thumb-empty" aria-hidden="true"><span>{m.name}</span></div>
+          }
           <div class="module-top">
             <h3>{m.name}</h3>
             <span class={`status-tag status-${m.status}`}>{statusLabels[m.status]}</span>
@@ -179,8 +196,36 @@ const counts = {
     .module-card {
       background: var(--ink-2); border: 1px solid rgba(244,241,230,0.08);
       border-left: 3px solid rgba(244,241,230,0.12);
-      border-radius: 10px; padding: 22px 22px 18px;
+      border-radius: 10px; padding: 0 0 18px; overflow: hidden;
+      display: flex; flex-direction: column;
     }
+    .module-card > :not(.module-thumb) { margin-left: 22px; margin-right: 22px; }
+    .module-thumb {
+      position: relative; display: block; aspect-ratio: 640 / 420;
+      overflow: hidden; background: var(--ink-3); margin-bottom: 18px;
+      border-bottom: 1px solid rgba(244,241,230,0.06);
+    }
+    .module-thumb img {
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
+      display: block; transition: transform 0.5s ease;
+    }
+    .module-thumb:hover img { transform: scale(1.05); }
+    .thumb-zoom {
+      position: absolute; top: 10px; right: 10px; opacity: 0;
+      background: var(--leaf); color: var(--ink); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px;
+      border-radius: 4px; transition: opacity 0.25s ease;
+    }
+    .module-thumb:hover .thumb-zoom { opacity: 1; }
+    .module-thumb-empty {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--ink-3), var(--ink-2));
+    }
+    .module-thumb-empty span {
+      font-family: var(--font-display); font-style: italic; font-size: 22px;
+      color: rgba(244,241,230,0.3);
+    }
+    .module-card .module-top { margin-top: 0; }
     .module-card.status-reciclar { border-left-color: var(--leaf); }
     .module-card.status-nuevo { border-left-color: var(--gold); }
     .module-top {
