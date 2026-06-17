@@ -44,6 +44,28 @@ function initHeroImage() {
   }
 }
 
+// ── Video de fondo del hero ──
+// Sólo se carga/reproduce si hay movimiento permitido. Con reduced-motion
+// queda el poster estático (no se descarga el video).
+function initHeroVideo() {
+  const video = document.getElementById('hero-video') as HTMLVideoElement | null
+  if (!video) return
+  if (prefersReducedMotion) return
+
+  video.preload = 'auto'
+  const reveal = () => video.classList.add('loaded')
+  video.addEventListener('playing', reveal, { once: true })
+  video.addEventListener('canplay', reveal, { once: true })
+
+  const play = () => {
+    const p = video.play()
+    if (p && typeof p.catch === 'function') p.catch(() => {})
+  }
+  if (video.readyState >= 2) play()
+  else video.addEventListener('loadeddata', play, { once: true })
+  video.load()
+}
+
 // ── Split words ──
 // IMPORTANTE: No ponemos opacity:0 en CSS. GSAP setea el from sólo si hay animaciones.
 function splitWords() {
@@ -488,6 +510,7 @@ function init() {
   initLoader()
   initNav()
   initHeroImage()
+  initHeroVideo()
   initParticles()
   initCursor()
 
