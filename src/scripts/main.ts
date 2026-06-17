@@ -4,6 +4,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// Quitar clase no-js tan pronto como el script corre
+document.documentElement.classList.remove('no-js')
+
 // ── Detectar preferencia de movimiento reducido ──
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -505,10 +508,53 @@ function initParticles() {
   }
 }
 
+// ── Mobile drawer ──
+function initMobileDrawer() {
+  const hamburger = document.querySelector<HTMLButtonElement>('.nav-hamburger')
+  const drawer    = document.getElementById('mobile-drawer') as HTMLElement | null
+  const backdrop  = drawer?.querySelector<HTMLElement>('.drawer-backdrop')
+  const closeBtn  = drawer?.querySelector<HTMLButtonElement>('.drawer-close')
+
+  if (!hamburger || !drawer) return
+
+  const openDrawer = () => {
+    drawer.hidden = false
+    hamburger.setAttribute('aria-expanded', 'true')
+    document.body.style.overflow = 'hidden'
+    // Foco al cierre para accesibilidad
+    setTimeout(() => closeBtn?.focus(), 50)
+  }
+
+  const closeDrawer = () => {
+    drawer.hidden = true
+    hamburger.setAttribute('aria-expanded', 'false')
+    document.body.style.overflow = ''
+    hamburger.focus()
+  }
+
+  hamburger.addEventListener('click', openDrawer)
+  closeBtn?.addEventListener('click', closeDrawer)
+  backdrop?.addEventListener('click', closeDrawer)
+
+  // Cerrar con Escape
+  drawer.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawer()
+  })
+
+  // Cerrar al hacer click en cualquier link del drawer
+  drawer.querySelectorAll<HTMLAnchorElement>('a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (!link.getAttribute('target')) closeDrawer()
+      else closeDrawer()
+    })
+  })
+}
+
 // ── Init all ──
 function init() {
   initLoader()
   initNav()
+  initMobileDrawer()
   initHeroImage()
   initHeroVideo()
   initParticles()

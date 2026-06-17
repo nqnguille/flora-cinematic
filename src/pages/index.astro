@@ -108,6 +108,8 @@ const steps = [
   <!-- Nav fija -->
   <nav class="site-nav" aria-label="Navegación principal">
     <a href="#inicio" class="nav-logo" aria-label="Flora ONG — inicio">Flora</a>
+
+    <!-- Desktop links -->
     <ul class="nav-links" role="list">
       <li><a href="#nosotros">Nosotros</a></li>
       <li><a href="#flora">Por qué Flora</a></li>
@@ -119,7 +121,40 @@ const steps = [
         </a>
       </li>
     </ul>
+
+    <!-- Hamburguesa — solo mobile -->
+    <button
+      class="nav-hamburger"
+      aria-label="Abrir menú de navegación"
+      aria-expanded="false"
+      aria-controls="mobile-drawer"
+    >
+      <span class="ham-bar"></span>
+      <span class="ham-bar"></span>
+      <span class="ham-bar"></span>
+    </button>
   </nav>
+
+  <!-- Drawer mobile -->
+  <div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Menú de navegación" hidden>
+    <div class="drawer-backdrop"></div>
+    <nav class="drawer-panel" aria-label="Navegación mobile">
+      <button class="drawer-close" aria-label="Cerrar menú">
+        <span aria-hidden="true">✕</span>
+      </button>
+      <ul role="list">
+        <li><a href="#nosotros">Nosotros</a></li>
+        <li><a href="#flora">Por qué Flora</a></li>
+        <li><a href="#membresias">Membresías</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li>
+          <a href={waAsociarse} class="drawer-cta" target="_blank" rel="noopener noreferrer">
+            Asociarme por WhatsApp
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- HERO                                       -->
@@ -360,11 +395,11 @@ const steps = [
         </div>
       </div>
 
-      <ol class="steps-list" aria-label="Pasos para asociarse">
+      <div class="steps-list-wrap">
         <div class="step-connector" aria-hidden="true">
           <div class="step-line"></div>
         </div>
-
+      <ol class="steps-list" aria-label="Pasos para asociarse">
         {steps.map((step) => (
           <li class="step-item">
             <div class="step-num-wrap" aria-hidden="true">
@@ -377,6 +412,7 @@ const steps = [
           </li>
         ))}
       </ol>
+      </div>
     </div>
   </section>
 
