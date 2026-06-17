@@ -252,8 +252,113 @@ function initWhyItems() {
   })
 }
 
+// ── Page loader ──
+function initLoader() {
+  const loader = document.querySelector<HTMLElement>('.page-loader')
+  if (!loader) return
+  const logo = loader.querySelector<HTMLElement>('.loader-logo')
+  const bar  = loader.querySelector<HTMLElement>('.loader-progress')
+
+  const tl = gsap.timeline()
+  tl.to(logo, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
+    .to(bar,   { width: '100%', duration: 0.55, ease: 'power1.inOut' }, 0)
+    .to(loader, { yPercent: -100, duration: 0.75, ease: 'power3.inOut', delay: 0.05 })
+    .set(loader, { display: 'none' })
+}
+
+// ── Scroll progress bar ──
+function initScrollProgress() {
+  const bar = document.querySelector<HTMLElement>('.scroll-progress')
+  if (!bar) return
+  gsap.to(bar, {
+    scaleX: 1,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.15,
+    }
+  })
+}
+
+// ── Custom cursor ──
+function initCursor() {
+  const isTouch = window.matchMedia('(hover: none)').matches
+  if (isTouch) return
+
+  const dot  = document.createElement('div')
+  const ring = document.createElement('div')
+  dot.className  = 'cursor-dot'
+  ring.className = 'cursor-ring'
+  document.body.append(dot, ring)
+
+  let mx = 0, my = 0, rx = 0, ry = 0
+
+  document.addEventListener('mousemove', (e) => {
+    mx = e.clientX
+    my = e.clientY
+    gsap.set(dot, { x: mx, y: my })
+  })
+
+  ;(function animateRing() {
+    rx += (mx - rx) * 0.11
+    ry += (my - ry) * 0.11
+    gsap.set(ring, { x: rx, y: ry })
+    requestAnimationFrame(animateRing)
+  })()
+
+  document.querySelectorAll('a, button, .membresia-card, .btn-primary, .btn-secondary').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'))
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'))
+  })
+
+  document.addEventListener('mouseleave', () => gsap.to([dot, ring], { opacity: 0, duration: 0.3 }))
+  document.addEventListener('mouseenter', () => gsap.to([dot, ring], { opacity: 1, duration: 0.3 }))
+}
+
+// ── Magnetic buttons ──
+function initMagnetic() {
+  const isTouch = window.matchMedia('(hover: none)').matches
+  if (isTouch) return
+
+  document.querySelectorAll<HTMLElement>('.btn-primary, .btn-secondary, .footer-cta-band .btn-primary').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const r = btn.getBoundingClientRect()
+      const x = (e.clientX - r.left - r.width  / 2)
+      const y = (e.clientY - r.top  - r.height / 2)
+      gsap.to(btn, { x: x * 0.28, y: y * 0.28, duration: 0.4, ease: 'power2.out' })
+    })
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.65, ease: 'elastic.out(1, 0.45)' })
+    })
+  })
+}
+
+// ── Partículas flotantes ──
+function initParticles() {
+  const container = document.querySelector<HTMLElement>('.hero-particles')
+  if (!container) return
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div')
+    p.className = 'particle'
+    p.style.setProperty('--dur',   `${7 + Math.random() * 9}s`)
+    p.style.setProperty('--del',   `${Math.random() * 10}s`)
+    p.style.setProperty('--drift', `${(Math.random() - 0.5) * 120}px`)
+    p.style.left   = `${Math.random() * 100}%`
+    p.style.width  = `${2 + Math.random() * 3}px`
+    p.style.height = p.style.width
+    p.style.opacity = String(0.2 + Math.random() * 0.4)
+    container.appendChild(p)
+  }
+}
+
 // ── Init all ──
 function init() {
+  initLoader()
+  initParticles()
+  initCursor()
+
   splitWords()
   ScrollTrigger.refresh()
 
@@ -265,6 +370,8 @@ function init() {
   initHorizontalScroll()
   initStepLine()
   initWhyItems()
+  initScrollProgress()
+  initMagnetic()
 }
 
 if (document.readyState === 'loading') {

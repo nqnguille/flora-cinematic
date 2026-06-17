@@ -829,3 +829,130 @@ body::after {
   .footer-grid { grid-template-columns: 1fr; gap: 40px; padding: 48px 20px; }
   .footer-bottom { flex-direction: column; gap: 8px; padding: 20px; text-align: center; }
 }
+
+/* ═══════════════════════════════════════════════
+   EFECTOS PREMIUM
+═══════════════════════════════════════════════ */
+
+/* ── Page loader ── */
+.page-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--dark);
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+}
+
+.loader-logo {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--cream);
+  opacity: 0;
+  transform: translateY(16px);
+  letter-spacing: 0.02em;
+}
+
+.loader-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--green);
+  width: 0%;
+}
+
+/* ── Scroll progress bar ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--green);
+  z-index: 99998;
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0.8;
+}
+
+/* ── Custom cursor (desktop only) ── */
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  a, button, [role="button"] { cursor: none; }
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100000;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s ease, height 0.25s ease, background 0.25s ease, opacity 0.3s ease;
+  will-change: transform;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(113, 206, 106, 0.45);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease, border-color 0.25s ease;
+  will-change: transform;
+}
+
+/* Estado hover sobre interactivos */
+body.cursor-hover .cursor-dot {
+  width: 52px;
+  height: 52px;
+  background: rgba(113, 206, 106, 0.12);
+  border: 1.5px solid rgba(113, 206, 106, 0.5);
+}
+
+body.cursor-hover .cursor-ring {
+  opacity: 0;
+}
+
+@media (max-width: 768px), (hover: none) {
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+/* ── Partículas flotantes en el hero ── */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--green);
+  border-radius: 50%;
+  bottom: -10px;
+  opacity: 0;
+  animation: float-particle var(--dur, 9s) ease-in-out infinite;
+  animation-delay: var(--del, 0s);
+}
+
+@keyframes float-particle {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  8%   { opacity: 0.55; }
+  85%  { opacity: 0.3; }
+  100% { transform: translateY(-105vh) translateX(var(--drift, 30px)) scale(0.4); opacity: 0; }
+}

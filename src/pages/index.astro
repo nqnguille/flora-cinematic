@@ -88,6 +88,16 @@ const steps = [
 ---
 
 <Layout>
+
+  <!-- Page loader -->
+  <div class="page-loader" aria-hidden="true">
+    <span class="loader-logo">Flora</span>
+    <div class="loader-progress"></div>
+  </div>
+
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress" aria-hidden="true"></div>
+
   <!-- ══════════════════════════════════════════ -->
   <!-- HERO                                       -->
   <!-- ══════════════════════════════════════════ -->
@@ -100,6 +110,9 @@ const steps = [
         fetchpriority="high"
       />
     </div>
+
+    <!-- Partículas flotantes -->
+    <div class="hero-particles" aria-hidden="true"></div>
 
     <div class="hero-content">
       <span class="hero-badge">Cannabis medicinal · Argentina · Ley 27.350</span>
