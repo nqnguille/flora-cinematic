@@ -1173,6 +1173,137 @@ body::after {
 }
 
 /* ═══════════════════════════════════════════════
+   LEGALIDAD — Marco legal
+═══════════════════════════════════════════════ */
+.legal-section {
+  background: var(--bone-2);
+  color: var(--ink);
+  padding: clamp(80px, 12vw, 160px) clamp(24px, 6vw, 96px);
+}
+.legal-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.legal-head { max-width: 640px; margin-bottom: clamp(48px, 6vw, 80px); }
+.legal-head .section-title {
+  margin: 18px 0 22px;
+}
+.legal-lead {
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.6;
+  color: rgba(21, 35, 24, 0.65);
+  max-width: 52ch;
+}
+
+.legal-body {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: clamp(40px, 6vw, 80px);
+  align-items: start;
+}
+
+.legal-list {
+  display: grid;
+  gap: 0;
+}
+.legal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: clamp(20px, 2.4vw, 28px) 0;
+  border-top: 1px solid rgba(21, 35, 24, 0.12);
+}
+.legal-item:last-child { border-bottom: 1px solid rgba(21, 35, 24, 0.12); }
+.legal-check {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--leaf);
+  color: var(--ink);
+  margin-top: 2px;
+}
+.legal-item-text h3 {
+  font-family: var(--font-ui);
+  font-size: clamp(16px, 1.9vw, 19px);
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.legal-item-text p {
+  font-family: var(--font-ui);
+  font-size: clamp(14px, 1.5vw, 15px);
+  line-height: 1.55;
+  color: rgba(21, 35, 24, 0.6);
+  max-width: 46ch;
+}
+
+.legal-aside {
+  background: var(--ink);
+  color: var(--bone);
+  border-radius: 12px;
+  padding: clamp(28px, 3vw, 40px);
+  position: sticky;
+  top: 96px;
+}
+.legal-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(244, 241, 230, 0.14);
+}
+.legal-badge-mark {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(113, 206, 106, 0.14);
+  color: var(--leaf);
+}
+.legal-badge-eyebrow {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(244, 241, 230, 0.45);
+  margin-bottom: 3px;
+}
+.legal-badge-name {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 18px; font-weight: 700;
+  color: var(--bone);
+  letter-spacing: 0.02em;
+}
+.legal-aside-text {
+  font-family: var(--font-ui);
+  font-size: clamp(14px, 1.5vw, 15px);
+  line-height: 1.6;
+  color: rgba(244, 241, 230, 0.7);
+  margin-bottom: 24px;
+}
+.legal-aside-cta {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-ui);
+  font-size: 14px; font-weight: 700;
+  color: var(--leaf);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.legal-aside-cta:hover { color: var(--leaf-2); border-color: var(--leaf-2); }
+
+@media (max-width: 880px) {
+  .legal-body { grid-template-columns: 1fr; }
+  .legal-aside { position: static; }
+}
+
+/* ═══════════════════════════════════════════════
    PROGRAMA — Espacio libre de prejuicios (YouTube)
 ═══════════════════════════════════════════════ */
 .programa-section {

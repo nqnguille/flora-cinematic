@@ -6,6 +6,27 @@ const WA = 'https://wa.me/5492996375723'
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
+const waLegal = `${WA}?text=Hola%20Flora%2C%20tengo%20una%20consulta%20sobre%20mi%20situaci%C3%B3n%20legal%20(Ley%2027.350%20%2F%20REPROCANN).%20%C2%BFMe%20orientan%3F`
+
+// Marco legal — pilares verificables (Ley 27.350 / REPROCANN)
+const legales = [
+  {
+    titulo: 'Ley 27.350 vigente',
+    desc: 'El marco nacional que regula el acceso al cannabis con fines medicinales en Argentina.',
+  },
+  {
+    titulo: 'Cada asociado, con REPROCANN',
+    desc: 'El cultivo se ampara en la inscripción de cada socio en el registro del programa.',
+  },
+  {
+    titulo: 'Asociación civil, sin compraventa',
+    desc: 'Te sumás como socio del club de cultivo compartido. El acceso es por membresía, no por venta.',
+  },
+  {
+    titulo: 'Decreto 883/2020',
+    desc: 'Reglamenta el autocultivo y el cultivo solidario entre personas asociadas.',
+  },
+]
 
 const memberships = [
   {
@@ -122,6 +143,7 @@ const episodes = [
       <li><a href="#flora">Por qué Flora</a></li>
       <li><a href="#membresias">Membresías</a></li>
       <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#legalidad">Legalidad</a></li>
       <li><a href="#programa">Programa</a></li>
       <li>
         <a href={waAsociarse} class="nav-cta" target="_blank" rel="noopener noreferrer">
@@ -155,6 +177,7 @@ const episodes = [
         <li><a href="#flora">Por qué Flora</a></li>
         <li><a href="#membresias">Membresías</a></li>
         <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
         <li>
           <a href={waAsociarse} class="drawer-cta" target="_blank" rel="noopener noreferrer">
@@ -426,6 +449,63 @@ const episodes = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- LEGALIDAD — Marco legal                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="legal-section" id="legalidad" aria-label="Marco legal">
+    <div class="legal-inner">
+
+      <div class="legal-head">
+        <span class="section-label on-light">Marco legal</span>
+        <h2 class="section-title split-words">Operamos dentro<br><em>de la ley.</em></h2>
+        <p class="legal-lead">
+          Flora es una asociación civil de cultivo compartido. El acceso es como socio,
+          dentro de la Ley 27.350 y el marco REPROCANN. Con todo por escrito.
+        </p>
+      </div>
+
+      <div class="legal-body">
+        <ul class="legal-list" role="list">
+          {legales.map((l) => (
+            <li class="legal-item fade-in" role="listitem">
+              <span class="legal-check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              <div class="legal-item-text">
+                <h3>{l.titulo}</h3>
+                <p>{l.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <aside class="legal-aside fade-in" aria-label="Registro y consulta">
+          <div class="legal-badge">
+            <span class="legal-badge-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+            </span>
+            <div>
+              <span class="legal-badge-eyebrow">Registro habilitado</span>
+              <span class="legal-badge-name">REPROCANN</span>
+            </div>
+          </div>
+          <p class="legal-aside-text">
+            ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
+            con una persona del equipo.
+          </p>
+          <a class="legal-aside-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
+            Consultar por WhatsApp →
+          </a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
   <!-- ══════════════════════════════════════════ -->
   <section class="programa-section" id="programa" aria-label="Programa Espacio libre de prejuicios">
@@ -504,6 +584,7 @@ const episodes = [
           <li><a href="#flora">Por qué Flora</a></li>
           <li><a href="#membresias">Membresías</a></li>
           <li><a href="#como-funciona">Cómo funciona</a></li>
+          <li><a href="#legalidad">Legalidad</a></li>
         </ul>
       </nav>
 

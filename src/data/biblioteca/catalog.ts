@@ -171,10 +171,11 @@ export const modules: ModuleEntry[] = [
     id: 'legalidad',
     name: 'Legalidad',
     desc: 'Marco legal explicado: Ley 27.350, REPROCANN, sin compraventa. Genera confianza.',
-    status: 'reciclar',
+    status: 'activo',
     variants: [
       { version: 'flora-v3', file: 'components/sections/Legalidad.tsx' },
       { version: 'flora-v4', file: 'components/sections/Legalidad.tsx', note: 'versión pulida' },
+      { version: 'flora-cinematic', file: 'index.astro · .legal-section', note: 'reciclado, checklist + badge REPROCANN' },
     ],
   },
   {
