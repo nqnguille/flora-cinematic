@@ -572,6 +572,44 @@ function initMobileDrawer() {
 }
 
 // ── Init all ──
+// ── Productos: selector de formato (tabs) ──
+function initProductTabs() {
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.prod-tab'))
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('.prod-panel'))
+  if (!tabs.length) return
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab
+      tabs.forEach(t => {
+        const active = t === tab
+        t.classList.toggle('is-active', active)
+        t.setAttribute('aria-selected', active ? 'true' : 'false')
+      })
+      panels.forEach(p => {
+        const show = p.dataset.panel === target
+        p.classList.toggle('is-active', show)
+        p.hidden = !show
+      })
+      ScrollTrigger.refresh()
+    })
+  })
+}
+
+// ── WhatsApp flotante: oculto en el hero, aparece al pasarlo ──
+function initWhatsAppFloat() {
+  const float = document.querySelector<HTMLElement>('.wa-float')
+  const hero = document.querySelector<HTMLElement>('.hero')
+  if (!float || !hero) return
+
+  ScrollTrigger.create({
+    trigger: hero,
+    start: 'bottom 80%',
+    onEnter: () => float.classList.add('is-visible'),
+    onLeaveBack: () => float.classList.remove('is-visible'),
+  })
+}
+
 function init() {
   initLoader()
   initNav()
@@ -597,6 +635,8 @@ function init() {
   initFadeIn()
   initScrollProgress()
   initMagnetic()
+  initProductTabs()
+  initWhatsAppFloat()
 }
 
 if (document.readyState === 'loading') {

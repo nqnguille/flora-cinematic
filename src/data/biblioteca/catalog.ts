@@ -192,18 +192,20 @@ export const modules: ModuleEntry[] = [
     id: 'perfiles',
     name: 'Perfiles',
     desc: 'Tipos de asociado / casos de uso. Ayuda a que cada persona se identifique.',
-    status: 'reciclar',
+    status: 'activo',
     variants: [
       { version: 'flora-v2', file: 'components/sections/Perfiles.tsx' },
+      { version: 'flora-cinematic', file: 'index.astro · .perfiles-section', note: 'reciclado, ¿Por qué llegaste a Flora? 3 abordajes' },
     ],
   },
   {
     id: 'productos',
     name: 'Productos',
     desc: 'Genéticas / variedades disponibles, con su documentación por lote.',
-    status: 'reciclar',
+    status: 'activo',
     variants: [
       { version: 'flora-v2', file: 'components/sections/Productos.tsx' },
+      { version: 'flora-cinematic', file: 'index.astro · .productos-section', note: 'reciclado, tabs Flores/Aceites/Crema; Flores→#membresias' },
     ],
   },
   {
@@ -271,10 +273,11 @@ export const modules: ModuleEntry[] = [
     id: 'whatsapp-float',
     name: 'WhatsApp flotante',
     desc: 'Botón flotante de WhatsApp siempre visible. Canal de conversión directo.',
-    status: 'reciclar',
+    status: 'activo',
     variants: [
       { version: 'flora-ong', file: 'components/layout/WhatsAppFloat.tsx' },
       { version: 'flora-v2', file: 'components/layout/WhatsAppFloat.tsx' },
+      { version: 'flora-cinematic', file: 'index.astro · .wa-float', note: 'reciclado, oculto en hero, aparece al pasar el hero' },
     ],
   },
   {

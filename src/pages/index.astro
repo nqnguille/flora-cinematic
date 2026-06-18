@@ -3,6 +3,71 @@ import Layout from '../layouts/Layout.astro'
 import '../styles/global.css'
 
 const WA = 'https://wa.me/5492996375723'
+const wa = (t: string) => `${WA}?text=${encodeURIComponent(t)}`
+
+// ¿Por qué llegaste a Flora? — abordajes por necesidad
+const perfiles = [
+  {
+    tag: 'Dolor & inflamación',
+    title: 'Para quienes buscan una alternativa real.',
+    desc: 'Variedades con alto CBD y terpenos antiinflamatorios como el beta-cariofileno. Para dolor crónico, articular o muscular que no encuentra respuesta en la medicina convencional.',
+    cta: 'Hablar sobre dolor',
+    href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
+  },
+  {
+    tag: 'Sueño & descanso',
+    title: 'Para quienes no logran descansar de verdad.',
+    desc: 'Genéticas indica-dominantes seleccionadas por su perfil sedante. Mirceno alto, THC balanceado. Para el insomnio, el sueño interrumpido y la mente que no para.',
+    cta: 'Hablar sobre sueño',
+    href: wa('Hola Flora, me interesa el club para mejorar mi sueño 🌿'),
+  },
+  {
+    tag: 'Bienestar & ansiedad',
+    title: 'Para quienes buscan equilibrio en el día a día.',
+    desc: 'Variedades CBD:THC balanceadas para uso diurno. Sin sedación ni niebla mental. Para la ansiedad, el estrés cotidiano y el bienestar como práctica continua.',
+    cta: 'Hablar sobre bienestar',
+    href: wa('Hola Flora, me interesa el club para bienestar y ansiedad 🌿'),
+  },
+]
+
+// Nuestros productos — 3 formatos (Flores / Aceites / Crema)
+const aceites = [
+  {
+    codigo: 'Q1',
+    sub: 'Entrada al tratamiento',
+    desc: 'Concentración baja, ideal para quienes empiezan. Suave, predecible y fácil de dosificar. El primer paso con respaldo del equipo.',
+    usos: ['Inicio de tratamiento', 'Ansiedad leve', 'Bienestar general'],
+    href: wa('Hola Flora, me interesa el aceite Q1 🌿'),
+  },
+  {
+    codigo: 'Q2',
+    sub: 'El equilibrado',
+    desc: 'Fórmula balanceada para uso continuo. Acompaña el día y la noche. Elegido por quienes ya tienen su tratamiento calibrado.',
+    usos: ['Uso diurno y nocturno', 'Dolor moderado', 'Insomnio'],
+    href: wa('Hola Flora, me interesa el aceite Q2 🌿'),
+  },
+  {
+    codigo: 'Q3',
+    sub: 'Alta concentración',
+    desc: 'Para tratamientos establecidos y condiciones complejas. Máxima potencia, formulación precisa. Con acompañamiento del equipo.',
+    usos: ['Dolor crónico', 'Condiciones complejas', 'Uso nocturno intensivo'],
+    href: wa('Hola Flora, me interesa el aceite Q3 🌿'),
+  },
+]
+const cremas = [
+  {
+    presentacion: '50 cc',
+    sub: 'Presentación personal',
+    desc: 'Para uso localizado y tratamientos puntuales. Fácil de llevar, ideal para incorporar la fórmula.',
+    href: wa('Hola Flora, me interesa la crema 50cc 🌿'),
+  },
+  {
+    presentacion: '100 cc',
+    sub: 'Presentación completa',
+    desc: 'Para uso continuo y zonas de mayor extensión. La opción de quienes ya sumaron la crema a su rutina.',
+    href: wa('Hola Flora, me interesa la crema 100cc 🌿'),
+  },
+]
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
@@ -139,10 +204,10 @@ const episodes = [
 
     <!-- Desktop links -->
     <ul class="nav-links" role="list">
-      <li><a href="#nosotros">Nosotros</a></li>
       <li><a href="#flora">Por qué Flora</a></li>
+      <li><a href="#perfiles">Para qué</a></li>
       <li><a href="#membresias">Membresías</a></li>
-      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#productos">Productos</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li><a href="#programa">Programa</a></li>
       <li>
@@ -175,7 +240,9 @@ const episodes = [
       <ul role="list">
         <li><a href="#nosotros">Nosotros</a></li>
         <li><a href="#flora">Por qué Flora</a></li>
+        <li><a href="#perfiles">Para qué sirve</a></li>
         <li><a href="#membresias">Membresías</a></li>
+        <li><a href="#productos">Productos</a></li>
         <li><a href="#como-funciona">Cómo funciona</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
@@ -368,6 +435,34 @@ const episodes = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- PERFILES — ¿Por qué llegaste a Flora?      -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="perfiles-section" id="perfiles" aria-label="Por qué llegaste a Flora">
+    <div class="perfiles-inner">
+      <div class="perfiles-head">
+        <h2 class="split-words">¿Por qué llegaste<br><em>a Flora?</em></h2>
+        <p class="perfiles-lead">
+          El cannabis medicinal no es una sola cosa. El equipo orienta el camino
+          según tu situación. Decinos qué te trae y avanzamos desde ahí.
+        </p>
+      </div>
+
+      <div class="perfiles-grid" role="list">
+        {perfiles.map((p) => (
+          <article class="perfil-card fade-in" role="listitem">
+            <span class="perfil-tag">{p.tag}</span>
+            <h3 class="perfil-title">{p.title}</h3>
+            <p class="perfil-desc">{p.desc}</p>
+            <a class="perfil-cta" href={p.href} target="_blank" rel="noopener noreferrer">
+              {p.cta} <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- MEMBRESÍAS — HORIZONTAL SCROLL             -->
   <!-- ══════════════════════════════════════════ -->
   <section class="horizontal-section" id="membresias" aria-label="Membresías">
@@ -444,6 +539,100 @@ const episodes = [
           </li>
         ))}
       </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- PRODUCTOS — Flores / Aceites / Crema       -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="productos-section" id="productos" aria-label="Nuestros productos">
+    <div class="productos-inner">
+      <div class="productos-head">
+        <span class="section-label on-dark">Nuestros productos</span>
+        <h2 class="split-words">Tres formas<br><em>de acceder.</em></h2>
+        <p class="productos-lead">
+          Flor de cultivo propio, aceites sublinguales y crema tópica. Todo con
+          trazabilidad por lote y el acompañamiento del equipo.
+        </p>
+      </div>
+
+      <!-- Selector de formato -->
+      <div class="prod-tabs" role="tablist" aria-label="Formatos disponibles">
+        <button class="prod-tab is-active" role="tab" aria-selected="true" data-tab="flores">
+          <span class="prod-tab-name">Flores</span>
+          <span class="prod-tab-sub">Membresía mensual</span>
+        </button>
+        <button class="prod-tab" role="tab" aria-selected="false" data-tab="aceites">
+          <span class="prod-tab-name">Aceites</span>
+          <span class="prod-tab-sub">Q1 · Q2 · Q3</span>
+        </button>
+        <button class="prod-tab" role="tab" aria-selected="false" data-tab="cremas">
+          <span class="prod-tab-name">Crema</span>
+          <span class="prod-tab-sub">50cc · 100cc</span>
+        </button>
+      </div>
+
+      <!-- Panel: Flores -->
+      <div class="prod-panel is-active" role="tabpanel" data-panel="flores">
+        <p class="prod-panel-lead">
+          Flor seca de cultivo propio. Cada lote con perfil completo de cannabinoides
+          y terpenos. Se accede por membresía mensual, sin contratos.
+        </p>
+        <div class="prod-flores-cta">
+          <div>
+            <span class="prod-flores-eyebrow">Cuatro planes</span>
+            <p class="prod-flores-text">Semilla 10g · Raíz 20g · Cosecha 30g · Tierra 40g por mes.</p>
+          </div>
+          <a class="prod-link" href="#membresias">Ver planes de flores ↓</a>
+        </div>
+      </div>
+
+      <!-- Panel: Aceites -->
+      <div class="prod-panel" role="tabpanel" data-panel="aceites" hidden>
+        <p class="prod-panel-lead">
+          Extractos sublinguales de producción propia. Tres formulaciones con distintas
+          relaciones CBD:THC, cada una pensada para una etapa del tratamiento.
+        </p>
+        <div class="prod-cards">
+          {aceites.map((a) => (
+            <article class="prod-card">
+              <span class="prod-card-eyebrow">Aceite medicinal</span>
+              <span class="prod-card-big">{a.codigo}</span>
+              <span class="prod-card-sub">{a.sub}</span>
+              <p class="prod-card-desc">{a.desc}</p>
+              <div class="prod-tags">
+                {a.usos.map((u) => <span class="prod-tag-pill">{u}</span>)}
+              </div>
+              <a class="prod-card-cta" href={a.href} target="_blank" rel="noopener noreferrer">
+                Consultar {a.codigo} →
+              </a>
+            </article>
+          ))}
+        </div>
+        <p class="prod-foot">Concentraciones y disponibilidad por consulta. El equipo orienta la elección.</p>
+      </div>
+
+      <!-- Panel: Crema -->
+      <div class="prod-panel" role="tabpanel" data-panel="cremas" hidden>
+        <p class="prod-panel-lead">
+          Formulación tópica antiinflamatoria de uso externo. Una fórmula, dos
+          presentaciones. Para dolor localizado, articulaciones y recuperación muscular.
+        </p>
+        <div class="prod-cards prod-cards-2">
+          {cremas.map((c) => (
+            <article class="prod-card">
+              <span class="prod-card-eyebrow">Presentación</span>
+              <span class="prod-card-big">{c.presentacion}</span>
+              <span class="prod-card-sub">{c.sub}</span>
+              <p class="prod-card-desc">{c.desc}</p>
+              <a class="prod-card-cta" href={c.href} target="_blank" rel="noopener noreferrer">
+                Consultar {c.presentacion} →
+              </a>
+            </article>
+          ))}
+        </div>
+        <p class="prod-foot">Uso externo. No requiere REPROCANN. Disponibilidad por consulta.</p>
       </div>
     </div>
   </section>
@@ -582,7 +771,9 @@ const episodes = [
         <ul>
           <li><a href="#nosotros">Nosotros</a></li>
           <li><a href="#flora">Por qué Flora</a></li>
+          <li><a href="#perfiles">Para qué sirve</a></li>
           <li><a href="#membresias">Membresías</a></li>
+          <li><a href="#productos">Productos</a></li>
           <li><a href="#como-funciona">Cómo funciona</a></li>
           <li><a href="#legalidad">Legalidad</a></li>
         </ul>
@@ -604,4 +795,17 @@ const episodes = [
       <p>Cultivamos conciencia</p>
     </div>
   </footer>
+
+  <!-- WhatsApp flotante — oculto en el hero, aparece al navegar -->
+  <a
+    class="wa-float"
+    href={waAsociarse}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Escribinos por WhatsApp"
+  >
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+      <path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.477-.911zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+    </svg>
+  </a>
 </Layout>

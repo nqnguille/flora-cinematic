@@ -1173,6 +1173,217 @@ body::after {
 }
 
 /* ═══════════════════════════════════════════════
+   PERFILES — ¿Por qué llegaste a Flora?
+═══════════════════════════════════════════════ */
+.perfiles-section {
+  background: var(--ink);
+  color: var(--bone);
+  padding: clamp(80px, 12vw, 160px) clamp(24px, 6vw, 96px);
+}
+.perfiles-inner { max-width: 1200px; margin: 0 auto; }
+.perfiles-head {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: clamp(36px, 4vw, 56px);
+  margin-bottom: clamp(36px, 4vw, 56px);
+  border-bottom: 1px solid rgba(244, 241, 230, 0.12);
+}
+.perfiles-head h2 {
+  font-family: var(--font-display); font-weight: 300;
+  font-size: clamp(38px, 6vw, 72px); line-height: 0.98;
+  letter-spacing: -0.02em; color: var(--bone);
+}
+.perfiles-head h2 em { color: var(--leaf); font-style: italic; }
+.perfiles-lead {
+  font-family: var(--font-ui); font-size: clamp(15px, 1.7vw, 17px);
+  line-height: 1.6; color: rgba(244, 241, 230, 0.55); max-width: 56ch;
+}
+@media (min-width: 768px) {
+  .perfiles-head { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  .perfiles-lead { max-width: 34ch; text-align: right; }
+}
+.perfiles-grid {
+  display: grid; gap: clamp(16px, 2vw, 24px);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.perfil-card {
+  display: flex; flex-direction: column;
+  border: 1px solid rgba(244, 241, 230, 0.12);
+  border-radius: 16px;
+  padding: clamp(28px, 3vw, 40px);
+  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+}
+.perfil-card:hover {
+  border-color: rgba(113, 206, 106, 0.45);
+  background: rgba(113, 206, 106, 0.04);
+  transform: translateY(-4px);
+}
+.perfil-tag {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--leaf);
+  margin-bottom: 18px;
+}
+.perfil-title {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 27px); line-height: 1.12;
+  color: var(--bone); margin-bottom: 16px;
+}
+.perfil-desc {
+  font-family: var(--font-ui); font-size: 14px; line-height: 1.6;
+  color: rgba(244, 241, 230, 0.55); flex: 1; margin-bottom: 28px;
+}
+.perfil-cta {
+  font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+  color: var(--leaf); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+.perfil-cta:hover { gap: 12px; color: var(--leaf-2); }
+
+/* ═══════════════════════════════════════════════
+   PRODUCTOS — Flores / Aceites / Crema
+═══════════════════════════════════════════════ */
+.productos-section {
+  background: var(--ink-2);
+  color: var(--bone);
+  padding: clamp(80px, 12vw, 160px) clamp(24px, 6vw, 96px);
+}
+.productos-inner { max-width: 1200px; margin: 0 auto; }
+.productos-head { max-width: 640px; margin-bottom: clamp(36px, 4vw, 56px); }
+.productos-head h2 {
+  font-family: var(--font-display); font-weight: 300;
+  font-size: clamp(38px, 6vw, 72px); line-height: 0.98;
+  letter-spacing: -0.02em; color: var(--bone); margin: 18px 0 22px;
+}
+.productos-head h2 em { color: var(--leaf); font-style: italic; }
+.productos-lead {
+  font-family: var(--font-ui); font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.6; color: rgba(244, 241, 230, 0.6); max-width: 50ch;
+}
+
+.prod-tabs {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 1.2vw, 14px);
+  margin-bottom: clamp(32px, 4vw, 48px);
+}
+.prod-tab {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: clamp(16px, 2vw, 24px);
+  background: transparent;
+  border: 1px solid rgba(244, 241, 230, 0.14);
+  border-radius: 12px;
+  cursor: pointer; text-align: left;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.prod-tab:hover { border-color: rgba(113, 206, 106, 0.4); }
+.prod-tab.is-active {
+  border-color: var(--leaf);
+  background: rgba(113, 206, 106, 0.08);
+}
+.prod-tab-name {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(22px, 3vw, 32px); line-height: 1; color: var(--bone);
+}
+.prod-tab.is-active .prod-tab-name { color: var(--leaf); }
+.prod-tab-sub {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; color: rgba(244, 241, 230, 0.4);
+}
+
+.prod-panel { animation: prodFade 0.35s ease; }
+.prod-panel[hidden] { display: none; }
+@keyframes prodFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.prod-panel-lead {
+  font-family: var(--font-ui); font-size: clamp(14px, 1.6vw, 16px);
+  line-height: 1.65; color: rgba(244, 241, 230, 0.55);
+  max-width: 60ch; margin-bottom: clamp(28px, 3vw, 40px);
+}
+
+.prod-flores-cta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 20px;
+  border: 1px solid rgba(244, 241, 230, 0.12);
+  border-radius: 16px; padding: clamp(28px, 3vw, 40px);
+}
+.prod-flores-eyebrow {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--leaf);
+  display: block; margin-bottom: 8px;
+}
+.prod-flores-text {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(18px, 2.2vw, 24px); color: var(--bone); line-height: 1.3;
+}
+.prod-link {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center;
+  height: 48px; padding: 0 24px; border-radius: 4px;
+  background: var(--leaf); color: var(--ink);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+  text-decoration: none; transition: background 0.2s ease;
+}
+.prod-link:hover { background: var(--leaf-2); }
+
+.prod-cards {
+  display: grid; gap: clamp(16px, 2vw, 20px);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.prod-cards-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 340px)); }
+.prod-card {
+  display: flex; flex-direction: column;
+  border: 1px solid rgba(244, 241, 230, 0.12);
+  border-radius: 16px; padding: clamp(26px, 3vw, 36px);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+.prod-card:hover {
+  border-color: rgba(113, 206, 106, 0.4);
+  background: rgba(113, 206, 106, 0.04);
+}
+.prod-card-eyebrow {
+  font-family: var(--font-ui); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(244, 241, 230, 0.4); margin-bottom: 14px;
+}
+.prod-card-big {
+  font-family: var(--font-display); font-weight: 300;
+  font-size: clamp(48px, 7vw, 72px); line-height: 0.9;
+  color: var(--bone); margin-bottom: 6px;
+}
+.prod-card-sub {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+  color: var(--leaf); margin-bottom: 18px;
+}
+.prod-card-desc {
+  font-family: var(--font-ui); font-size: 14px; line-height: 1.6;
+  color: rgba(244, 241, 230, 0.55); flex: 1; margin-bottom: 22px;
+}
+.prod-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+.prod-tag-pill {
+  font-family: var(--font-ui); font-size: 12px;
+  color: rgba(244, 241, 230, 0.5);
+  border: 1px solid rgba(244, 241, 230, 0.14);
+  padding: 5px 12px; border-radius: 999px;
+}
+.prod-card-cta {
+  text-align: center;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+  padding: 12px; border-radius: 999px;
+  background: rgba(113, 206, 106, 0.1); color: var(--leaf);
+  border: 1px solid rgba(113, 206, 106, 0.22);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.prod-card-cta:hover {
+  background: var(--leaf); color: var(--ink); border-color: var(--leaf);
+}
+.prod-foot {
+  font-family: var(--font-ui); font-size: 13px;
+  color: rgba(244, 241, 230, 0.35);
+  margin-top: clamp(24px, 3vw, 32px);
+}
+
+/* ═══════════════════════════════════════════════
    LEGALIDAD — Marco legal
 ═══════════════════════════════════════════════ */
 .legal-section {
@@ -1748,4 +1959,45 @@ body.cursor-hover .cursor-ring {
 .drawer-cta:hover {
   background: var(--leaf-2);
   color: var(--ink) !important;
+}
+
+/* ═══════════════════════════════════════════════
+   WHATSAPP FLOTANTE — oculto en hero, aparece al navegar
+═══════════════════════════════════════════════ */
+.wa-float {
+  position: fixed;
+  bottom: clamp(18px, 3vw, 28px);
+  right: clamp(18px, 3vw, 28px);
+  z-index: 9000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  /* Estado base: oculto (el hero no lo muestra) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px) scale(0.85);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease, box-shadow 0.2s ease;
+}
+.wa-float.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+.wa-float:hover {
+  box-shadow: 0 14px 38px rgba(37, 211, 102, 0.45);
+  transform: scale(1.06);
+}
+.wa-float svg { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-float { transition: opacity 0.2s ease, visibility 0.2s ease; transform: none; }
+  .wa-float.is-visible { transform: none; }
 }
