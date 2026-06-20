@@ -196,12 +196,12 @@ const episodes = [
   { id: '69kQ-XoVmuU', title: 'Ansiedad y estrés', dur: '29:41' },
 ]
 
-// Instagram — slider en vivo. El feed lo sirve el Worker flora-ig-feed
-// (Graph API + KV + cron que refresca el token solo). Si la API no responde,
-// se muestran estas tarjetas de respaldo y el botón al perfil.
+// Instagram — slider en vivo. El feed lo sirve Behold (behold.so): JSON con
+// imágenes hosteadas estables + CORS, refresco automático del token. Si no
+// responde, se muestran estas tarjetas de respaldo y el botón al perfil.
 const igHandle = '@flora.cultivamosconciencia'
 const igProfile = 'https://www.instagram.com/flora.cultivamosconciencia/'
-const igFeedUrl = 'https://flora-ig-feed.nqnguille.workers.dev/'
+const igFeedUrl = 'https://feeds.behold.so/BdL7J34neXVcfDDQ3Qe2'
 const igFallback = [
   { caption: 'Efecto séquito: por qué la planta entera funciona mejor que un cannabinoide aislado.' },
   { caption: 'Cómo elegir tu aceite: quimiotipo, relación CBD:THC y para qué sirve cada uno.' },

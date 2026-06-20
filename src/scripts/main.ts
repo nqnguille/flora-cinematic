@@ -610,15 +610,18 @@ function initWhatsAppFloat() {
   })
 }
 
-// ── Instagram: slider en vivo (feed servido por el Worker flora-ig-feed) ──
+// ── Instagram: slider en vivo (feed JSON servido por Behold) ──
+interface IgSize { mediaUrl?: string }
 interface IgPost {
   id: string
   caption?: string
-  media_type?: string
-  media_url?: string
-  thumbnail_url?: string
+  prunedCaption?: string
+  mediaType?: string
+  mediaUrl?: string
+  thumbnailUrl?: string
   permalink: string
   timestamp?: string
+  sizes?: { small?: IgSize; medium?: IgSize; large?: IgSize; full?: IgSize }
 }
 
 function initInstagramFeed() {
@@ -671,10 +674,17 @@ function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
     s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
   const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' : s)
 
+  // Behold sirve imágenes estables (hop.behold.pictures) en `sizes`; se
+  // prefieren a la mediaUrl cruda de Instagram, que caduca.
+  const pickImg = (p: IgPost) =>
+    p.sizes?.medium?.mediaUrl || p.sizes?.large?.mediaUrl || p.sizes?.small?.mediaUrl ||
+    (p.mediaType === 'VIDEO' ? p.thumbnailUrl : p.mediaUrl) || p.thumbnailUrl || p.mediaUrl
+
   track.innerHTML = posts
     .map(p => {
-      const img = p.media_type === 'VIDEO' ? p.thumbnail_url || p.media_url : p.media_url
-      const cap = p.caption ? esc(clip(p.caption)) : 'Ver este posteo en Instagram.'
+      const img = pickImg(p)
+      const rawCap = p.prunedCaption || p.caption
+      const cap = rawCap ? esc(clip(rawCap)) : 'Ver este posteo en Instagram.'
       const media = img
         ? `<span class="ig-card-media"><img src="${esc(img)}" alt="" loading="lazy" /></span>`
         : `<span class="ig-card-media" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>`
