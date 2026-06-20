@@ -233,7 +233,19 @@ function initHorizontalScroll() {
 
     ScrollTrigger.refresh()
 
-    const getTotal = () => track.scrollWidth - window.innerWidth + 100
+    // Distancia a trasladar = overflow real del track respecto del ANCHO VISIBLE
+    // del wrapper (no del viewport). La sección tiene una columna de label a la
+    // izquierda, así que el área visible del slider es más angosta que la ventana;
+    // usar window.innerWidth dejaba la 4ª card (Tierra) fuera de pantalla.
+    const wrapper = track.parentElement as HTMLElement | null
+    const getTotal = () => {
+      const last = cards[cards.length - 1]
+      if (!last || !wrapper) return 0
+      const x = (gsap.getProperty(track, 'x') as number) || 0
+      const lastRight = last.getBoundingClientRect().right - x // borde derecho sin transform
+      const wrapRight = wrapper.getBoundingClientRect().right
+      return Math.max(0, lastRight - wrapRight + 40)
+    }
 
     const tween = gsap.to(track, {
       x: () => -getTotal(),

@@ -10,7 +10,7 @@ const perfiles = [
   {
     tag: 'Dolor & inflamación',
     title: 'Para quienes buscan una alternativa real.',
-    desc: 'Variedades con alto CBD y terpenos antiinflamatorios como el beta-cariofileno. Para dolor crónico, articular o muscular que no encuentra respuesta en la medicina convencional.',
+    desc: 'Variedades con alto CBD y terpenos antiinflamatorios como el beta-cariofileno. Para acompañar el dolor crónico, articular o muscular en tu día a día.',
     cta: 'Hablar sobre dolor',
     href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
   },
@@ -115,7 +115,7 @@ const memberships = [
     name: 'Semilla',
     grams: '10',
     features: [
-      'Acceso mensual garantizado',
+      'Acceso mensual a tu parte del cultivo',
       'Variedad rotativa de temporada',
       'Cultivo propio, sin pesticidas',
       'Sin compraventa — marco Ley 27.350',
@@ -127,7 +127,7 @@ const memberships = [
     name: 'Raíz',
     grams: '20',
     features: [
-      'Acceso mensual garantizado',
+      'Acceso mensual a tu parte del cultivo',
       'Elección de variedad disponible',
       'Orientación para elegir tu variedad',
       'Acompañamiento por WhatsApp',
@@ -141,7 +141,7 @@ const memberships = [
     name: 'Cosecha',
     grams: '30',
     features: [
-      'Acceso mensual garantizado',
+      'Acceso mensual a tu parte del cultivo',
       'Prioridad en variedades nuevas',
       'Sesión de orientación inicial',
       'Acompañamiento directo del equipo',
@@ -154,7 +154,7 @@ const memberships = [
     name: 'Tierra',
     grams: '40',
     features: [
-      'Acceso mensual garantizado',
+      'Acceso mensual a tu parte del cultivo',
       'Acceso a todas las variedades del club',
       'Acceso a los aceites con cromatografía (Q1·Q2·Q3)',
       'Acompañamiento prioritario 24h',
@@ -235,11 +235,11 @@ const igFallback = [
 
     <!-- Desktop links -->
     <ul class="nav-links" role="list">
-      <li><a href="#flora">Por qué Flora</a></li>
       <li><a href="#perfiles">Para qué</a></li>
-      <li><a href="#membresias">Membresías</a></li>
+      <li><a href="#flora">Por qué Flora</a></li>
       <li><a href="#productos">Productos</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
+      <li><a href="#membresias">Membresías</a></li>
       <li><a href="#programa">Programa</a></li>
       <li>
         <a href={waAsociarse} class="nav-cta" target="_blank" rel="noopener noreferrer">
@@ -270,12 +270,12 @@ const igFallback = [
       </button>
       <ul role="list">
         <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#flora">Por qué Flora</a></li>
         <li><a href="#perfiles">Para qué sirve</a></li>
-        <li><a href="#membresias">Membresías</a></li>
+        <li><a href="#flora">Por qué Flora</a></li>
         <li><a href="#productos">Productos</a></li>
-        <li><a href="#como-funciona">Cómo funciona</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
+        <li><a href="#membresias">Membresías</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
         <li><a href="#programa">Programa</a></li>
         <li>
           <a href={waAsociarse} class="drawer-cta" target="_blank" rel="noopener noreferrer">
@@ -386,11 +386,39 @@ const igFallback = [
         <span class="stat-label">Alcance</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">100%</span>
-        <span class="stat-label">Legal</span>
+        <span class="stat-number">27.350</span>
+        <span class="stat-label">Ley nacional</span>
       </div>
     </div>
     <div class="stats-separator"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- PERFILES — ¿Por qué llegaste a Flora?      -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="perfiles-section" id="perfiles" aria-label="Por qué llegaste a Flora">
+    <div class="perfiles-inner">
+      <div class="perfiles-head">
+        <h2 class="split-words">¿Por qué llegaste<br><em>a Flora?</em></h2>
+        <p class="perfiles-lead">
+          El cannabis medicinal abarca muchos caminos. El equipo orienta el tuyo
+          según tu situación. Decinos qué te trae y avanzamos desde ahí.
+        </p>
+      </div>
+
+      <div class="perfiles-grid" role="list">
+        {perfiles.map((p) => (
+          <article class="perfil-card fade-in" role="listitem">
+            <span class="perfil-tag">{p.tag}</span>
+            <h3 class="perfil-title">{p.title}</h3>
+            <p class="perfil-desc">{p.desc}</p>
+            <a class="perfil-cta" href={p.href} target="_blank" rel="noopener noreferrer">
+              {p.cta} <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
   </section>
 
   <!-- ══════════════════════════════════════════ -->
@@ -405,7 +433,7 @@ const igFallback = [
           <h2 class="section-title split-words">Sabés lo que<br><em>recibís.</em></h2>
         </div>
         <p class="section-tagline">
-          Un club de cultivo no es un negocio. Es una forma legal de organizarse para acceder a lo que la ley ya permite.
+          Un club de cultivo es una forma legal de organizarse para acceder a lo que la ley ya permite.
         </p>
       </div>
 
@@ -461,115 +489,6 @@ const igFallback = [
           </div>
         </div>
 
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- PERFILES — ¿Por qué llegaste a Flora?      -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="perfiles-section" id="perfiles" aria-label="Por qué llegaste a Flora">
-    <div class="perfiles-inner">
-      <div class="perfiles-head">
-        <h2 class="split-words">¿Por qué llegaste<br><em>a Flora?</em></h2>
-        <p class="perfiles-lead">
-          El cannabis medicinal no es una sola cosa. El equipo orienta el camino
-          según tu situación. Decinos qué te trae y avanzamos desde ahí.
-        </p>
-      </div>
-
-      <div class="perfiles-grid" role="list">
-        {perfiles.map((p) => (
-          <article class="perfil-card fade-in" role="listitem">
-            <span class="perfil-tag">{p.tag}</span>
-            <h3 class="perfil-title">{p.title}</h3>
-            <p class="perfil-desc">{p.desc}</p>
-            <a class="perfil-cta" href={p.href} target="_blank" rel="noopener noreferrer">
-              {p.cta} <span aria-hidden="true">→</span>
-            </a>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- MEMBRESÍAS — HORIZONTAL SCROLL             -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="horizontal-section" id="membresias" aria-label="Membresías">
-    <div class="horizontal-inner">
-      <div class="horizontal-header">
-        <span class="section-label on-dark">Membresías</span>
-        <h2 class="split-words">Elegí cómo<br>acceder.</h2>
-        <div class="horizontal-scroll-hint" aria-hidden="true">
-          <span class="hint-arrow"></span>
-          <span>deslizá</span>
-        </div>
-      </div>
-
-      <div class="cards-track-wrapper" aria-label="Planes disponibles">
-        <div class="cards-track" role="list">
-          {memberships.map((m) => (
-            <div
-              class={m.featured ? 'membresia-card featured' : 'membresia-card'}
-              role="listitem"
-              aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
-            >
-              {m.badge && <span class="card-badge" aria-label="Plan más popular">{m.badge}</span>}
-              <h3 class="card-title">{m.name}</h3>
-              <div class="card-grams" aria-label={`${m.grams} gramos`}>
-                {m.grams}<span class="card-grams-unit">g</span>
-              </div>
-              <p class="card-unit">por mes · cultivo compartido</p>
-              <ul class="card-features" aria-label="Características incluidas">
-                {m.features.map((f) => <li>{f}</li>)}
-              </ul>
-              <a
-                href={m.waLink}
-                class="card-cta"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Consultar membresía ${m.name} por WhatsApp`}
-              >
-                Consultar por WhatsApp
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- CÓMO FUNCIONA                              -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="steps-section" id="como-funciona" aria-label="Cómo funciona">
-    <div class="steps-inner">
-
-      <div class="section-header">
-        <div>
-          <span class="section-label on-light">Proceso</span>
-          <h2 class="section-title split-words">Cuatro pasos.<br><em>Sin grises.</em></h2>
-        </div>
-      </div>
-
-      <div class="steps-list-wrap">
-        <div class="step-connector" aria-hidden="true">
-          <div class="step-line"></div>
-        </div>
-      <ol class="steps-list" aria-label="Pasos para asociarse">
-        {steps.map((step) => (
-          <li class="step-item">
-            <div class="step-num-wrap" aria-hidden="true">
-              <span class="step-num">{step.num}</span>
-            </div>
-            <div class="step-content">
-              <h3>{step.title}</h3>
-              <p>{step.desc}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
       </div>
     </div>
   </section>
@@ -734,6 +653,87 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- MEMBRESÍAS — HORIZONTAL SCROLL             -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="horizontal-section" id="membresias" aria-label="Membresías">
+    <div class="horizontal-inner">
+      <div class="horizontal-header">
+        <span class="section-label on-dark">Membresías</span>
+        <h2 class="split-words">Elegí cómo<br>acceder.</h2>
+        <div class="horizontal-scroll-hint" aria-hidden="true">
+          <span class="hint-arrow"></span>
+          <span>deslizá</span>
+        </div>
+      </div>
+
+      <div class="cards-track-wrapper" aria-label="Planes disponibles">
+        <div class="cards-track" role="list">
+          {memberships.map((m) => (
+            <div
+              class={m.featured ? 'membresia-card featured' : 'membresia-card'}
+              role="listitem"
+              aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
+            >
+              {m.badge && <span class="card-badge" aria-label="Plan más popular">{m.badge}</span>}
+              <h3 class="card-title">{m.name}</h3>
+              <div class="card-grams" aria-label={`${m.grams} gramos`}>
+                {m.grams}<span class="card-grams-unit">g</span>
+              </div>
+              <p class="card-unit">por mes · cultivo compartido</p>
+              <ul class="card-features" aria-label="Características incluidas">
+                {m.features.map((f) => <li>{f}</li>)}
+              </ul>
+              <a
+                href={m.waLink}
+                class="card-cta"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Consultar membresía ${m.name} por WhatsApp`}
+              >
+                Consultar por WhatsApp
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CÓMO FUNCIONA                              -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="steps-section" id="como-funciona" aria-label="Cómo funciona">
+    <div class="steps-inner">
+
+      <div class="section-header">
+        <div>
+          <span class="section-label on-light">Proceso</span>
+          <h2 class="section-title split-words">Cuatro pasos.<br><em>Sin grises.</em></h2>
+        </div>
+      </div>
+
+      <div class="steps-list-wrap">
+        <div class="step-connector" aria-hidden="true">
+          <div class="step-line"></div>
+        </div>
+      <ol class="steps-list" aria-label="Pasos para asociarse">
+        {steps.map((step) => (
+          <li class="step-item">
+            <div class="step-num-wrap" aria-hidden="true">
+              <span class="step-num">{step.num}</span>
+            </div>
+            <div class="step-content">
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
   <!-- ══════════════════════════════════════════ -->
   <section class="programa-section" id="programa" aria-label="Programa Espacio libre de prejuicios">
@@ -865,12 +865,12 @@ const igFallback = [
         <h5>Navegación</h5>
         <ul>
           <li><a href="#nosotros">Nosotros</a></li>
-          <li><a href="#flora">Por qué Flora</a></li>
           <li><a href="#perfiles">Para qué sirve</a></li>
-          <li><a href="#membresias">Membresías</a></li>
+          <li><a href="#flora">Por qué Flora</a></li>
           <li><a href="#productos">Productos</a></li>
-          <li><a href="#como-funciona">Cómo funciona</a></li>
           <li><a href="#legalidad">Legalidad</a></li>
+          <li><a href="#membresias">Membresías</a></li>
+          <li><a href="#como-funciona">Cómo funciona</a></li>
         </ul>
       </nav>
 
