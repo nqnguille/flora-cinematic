@@ -610,6 +610,87 @@ function initWhatsAppFloat() {
   })
 }
 
+// ── Instagram: slider en vivo (feed servido por el Worker flora-ig-feed) ──
+interface IgPost {
+  id: string
+  caption?: string
+  media_type?: string
+  media_url?: string
+  thumbnail_url?: string
+  permalink: string
+  timestamp?: string
+}
+
+function initInstagramFeed() {
+  const slider = document.querySelector<HTMLElement>('.ig-slider')
+  if (!slider) return
+  const track = slider.querySelector<HTMLElement>('.ig-track')
+  const prev = slider.querySelector<HTMLButtonElement>('.ig-prev')
+  const next = slider.querySelector<HTMLButtonElement>('.ig-next')
+  if (!track) return
+
+  // Navegación por flechas: desplaza ~una tarjeta + gap
+  const step = () => {
+    const card = track.querySelector<HTMLElement>('.ig-card')
+    return card ? card.offsetWidth + 20 : 300
+  }
+  const updateNav = () => {
+    if (!prev || !next) return
+    const max = track.scrollWidth - track.clientWidth - 2
+    prev.disabled = track.scrollLeft <= 2
+    next.disabled = track.scrollLeft >= max
+  }
+  prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }))
+  next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }))
+  track.addEventListener('scroll', updateNav, { passive: true })
+
+  // Trae los posteos reales; si falla, quedan las tarjetas de respaldo
+  const feed = slider.dataset.feed
+  if (feed) {
+    fetch(feed, { headers: { Accept: 'application/json' } })
+      .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((data: { posts?: IgPost[] }) => {
+        const posts = (data.posts || []).filter(p => p.permalink)
+        if (!posts.length) return
+        renderInstagramPosts(track, posts)
+        updateNav()
+        ScrollTrigger.refresh()
+      })
+      .catch(() => {/* se mantiene el fallback */})
+  }
+  updateNav()
+}
+
+function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
+  const fmt = (ts?: string) => {
+    if (!ts) return ''
+    const d = new Date(ts)
+    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+  }
+  const esc = (s: string) =>
+    s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+  const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' : s)
+
+  track.innerHTML = posts
+    .map(p => {
+      const img = p.media_type === 'VIDEO' ? p.thumbnail_url || p.media_url : p.media_url
+      const cap = p.caption ? esc(clip(p.caption)) : 'Ver este posteo en Instagram.'
+      const media = img
+        ? `<span class="ig-card-media"><img src="${esc(img)}" alt="" loading="lazy" /></span>`
+        : `<span class="ig-card-media" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>`
+      return `<li class="ig-card" role="listitem">
+        <a class="ig-card-link" href="${esc(p.permalink)}" target="_blank" rel="noopener noreferrer">
+          ${media}
+          <span class="ig-card-body">
+            <span class="ig-card-caption">${cap}</span>
+            <span class="ig-card-date">${fmt(p.timestamp)}</span>
+          </span>
+        </a>
+      </li>`
+    })
+    .join('')
+}
+
 function init() {
   initLoader()
   initNav()
@@ -637,6 +718,7 @@ function init() {
   initMagnetic()
   initProductTabs()
   initWhatsAppFloat()
+  initInstagramFeed()
 }
 
 if (document.readyState === 'loading') {
