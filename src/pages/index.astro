@@ -96,6 +96,13 @@ const perfilIconsSvg = [
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h18"/></svg>`,
 ]
 
+// Iconos de los productos (flores / aceites / cremas) para sus paneles gateway
+const productIconsSvg = [
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11M12 11c3.5-.4 6-3 6-7-3.5.4-6 3-6 7zM12 13C8.5 12.6 6 10 6 6c3.5.4 6 3 6 7z"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="4" y="5.5" width="16" height="4.5" rx="1"/></svg>`,
+]
+
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
 const waLegal = `${WA}?text=Hola%20Flora%2C%20tengo%20una%20consulta%20sobre%20mi%20situaci%C3%B3n%20legal%20(Ley%2027.350%20%2F%20REPROCANN).%20%C2%BFMe%20orientan%3F`
@@ -338,42 +345,39 @@ const igFallback = [
     <div class="fl-wrap">
       <header class="fl-head">
         <span class="fl-eyebrow">Nuestros productos</span>
-        <h2 class="fl-title">Flores, aceites <em>y cremas.</em></h2>
+        <h2 class="fl-title">De la planta, <em>a tu mano.</em></h2>
         <p class="fl-lead">
           Todo de cultivo propio, con el acompañamiento del equipo en cada paso.
         </p>
       </header>
 
-      <div class="fl-cards">
-        <article class="fl-card">
-          <span class="fl-card-tag fl-tag-membresia">Cultivo solidario</span>
-          <h3 class="fl-card-title">Flores</h3>
-          <p class="fl-card-desc">
-            Cultivamos tu parte del material vegetal, mes a mes, para quienes no pueden
-            hacerlo en casa. Un aporte solidario, sin fines de lucro.
-          </p>
-          <a class="fl-card-cta" href="#membresias">Cómo acceder <span aria-hidden="true">→</span></a>
-        </article>
+      <div class="fl-gateway fl-prod-gateway" role="list">
+        <a class="fl-panel fl-panel-1" href="#membresias" role="listitem" aria-label="Flores">
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Flores</span>
+            <span class="fl-panel-desc">Cultivamos tu parte del material vegetal, mes a mes, con un aporte solidario para quienes no pueden hacerlo en casa.</span>
+            <span class="fl-panel-cta">Cómo acceder <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
 
-        <article class="fl-card fl-card-feat">
-          <span class="fl-card-tag fl-tag-consulta">Por consulta</span>
-          <h3 class="fl-card-title">Aceites</h3>
-          <p class="fl-card-desc">
-            Extractos sublinguales Q1 · Q2 · Q3, cada uno con su cromatografía HPLC.
-            Los encargás al equipo según tu caso.
-          </p>
-          <a class="fl-card-cta" href={wa('Hola Flora, quiero consultar por los aceites medicinales 🌿')} target="_blank" rel="noopener noreferrer">Consultar aceites <span aria-hidden="true">→</span></a>
-        </article>
+        <a class="fl-panel fl-panel-2" href={wa('Hola Flora, quiero consultar por los aceites medicinales 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Aceites">
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Aceites</span>
+            <span class="fl-panel-desc">Tres extractos sublinguales —Q1, Q2 y Q3— cada uno con su análisis de laboratorio. Los encargás al equipo según tu caso.</span>
+            <span class="fl-panel-cta">Consultar <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
 
-        <article class="fl-card">
-          <span class="fl-card-tag fl-tag-consulta">Por consulta</span>
-          <h3 class="fl-card-title">Cremas</h3>
-          <p class="fl-card-desc">
-            Crema tópica de uso externo, en 50 y 100 cc, para dolor localizado.
-            No requiere REPROCANN. La encargás al equipo.
-          </p>
-          <a class="fl-card-cta" href={wa('Hola Flora, quiero consultar por las cremas 🌿')} target="_blank" rel="noopener noreferrer">Consultar cremas <span aria-hidden="true">→</span></a>
-        </article>
+        <a class="fl-panel fl-panel-3" href={wa('Hola Flora, quiero consultar por las cremas 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Cremas">
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Cremas</span>
+            <span class="fl-panel-desc">Fórmula tópica de uso externo, en 50 y 100 cc, para dolor localizado. No requiere REPROCANN. La encargás al equipo.</span>
+            <span class="fl-panel-cta">Consultar <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
       </div>
 
       <!-- Spec highlights: aceites con HPLC (el dato verificable) -->
