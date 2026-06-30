@@ -53,6 +53,8 @@ const aceites = [
     img: '/img/prod-aceite-q1.jpg',
     color: '#C9396B',
     ratio: 'THC:CBD ≈ 2,3:1',
+    ratioStd: '1:3',
+    zoom: 1.06,
   },
   {
     codigo: 'Q2',
@@ -70,6 +72,8 @@ const aceites = [
     img: '/img/prod-aceite-q2.jpg',
     color: '#6E54C8',
     ratio: 'CBD:THC ≈ 1,4:1',
+    ratioStd: '1:1',
+    zoom: 1.08,
   },
   {
     codigo: 'Q3',
@@ -87,6 +91,8 @@ const aceites = [
     img: '/img/prod-aceite-q3.jpg',
     color: '#1F9389',
     ratio: 'CBD:THC ≈ 27:1',
+    ratioStd: '20:1',
+    zoom: 1.22,
   },
 ]
 const maxCannabinoid = Math.max(
@@ -678,58 +684,57 @@ const igFallback = [
           <h2 class="fl-spec-title">Tres perfiles. <em>Uno es para vos.</em></h2>
           <p class="fl-spec-sub">
             Cada aceite nace del mismo cultivo y se mide planta por planta. Elegí por
-            objetivo —descanso, equilibrio o calma diurna— y mirá su composición exacta.
-            Todo lo que ves acá sale del análisis del último lote.
+            objetivo —descanso, equilibrio o calma diurna— y mirá la proporción exacta de
+            cannabinoides. Todo medido por cromatografía <strong>HPLC-UV</strong> en
+            <strong> IACA Laboratorios</strong> (último lote, 02/06/2026), con su informe descargable.
           </p>
         </div>
 
-        <div class="fl-lote">
-          <div class="fl-lote-info">
-            <span class="fl-lote-eyebrow" aria-hidden="true">Cromatografía · último lote</span>
-            <p class="fl-lote-text">
-              Medido en mg/mL por <strong>HPLC-UV</strong> en <strong>IACA Laboratorios</strong>.
-              Extracción del <strong>02/06/2026</strong>. Cada aceite tiene su informe firmado para descargar.
-            </p>
-          </div>
-          <div class="fl-lote-files">
-            {aceites.map((a) => (
-              <a class="fl-lote-file" href={a.pdf} download>
-                <span class="fl-lote-file-code" style={`color:${a.color}`}>{a.codigo}</span>
-                <span class="fl-lote-file-label">Análisis<i>PDF ↓</i></span>
-              </a>
-            ))}
-          </div>
-        </div>
         <div class="fl-spec-grid">
           {aceites.map((a) => (
-            <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color}`}>
+            <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color};--zoom:${a.zoom}`}>
               <div class="fl-oil-photo">
                 <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="1100" height="1100" />
                 <span class="fl-oil-badge">{a.codigo}</span>
-                <span class="fl-oil-ratio">{a.ratio}</span>
               </div>
 
               <div class="fl-oil-body">
                 <h3 class="fl-oil-title">{a.sub}</h3>
                 <p class="fl-oil-desc">{a.desc}</p>
 
-                <div class="fl-oil-bars" aria-label={`Gráfico de cannabinoides de ${a.codigo} en mg/mL`}>
-                  {a.perfil.map((p) => {
-                    const value = Number(p.v.replace(',', '.'))
-                    const pct = Math.max(3, Math.round((value / maxCannabinoid) * 100))
-                    return (
-                      <div class={`fl-oil-bar fl-oil-bar-${p.k.toLowerCase()}`}>
-                        <div class="fl-oil-bar-top">
-                          <span>{p.k}</span>
-                          <strong>{p.v}<i>mg/mL</i></strong>
+                {(() => {
+                  const cols = { CBD: 'var(--fl-green)', THC: 'var(--fl-violet)' }
+                  const vals = a.perfil
+                    .filter((p) => p.k === 'CBD' || p.k === 'THC')
+                    .map((p) => ({ k: p.k, v: p.v, n: Number(p.v.replace(',', '.')) }))
+                  const total = vals.reduce((s, x) => s + x.n, 0)
+                  let acc = 0
+                  const stops = vals.map((x) => {
+                    const from = (acc / total) * 100
+                    acc += x.n
+                    const to = (acc / total) * 100
+                    return `${cols[x.k]} ${from.toFixed(1)}% ${to.toFixed(1)}%`
+                  }).join(', ')
+                  return (
+                    <div class="fl-oil-chart" aria-label={`Proporción CBD:THC de ${a.codigo}, ratio ${a.ratioStd}`}>
+                      <div class="fl-oil-donut" style={`--ring:conic-gradient(${stops})`}>
+                        <div class="fl-oil-donut-hole">
+                          <strong>{a.ratioStd}</strong>
+                          <i>CBD:THC</i>
                         </div>
-                        <span class="fl-oil-track" aria-hidden="true">
-                          <span class="fl-oil-fill" style={`--w:${pct}%`}></span>
-                        </span>
                       </div>
-                    )
-                  })}
-                </div>
+                      <ul class="fl-oil-legend">
+                        {vals.map((x) => (
+                          <li>
+                            <span class="fl-oil-dot" style={`background:${cols[x.k]}`}></span>
+                            <span class="fl-oil-legend-k">{x.k}</span>
+                            <strong>{x.v}<i>mg/mL</i></strong>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })()}
 
                 <div class="fl-oil-para">
                   <span class="fl-oil-para-label">Puede acompañar en</span>
@@ -740,10 +745,12 @@ const igFallback = [
 
                 <div class="fl-oil-actions">
                   <a class="fl-oil-btn" href={a.href} target="_blank" rel="noopener noreferrer">
-                    Consultar este aceite <span aria-hidden="true">→</span>
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2zm4.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
+                    Consultar por este aceite
                   </a>
                   <a class="fl-oil-download" href={a.pdf} download>
-                    <span aria-hidden="true">↓</span> Análisis del lote (PDF)
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 21V5a2 2 0 0 1 2-2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M12 11v5"/><path d="m9.5 14 2.5 2.5 2.5-2.5"/></svg>
+                    Descargar análisis de cromatografía
                   </a>
                 </div>
               </div>
