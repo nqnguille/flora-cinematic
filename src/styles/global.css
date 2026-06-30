@@ -1629,14 +1629,8 @@ body::after {
   font-size: clamp(22px, 2.6vw, 28px); line-height: 1.1; color: var(--bone);
 }
 
-/* Custom cursor (desktop) — solo cuando main.ts lo activó (body.custom-cursor) */
-@media (hover: hover) and (pointer: fine) {
-  body.custom-cursor { cursor: none; }
-  body.custom-cursor a,
-  body.custom-cursor button,
-  body.custom-cursor [role="button"],
-  body.custom-cursor .membresia-card { cursor: none; }
-}
+/* Cursor nativo: flecha por defecto, manito en todo lo clickeable */
+a, button, [role="button"], label[for], summary, .membresia-card { cursor: pointer; }
 
 .cursor-dot {
   position: fixed;
@@ -2820,19 +2814,16 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-spec-vals dd { font-family: var(--font-ui); font-weight: 800; font-size: 20px; color: var(--fl-ink); margin-top: 3px; }
 .fl-spec-vals dd i { display: block; font-style: normal; font-size: 9px; font-weight: 600; color: rgba(28,22,38,0.4); }
 
-/* ── Aceites: card con fotoproducto + donut de proporción de cannabinoides ── */
-.fl-oil-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; background: #fff; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
-.fl-oil-card:hover { transform: translateY(-4px); box-shadow: 0 22px 48px -26px rgba(56,31,86,0.32); border-color: color-mix(in srgb, var(--oil) 40%, var(--fl-line)); }
-.fl-oil-photo { position: relative; aspect-ratio: 1 / 1; background: linear-gradient(150deg, #F3EBE4, #EFE6DC); overflow: hidden; }
-/* Zoom base sobre el producto + acercamiento suave en hover */
-.fl-oil-photo img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center 46%; display: block;
-  transform: scale(var(--zoom, 1.1)); transform-origin: center 46%;
-  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
-}
-.fl-oil-card:hover .fl-oil-photo img { transform: scale(calc(var(--zoom, 1.1) * 1.12)); }
-@media (prefers-reduced-motion: reduce) {
-  .fl-oil-photo img, .fl-oil-card:hover .fl-oil-photo img { transition: none; }
+/* ── Aceites: card con fotoproducto (escala idéntica) + donut de ratio ── */
+.fl-oil-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; background: #fff; border-top: 3px solid var(--oil, var(--fl-violet)); transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.fl-oil-card:hover { transform: translateY(-4px); box-shadow: 0 22px 48px -26px rgba(56,31,86,0.32); }
+.fl-oil-photo { position: relative; aspect-ratio: 4 / 5; background: #ECE0D0; overflow: hidden; }
+.fl-oil-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.fl-oil-badge {
+  position: absolute; top: 14px; left: 14px; z-index: 2;
+  font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: 0.02em;
+  color: #fff; background: var(--oil, var(--fl-violet)); border-radius: 999px; padding: 6px 14px;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--oil) 70%, transparent);
 }
 .fl-oil-badge {
   position: absolute; top: 14px; left: 14px; z-index: 2;
@@ -2846,8 +2837,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
   color: var(--fl-ink); background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);
   border-radius: 999px; padding: 5px 12px; box-shadow: 0 6px 16px -10px rgba(28,22,38,0.5);
 }
-.fl-oil-body { padding: 24px; display: flex; flex-direction: column; flex: 1; }
-.fl-oil-title { font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--fl-green); margin: 0 0 10px; }
+.fl-oil-body { padding: 14px 24px 24px; display: flex; flex-direction: column; flex: 1; }
+.fl-oil-title { font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--fl-green); margin: 0 0 10px; line-height: 1.3; }
 .fl-oil-desc { font-family: var(--font-ui); font-size: 14px; line-height: 1.55; color: rgba(28,22,38,0.64); margin: 0 0 20px; }
 
 /* Donut de proporción (ratio) de cannabinoides */

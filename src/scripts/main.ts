@@ -882,7 +882,7 @@ function init() {
   initHeroVideo()
   initYouTubeFacades()
   initParticles()
-  initCursor()
+  // initCursor() — desactivado: se usa el cursor nativo (flecha + manito)
 
   splitWords()
   ScrollTrigger.refresh()
