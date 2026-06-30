@@ -2047,12 +2047,6 @@ body.cursor-hover .cursor-ring {
   text-transform: uppercase; color: rgba(28, 43, 28, 0.45);
   display: block; margin-bottom: 18px;
 }
-.ig-head h2 {
-  font-family: var(--font-display); font-weight: 300;
-  font-size: clamp(34px, 5.5vw, 64px); line-height: 0.98;
-  letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px;
-}
-.ig-head h2 em { font-style: italic; color: var(--leaf-2, #4f9e49); }
 .ig-lead {
   font-family: var(--font-ui); font-size: clamp(15px, 1.7vw, 17px);
   line-height: 1.6; color: rgba(21, 35, 24, 0.6); max-width: 46ch;
@@ -2060,12 +2054,12 @@ body.cursor-hover .cursor-ring {
 .ig-cta {
   display: inline-flex; align-items: center; gap: 9px;
   height: 46px; padding: 0 22px; border-radius: 999px;
-  border: 1px solid rgba(21, 35, 24, 0.18); color: var(--ink);
+  border: 1px solid var(--fl-line); color: var(--fl-violet);
   font-family: var(--font-ui); font-size: 14px; font-weight: 700;
   text-decoration: none; white-space: nowrap;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
-.ig-cta:hover { background: var(--ink); color: var(--bone); border-color: var(--ink); }
+.ig-cta:hover { background: var(--fl-violet); color: #fff; border-color: var(--fl-violet); }
 
 .ig-slider { position: relative; }
 .ig-track {
@@ -2688,11 +2682,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .footer-closer em { font-style: italic; color: var(--leaf); }
 .wa-float {
-  border-radius: 2px;
-  background: var(--leaf); color: var(--ink);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  background: var(--fl-violet); color: #fff;
+  box-shadow: 0 10px 30px rgba(56, 31, 86, 0.28);
 }
-.wa-float:hover { background: var(--leaf-2); box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3); transform: scale(1.04); }
+.wa-float:hover { background: var(--fl-violet-2); box-shadow: 0 14px 38px rgba(56, 31, 86, 0.36); transform: scale(1.04); }
 
 /* ══════════════════════════════════════════════════ */
 /* SISTEMA FLORA v2 — light · marca real · estilo ASUS  */
@@ -2709,7 +2703,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   --fl-line:     rgba(56, 31, 86, 0.14);
 }
 
-.fl-section { background: var(--fl-paper); color: var(--fl-ink); padding: clamp(72px, 9vw, 128px) clamp(24px, 6vw, 80px); }
+.fl-section { background: var(--fl-paper); color: var(--fl-ink); padding: clamp(44px, 5.5vw, 84px) clamp(24px, 6vw, 80px); }
 .fl-wrap { max-width: 1240px; margin: 0 auto; }
 
 .fl-eyebrow {
@@ -2729,7 +2723,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 
 /* Gateway — paneles que se expanden al hover (patrón ASUS) */
-.fl-gateway { display: flex; gap: 14px; margin-top: clamp(36px, 4vw, 56px); height: clamp(420px, 46vw, 520px); }
+.fl-gateway { display: flex; gap: 14px; margin-top: clamp(28px, 3.4vw, 48px); height: clamp(340px, 38vw, 440px); }
+.fl-prod-gateway { height: clamp(320px, 34vw, 400px); }
 .fl-panel {
   position: relative; flex: 1 1 0; min-width: 0; overflow: hidden;
   border-radius: 20px; padding: 30px;
@@ -3038,3 +3033,9 @@ html.no-js .reveal { opacity: 1; transform: none; }
   color: rgba(28, 22, 38, 0.66); max-width: 64ch; margin: 0;
 }
 @media (prefers-reduced-motion: reduce) { .fl-faq-icon::before, .fl-faq-icon::after { transition: none; } }
+
+/* ── Coherencia: cadencia de fondos blanco / off-white (auditoría) ── */
+.fl-access { background: var(--fl-paper-2); }
+.fl-legal { background: var(--fl-paper-2); }
+.fl-analisis { background: var(--fl-paper); }
+.fl-faq { background: var(--fl-paper-2); }
