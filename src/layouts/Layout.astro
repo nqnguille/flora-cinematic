@@ -17,13 +17,14 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "NGO",
   "name": "Flora ONG",
-  "alternateName": "Flora Club de Cultivo",
-  "description": "Club de cultivo de cannabis medicinal bajo Ley 27.350 / REPROCANN. Cultivo solidario en Neuquén, Patagonia.",
+  "alternateName": "Asociación Civil Cann de Cannabis Medicinal",
+  "description": "Asociación civil de cultivo solidario de cannabis medicinal bajo Ley 27.350 / REPROCANN. Neuquén, Patagonia.",
   "url": "https://floraong.ar",
   "logo": "https://floraong.ar/favicon.png",
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "customer support",
+    "telephone": "+5492996375723",
     "availableLanguage": "Spanish"
   },
   "address": {
@@ -34,9 +35,13 @@ const jsonLd = {
   },
   "areaServed": "AR",
   "foundingDate": "2022",
+  "sameAs": [
+    "https://www.instagram.com/flora.cultivamosconciencia/",
+    "https://www.youtube.com/@FloraCultivamosConciencia"
+  ],
   "knowsAbout": [
     "Cannabis medicinal",
-    "Cultivo compartido",
+    "Cultivo solidario",
     "Ley 27.350",
     "REPROCANN"
   ]
@@ -57,7 +62,7 @@ const jsonLd = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#1C2B1C" />
+    <meta name="theme-color" content="#381F56" />
 
     <!-- Open Graph -->
     <meta property="og:site_name" content="Flora ONG" />
@@ -77,6 +82,8 @@ const jsonLd = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content="Flora ONG — Club de cultivo de cannabis medicinal en Neuquén" />
+
+    <noscript><style>.page-loader{display:none!important}</style></noscript>
 
     <!-- Favicon — la O de FLORA con la hoja -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -100,6 +107,43 @@ const jsonLd = {
     <slot />
     <script>
       import '../scripts/main.ts'
+    </script>
+
+    <!-- Tracking: visitas + clics de CTA → dashboard central gates-analytics (project flora-ong).
+         Para medir un botón/link, agregale data-cta="etiqueta". -->
+    <script is:inline>
+      (function () {
+        var ENDPOINT = 'https://gates-analytics.nqnguille.workers.dev/event';
+        var PROJECT = 'flora-ong';
+        function gid(p) {
+          try {
+            var s = p === 'visitor' ? localStorage : sessionStorage;
+            var k = 'floraong_' + p + '_id';
+            var v = s.getItem(k);
+            if (!v) { v = p + '-' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2))); s.setItem(k, v); }
+            return v;
+          } catch (e) { return p + '-unknown'; }
+        }
+        function send(event, key) {
+          try {
+            var body = JSON.stringify({ project: PROJECT, gate: 'sitio', event: event, key: key || '', visitor_id: gid('visitor'), session_id: gid('session'), path: location.pathname, lang: document.documentElement.lang || 'es' });
+            // text/plain = CORS-safelisted: el beacon dispara cross-origin sin preflight; el central igual parsea JSON.
+            if (navigator.sendBeacon) navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'text/plain' }));
+            else fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: body, keepalive: true });
+          } catch (e) {}
+        }
+        // Vista de página (una vez por sesión + path)
+        try {
+          var vk = 'floraong_view_' + location.pathname;
+          if (sessionStorage.getItem(vk) !== '1') { sessionStorage.setItem(vk, '1'); send('view'); }
+        } catch (e) { send('view'); }
+        // Clics en CTAs marcados con data-cta
+        document.addEventListener('click', function (e) {
+          var el = e.target && e.target.closest ? e.target.closest('[data-cta]') : null;
+          if (!el) return;
+          send('click', el.getAttribute('data-cta') || (el.textContent || '').trim().slice(0, 40) || 'cta');
+        }, true);
+      })();
     </script>
   </body>
 </html>
