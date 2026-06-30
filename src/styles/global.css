@@ -2960,3 +2960,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-note { font-family: var(--font-ui); font-size: 13px; line-height: 1.55; color: rgba(28,22,38,0.52); max-width: 48ch; margin: 22px auto 0; }
 .fl-acceso-note strong { color: var(--fl-violet); }
 @media (min-width: 540px) { .fl-amounts { grid-template-columns: repeat(4, 1fr); max-width: none; } }
+
+/* ── REPROCANN: banda violeta (hook del primer paso / entrevista médica) ── */
+.fl-reprocann { background: var(--fl-violet); color: #fff; }
+.fl-reprocann-wrap { max-width: 760px; margin: 0 auto; text-align: center; }
+.fl-reprocann .fl-eyebrow { color: #8FE3A4; }
+.fl-reprocann .fl-title { color: #fff; max-width: 17ch; margin: 0 auto; }
+.fl-reprocann .fl-title em { color: #8FE3A4; }
+.fl-reprocann-lead { font-family: var(--font-ui); font-size: clamp(16px, 2vw, 20px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 54ch; margin: 22px auto 0; }
+.fl-reprocann-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 28px; background: #fff; color: var(--fl-violet); font-family: var(--font-ui); font-weight: 700; font-size: 16px; padding: 17px 34px; border-radius: 999px; text-decoration: none; transition: transform 0.2s ease; }
+.fl-reprocann-cta:hover { transform: translateY(-2px); }
+.fl-reprocann-note { font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 16px; }
+
+/* ── Análisis al fondo: leve separación ── */
+.fl-analisis { background: var(--fl-paper-2); border-top: 1px solid var(--fl-line); }
+.fl-analisis .fl-spec { margin-top: 0; }

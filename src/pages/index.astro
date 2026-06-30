@@ -183,8 +183,8 @@ const igFallback = [
 ---
 
 <Layout
-  title="Flora ONG — Club de cultivo de cannabis medicinal en Neuquén"
-  description="Club de cultivo bajo Ley 27.350 / REPROCANN. Acceso mensual a cultivo propio y aceites con cromatografía, con acompañamiento real. Neuquén, Patagonia, Argentina."
+  title="Flora — Tramitá tu REPROCANN y accedé a cannabis medicinal | Neuquén"
+  description="¿Cómo se tramita el REPROCANN? El primer paso es una entrevista médica. Asociación civil de cultivo de cannabis medicinal en Neuquén, bajo Ley 27.350. Material vegetal y aceites con análisis de laboratorio."
 >
 
   <!-- Skip to content para navegación por teclado -->
@@ -209,7 +209,7 @@ const igFallback = [
       <li><a href="#perfiles">En qué te ayuda</a></li>
       <li><a href="#productos">Productos</a></li>
       <li><a href="#membresias">Acceso</a></li>
-      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#entrevista">REPROCANN</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
         <a href={waAsociarse} class="nav-cta" target="_blank" rel="noopener noreferrer">
@@ -242,7 +242,7 @@ const igFallback = [
         <li><a href="#perfiles">En qué te ayuda</a></li>
         <li><a href="#productos">Productos</a></li>
         <li><a href="#membresias">Acceso</a></li>
-        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#entrevista">REPROCANN</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
         <li><a href="#instagram">Instagram</a></li>
@@ -380,34 +380,25 @@ const igFallback = [
         </a>
       </div>
 
-      <!-- Spec highlights: aceites con HPLC (el dato verificable) -->
-      <div class="fl-spec">
-        <div class="fl-spec-head">
-          <span class="fl-eyebrow">Análisis de laboratorio</span>
-          <h3 class="fl-spec-title">Los últimos análisis <em>de nuestros aceites.</em></h3>
-          <p class="fl-spec-sub">
-            Cannabinoides del último lote, medidos en mg/mL por cromatografía
-            (HPLC-UV · IACA Laboratorios · extracción 02/06/2026). Descargá el informe
-            de cada aceite acá abajo.
-          </p>
-        </div>
-        <div class="fl-spec-grid">
-          {aceites.map((a) => (
-            <article class="fl-spec-card">
-              <span class="fl-spec-code">{a.codigo}</span>
-              <span class="fl-spec-sublabel">{a.sub}</span>
-              <dl class="fl-spec-vals" aria-label={`Perfil de ${a.codigo} en mg/mL`}>
-                {a.perfil.map((p) => (
-                  <div><dt>{p.k}</dt><dd>{p.v}<i>mg/mL</i></dd></div>
-                ))}
-              </dl>
-              <a class="fl-card-cta" href={a.pdf} download>
-                Descargar análisis <span aria-hidden="true">↓</span>
-              </a>
-            </article>
-          ))}
-        </div>
-      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- REPROCANN — hook: el primer paso (entrevista médica) -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-reprocann" id="entrevista" aria-label="Cómo tramitar tu REPROCANN">
+    <div class="fl-wrap fl-reprocann-wrap">
+      <span class="fl-eyebrow on-dark">Tu REPROCANN</span>
+      <h2 class="fl-title">¿Cómo se tramita el <em>REPROCANN?</em></h2>
+      <p class="fl-reprocann-lead">
+        Es la pregunta que más nos hacen. El primer paso es una entrevista con un
+        profesional de la salud: evalúa tu caso y, si corresponde, te inscribe en el
+        REPROCANN. Ese mismo paso es el que te habilita a asociarte a Flora.
+      </p>
+      <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
+        Pedir mi entrevista médica <span aria-hidden="true">→</span>
+      </a>
+      <p class="fl-reprocann-note">Sin compromiso. Te orientamos en cada paso del trámite.</p>
     </div>
   </section>
 
@@ -498,30 +489,6 @@ const igFallback = [
           lo conversamos según tu caso. Te sugerimos empezar por la más baja.
         </p>
       </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- CÓMO FUNCIONA                              -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-steps" id="como-funciona" aria-label="Cómo funciona">
-    <div class="fl-wrap">
-      <header class="fl-head">
-        <span class="fl-eyebrow">Cómo asociarte</span>
-        <h2 class="fl-title">Cuatro pasos <em>y estás adentro.</em></h2>
-      </header>
-
-      <ol class="fl-ed-list" aria-label="Pasos para asociarse">
-        {steps.map((step) => (
-          <li class="fl-ed-row">
-            <span class="fl-ed-num" aria-hidden="true">{step.num}</span>
-            <div class="fl-ed-body">
-              <h3 class="fl-ed-title">{step.title}</h3>
-              <p class="fl-ed-desc">{step.desc}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
     </div>
   </section>
 
@@ -631,6 +598,41 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- ANÁLISIS DE LABORATORIO — al fondo          -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-analisis" id="analisis" aria-label="Análisis de laboratorio">
+    <div class="fl-wrap">
+      <div class="fl-spec">
+        <div class="fl-spec-head">
+          <span class="fl-eyebrow">Análisis de laboratorio</span>
+          <h2 class="fl-spec-title">Los últimos análisis <em>de nuestros aceites.</em></h2>
+          <p class="fl-spec-sub">
+            Cannabinoides del último lote, medidos en mg/mL por cromatografía
+            (HPLC-UV · IACA Laboratorios · extracción 02/06/2026). Descargá el informe
+            de cada aceite acá abajo.
+          </p>
+        </div>
+        <div class="fl-spec-grid">
+          {aceites.map((a) => (
+            <article class="fl-spec-card">
+              <span class="fl-spec-code">{a.codigo}</span>
+              <span class="fl-spec-sublabel">{a.sub}</span>
+              <dl class="fl-spec-vals" aria-label={`Perfil de ${a.codigo} en mg/mL`}>
+                {a.perfil.map((p) => (
+                  <div><dt>{p.k}</dt><dd>{p.v}<i>mg/mL</i></dd></div>
+                ))}
+              </dl>
+              <a class="fl-card-cta" href={a.pdf} download>
+                Descargar análisis <span aria-hidden="true">↓</span>
+              </a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- FOOTER                                     -->
   <!-- ══════════════════════════════════════════ -->
   <footer class="fl-footer" id="contacto">
@@ -657,7 +659,7 @@ const igFallback = [
             <li><a href="#perfiles">En qué te ayuda</a></li>
             <li><a href="#productos">Productos</a></li>
             <li><a href="#membresias">Acceso</a></li>
-            <li><a href="#como-funciona">Cómo funciona</a></li>
+            <li><a href="#entrevista">REPROCANN</a></li>
             <li><a href="#legalidad">Legalidad</a></li>
           </ul>
         </nav>
