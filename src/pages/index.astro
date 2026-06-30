@@ -118,7 +118,6 @@ const memberships = [
       'Acceso mensual a tu parte del cultivo',
       'Variedad rotativa de temporada',
       'Cultivo propio, sin pesticidas',
-      'Sin compraventa — marco Ley 27.350',
     ],
     featured: false,
     waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Semilla%20(10g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
@@ -131,7 +130,6 @@ const memberships = [
       'Elección de variedad disponible',
       'Orientación para elegir tu variedad',
       'Acompañamiento por WhatsApp',
-      'Sin compraventa — marco Ley 27.350',
     ],
     featured: true,
     badge: 'El más elegido',
@@ -145,7 +143,6 @@ const memberships = [
       'Prioridad en variedades nuevas',
       'Sesión de orientación inicial',
       'Acompañamiento directo del equipo',
-      'Sin compraventa — marco Ley 27.350',
     ],
     featured: false,
     waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Cosecha%20(30g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
@@ -159,7 +156,6 @@ const memberships = [
       'Acceso a los aceites con cromatografía (Q1·Q2·Q3)',
       'Acompañamiento prioritario 24h',
       'Invitaciones a ciclos de formación',
-      'Sin compraventa — marco Ley 27.350',
     ],
     featured: false,
     waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Tierra%20(40g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
@@ -333,78 +329,39 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- MANIFIESTO (antes hero)                    -->
+  <!-- MANIFIESTO — escena documental (reveal, sin pin) -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="hero" id="manifiesto" aria-label="Cultivamos lo que la ley te permite">
+  <section class="scene manifiesto" id="manifiesto" aria-label="Nuestro manifiesto">
 
-    <!-- Fondo de video — decorativo. Poster local = imagen LCP y fallback reduced-motion -->
-    <div class="hero-visual" aria-hidden="true">
+    <!-- Plano sostenido: una sola still documental + scrim del welcome -->
+    <div class="scene-bg" aria-hidden="true">
       <img
+        class="scene-img"
         src="/hero/cannabis-hero-poster.jpg"
         alt=""
-        loading="eager"
-        fetchpriority="high"
+        loading="lazy"
         decoding="async"
         width="1280"
         height="720"
-        id="hero-img"
       />
-      <video
-        id="hero-video"
-        class="hero-video"
-        muted
-        loop
-        playsinline
-        preload="none"
-        poster="/hero/cannabis-hero-poster.jpg"
-      >
-        <source src="/hero/cannabis-hero-720.webm" type="video/webm" />
-        <source src="/hero/cannabis-hero-720.mp4" type="video/mp4" />
-      </video>
+      <div class="scene-scrim"></div>
     </div>
 
-    <!-- Viñeta -->
-    <div class="hero-vignette" aria-hidden="true"></div>
+    <div class="scene-content manifiesto-content">
+      <span class="eyebrow reveal">Nuestro manifiesto</span>
 
-    <!-- Partículas -->
-    <div class="hero-particles" aria-hidden="true"></div>
+      <h2 class="manifiesto-title reveal" data-reveal-delay="80">
+        Cultivamos conciencia,<br><em>planta por planta.</em>
+      </h2>
 
-    <!-- Número de año decorativo -->
-    <span class="hero-year" aria-hidden="true">Est. 2022</span>
+      <p class="manifiesto-sub reveal" data-reveal-delay="160">
+        Cultivo propio y acompañamiento real, dentro del marco de la Ley&nbsp;27.350
+        y el REPROCANN.
+      </p>
 
-    <!-- Contenido principal -->
-    <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span class="hero-badge">Ley 27.350 · REPROCANN</span>
-        <span class="hero-badge-sep" aria-hidden="true"></span>
-        <span class="hero-badge-location">Neuquén, Patagonia</span>
-      </div>
-
-      <h1 class="hero-title split-words">
-        Cultivamos<br>lo que la ley<br><em class="accent-word">te permite.</em>
-      </h1>
-
-      <div class="hero-bottom">
-        <p class="hero-subtext">
-          Cultivo propio y acompañamiento real.<br>Sin intermediarios. Con la ley a favor.
-        </p>
-
-        <div class="hero-ctas">
-          <a href={waAsociarse} class="btn-primary" target="_blank" rel="noopener noreferrer">
-            Quiero asociarme
-          </a>
-          <a href="#membresias" class="btn-secondary">Ver membresías</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ticker -->
-    <div class="hero-ticker" aria-hidden="true">
-      <div class="ticker-track">
-        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; CULTIVO PROPIO &nbsp;·&nbsp; </span>
-        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; CULTIVO PROPIO &nbsp;·&nbsp; </span>
-        <span>CULTIVAMOS CONCIENCIA &nbsp;·&nbsp; CANNABIS MEDICINAL &nbsp;·&nbsp; NEUQUÉN ARGENTINA &nbsp;·&nbsp; LEY 27.350 &nbsp;·&nbsp; REPROCANN &nbsp;·&nbsp; CULTIVO PROPIO &nbsp;·&nbsp; </span>
-      </div>
+      <span class="scene-legal reveal" data-reveal-delay="240">
+        Neuquén, Patagonia · Asociación civil · Est. 2022
+      </span>
     </div>
   </section>
 
@@ -693,49 +650,48 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- MEMBRESÍAS — HORIZONTAL SCROLL             -->
+  <!-- MEMBRESÍAS — grilla estática (escena ink)   -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="horizontal-section" id="membresias" aria-label="Membresías">
-    <div class="horizontal-inner">
-      <div class="horizontal-header">
-        <span class="section-label on-dark">Membresías</span>
-        <h2 class="split-words">Elegí cómo<br>acceder.</h2>
-        <div class="horizontal-scroll-hint" aria-hidden="true">
-          <span class="hint-arrow"></span>
-          <span>deslizá</span>
-        </div>
+  <section class="membresias-section" id="membresias" aria-label="Membresías">
+    <div class="membresias-inner">
+      <div class="membresias-head">
+        <span class="eyebrow reveal">Membresías</span>
+        <h2 class="section-title reveal" data-reveal-delay="80">Elegí cómo<br><em>acceder.</em></h2>
       </div>
 
-      <div class="cards-track-wrapper" aria-label="Planes disponibles">
-        <div class="cards-track" role="list">
-          {memberships.map((m) => (
-            <div
-              class={m.featured ? 'membresia-card featured' : 'membresia-card'}
-              role="listitem"
-              aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
-            >
-              {m.badge && <span class="card-badge" aria-label="Plan más popular">{m.badge}</span>}
-              <h3 class="card-title">{m.name}</h3>
-              <div class="card-grams" aria-label={`${m.grams} gramos`}>
-                {m.grams}<span class="card-grams-unit">g</span>
-              </div>
-              <p class="card-unit">por mes · cultivo compartido</p>
-              <ul class="card-features" aria-label="Características incluidas">
-                {m.features.map((f) => <li>{f}</li>)}
-              </ul>
-              <a
-                href={m.waLink}
-                class="card-cta"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Consultar membresía ${m.name} por WhatsApp`}
-              >
-                Consultar por WhatsApp
-              </a>
+      <div class="membresias-grid" role="list">
+        {memberships.map((m, i) => (
+          <article
+            class={m.featured ? 'plan-card featured reveal' : 'plan-card reveal'}
+            role="listitem"
+            aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
+            data-reveal-delay={120 + i * 80}
+          >
+            {m.badge && <span class="plan-badge">{m.badge}</span>}
+            <h3 class="plan-name">{m.name}</h3>
+            <div class="plan-grams" aria-label={`${m.grams} gramos`}>
+              {m.grams}<span class="plan-grams-unit">g</span>
             </div>
-          ))}
-        </div>
+            <p class="plan-unit">por mes · cultivo compartido</p>
+            <ul class="plan-features" aria-label="Características incluidas">
+              {m.features.map((f) => <li>{f}</li>)}
+            </ul>
+            <a
+              href={m.waLink}
+              class="plan-cta"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Consultar membresía ${m.name} por WhatsApp`}
+            >
+              Consultar por WhatsApp
+            </a>
+          </article>
+        ))}
       </div>
+
+      <p class="membresias-legal reveal">
+        Cada membresía es tu parte de un cultivo colectivo, dentro del marco de la Ley&nbsp;27.350.
+      </p>
     </div>
   </section>
 

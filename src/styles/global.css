@@ -2271,3 +2271,204 @@ html.no-js .welcome-cue { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .welcome-cue-line { animation: none; }
 }
+
+/* ══════════════════════════════════════════ */
+/* SISTEMA DEL GIRO — componentes compartidos   */
+/* (escena ink + scrim · eyebrow · reveal)      */
+/* ══════════════════════════════════════════ */
+
+/* Escena: bloque oscuro full-bleed con imagen documental + scrim */
+.scene {
+  position: relative;
+  min-height: 100svh;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.scene-bg { position: absolute; inset: 0; z-index: 0; }
+.scene-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform-origin: 50% 45%;
+}
+/* Ken Burns lento, sólo si el usuario lo tolera */
+@media (prefers-reduced-motion: no-preference) {
+  .scene-img { animation: sceneKenBurns 28s ease-in-out infinite alternate; }
+}
+@keyframes sceneKenBurns {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.12); }
+}
+/* Mismo scrim que el welcome — un solo lenguaje de legibilidad en todo el sitio */
+.scene-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(10,18,12,0.25) 0%, rgba(10,18,12,0.55) 60%, rgba(10,18,12,0.82) 100%),
+    linear-gradient(180deg, rgba(10,18,12,0.55) 0%, rgba(10,18,12,0.25) 35%, rgba(10,18,12,0.45) 70%, rgba(10,18,12,0.85) 100%);
+}
+.scene-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(96px, 12vw, 160px) clamp(24px, 6vw, 96px);
+}
+
+/* Eyebrow — la firma tipográfica del sistema */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--leaf);
+}
+.scene-content .eyebrow { letter-spacing: 0.22em; }   /* sobre oscuro, un poco más abierto */
+.eyebrow.on-light { color: rgba(21,35,24,0.55); }      /* sobre fondo bone */
+
+/* Reveal simple — el movimiento por defecto del 80% del sitio */
+.reveal { opacity: 0; transform: translateY(28px); will-change: opacity, transform; }
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+html.no-js .reveal { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .scene-img { animation: none; }
+}
+
+/* ── Manifiesto ── */
+.manifiesto-content { max-width: 1100px; }
+.manifiesto-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 7vw, 5.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--bone);
+  margin: clamp(20px, 3vw, 32px) 0 clamp(18px, 2.5vw, 28px);
+  max-width: 18ch;
+}
+.manifiesto-title em { font-style: italic; color: var(--leaf); }
+.manifiesto-sub {
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 44ch;
+}
+.scene-legal {
+  display: block;
+  margin-top: clamp(20px, 3vw, 32px);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Membresías — grilla estática en escena ink ── */
+.membresias-section { background: var(--ink); padding: clamp(80px, 10vw, 140px) 0; }
+.membresias-inner { max-width: 1280px; margin: 0 auto; padding: 0 clamp(24px, 6vw, 96px); }
+.membresias-head { margin-bottom: clamp(40px, 6vw, 72px); }
+.membresias-head .section-title { color: var(--bone); margin-top: clamp(14px, 2vw, 20px); }
+.membresias-head .section-title em { font-style: italic; color: var(--leaf); }
+
+.membresias-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(14px, 1.6vw, 22px);
+}
+.plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(26px, 2.4vw, 38px) clamp(20px, 2vw, 28px);
+  background: var(--ink-2);
+  border: 1px solid rgba(184, 168, 120, 0.14);
+  border-radius: 2px;
+}
+.plan-card.featured { background: var(--bone); border-color: transparent; }
+
+.plan-badge {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-ui);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink); background: var(--leaf);
+  padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+}
+.plan-name {
+  font-family: var(--font-ui);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.plan-card.featured .plan-name { color: rgba(21, 35, 24, 0.5); }
+
+.plan-grams {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(52px, 5vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--bone);
+}
+.plan-card.featured .plan-grams { color: var(--ink); }
+.plan-grams-unit { font-size: 0.4em; color: var(--leaf); margin-left: 2px; }
+
+.plan-unit {
+  font-family: var(--font-ui);
+  font-size: 12px; color: var(--muted);
+  margin: 8px 0 0;
+}
+.plan-card.featured .plan-unit { color: rgba(21, 35, 24, 0.5); }
+
+.plan-features {
+  list-style: none; padding: clamp(18px, 2vw, 22px) 0 0; margin: clamp(18px, 2vw, 24px) 0 clamp(22px, 2.4vw, 28px);
+  display: flex; flex-direction: column; gap: 10px; flex: 1;
+  border-top: 1px solid rgba(184, 168, 120, 0.14);
+}
+.plan-card.featured .plan-features { border-top-color: rgba(21, 35, 24, 0.1); }
+.plan-features li {
+  position: relative; padding-left: 18px;
+  font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
+  color: rgba(244, 241, 230, 0.72);
+}
+.plan-card.featured .plan-features li { color: rgba(21, 35, 24, 0.74); }
+.plan-features li::before {
+  content: ''; position: absolute; left: 0; top: 9px;
+  width: 6px; height: 1px; background: var(--leaf);
+}
+
+.plan-cta {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 48px;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--bone);
+  border: 1px solid rgba(244, 241, 230, 0.22); border-radius: 2px;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.plan-cta:hover { background: var(--leaf); color: var(--ink); border-color: var(--leaf); }
+.plan-card.featured .plan-cta { background: var(--leaf); color: var(--ink); border-color: var(--leaf); }
+.plan-card.featured .plan-cta:hover { background: var(--leaf-2); border-color: var(--leaf-2); }
+
+.membresias-legal {
+  margin-top: clamp(28px, 3.5vw, 44px);
+  font-family: var(--font-ui); font-size: 12.5px; letter-spacing: 0.04em;
+  color: var(--muted); text-align: center;
+}
+
+@media (max-width: 900px) { .membresias-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .membresias-grid { grid-template-columns: 1fr; } }

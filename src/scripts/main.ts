@@ -810,6 +810,33 @@ function initWelcome() {
   }
 }
 
+// ── Reveal simple: el movimiento por defecto del giro (fade + y al entrar) ──
+function initReveal() {
+  const els = Array.from(document.querySelectorAll<HTMLElement>('.reveal'))
+  if (els.length === 0) return
+
+  // reduced-motion: mostramos todo de una, sin animar
+  if (prefersReducedMotion) {
+    els.forEach((el) => el.classList.add('is-in'))
+    return
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        const el = entry.target as HTMLElement
+        io.unobserve(el)
+        const delay = Number(el.dataset.revealDelay || 0)
+        if (delay) el.style.transitionDelay = delay + 'ms'
+        el.classList.add('is-in')
+      })
+    },
+    { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+  )
+  els.forEach((el) => io.observe(el))
+}
+
 function init() {
   initLoader()
   initNav()
@@ -824,12 +851,10 @@ function init() {
   ScrollTrigger.refresh()
 
   initWelcome()
-  initHeroEntrance()
-  initHeroParallax()
+  initReveal()
   animateSplitWords()
   initCounters()
   initClipReveal()
-  initHorizontalScroll()
   initStepLine()
   initBentoItems()
   initStats()
