@@ -10,21 +10,21 @@ const perfiles = [
   {
     tag: 'Dolor & inflamación',
     title: 'Para quienes buscan una alternativa real.',
-    desc: 'Variedades con alto CBD y terpenos como el beta-cariofileno, para acompañar el dolor crónico, articular o muscular en tu día a día.',
+    desc: 'El CBD y el THC pueden acompañar el dolor crónico, articular o muscular, trabajando sobre la inflamación y la forma en que percibís el dolor.',
     cta: 'Hablar sobre dolor',
     href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
   },
   {
     tag: 'Sueño & descanso',
     title: 'Para quienes buscan recuperar el descanso.',
-    desc: 'Variedades de perfil más sedante, con presencia de mirceno y THC balanceado, para acompañar el insomnio, el sueño interrumpido y la mente acelerada.',
+    desc: 'El THC en dosis justas y ciertos cannabinoides pueden ayudarte a conciliar y sostener el sueño, para el insomnio y la mente que no para.',
     cta: 'Hablar sobre sueño',
     href: wa('Hola Flora, me interesa el club para mejorar mi sueño 🌿'),
   },
   {
     tag: 'Bienestar & ansiedad',
     title: 'Para quienes buscan equilibrio en el día a día.',
-    desc: 'Variedades CBD:THC balanceadas para uso diurno, pensadas para mantenerte despejado y presente. Para la ansiedad, el estrés cotidiano y el bienestar como práctica continua.',
+    desc: 'El CBD acompaña la ansiedad y el estrés del día a día sin alterarte, pensado para uso diurno y como una práctica continua de bienestar.',
     cta: 'Hablar sobre bienestar',
     href: wa('Hola Flora, me interesa el club para bienestar y ansiedad 🌿'),
   },
@@ -84,6 +84,13 @@ const cremas = [
     desc: 'Para uso continuo y zonas de mayor extensión. La opción de quienes ya sumaron la crema a su rutina.',
     href: wa('Hola Flora, me interesa la crema 100cc 🌿'),
   },
+]
+
+// Iconos de línea para los paneles gateway de Perfiles (dolor / sueño / ansiedad)
+const perfilIconsSvg = [
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 5 4-12 2 7h6"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h18"/></svg>`,
 ]
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
@@ -397,30 +404,35 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- PERFILES — ¿Por qué llegaste a Flora?      -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="perfiles-section" id="perfiles" aria-label="Por qué llegaste a Flora">
-    <div class="perfiles-inner">
-      <div class="perfiles-head">
-        <span class="eyebrow reveal">¿Por qué llegaste?</span>
-        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Cada camino<br><em>tiene su planta.</em></h2>
-        <p class="perfiles-lead reveal" data-reveal-delay="140">
+  <section class="fl-section fl-perfiles" id="perfiles" aria-label="Por qué llegaste a Flora">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">¿Por qué llegaste?</span>
+        <h2 class="fl-title">Cada camino<br><em>tiene su planta.</em></h2>
+        <p class="fl-lead">
           El cannabis medicinal abarca muchos caminos. El equipo orienta el tuyo
-          según tu situación. Contanos qué te trae y avanzamos desde ahí.
+          según tu situación. Pasá el mouse por cada abordaje y descubrí cuál es el tuyo.
         </p>
-      </div>
+      </header>
 
-      <div class="ed-list" role="list">
+      <div class="fl-gateway" role="list">
         {perfiles.map((p, i) => (
-          <article class="ed-row reveal" role="listitem" data-reveal-delay={i * 80}>
-            <span class="ed-num" aria-hidden="true">0{i + 1}</span>
-            <div class="ed-body">
-              <span class="ed-kicker">{p.tag}</span>
-              <h3 class="ed-title">{p.title}</h3>
-              <p class="ed-desc">{p.desc}</p>
-              <a class="ed-cta" href={p.href} target="_blank" rel="noopener noreferrer">
-                {p.cta} <span aria-hidden="true">→</span>
-              </a>
-            </div>
-          </article>
+          <a
+            class={`fl-panel fl-panel-${i + 1}`}
+            href={p.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            role="listitem"
+            aria-label={`${p.tag}: ${p.title}`}
+          >
+            <span class="fl-panel-icon" aria-hidden="true" set:html={perfilIconsSvg[i]} />
+            <span class="fl-panel-body">
+              <span class="fl-panel-tag">{p.tag}</span>
+              <span class="fl-panel-title">{p.title}</span>
+              <span class="fl-panel-desc">{p.desc}</span>
+              <span class="fl-panel-cta">{p.cta} <span aria-hidden="true">→</span></span>
+            </span>
+          </a>
         ))}
       </div>
     </div>
@@ -490,101 +502,75 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="productos-section" id="productos" aria-label="Nuestros productos">
-    <div class="productos-inner">
-      <div class="productos-head">
-        <span class="eyebrow reveal">Nuestros productos</span>
-        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Tres formas<br><em>de acceder.</em></h2>
-        <p class="productos-lead reveal" data-reveal-delay="140">
-          Flor de cultivo propio, aceites sublinguales con cromatografía y crema
-          tópica. Todo con el acompañamiento del equipo.
+  <section class="fl-section fl-access" id="productos" aria-label="Qué hacemos y cómo accedés">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Qué hacemos</span>
+        <h2 class="fl-title">Tres productos, <em>dos formas de acceder.</em></h2>
+        <p class="fl-lead">
+          Hacemos aceites, cremas y flores. A las flores accedés por membresía mensual
+          del cultivo compartido; a los aceites y las cremas, por consulta con el equipo.
         </p>
+      </header>
+
+      <div class="fl-cards">
+        <article class="fl-card">
+          <span class="fl-card-tag fl-tag-membresia">Membresía mensual</span>
+          <h3 class="fl-card-title">Flores</h3>
+          <p class="fl-card-desc">
+            Flor seca de cultivo propio. Accedés a tu parte del cultivo compartido todos
+            los meses, con planes de 10 a 40 gramos.
+          </p>
+          <a class="fl-card-cta" href="#membresias">Ver planes <span aria-hidden="true">→</span></a>
+        </article>
+
+        <article class="fl-card fl-card-feat">
+          <span class="fl-card-tag fl-tag-consulta">Por consulta</span>
+          <h3 class="fl-card-title">Aceites</h3>
+          <p class="fl-card-desc">
+            Extractos sublinguales Q1 · Q2 · Q3, cada uno con su cromatografía HPLC.
+            Los encargás al equipo según tu caso.
+          </p>
+          <a class="fl-card-cta" href={wa('Hola Flora, quiero consultar por los aceites medicinales 🌿')} target="_blank" rel="noopener noreferrer">Consultar aceites <span aria-hidden="true">→</span></a>
+        </article>
+
+        <article class="fl-card">
+          <span class="fl-card-tag fl-tag-consulta">Por consulta</span>
+          <h3 class="fl-card-title">Cremas</h3>
+          <p class="fl-card-desc">
+            Crema tópica de uso externo, en 50 y 100 cc, para dolor localizado.
+            No requiere REPROCANN. La encargás al equipo.
+          </p>
+          <a class="fl-card-cta" href={wa('Hola Flora, quiero consultar por las cremas 🌿')} target="_blank" rel="noopener noreferrer">Consultar cremas <span aria-hidden="true">→</span></a>
+        </article>
       </div>
 
-      <!-- Selector de formato -->
-      <div class="prod-tabs" role="tablist" aria-label="Formatos disponibles">
-        <button class="prod-tab is-active" role="tab" id="tab-flores" aria-controls="panel-flores" aria-selected="true" tabindex="0" data-tab="flores">
-          <span class="prod-tab-name">Flores</span>
-          <span class="prod-tab-sub">Membresía mensual</span>
-        </button>
-        <button class="prod-tab" role="tab" id="tab-aceites" aria-controls="panel-aceites" aria-selected="false" tabindex="-1" data-tab="aceites">
-          <span class="prod-tab-name">Aceites</span>
-          <span class="prod-tab-sub">Q1 · Q2 · Q3</span>
-        </button>
-        <button class="prod-tab" role="tab" id="tab-cremas" aria-controls="panel-cremas" aria-selected="false" tabindex="-1" data-tab="cremas">
-          <span class="prod-tab-name">Crema</span>
-          <span class="prod-tab-sub">50cc · 100cc</span>
-        </button>
-      </div>
-
-      <!-- Panel: Flores -->
-      <div class="prod-panel is-active" role="tabpanel" id="panel-flores" aria-labelledby="tab-flores" data-panel="flores">
-        <p class="prod-panel-lead">
-          Flor seca de cultivo propio. Cada lote con perfil completo de cannabinoides
-          y terpenos. Se accede por membresía mensual, sin contratos.
-        </p>
-        <div class="prod-flores-cta">
-          <div>
-            <span class="prod-flores-eyebrow">Cuatro planes</span>
-            <p class="prod-flores-text">Semilla 10g · Raíz 20g · Cosecha 30g · Tierra 40g por mes.</p>
-          </div>
-          <a class="prod-link" href="#membresias">Ver planes de flores ↓</a>
+      <!-- Spec highlights: aceites con HPLC (el dato verificable) -->
+      <div class="fl-spec">
+        <div class="fl-spec-head">
+          <span class="fl-eyebrow">El dato verificable</span>
+          <h3 class="fl-spec-title">Cada aceite, con su cromatografía.</h3>
+          <p class="fl-spec-sub">
+            Concentración real en mg/mL de la última cromatografía
+            (HPLC-UV · IACA Laboratorios · 02/06/2026).
+          </p>
         </div>
-      </div>
-
-      <!-- Panel: Aceites -->
-      <div class="prod-panel" role="tabpanel" id="panel-aceites" aria-labelledby="tab-aceites" data-panel="aceites" hidden>
-        <p class="prod-panel-lead">
-          Extractos sublinguales de producción propia. Tres quimiotipos con distinta
-          relación CBD:THC, cada uno con su análisis de cromatografía.
-        </p>
-        <div class="prod-cards">
+        <div class="fl-spec-grid">
           {aceites.map((a) => (
-            <article class="prod-card">
-              <span class="prod-card-eyebrow">Aceite medicinal</span>
-              <span class="prod-card-big">{a.codigo}</span>
-              <span class="prod-card-sub">{a.sub}</span>
-              <p class="prod-card-desc">{a.desc}</p>
-              <dl class="prod-perfil" aria-label={`Perfil de cannabinoides de ${a.codigo} en mg/mL`}>
+            <article class="fl-spec-card">
+              <span class="fl-spec-code">{a.codigo}</span>
+              <span class="fl-spec-sublabel">{a.sub}</span>
+              <dl class="fl-spec-vals" aria-label={`Perfil de ${a.codigo} en mg/mL`}>
                 {a.perfil.map((p) => (
-                  <div class="prod-perfil-item">
-                    <dt>{p.k}</dt>
-                    <dd>{p.v}</dd>
-                  </div>
+                  <div><dt>{p.k}</dt><dd>{p.v}<i>mg/mL</i></dd></div>
                 ))}
               </dl>
-              <div class="prod-tags">
-                {a.usos.map((u) => <span class="prod-tag-pill">{u}</span>)}
-              </div>
-              <a class="prod-card-cta" href={a.href} target="_blank" rel="noopener noreferrer">
-                Consultar {a.codigo} →
+              <a class="fl-card-cta" href={a.href} target="_blank" rel="noopener noreferrer">
+                Consultar {a.codigo} <span aria-hidden="true">→</span>
               </a>
             </article>
           ))}
         </div>
-        <p class="prod-foot">Valores en mg/mL de la última cromatografía (HPLC-UV · IACA Laboratorios · junio 2026). Disponibilidad por consulta.</p>
-      </div>
-
-      <!-- Panel: Crema -->
-      <div class="prod-panel" role="tabpanel" id="panel-cremas" aria-labelledby="tab-cremas" data-panel="cremas" hidden>
-        <p class="prod-panel-lead">
-          Formulación tópica antiinflamatoria de uso externo. Una fórmula, dos
-          presentaciones. Para dolor localizado, articulaciones y recuperación muscular.
-        </p>
-        <div class="prod-cards prod-cards-2">
-          {cremas.map((c) => (
-            <article class="prod-card">
-              <span class="prod-card-eyebrow">Presentación</span>
-              <span class="prod-card-big">{c.presentacion}</span>
-              <span class="prod-card-sub">{c.sub}</span>
-              <p class="prod-card-desc">{c.desc}</p>
-              <a class="prod-card-cta" href={c.href} target="_blank" rel="noopener noreferrer">
-                Consultar {c.presentacion} →
-              </a>
-            </article>
-          ))}
-        </div>
-        <p class="prod-foot">Uso externo. No requiere REPROCANN. Disponibilidad por consulta.</p>
       </div>
     </div>
   </section>
