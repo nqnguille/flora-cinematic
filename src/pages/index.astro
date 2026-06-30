@@ -112,7 +112,7 @@ const legales = [
   },
   {
     titulo: 'Asociación civil de cultivo compartido',
-    desc: 'Te sumás como socio del club de cultivo compartido. El acceso es por membresía a la asociación.',
+    desc: 'Te sumás como socio de la asociación. El acceso es mediante un aporte solidario al cultivo compartido.',
   },
   {
     titulo: 'Decreto 883/2020',
@@ -120,55 +120,57 @@ const legales = [
   },
 ]
 
-const memberships = [
+// Acceso a material vegetal — niveles de cultivo solidario.
+// Sugerimos siempre arrancar por el más bajo (Semilla, 10g).
+const niveles = [
   {
     name: 'Semilla',
     grams: '10',
     features: [
-      'Acceso mensual a tu parte del cultivo',
-      'Variedad rotativa de temporada',
-      'Cultivo propio, sin pesticidas',
+      'El punto de partida que sugerimos',
+      'Tu parte del cultivo, cada mes',
+      'Cultivado sin pesticidas',
+      'Acompañamiento del equipo',
     ],
-    featured: false,
-    waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Semilla%20(10g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
+    featured: true,
+    badge: 'Sugerido para empezar',
+    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Semilla (10g). ¿Me orientan para empezar?'),
   },
   {
     name: 'Raíz',
     grams: '20',
     features: [
-      'Acceso mensual a tu parte del cultivo',
+      'Tu parte del cultivo, cada mes',
       'Elección de variedad disponible',
-      'Orientación para elegir tu variedad',
+      'Orientación para elegir',
       'Acompañamiento por WhatsApp',
     ],
-    featured: true,
-    badge: 'El más elegido',
-    waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Ra%C3%ADz%20(20g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
+    featured: false,
+    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Raíz (20g). ¿Me orientan?'),
   },
   {
     name: 'Cosecha',
     grams: '30',
     features: [
-      'Acceso mensual a tu parte del cultivo',
+      'Tu parte del cultivo, cada mes',
       'Prioridad en variedades nuevas',
-      'Sesión de orientación inicial',
-      'Acompañamiento directo del equipo',
+      'Orientación inicial con el equipo',
+      'Acompañamiento directo',
     ],
     featured: false,
-    waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Cosecha%20(30g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
+    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Cosecha (30g). ¿Me orientan?'),
   },
   {
     name: 'Tierra',
     grams: '40',
     features: [
-      'Acceso mensual a tu parte del cultivo',
-      'Acceso a todas las variedades del club',
-      'Acceso a los aceites con cromatografía (Q1·Q2·Q3)',
-      'Acompañamiento prioritario 24h',
-      'Invitaciones a ciclos de formación',
+      'Tu parte del cultivo, cada mes',
+      'Acceso a todas las variedades',
+      'Acceso a los aceites con análisis (Q1·Q2·Q3)',
+      'Acompañamiento prioritario',
     ],
     featured: false,
-    waLink: `${WA}?text=Hola%20Flora%2C%20me%20interesa%20la%20membres%C3%ADa%20Tierra%20(40g).%20%C2%BFPueden%20darme%20m%C3%A1s%20informaci%C3%B3n%3F`,
+    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Tierra (40g). ¿Me orientan?'),
   },
 ]
 
@@ -185,8 +187,8 @@ const steps = [
   },
   {
     num: '03',
-    title: 'Elegís tu membresía',
-    desc: 'Una vez adentro, elegís el plan que se ajusta a tu uso y lo podés cambiar cuando quieras.',
+    title: 'Elegís tu nivel de acceso',
+    desc: 'Una vez adentro, elegís el nivel que se ajusta a lo que necesitás. Lo podés cambiar cuando quieras.',
   },
   {
     num: '04',
@@ -243,7 +245,7 @@ const igFallback = [
     <ul class="nav-links" role="list">
       <li><a href="#perfiles">En qué te ayuda</a></li>
       <li><a href="#productos">Productos</a></li>
-      <li><a href="#membresias">Membresías</a></li>
+      <li><a href="#membresias">Acceso</a></li>
       <li><a href="#como-funciona">Cómo funciona</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
@@ -276,7 +278,7 @@ const igFallback = [
       <ul role="list">
         <li><a href="#perfiles">En qué te ayuda</a></li>
         <li><a href="#productos">Productos</a></li>
-        <li><a href="#membresias">Membresías</a></li>
+        <li><a href="#membresias">Acceso</a></li>
         <li><a href="#como-funciona">Cómo funciona</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
@@ -388,13 +390,13 @@ const igFallback = [
 
       <div class="fl-cards">
         <article class="fl-card">
-          <span class="fl-card-tag fl-tag-membresia">Membresía mensual</span>
+          <span class="fl-card-tag fl-tag-membresia">Cultivo solidario</span>
           <h3 class="fl-card-title">Flores</h3>
           <p class="fl-card-desc">
-            Flor seca de cultivo propio. Accedés a tu parte del cultivo compartido todos
-            los meses, con planes de 10 a 40 gramos.
+            Cultivamos tu parte del material vegetal, mes a mes, para quienes no pueden
+            hacerlo en casa. Un aporte solidario, sin fines de lucro.
           </p>
-          <a class="fl-card-cta" href="#membresias">Ver planes <span aria-hidden="true">→</span></a>
+          <a class="fl-card-cta" href="#membresias">Cómo acceder <span aria-hidden="true">→</span></a>
         </article>
 
         <article class="fl-card fl-card-feat">
@@ -491,25 +493,27 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- MEMBRESÍAS — planes de flores (light)       -->
+  <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-plans" id="membresias" aria-label="Membresía de flores">
+  <section class="fl-section fl-plans" id="membresias" aria-label="Acceso a material vegetal">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Membresía de flores</span>
-        <h2 class="fl-title">Elegí <em>tu plan.</em></h2>
+        <span class="fl-eyebrow">Acceso a material vegetal</span>
+        <h2 class="fl-title">Cultivamos <em>para vos.</em></h2>
         <p class="fl-lead">
-          Cada plan es tu parte del cultivo compartido, mes a mes. Desde
-          <strong class="fl-price-from">$170.000</strong> por mes según los gramos.
+          Somos una asociación civil sin fines de lucro. Dentro del REPROCANN, cultivamos
+          el material vegetal de cada socio que no puede hacerlo en su casa. Tu aporte
+          mensual sostiene ese cultivo —desde <strong class="fl-price-from">$170.000</strong>,
+          según la cantidad que te corresponde.
         </p>
       </header>
 
       <div class="fl-plan-grid" role="list">
-        {memberships.map((m) => (
+        {niveles.map((m) => (
           <article
             class={m.featured ? 'fl-plan featured' : 'fl-plan'}
             role="listitem"
-            aria-label={`Plan ${m.name}: ${m.grams} gramos por mes`}
+            aria-label={`Nivel ${m.name}: ${m.grams} gramos de material vegetal por mes`}
           >
             {m.badge && <span class="fl-plan-badge">{m.badge}</span>}
             <span class="fl-plan-name">{m.name}</span>
@@ -520,13 +524,13 @@ const igFallback = [
               {m.features.map((f) => <li>{f}</li>)}
             </ul>
             <a class="fl-card-cta" href={m.waLink} target="_blank" rel="noopener noreferrer">
-              Consultar plan <span aria-hidden="true">→</span>
+              Quiero acceder <span aria-hidden="true">→</span>
             </a>
           </article>
         ))}
       </div>
 
-      <p class="fl-plan-note">Cada plan es tu parte de un cultivo colectivo, dentro del marco de la Ley&nbsp;27.350.</p>
+      <p class="fl-plan-note">El aporte sostiene el cultivo compartido, sin fines de lucro, dentro de la Ley&nbsp;27.350 y el REPROCANN.</p>
     </div>
   </section>
 
@@ -685,7 +689,7 @@ const igFallback = [
           <ul>
             <li><a href="#perfiles">En qué te ayuda</a></li>
             <li><a href="#productos">Productos</a></li>
-            <li><a href="#membresias">Membresías</a></li>
+            <li><a href="#membresias">Acceso</a></li>
             <li><a href="#como-funciona">Cómo funciona</a></li>
             <li><a href="#legalidad">Legalidad</a></li>
           </ul>
