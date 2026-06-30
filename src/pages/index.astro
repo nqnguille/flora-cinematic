@@ -391,55 +391,14 @@ const igFallback = [
       <span class="fl-eyebrow on-dark">Tu REPROCANN</span>
       <h2 class="fl-title">¿Cómo se tramita el <em>REPROCANN?</em></h2>
       <p class="fl-reprocann-lead">
-        Es la pregunta que más nos hacen. El primer paso es una entrevista con un
-        profesional de la salud: evalúa tu caso y, si corresponde, te inscribe en el
-        REPROCANN. Ese mismo paso es el que te habilita a asociarte a Flora.
+        El primer paso es una entrevista con un profesional de la salud: evalúa tu caso
+        y, si corresponde, te inscribe en el REPROCANN. Es también lo que te habilita a
+        asociarte a Flora.
       </p>
       <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
         Pedir mi entrevista médica <span aria-hidden="true">→</span>
       </a>
       <p class="fl-reprocann-note">Sin compromiso. Te orientamos en cada paso del trámite.</p>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- LEGALIDAD — Marco legal                    -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-legal" id="legalidad" aria-label="Marco legal">
-    <div class="fl-wrap">
-      <header class="fl-head">
-        <span class="fl-eyebrow">Marco legal</span>
-        <h2 class="fl-title">Operamos dentro <em>de la ley.</em></h2>
-        <p class="fl-lead">
-          Flora es una asociación civil de cultivo compartido. El acceso es como socio,
-          dentro de la Ley 27.350 y el marco REPROCANN. Con todo por escrito.
-        </p>
-      </header>
-
-      <div class="fl-legal-body">
-        <ol class="fl-ed-list" role="list">
-          {legales.map((l, i) => (
-            <li class="fl-ed-row" role="listitem">
-              <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
-              <div class="fl-ed-body">
-                <h3 class="fl-ed-title">{l.titulo}</h3>
-                <p class="fl-ed-desc">{l.desc}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        <aside class="fl-legal-aside" aria-label="Registro y consulta">
-          <span class="fl-eyebrow">Registro habilitado · REPROCANN</span>
-          <p class="fl-legal-aside-text">
-            ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
-            con una persona del equipo.
-          </p>
-          <a class="fl-card-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
-            Consultar por WhatsApp <span aria-hidden="true">→</span>
-          </a>
-        </aside>
-      </div>
     </div>
   </section>
 
@@ -493,30 +452,73 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- LEGALIDAD — Marco legal                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-legal" id="legalidad" aria-label="Marco legal">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Marco legal</span>
+        <h2 class="fl-title">Operamos dentro <em>de la ley.</em></h2>
+        <p class="fl-lead">
+          Flora es una asociación civil de cultivo compartido. El acceso es como socio,
+          dentro de la Ley 27.350 y el marco REPROCANN. Con todo por escrito.
+        </p>
+      </header>
+
+      <div class="fl-legal-body">
+        <ol class="fl-ed-list" role="list">
+          {legales.map((l, i) => (
+            <li class="fl-ed-row" role="listitem">
+              <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
+              <div class="fl-ed-body">
+                <h3 class="fl-ed-title">{l.titulo}</h3>
+                <p class="fl-ed-desc">{l.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <aside class="fl-legal-aside" aria-label="Registro y consulta">
+          <span class="fl-eyebrow">Registro habilitado · REPROCANN</span>
+          <p class="fl-legal-aside-text">
+            ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
+            con una persona del equipo.
+          </p>
+          <a class="fl-card-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
+            Consultar por WhatsApp <span aria-hidden="true">→</span>
+          </a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-programa" id="programa" aria-label="Programa Espacio libre de prejuicios">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Programa en YouTube</span>
+        <span class="fl-eyebrow">Nuestro canal de YouTube</span>
         <h2 class="fl-title">Espacio libre <em>de prejuicios.</em></h2>
         <p class="fl-lead">
-          Conversaciones sin vueltas sobre cannabis medicinal: acceso, legalidad y
-          bienestar. Para sumar información a la conversación.
+          Conversaciones sin vueltas sobre cannabis medicinal. Mirá los capítulos completos
+          en YouTube y sumate a la comunidad del canal.
         </p>
-        <a class="fl-card-cta" href={ytChannel} target="_blank" rel="noopener noreferrer">
-          Ver el canal <span aria-hidden="true">→</span>
+        <a class="fl-yt-cta" href={`${ytChannel}?sub_confirmation=1`} target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+          Suscribite al canal
         </a>
       </header>
 
       <ul class="fl-episodes" role="list">
         {episodes.map((ep, i) => (
           <li class="fl-episode">
-            <button
-              class="yt-facade"
-              data-id={ep.id}
-              data-title={ep.title}
-              aria-label={`Reproducir episodio: ${ep.title}`}
+            <a
+              class="fl-episode-thumb"
+              href={`https://www.youtube.com/watch?v=${ep.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Ver en YouTube: ${ep.title}`}
             >
               <img
                 class="yt-thumb"
@@ -530,10 +532,13 @@ const igFallback = [
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               </span>
               <span class="yt-dur" aria-hidden="true">{ep.dur}</span>
-            </button>
+            </a>
             <div class="fl-episode-meta">
               <span class="fl-episode-num">Episodio 0{i + 1}</span>
               <h3 class="fl-episode-title">{ep.title}</h3>
+              <a class="fl-card-cta" href={`https://www.youtube.com/watch?v=${ep.id}`} target="_blank" rel="noopener noreferrer">
+                Ver en YouTube <span aria-hidden="true">→</span>
+              </a>
             </div>
           </li>
         ))}
