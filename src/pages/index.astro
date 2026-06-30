@@ -45,6 +45,7 @@ const aceites = [
     ],
     usos: ['Uso nocturno', 'Dolor intenso', 'Descanso'],
     href: wa('Hola Flora, me interesa el aceite Q1 🌿'),
+    pdf: '/analisis/Q1.pdf',
   },
   {
     codigo: 'Q2',
@@ -57,6 +58,7 @@ const aceites = [
     ],
     usos: ['Día y noche', 'Dolor moderado', 'Uso continuo'],
     href: wa('Hola Flora, me interesa el aceite Q2 🌿'),
+    pdf: '/analisis/Q2.pdf',
   },
   {
     codigo: 'Q3',
@@ -69,6 +71,7 @@ const aceites = [
     ],
     usos: ['Uso diurno', 'Ansiedad', 'Inicio suave'],
     href: wa('Hola Flora, me interesa el aceite Q3 🌿'),
+    pdf: '/analisis/Q3.pdf',
   },
 ]
 const cremas = [
@@ -551,11 +554,9 @@ const igFallback = [
           <h3 class="fl-spec-title">Los últimos análisis <em>de nuestros aceites.</em></h3>
           <p class="fl-spec-sub">
             Cannabinoides del último lote, medidos en mg/mL por cromatografía
-            (HPLC-UV · IACA Laboratorios · 02/06/2026).
+            (HPLC-UV · IACA Laboratorios · extracción 02/06/2026). Descargá el informe
+            de cada aceite acá abajo.
           </p>
-          <a class="fl-card-cta fl-spec-download" href={wa('Hola Flora, quiero ver el análisis completo del último lote de aceites 🌿')} target="_blank" rel="noopener noreferrer">
-            Pedí el análisis completo <span aria-hidden="true">→</span>
-          </a>
         </div>
         <div class="fl-spec-grid">
           {aceites.map((a) => (
@@ -567,8 +568,8 @@ const igFallback = [
                   <div><dt>{p.k}</dt><dd>{p.v}<i>mg/mL</i></dd></div>
                 ))}
               </dl>
-              <a class="fl-card-cta" href={a.href} target="_blank" rel="noopener noreferrer">
-                Consultar {a.codigo} <span aria-hidden="true">→</span>
+              <a class="fl-card-cta" href={a.pdf} download>
+                Descargar análisis <span aria-hidden="true">↓</span>
               </a>
             </article>
           ))}
