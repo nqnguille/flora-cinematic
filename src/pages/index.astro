@@ -502,8 +502,8 @@ const igFallback = [
         <span class="fl-eyebrow">Nuestro canal de YouTube</span>
         <h2 class="fl-title">Espacio libre <em>de prejuicios.</em></h2>
         <p class="fl-lead">
-          Conversaciones sin vueltas sobre cannabis medicinal. Mirá los capítulos completos
-          en YouTube y sumate a la comunidad del canal.
+          Conversaciones sin vueltas sobre cannabis medicinal. Mirá los capítulos acá mismo,
+          o abrilos en YouTube y suscribite al canal.
         </p>
         <a class="fl-yt-cta" href={`${ytChannel}?sub_confirmation=1`} target="_blank" rel="noopener noreferrer">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
@@ -514,12 +514,11 @@ const igFallback = [
       <ul class="fl-episodes" role="list">
         {episodes.map((ep, i) => (
           <li class="fl-episode">
-            <a
-              class="fl-episode-thumb"
-              href={`https://www.youtube.com/watch?v=${ep.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Ver en YouTube: ${ep.title}`}
+            <button
+              class="yt-facade fl-episode-thumb"
+              data-id={ep.id}
+              data-title={ep.title}
+              aria-label={`Reproducir acá: ${ep.title}`}
             >
               <img
                 class="yt-thumb"
@@ -533,12 +532,13 @@ const igFallback = [
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               </span>
               <span class="yt-dur" aria-hidden="true">{ep.dur}</span>
-            </a>
+            </button>
             <div class="fl-episode-meta">
               <span class="fl-episode-num">Episodio 0{i + 1}</span>
               <h3 class="fl-episode-title">{ep.title}</h3>
-              <a class="fl-card-cta" href={`https://www.youtube.com/watch?v=${ep.id}`} target="_blank" rel="noopener noreferrer">
-                Ver en YouTube <span aria-hidden="true">→</span>
+              <a class="fl-episode-yt" href={`https://www.youtube.com/watch?v=${ep.id}`} target="_blank" rel="noopener noreferrer">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+                Verlo en YouTube y suscribirte <span aria-hidden="true">↗</span>
               </a>
             </div>
           </li>
