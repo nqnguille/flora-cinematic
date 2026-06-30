@@ -10,21 +10,21 @@ const perfiles = [
   {
     tag: 'Dolor & inflamación',
     title: 'Para quienes buscan una alternativa real.',
-    desc: 'Variedades con alto CBD y terpenos antiinflamatorios como el beta-cariofileno. Para acompañar el dolor crónico, articular o muscular en tu día a día.',
+    desc: 'Variedades con alto CBD y terpenos como el beta-cariofileno, para acompañar el dolor crónico, articular o muscular en tu día a día.',
     cta: 'Hablar sobre dolor',
     href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
   },
   {
     tag: 'Sueño & descanso',
-    title: 'Para quienes no logran descansar de verdad.',
-    desc: 'Variedades de perfil más sedante, con presencia de mirceno y THC balanceado. Para el insomnio, el sueño interrumpido y la mente que no para.',
+    title: 'Para quienes buscan recuperar el descanso.',
+    desc: 'Variedades de perfil más sedante, con presencia de mirceno y THC balanceado, para acompañar el insomnio, el sueño interrumpido y la mente acelerada.',
     cta: 'Hablar sobre sueño',
     href: wa('Hola Flora, me interesa el club para mejorar mi sueño 🌿'),
   },
   {
     tag: 'Bienestar & ansiedad',
     title: 'Para quienes buscan equilibrio en el día a día.',
-    desc: 'Variedades CBD:THC balanceadas para uso diurno. Sin sedación ni niebla mental. Para la ansiedad, el estrés cotidiano y el bienestar como práctica continua.',
+    desc: 'Variedades CBD:THC balanceadas para uso diurno, pensadas para mantenerte despejado y presente. Para la ansiedad, el estrés cotidiano y el bienestar como práctica continua.',
     cta: 'Hablar sobre bienestar',
     href: wa('Hola Flora, me interesa el club para bienestar y ansiedad 🌿'),
   },
@@ -209,7 +209,7 @@ const igFallback = [
 
 <Layout
   title="Flora ONG — Club de cultivo de cannabis medicinal en Neuquén"
-  description="Club de cultivo bajo Ley 27.350 / REPROCANN. Acceso mensual a cultivo propio y aceites con cromatografía, sin intermediarios. Neuquén, Patagonia, Argentina."
+  description="Club de cultivo bajo Ley 27.350 / REPROCANN. Acceso mensual a cultivo propio y aceites con cromatografía, con acompañamiento real. Neuquén, Patagonia, Argentina."
 >
 
   <!-- Skip to content para navegación por teclado -->
@@ -396,22 +396,26 @@ const igFallback = [
   <section class="perfiles-section" id="perfiles" aria-label="Por qué llegaste a Flora">
     <div class="perfiles-inner">
       <div class="perfiles-head">
-        <h2 class="split-words">¿Por qué llegaste<br><em>a Flora?</em></h2>
-        <p class="perfiles-lead">
+        <span class="eyebrow reveal">¿Por qué llegaste?</span>
+        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Cada camino<br><em>tiene su planta.</em></h2>
+        <p class="perfiles-lead reveal" data-reveal-delay="140">
           El cannabis medicinal abarca muchos caminos. El equipo orienta el tuyo
-          según tu situación. Decinos qué te trae y avanzamos desde ahí.
+          según tu situación. Contanos qué te trae y avanzamos desde ahí.
         </p>
       </div>
 
-      <div class="perfiles-grid" role="list">
-        {perfiles.map((p) => (
-          <article class="perfil-card fade-in" role="listitem">
-            <span class="perfil-tag">{p.tag}</span>
-            <h3 class="perfil-title">{p.title}</h3>
-            <p class="perfil-desc">{p.desc}</p>
-            <a class="perfil-cta" href={p.href} target="_blank" rel="noopener noreferrer">
-              {p.cta} <span aria-hidden="true">→</span>
-            </a>
+      <div class="ed-list" role="list">
+        {perfiles.map((p, i) => (
+          <article class="ed-row reveal" role="listitem" data-reveal-delay={i * 80}>
+            <span class="ed-num" aria-hidden="true">0{i + 1}</span>
+            <div class="ed-body">
+              <span class="ed-kicker">{p.tag}</span>
+              <h3 class="ed-title">{p.title}</h3>
+              <p class="ed-desc">{p.desc}</p>
+              <a class="ed-cta" href={p.href} target="_blank" rel="noopener noreferrer">
+                {p.cta} <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </article>
         ))}
       </div>
@@ -424,68 +428,57 @@ const igFallback = [
   <section class="why-section" id="flora" aria-label="Por qué Flora">
     <div class="why-inner">
 
-      <div class="section-header">
-        <div>
-          <span class="section-label on-light">Por qué Flora</span>
-          <h2 class="section-title split-words">Sabés lo que<br><em>recibís.</em></h2>
-        </div>
-        <p class="section-tagline">
-          Un club de cultivo es una forma legal de organizarse para acceder a lo que la ley ya permite.
+      <div class="why-head">
+        <span class="eyebrow on-light reveal">Por qué Flora</span>
+        <h2 class="why-lead reveal" data-reveal-delay="80">
+          Sabés <em>exactamente</em> qué recibís, de la planta a tu mano.
+        </h2>
+        <p class="why-sub reveal" data-reveal-delay="140">
+          Cultivo propio, marco legal y el equipo acompañando cada paso, dentro de la Ley&nbsp;27.350 y el REPROCANN.
         </p>
       </div>
 
-      <div class="why-bento" role="list">
-
-        <!-- Celda statement editorial grande -->
-        <div class="bento-statement" role="listitem">
-          <div>
-            <p class="bento-statement-text">
-              Flora existe para que ese acceso sea real, documentado y sin intermediarios.
-            </p>
+      <div class="ed-list" role="list">
+        <article class="ed-row reveal" role="listitem">
+          <span class="ed-num" aria-hidden="true">01</span>
+          <div class="ed-body">
+            <h3 class="ed-title">Cultivo propio</h3>
+            <p class="ed-desc">Cultivamos nuestras plantas en sala controlada, sin pesticidas. Vos accedés a tu parte como socio de la asociación.</p>
           </div>
-          <div>
-            <p class="bento-statement-sub">
-              Cultivo propio, marco legal y el equipo acompañando cada paso.
-            </p>
-            <div class="bento-law-badge" aria-label="Marco legal">
-              <span>Ley 27.350 · REPROCANN</span>
-            </div>
-          </div>
-        </div>
+        </article>
 
-        <!-- Grilla de razones -->
-        <div class="bento-items" role="list">
-          <div class="bento-item" role="listitem">
-            <span class="bento-item-num">01</span>
-            <h3 class="bento-item-title">Cultivo propio</h3>
-            <p class="bento-item-desc">Cultivamos nuestras plantas en sala controlada, sin pesticidas. Vos accedés a tu parte como socio del club.</p>
+        <article class="ed-row is-anchor reveal" role="listitem" data-reveal-delay="80">
+          <span class="ed-num" aria-hidden="true">02</span>
+          <div class="ed-body">
+            <span class="ed-kicker">El dato verificable</span>
+            <h3 class="ed-title">Aceites con cromatografía</h3>
+            <p class="ed-desc">Nuestros tres aceites —Q1, Q2 y Q3— tienen análisis HPLC que informa su concentración real de CBD, THC y CBG. El único dato que se puede comprobar, por escrito.</p>
           </div>
+        </article>
 
-          <div class="bento-item" role="listitem">
-            <span class="bento-item-num">02</span>
-            <h3 class="bento-item-title">Aceites con cromatografía</h3>
-            <p class="bento-item-desc">Nuestros tres aceites —Q1, Q2 y Q3— tienen análisis HPLC que informa su concentración real de CBD, THC y CBG.</p>
+        <article class="ed-row reveal" role="listitem">
+          <span class="ed-num" aria-hidden="true">03</span>
+          <div class="ed-body">
+            <h3 class="ed-title">Marco legal vigente</h3>
+            <p class="ed-desc">Operamos dentro de la Ley 27.350 y el REPROCANN. Tu acceso es como socio de la asociación, con todo en regla.</p>
           </div>
+        </article>
 
-          <div class="bento-item" role="listitem">
-            <span class="bento-item-num">03</span>
-            <h3 class="bento-item-title">Marco legal vigente</h3>
-            <p class="bento-item-desc">Operamos bajo Ley 27.350 y marco REPROCANN. Sin compraventa, sin grises, sin riesgo para vos.</p>
+        <article class="ed-row reveal" role="listitem">
+          <span class="ed-num" aria-hidden="true">04</span>
+          <div class="ed-body">
+            <h3 class="ed-title">Acompañamiento real</h3>
+            <p class="ed-desc">Respondemos por WhatsApp. Una persona del equipo, no un bot, porque tus preguntas merecen respuestas.</p>
           </div>
+        </article>
 
-          <div class="bento-item" role="listitem">
-            <span class="bento-item-num">04</span>
-            <h3 class="bento-item-title">Acompañamiento real</h3>
-            <p class="bento-item-desc">Respondemos por WhatsApp. Una persona del equipo, no un bot. Porque tus preguntas merecen respuestas.</p>
+        <article class="ed-row reveal" role="listitem">
+          <span class="ed-num" aria-hidden="true">05</span>
+          <div class="ed-body">
+            <h3 class="ed-title">Educación que acompaña</h3>
+            <p class="ed-desc">Te explicamos cada cannabinoide, cada vía de consumo y cada paso. Cultivamos conciencia.</p>
           </div>
-
-          <div class="bento-item" role="listitem">
-            <span class="bento-item-num">05</span>
-            <h3 class="bento-item-title">Educación, no estigma</h3>
-            <p class="bento-item-desc">Te explicamos cada cannabinoide, cada vía de consumo y cada paso. Cultivamos conciencia, no consumo a ciegas.</p>
-          </div>
-        </div>
-
+        </article>
       </div>
     </div>
   </section>

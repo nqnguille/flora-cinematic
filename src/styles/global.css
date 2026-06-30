@@ -2472,3 +2472,111 @@ html.no-js .reveal { opacity: 1; transform: none; }
 
 @media (max-width: 900px) { .membresias-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .membresias-grid { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════ */
+/* TEMPLATE EDITORIAL — lista de filas reusable */
+/* (Perfiles · Flora · Legal · Pasos)           */
+/* ══════════════════════════════════════════ */
+.ed-list { display: flex; flex-direction: column; }
+.ed-row {
+  display: grid;
+  grid-template-columns: clamp(2rem, 4vw, 4rem) 1fr;
+  gap: clamp(16px, 3vw, 48px);
+  align-items: start;
+  padding: clamp(26px, 3.6vw, 46px) 0;
+  border-top: 1px solid var(--ed-rule, rgba(21, 35, 24, 0.12));
+}
+.ed-row:last-child { border-bottom: 1px solid var(--ed-rule, rgba(21, 35, 24, 0.12)); }
+.ed-num {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 2.4vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--leaf);
+}
+.ed-kicker {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ed-muted, rgba(21, 35, 24, 0.5));
+  margin-bottom: 10px;
+}
+.ed-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 2.6vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--ed-fg, var(--ink));
+  margin-bottom: clamp(8px, 1vw, 12px);
+}
+.ed-title em { font-style: italic; color: var(--leaf); }
+.ed-desc {
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 1.6vw, 17px);
+  line-height: 1.6;
+  color: var(--ed-muted, rgba(21, 35, 24, 0.6));
+  max-width: 56ch;
+}
+.ed-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: clamp(12px, 1.4vw, 18px);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--leaf); text-decoration: none;
+  transition: gap 0.25s ease;
+}
+.ed-cta:hover { gap: 13px; }
+/* Fila ancla (el dato verificable: HPLC) */
+.ed-row.is-anchor .ed-kicker { color: var(--leaf); }
+.ed-row.is-anchor .ed-num { font-size: clamp(28px, 3vw, 48px); }
+
+/* ── Perfiles: escena ink editorial ── */
+.perfiles-section {
+  background: var(--ink);
+  padding: clamp(80px, 10vw, 140px) 0;
+  --ed-rule: rgba(184, 168, 120, 0.2);
+  --ed-fg: var(--bone);
+  --ed-muted: rgba(244, 241, 230, 0.6);
+}
+.perfiles-head { margin-bottom: clamp(36px, 5vw, 64px); max-width: 720px; }
+.perfiles-head .section-title { margin: clamp(14px, 2vw, 20px) 0 clamp(16px, 2vw, 22px); }
+.perfiles-head .section-title em { color: var(--leaf); font-style: italic; }
+.perfiles-lead {
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+/* ── Flora: respiro bone con lista editorial ── */
+.why-section {
+  background: var(--bone);
+  --ed-rule: rgba(21, 35, 24, 0.12);
+  --ed-fg: var(--ink);
+  --ed-muted: rgba(21, 35, 24, 0.6);
+}
+.why-head { margin-bottom: clamp(36px, 5vw, 64px); max-width: 880px; }
+.why-lead {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(32px, 4.6vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: clamp(14px, 2vw, 20px) 0 clamp(16px, 2vw, 22px);
+}
+.why-lead em { font-style: italic; color: var(--leaf); }
+.why-sub {
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.6;
+  color: rgba(21, 35, 24, 0.58);
+  max-width: 56ch;
+}
+
+@media (max-width: 560px) {
+  .ed-row { grid-template-columns: 1fr; gap: 6px; }
+  .ed-num { font-size: clamp(20px, 8vw, 28px); }
+}
