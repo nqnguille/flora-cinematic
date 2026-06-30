@@ -594,20 +594,35 @@ function initProductTabs() {
   const panels = Array.from(document.querySelectorAll<HTMLElement>('.prod-panel'))
   if (!tabs.length) return
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.tab
-      tabs.forEach(t => {
-        const active = t === tab
-        t.classList.toggle('is-active', active)
-        t.setAttribute('aria-selected', active ? 'true' : 'false')
-      })
-      panels.forEach(p => {
-        const show = p.dataset.panel === target
-        p.classList.toggle('is-active', show)
-        p.hidden = !show
-      })
-      ScrollTrigger.refresh()
+  const select = (tab: HTMLButtonElement, focus = false) => {
+    const target = tab.dataset.tab
+    tabs.forEach(t => {
+      const active = t === tab
+      t.classList.toggle('is-active', active)
+      t.setAttribute('aria-selected', active ? 'true' : 'false')
+      t.tabIndex = active ? 0 : -1
+    })
+    panels.forEach(p => {
+      const show = p.dataset.panel === target
+      p.classList.toggle('is-active', show)
+      p.hidden = !show
+    })
+    if (focus) tab.focus()
+    ScrollTrigger.refresh()
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab))
+    // Navegación por teclado del tablist (patrón WAI-ARIA)
+    tab.addEventListener('keydown', (e) => {
+      let next = -1
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % tabs.length
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + tabs.length) % tabs.length
+      else if (e.key === 'Home') next = 0
+      else if (e.key === 'End') next = tabs.length - 1
+      else return
+      e.preventDefault()
+      select(tabs[next], true)
     })
   })
 }
@@ -853,11 +868,7 @@ function init() {
   initWelcome()
   initReveal()
   animateSplitWords()
-  initCounters()
   initClipReveal()
-  initStepLine()
-  initBentoItems()
-  initStats()
   initFadeIn()
   initScrollProgress()
   initMagnetic()

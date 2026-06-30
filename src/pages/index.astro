@@ -61,7 +61,7 @@ const aceites = [
   {
     codigo: 'Q3',
     sub: 'Quimiotipo III · CBD predominante',
-    desc: 'CBD alto y THC casi nulo. Sin efecto psicoactivo: ideal para el día, la ansiedad y para empezar con un perfil suave.',
+    desc: 'CBD alto y THC casi nulo, de efecto suave. Ideal para el día, la ansiedad y para empezar con un perfil liviano.',
     perfil: [
       { k: 'CBD', v: '32,6' },
       { k: 'THC', v: '1,2' },
@@ -101,8 +101,8 @@ const legales = [
     desc: 'El cultivo se ampara en la inscripción de cada socio en el registro del programa.',
   },
   {
-    titulo: 'Asociación civil, sin compraventa',
-    desc: 'Te sumás como socio del club de cultivo compartido. El acceso es por membresía, no por venta.',
+    titulo: 'Asociación civil de cultivo compartido',
+    desc: 'Te sumás como socio del club de cultivo compartido. El acceso es por membresía a la asociación.',
   },
   {
     titulo: 'Decreto 883/2020',
@@ -181,7 +181,7 @@ const steps = [
   {
     num: '04',
     title: 'Accedés al cultivo compartido',
-    desc: 'Recibís tu parte del cultivo del mes. Todo dentro del marco legal del club. Sin intermediarios, sin grises.',
+    desc: 'Recibís tu parte del cultivo del mes, dentro del marco legal del club, con acceso directo y acompañado.',
   },
 ]
 
@@ -369,25 +369,29 @@ const igFallback = [
   <!-- STATS                                      -->
   <!-- ══════════════════════════════════════════ -->
   <section class="stats-section" id="nosotros" aria-label="Flora en números">
-    <div class="stats-grid">
-      <div class="stat-item">
-        <span class="stat-number count-up" data-target="200" data-suffix="+">200+</span>
-        <span class="stat-label">Asociados</span>
+    <div class="stats-inner">
+      <div class="stats-head">
+        <span class="eyebrow on-light reveal">Flora en números</span>
+        <h2 class="section-title reveal" data-reveal-delay="80">Una comunidad<br><em>que ya está.</em></h2>
       </div>
-      <div class="stat-item">
-        <span class="stat-number count-up" data-target="3" data-suffix=" años">3 años</span>
-        <span class="stat-label">Activos</span>
+
+      <div class="stats-grid">
+        <div class="stat-item reveal">
+          <span class="stat-number">200<span class="stat-plus">+</span></span>
+          <span class="stat-label">Asociados activos</span>
+        </div>
+        <div class="stat-item reveal" data-reveal-delay="80">
+          <span class="stat-number">3<span class="stat-unit"> años</span></span>
+          <span class="stat-label">Cultivando, desde 2022</span>
+        </div>
+        <div class="stat-item stat-anchor reveal" data-reveal-delay="160">
+          <span class="stat-number">I·II·III</span>
+          <span class="stat-label">Quimiotipos verificados por HPLC</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <span class="stat-number">Todo el país</span>
-        <span class="stat-label">Alcance</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">27.350</span>
-        <span class="stat-label">Ley nacional</span>
-      </div>
+
+      <span class="stats-badge reveal" data-reveal-delay="220">Ley nacional 27.350 · REPROCANN</span>
     </div>
-    <div class="stats-separator"></div>
   </section>
 
   <!-- ══════════════════════════════════════════ -->
@@ -489,9 +493,9 @@ const igFallback = [
   <section class="productos-section" id="productos" aria-label="Nuestros productos">
     <div class="productos-inner">
       <div class="productos-head">
-        <span class="section-label on-dark">Nuestros productos</span>
-        <h2 class="split-words">Tres formas<br><em>de acceder.</em></h2>
-        <p class="productos-lead">
+        <span class="eyebrow reveal">Nuestros productos</span>
+        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Tres formas<br><em>de acceder.</em></h2>
+        <p class="productos-lead reveal" data-reveal-delay="140">
           Flor de cultivo propio, aceites sublinguales con cromatografía y crema
           tópica. Todo con el acompañamiento del equipo.
         </p>
@@ -499,22 +503,22 @@ const igFallback = [
 
       <!-- Selector de formato -->
       <div class="prod-tabs" role="tablist" aria-label="Formatos disponibles">
-        <button class="prod-tab is-active" role="tab" aria-selected="true" data-tab="flores">
+        <button class="prod-tab is-active" role="tab" id="tab-flores" aria-controls="panel-flores" aria-selected="true" tabindex="0" data-tab="flores">
           <span class="prod-tab-name">Flores</span>
           <span class="prod-tab-sub">Membresía mensual</span>
         </button>
-        <button class="prod-tab" role="tab" aria-selected="false" data-tab="aceites">
+        <button class="prod-tab" role="tab" id="tab-aceites" aria-controls="panel-aceites" aria-selected="false" tabindex="-1" data-tab="aceites">
           <span class="prod-tab-name">Aceites</span>
           <span class="prod-tab-sub">Q1 · Q2 · Q3</span>
         </button>
-        <button class="prod-tab" role="tab" aria-selected="false" data-tab="cremas">
+        <button class="prod-tab" role="tab" id="tab-cremas" aria-controls="panel-cremas" aria-selected="false" tabindex="-1" data-tab="cremas">
           <span class="prod-tab-name">Crema</span>
           <span class="prod-tab-sub">50cc · 100cc</span>
         </button>
       </div>
 
       <!-- Panel: Flores -->
-      <div class="prod-panel is-active" role="tabpanel" data-panel="flores">
+      <div class="prod-panel is-active" role="tabpanel" id="panel-flores" aria-labelledby="tab-flores" data-panel="flores">
         <p class="prod-panel-lead">
           Flor seca de cultivo propio. Cada lote con perfil completo de cannabinoides
           y terpenos. Se accede por membresía mensual, sin contratos.
@@ -529,7 +533,7 @@ const igFallback = [
       </div>
 
       <!-- Panel: Aceites -->
-      <div class="prod-panel" role="tabpanel" data-panel="aceites" hidden>
+      <div class="prod-panel" role="tabpanel" id="panel-aceites" aria-labelledby="tab-aceites" data-panel="aceites" hidden>
         <p class="prod-panel-lead">
           Extractos sublinguales de producción propia. Tres quimiotipos con distinta
           relación CBD:THC, cada uno con su análisis de cromatografía.
@@ -562,7 +566,7 @@ const igFallback = [
       </div>
 
       <!-- Panel: Crema -->
-      <div class="prod-panel" role="tabpanel" data-panel="cremas" hidden>
+      <div class="prod-panel" role="tabpanel" id="panel-cremas" aria-labelledby="tab-cremas" data-panel="cremas" hidden>
         <p class="prod-panel-lead">
           Formulación tópica antiinflamatoria de uso externo. Una fórmula, dos
           presentaciones. Para dolor localizado, articulaciones y recuperación muscular.
@@ -592,50 +596,35 @@ const igFallback = [
     <div class="legal-inner">
 
       <div class="legal-head">
-        <span class="section-label on-light">Marco legal</span>
-        <h2 class="section-title split-words">Operamos dentro<br><em>de la ley.</em></h2>
-        <p class="legal-lead">
+        <span class="eyebrow on-light reveal">Marco legal</span>
+        <h2 class="section-title reveal" data-reveal-delay="80">Operamos dentro<br><em>de la ley.</em></h2>
+        <p class="legal-lead reveal" data-reveal-delay="140">
           Flora es una asociación civil de cultivo compartido. El acceso es como socio,
           dentro de la Ley 27.350 y el marco REPROCANN. Con todo por escrito.
         </p>
       </div>
 
       <div class="legal-body">
-        <ul class="legal-list" role="list">
-          {legales.map((l) => (
-            <li class="legal-item fade-in" role="listitem">
-              <span class="legal-check" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              <div class="legal-item-text">
-                <h3>{l.titulo}</h3>
-                <p>{l.desc}</p>
+        <div class="ed-list" role="list">
+          {legales.map((l, i) => (
+            <article class="ed-row reveal" role="listitem" data-reveal-delay={i * 70}>
+              <span class="ed-num" aria-hidden="true">0{i + 1}</span>
+              <div class="ed-body">
+                <h3 class="ed-title">{l.titulo}</h3>
+                <p class="ed-desc">{l.desc}</p>
               </div>
-            </li>
+            </article>
           ))}
-        </ul>
+        </div>
 
-        <aside class="legal-aside fade-in" aria-label="Registro y consulta">
-          <div class="legal-badge">
-            <span class="legal-badge-mark" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <polyline points="9 12 11 14 15 10" />
-              </svg>
-            </span>
-            <div>
-              <span class="legal-badge-eyebrow">Registro habilitado</span>
-              <span class="legal-badge-name">REPROCANN</span>
-            </div>
-          </div>
+        <aside class="legal-aside reveal" aria-label="Registro y consulta">
+          <span class="eyebrow">Registro habilitado · REPROCANN</span>
           <p class="legal-aside-text">
             ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
             con una persona del equipo.
           </p>
-          <a class="legal-aside-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
-            Consultar por WhatsApp →
+          <a class="legal-aside-cta ed-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
+            Consultar por WhatsApp <span aria-hidden="true">→</span>
           </a>
         </aside>
       </div>
@@ -694,31 +683,22 @@ const igFallback = [
   <section class="steps-section" id="como-funciona" aria-label="Cómo funciona">
     <div class="steps-inner">
 
-      <div class="section-header">
-        <div>
-          <span class="section-label on-light">Proceso</span>
-          <h2 class="section-title split-words">Cuatro pasos.<br><em>Sin grises.</em></h2>
-        </div>
+      <div class="steps-head">
+        <span class="eyebrow on-light reveal">Proceso</span>
+        <h2 class="section-title reveal" data-reveal-delay="80">Cuatro pasos<br><em>y estás adentro.</em></h2>
       </div>
 
-      <div class="steps-list-wrap">
-        <div class="step-connector" aria-hidden="true">
-          <div class="step-line"></div>
-        </div>
-      <ol class="steps-list" aria-label="Pasos para asociarse">
-        {steps.map((step) => (
-          <li class="step-item">
-            <div class="step-num-wrap" aria-hidden="true">
-              <span class="step-num">{step.num}</span>
-            </div>
-            <div class="step-content">
-              <h3>{step.title}</h3>
-              <p>{step.desc}</p>
+      <ol class="ed-list" aria-label="Pasos para asociarse">
+        {steps.map((step, i) => (
+          <li class="ed-row reveal" data-reveal-delay={i * 70}>
+            <span class="ed-num" aria-hidden="true">{step.num}</span>
+            <div class="ed-body">
+              <h3 class="ed-title">{step.title}</h3>
+              <p class="ed-desc">{step.desc}</p>
             </div>
           </li>
         ))}
       </ol>
-      </div>
     </div>
   </section>
 
@@ -728,13 +708,13 @@ const igFallback = [
   <section class="programa-section" id="programa" aria-label="Programa Espacio libre de prejuicios">
     <div class="programa-inner">
       <div class="programa-head">
-        <span class="section-label">Programa en YouTube</span>
-        <h2 class="split-words">Espacio libre<br>de prejuicios.</h2>
-        <p class="programa-lead">
+        <span class="eyebrow reveal">Programa en YouTube</span>
+        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Espacio libre<br><em>de prejuicios.</em></h2>
+        <p class="programa-lead reveal" data-reveal-delay="140">
           Conversaciones sin vueltas sobre cannabis medicinal: acceso, legalidad y
-          bienestar. Para informarte antes de opinar.
+          bienestar. Para sumar información a la conversación.
         </p>
-        <a class="programa-cta" href={ytChannel} target="_blank" rel="noopener noreferrer">
+        <a class="programa-cta reveal" data-reveal-delay="200" href={ytChannel} target="_blank" rel="noopener noreferrer">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
           </svg>
@@ -743,8 +723,8 @@ const igFallback = [
       </div>
 
       <ul class="programa-episodes" role="list">
-        {episodes.map((ep) => (
-          <li class="episode-card clip-reveal">
+        {episodes.map((ep, i) => (
+          <li class="episode-card reveal" data-reveal-delay={i * 90}>
             <button
               class="yt-facade"
               data-id={ep.id}
@@ -765,7 +745,7 @@ const igFallback = [
               <span class="yt-dur" aria-hidden="true">{ep.dur}</span>
             </button>
             <div class="episode-meta">
-              <span class="episode-eyebrow">Episodio</span>
+              <span class="episode-eyebrow">Episodio 0{i + 1}</span>
               <h3>{ep.title}</h3>
             </div>
           </li>
@@ -781,9 +761,9 @@ const igFallback = [
     <div class="ig-inner">
       <div class="ig-head">
         <div class="ig-head-text">
-          <span class="section-label">Comunidad</span>
-          <h2 class="split-words">Lo último<br><em>en Instagram.</em></h2>
-          <p class="ig-lead">
+          <span class="eyebrow reveal">Comunidad</span>
+          <h2 class="section-title on-dark reveal" data-reveal-delay="80">Lo último<br><em>en Instagram.</em></h2>
+          <p class="ig-lead reveal" data-reveal-delay="140">
             Educación, cultivo y comunidad, día a día. Esto se actualiza solo con
             nuestros últimos posteos.
           </p>
@@ -835,8 +815,8 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <footer class="footer" id="contacto">
     <div class="footer-cta-band">
-      <h3>¿Listo para empezar?</h3>
-      <a href={waFooter} class="btn-primary" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
+      <h3 class="footer-closer reveal">Empezá <em>hoy</em><br>tu acceso legal.</h3>
+      <a href={waFooter} class="btn-primary reveal" data-reveal-delay="80" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
         Asociarme por WhatsApp
       </a>
     </div>
@@ -866,10 +846,10 @@ const igFallback = [
       <nav class="footer-col" aria-label="Información legal">
         <h5>Legal</h5>
         <ul>
-          <li><a href="#">Ley 27.350</a></li>
-          <li><a href="#">REPROCANN</a></li>
-          <li><a href="#">Estatuto ONG</a></li>
-          <li><a href="#">Términos de uso</a></li>
+          <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350</a></li>
+          <li><a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN</a></li>
+          <li><a href="#legalidad">Marco legal</a></li>
+          <li><a href="#como-funciona">Cómo asociarte</a></li>
         </ul>
       </nav>
     </div>
