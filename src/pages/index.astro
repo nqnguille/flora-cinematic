@@ -13,6 +13,7 @@ const perfiles = [
     desc: 'El CBD y el THC pueden acompañar el dolor crónico, articular o muscular, trabajando sobre la inflamación y la forma en que percibís el dolor.',
     cta: 'Hablar sobre dolor',
     href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
+    img: '/img/perfil-dolor.jpg',
   },
   {
     tag: 'Sueño & descanso',
@@ -20,6 +21,7 @@ const perfiles = [
     desc: 'El THC en dosis justas y ciertos cannabinoides pueden ayudarte a conciliar y sostener el sueño, para el insomnio y la mente que no para.',
     cta: 'Hablar sobre sueño',
     href: wa('Hola Flora, me interesa el club para mejorar mi sueño 🌿'),
+    img: '/img/perfil-sueno.jpg',
   },
   {
     tag: 'Bienestar & ansiedad',
@@ -27,6 +29,7 @@ const perfiles = [
     desc: 'El CBD acompaña la ansiedad y el estrés del día a día sin alterarte, pensado para uso diurno y como una práctica continua de bienestar.',
     cta: 'Hablar sobre bienestar',
     href: wa('Hola Flora, me interesa el club para bienestar y ansiedad 🌿'),
+    img: '/img/perfil-ansiedad.jpg',
   },
 ]
 
@@ -321,6 +324,7 @@ const igFallback = [
             role="listitem"
             aria-label={`${p.tag}: ${p.title}`}
           >
+            <img class="fl-panel-img" src={p.img} alt="" loading="lazy" width="1400" height="1750" />
             <span class="fl-panel-icon" aria-hidden="true" set:html={perfilIconsSvg[i]} />
             <span class="fl-panel-body">
               <span class="fl-panel-tag">{p.tag}</span>
@@ -349,6 +353,7 @@ const igFallback = [
 
       <div class="fl-gateway fl-prod-gateway" role="list">
         <a class="fl-panel fl-panel-1" href="#membresias" role="listitem" aria-label="Flores">
+          <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Flores</span>
@@ -358,6 +363,7 @@ const igFallback = [
         </a>
 
         <a class="fl-panel fl-panel-2" href={wa('Hola Flora, quiero consultar por los aceites medicinales 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Aceites">
+          <img class="fl-panel-img" src="/img/prod-aceites.jpg" alt="" loading="lazy" width="1400" height="1750" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Aceites</span>
@@ -367,6 +373,7 @@ const igFallback = [
         </a>
 
         <a class="fl-panel fl-panel-3" href={wa('Hola Flora, quiero consultar por las cremas 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Cremas">
+          <img class="fl-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" width="1400" height="1750" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>

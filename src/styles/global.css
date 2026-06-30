@@ -2993,3 +2993,17 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-episode-thumb iframe { width: 100%; height: 100%; border: 0; display: block; }
 .fl-episode-yt { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; font-family: var(--font-ui); font-weight: 700; font-size: 13.5px; color: #FF0000; text-decoration: none; }
 .fl-episode-yt:hover { text-decoration: underline; }
+
+/* ── Imagen de fondo en los paneles gateway (con scrim de marca encima) ── */
+.fl-panel-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.1, 1);
+}
+.fl-panel:hover .fl-panel-img, .fl-panel:focus-visible .fl-panel-img { transform: scale(1.06); }
+/* El gradiente de marca pasa a ser un scrim semi-transparente sobre la foto */
+.fl-panel::before { z-index: 1; background: linear-gradient(165deg, rgba(56,31,86,0.74) 0%, rgba(11,60,45,0.72) 130%); }
+.fl-panel-2::before { background: linear-gradient(165deg, rgba(10,80,60,0.72) 0%, rgba(56,31,86,0.76) 140%); }
+.fl-panel-3::before { background: linear-gradient(165deg, rgba(42,26,71,0.74) 0%, rgba(20,121,79,0.72) 150%); }
+.fl-panel::after { z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .fl-panel-img { transition: none; } }
