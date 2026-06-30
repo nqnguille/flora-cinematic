@@ -107,23 +107,19 @@ const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club
 const waFooter = waAsociarse
 const waLegal = `${WA}?text=Hola%20Flora%2C%20tengo%20una%20consulta%20sobre%20mi%20situaci%C3%B3n%20legal%20(Ley%2027.350%20%2F%20REPROCANN).%20%C2%BFMe%20orientan%3F`
 
-// Marco legal — datos reales de la ONG (verificables)
+// Marco legal — los instrumentos bajo los que funciona la ONG (la entidad va en el lead)
 const legales = [
   {
-    titulo: 'Asociación Civil Cann de Cannabis Medicinal',
-    desc: 'Flora funciona dentro de esta asociación civil, con personería jurídica reconocida por la Inspección General de Justicia (I.G.J. N° correlativo 1994128).',
-  },
-  {
-    titulo: 'Ley 27.350 vigente',
+    titulo: 'Ley 27.350',
     desc: 'El marco nacional que regula el acceso al cannabis con fines medicinales en Argentina.',
   },
   {
-    titulo: 'Cada asociado, con REPROCANN',
-    desc: 'El cultivo se ampara en la inscripción de cada socio en el registro del programa (REPROCANN).',
+    titulo: 'REPROCANN',
+    desc: 'Cada socio se inscribe en el registro del programa; ahí queda amparado su acceso.',
   },
   {
     titulo: 'Decreto 883/2020',
-    desc: 'Reglamenta el REPROCANN, el autocultivo y el cultivo solidario entre personas asociadas.',
+    desc: 'Reglamenta el funcionamiento del programa y el cultivo solidario entre personas asociadas.',
   },
 ]
 
@@ -409,11 +405,11 @@ const igFallback = [
     <div class="fl-wrap">
       <div class="fl-acceso-intro">
         <span class="fl-eyebrow">Acceso a material vegetal</span>
-        <h2 class="fl-title">Cultivamos lo que <em>vos no podés.</em></h2>
+        <h2 class="fl-title">Cultivamos lo que <em>la ley te permite.</em></h2>
         <p class="fl-acceso-story">
           Hay personas que necesitan cannabis y no pueden cultivarlo en su casa.
           Para ellas cultivamos nosotros. Tu aporte mensual sostiene ese cultivo y
-          mantiene viva cada planta, dentro del REPROCANN.
+          mantiene viva cada planta.
         </p>
       </div>
 
@@ -457,12 +453,12 @@ const igFallback = [
   <section class="fl-section fl-legal" id="legalidad" aria-label="Marco legal">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Marco legal</span>
-        <h2 class="fl-title">Operamos dentro <em>de la ley.</em></h2>
+        <span class="fl-eyebrow">Respaldo legal</span>
+        <h2 class="fl-title">Con todo <em>en regla.</em></h2>
         <p class="fl-lead">
-          Flora funciona dentro de la Asociación Civil Cann de Cannabis Medicinal, con
-          personería jurídica (I.G.J. N° 1994128). Operamos bajo la Ley 27.350 y el
-          REPROCANN, con todo por escrito.
+          Detrás de Flora hay una entidad registrada: la Asociación Civil Cann de Cannabis
+          Medicinal, con personería jurídica reconocida por la Inspección General de Justicia
+          (I.G.J. N° 1994128). Todo asentado y por escrito.
         </p>
       </header>
 
