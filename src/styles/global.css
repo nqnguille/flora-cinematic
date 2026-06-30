@@ -3058,3 +3058,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .nav-logo-img { height: 22px; width: auto; display: block; }
 .fl-footer-logo-img { height: 30px; width: auto; display: block; }
 @media (min-width: 760px) { .nav-logo-img { height: 24px; } }
+
+/* ── Remate del hero: "Bienvenido a" + logo FLORA (reemplaza la palabra) ── */
+.welcome-line-final { display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 3vh, 32px); }
+.welcome-line-logo { width: clamp(240px, 42vw, 440px); height: auto; display: block; }
