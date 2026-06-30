@@ -1791,7 +1791,7 @@ body.cursor-hover .cursor-ring {
   border-bottom-color: var(--fl-line);
 }
 /* Nav adaptativa: contenido oscuro/violeta sobre el cuerpo claro */
-.nav-logo-violet { display: none; }
+.site-nav .nav-logo-violet { display: none; }
 .site-nav.scrolled .nav-logo-white { display: none; }
 .site-nav.scrolled .nav-logo-violet { display: block; }
 .site-nav.scrolled .nav-links a { color: rgba(28, 22, 38, 0.66); }
@@ -3135,4 +3135,17 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-credencial-data { grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 2vw, 28px); }
   .fl-credencial-data > div { border-top: none; border-left: 1px solid rgba(255, 255, 255, 0.16); padding: 2px 0 2px clamp(14px, 1.6vw, 20px); }
   .fl-credencial-seal { flex: 0 0 clamp(210px, 28%, 290px); }
+}
+
+/* ── Respaldo legal: header + tarjeta chica al lado ── */
+.fl-legal-grid { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 44px); align-items: center; }
+.fl-legal-text .fl-lead { max-width: 48ch; }
+.fl-credencial-sm { margin-top: 0; box-shadow: 0 18px 44px -26px rgba(56, 31, 86, 0.42); }
+.fl-credencial-sm .fl-credencial-body { padding: clamp(24px, 3vw, 34px); }
+.fl-credencial-sm .fl-credencial-name { font-size: clamp(17px, 2vw, 21px); margin: clamp(16px, 2vw, 20px) 0 clamp(12px, 1.6vw, 16px); }
+.fl-credencial-sm .fl-credencial-data { grid-template-columns: 1fr; gap: 0; }
+.fl-credencial-sm .fl-credencial-data > div { border-top: 1px solid rgba(255, 255, 255, 0.16); border-left: none; padding: 11px 0 11px 0; }
+.fl-credencial-sm .fl-credencial-data dd { font-size: clamp(15px, 1.8vw, 18px); }
+@media (min-width: 860px) {
+  .fl-legal-grid { grid-template-columns: 1.05fr 0.95fr; gap: clamp(40px, 5vw, 72px); }
 }

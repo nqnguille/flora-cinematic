@@ -501,8 +501,8 @@ const igFallback = [
   <!-- LEGALIDAD — Marco legal                    -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-legal" id="legalidad" aria-label="Marco legal">
-    <div class="fl-wrap">
-      <header class="fl-head">
+    <div class="fl-wrap fl-legal-grid">
+      <div class="fl-legal-text">
         <span class="fl-eyebrow">Respaldo legal</span>
         <h2 class="fl-title">Con todo <em>en regla.</em></h2>
         <p class="fl-lead">
@@ -510,10 +510,10 @@ const igFallback = [
           Medicinal, con personería jurídica reconocida por la Inspección General de Justicia
           (I.G.J. N° 1994128). Todo asentado y por escrito.
         </p>
-      </header>
+      </div>
 
       <!-- Datos formales de la asociación (inspirado en el cartel propio) -->
-      <div class="fl-credencial">
+      <div class="fl-credencial fl-credencial-sm">
         <div class="fl-credencial-body">
           <span class="fl-credencial-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -528,22 +528,6 @@ const igFallback = [
           </dl>
         </div>
       </div>
-
-      <ol class="fl-ed-list fl-legal-list" role="list">
-        {legales.map((l, i) => (
-          <li class="fl-ed-row" role="listitem">
-            <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
-            <div class="fl-ed-body">
-              <h3 class="fl-ed-title">{l.titulo}</h3>
-              <p class="fl-ed-desc">{l.desc}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-
-      <a class="fl-card-cta fl-legal-consulta" href={waLegal} target="_blank" rel="noopener noreferrer">
-        ¿Dudas con tu situación legal? Consultanos <span aria-hidden="true">→</span>
-      </a>
     </div>
   </section>
 
