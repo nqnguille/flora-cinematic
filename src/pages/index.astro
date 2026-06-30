@@ -505,11 +505,10 @@ const igFallback = [
   <section class="fl-section fl-access" id="productos" aria-label="Qué hacemos y cómo accedés">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Qué hacemos</span>
-        <h2 class="fl-title">Tres productos, <em>dos formas de acceder.</em></h2>
+        <span class="fl-eyebrow">Nuestros productos</span>
+        <h2 class="fl-title">Flores, aceites <em>y cremas.</em></h2>
         <p class="fl-lead">
-          Hacemos aceites, cremas y flores. A las flores accedés por membresía mensual
-          del cultivo compartido; a los aceites y las cremas, por consulta con el equipo.
+          Todo de cultivo propio, con el acompañamiento del equipo en cada paso.
         </p>
       </header>
 
@@ -548,12 +547,15 @@ const igFallback = [
       <!-- Spec highlights: aceites con HPLC (el dato verificable) -->
       <div class="fl-spec">
         <div class="fl-spec-head">
-          <span class="fl-eyebrow">El dato verificable</span>
-          <h3 class="fl-spec-title">Cada aceite, con su cromatografía.</h3>
+          <span class="fl-eyebrow">Análisis de laboratorio</span>
+          <h3 class="fl-spec-title">Los últimos análisis <em>de nuestros aceites.</em></h3>
           <p class="fl-spec-sub">
-            Concentración real en mg/mL de la última cromatografía
+            Cannabinoides del último lote, medidos en mg/mL por cromatografía
             (HPLC-UV · IACA Laboratorios · 02/06/2026).
           </p>
+          <a class="fl-card-cta fl-spec-download" href={wa('Hola Flora, quiero ver el análisis completo del último lote de aceites 🌿')} target="_blank" rel="noopener noreferrer">
+            Pedí el análisis completo <span aria-hidden="true">→</span>
+          </a>
         </div>
         <div class="fl-spec-grid">
           {aceites.map((a) => (

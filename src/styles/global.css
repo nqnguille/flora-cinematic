@@ -2856,3 +2856,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-panel-desc { margin: 10px 0 0; }
   .fl-panel-cta { margin-top: 14px; }
 }
+
+/* spec: em verde + CTA pedir análisis */
+.fl-spec-title em { font-style: normal; color: var(--fl-green); }
+.fl-spec-download { margin-top: 18px; }
