@@ -241,12 +241,11 @@ const igFallback = [
 
     <!-- Desktop links -->
     <ul class="nav-links" role="list">
-      <li><a href="#perfiles">Para qué</a></li>
-      <li><a href="#flora">Por qué Flora</a></li>
+      <li><a href="#perfiles">En qué te ayuda</a></li>
       <li><a href="#productos">Productos</a></li>
-      <li><a href="#legalidad">Legalidad</a></li>
       <li><a href="#membresias">Membresías</a></li>
-      <li><a href="#programa">Programa</a></li>
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#legalidad">Legalidad</a></li>
       <li>
         <a href={waAsociarse} class="nav-cta" target="_blank" rel="noopener noreferrer">
           Asociarme
@@ -275,14 +274,13 @@ const igFallback = [
         <span aria-hidden="true">✕</span>
       </button>
       <ul role="list">
-        <li><a href="#nosotros">Nosotros</a></li>
-        <li><a href="#perfiles">Para qué sirve</a></li>
-        <li><a href="#flora">Por qué Flora</a></li>
+        <li><a href="#perfiles">En qué te ayuda</a></li>
         <li><a href="#productos">Productos</a></li>
-        <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#membresias">Membresías</a></li>
         <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
+        <li><a href="#instagram">Instagram</a></li>
         <li>
           <a href={waAsociarse} class="drawer-cta" target="_blank" rel="noopener noreferrer">
             Asociarme por WhatsApp
@@ -339,78 +337,12 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- MANIFIESTO — escena documental (reveal, sin pin) -->
+  <!-- NECESIDADES — ¿En qué te puede ayudar?     -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="scene manifiesto" id="manifiesto" aria-label="Nuestro manifiesto">
-
-    <!-- Plano sostenido: una sola still documental + scrim del welcome -->
-    <div class="scene-bg" aria-hidden="true">
-      <img
-        class="scene-img"
-        src="/hero/cannabis-hero-poster.jpg"
-        alt=""
-        loading="lazy"
-        decoding="async"
-        width="1280"
-        height="720"
-      />
-      <div class="scene-scrim"></div>
-    </div>
-
-    <div class="scene-content manifiesto-content">
-      <span class="eyebrow reveal">Nuestro manifiesto</span>
-
-      <h2 class="manifiesto-title reveal" data-reveal-delay="80">
-        Cultivamos conciencia,<br><em>planta por planta.</em>
-      </h2>
-
-      <p class="manifiesto-sub reveal" data-reveal-delay="160">
-        Cultivo propio y acompañamiento real, dentro del marco de la Ley&nbsp;27.350
-        y el REPROCANN.
-      </p>
-
-      <span class="scene-legal reveal" data-reveal-delay="240">
-        Neuquén, Patagonia · Asociación civil · Est. 2022
-      </span>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- STATS                                      -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="stats-section" id="nosotros" aria-label="Flora en números">
-    <div class="stats-inner">
-      <div class="stats-head">
-        <span class="eyebrow on-light reveal">Flora en números</span>
-        <h2 class="section-title reveal" data-reveal-delay="80">Una comunidad<br><em>que ya está.</em></h2>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-item reveal">
-          <span class="stat-number">200<span class="stat-plus">+</span></span>
-          <span class="stat-label">Asociados activos</span>
-        </div>
-        <div class="stat-item reveal" data-reveal-delay="80">
-          <span class="stat-number">3<span class="stat-unit"> años</span></span>
-          <span class="stat-label">Cultivando, desde 2022</span>
-        </div>
-        <div class="stat-item stat-anchor reveal" data-reveal-delay="160">
-          <span class="stat-number">I·II·III</span>
-          <span class="stat-label">Quimiotipos verificados por HPLC</span>
-        </div>
-      </div>
-
-      <span class="stats-badge reveal" data-reveal-delay="220">Ley nacional 27.350 · REPROCANN</span>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- PERFILES — ¿Por qué llegaste a Flora?      -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-perfiles" id="perfiles" aria-label="Por qué llegaste a Flora">
+  <section class="fl-section fl-perfiles" id="perfiles" aria-label="¿En qué te puede ayudar?">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">¿Por qué llegaste?</span>
+        <span class="fl-eyebrow">¿En qué te puede ayudar?</span>
         <h2 class="fl-title">Cada camino<br><em>tiene su planta.</em></h2>
         <p class="fl-lead">
           El cannabis medicinal abarca muchos caminos. El equipo orienta el tuyo
@@ -437,67 +369,6 @@ const igFallback = [
             </span>
           </a>
         ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- POR QUÉ FLORA — BENTO                      -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="why-section" id="flora" aria-label="Por qué Flora">
-    <div class="why-inner">
-
-      <div class="why-head">
-        <span class="eyebrow on-light reveal">Por qué Flora</span>
-        <h2 class="why-lead reveal" data-reveal-delay="80">
-          Sabés <em>exactamente</em> qué recibís, de la planta a tu mano.
-        </h2>
-        <p class="why-sub reveal" data-reveal-delay="140">
-          Cultivo propio, marco legal y el equipo acompañando cada paso, dentro de la Ley&nbsp;27.350 y el REPROCANN.
-        </p>
-      </div>
-
-      <div class="ed-list" role="list">
-        <article class="ed-row reveal" role="listitem">
-          <span class="ed-num" aria-hidden="true">01</span>
-          <div class="ed-body">
-            <h3 class="ed-title">Cultivo propio</h3>
-            <p class="ed-desc">Cultivamos nuestras plantas en sala controlada, sin pesticidas. Vos accedés a tu parte como socio de la asociación.</p>
-          </div>
-        </article>
-
-        <article class="ed-row is-anchor reveal" role="listitem" data-reveal-delay="80">
-          <span class="ed-num" aria-hidden="true">02</span>
-          <div class="ed-body">
-            <span class="ed-kicker">El dato verificable</span>
-            <h3 class="ed-title">Aceites con cromatografía</h3>
-            <p class="ed-desc">Nuestros tres aceites —Q1, Q2 y Q3— tienen análisis HPLC que informa su concentración real de CBD, THC y CBG. El único dato que se puede comprobar, por escrito.</p>
-          </div>
-        </article>
-
-        <article class="ed-row reveal" role="listitem">
-          <span class="ed-num" aria-hidden="true">03</span>
-          <div class="ed-body">
-            <h3 class="ed-title">Marco legal vigente</h3>
-            <p class="ed-desc">Operamos dentro de la Ley 27.350 y el REPROCANN. Tu acceso es como socio de la asociación, con todo en regla.</p>
-          </div>
-        </article>
-
-        <article class="ed-row reveal" role="listitem">
-          <span class="ed-num" aria-hidden="true">04</span>
-          <div class="ed-body">
-            <h3 class="ed-title">Acompañamiento real</h3>
-            <p class="ed-desc">Respondemos por WhatsApp. Una persona del equipo, no un bot, porque tus preguntas merecen respuestas.</p>
-          </div>
-        </article>
-
-        <article class="ed-row reveal" role="listitem">
-          <span class="ed-num" aria-hidden="true">05</span>
-          <div class="ed-body">
-            <h3 class="ed-title">Educación que acompaña</h3>
-            <p class="ed-desc">Te explicamos cada cannabinoide, cada vía de consumo y cada paso. Cultivamos conciencia.</p>
-          </div>
-        </article>
       </div>
     </div>
   </section>
@@ -581,38 +452,37 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- LEGALIDAD — Marco legal                    -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="legal-section" id="legalidad" aria-label="Marco legal">
-    <div class="legal-inner">
-
-      <div class="legal-head">
-        <span class="eyebrow on-light reveal">Marco legal</span>
-        <h2 class="section-title reveal" data-reveal-delay="80">Operamos dentro<br><em>de la ley.</em></h2>
-        <p class="legal-lead reveal" data-reveal-delay="140">
+  <section class="fl-section fl-legal" id="legalidad" aria-label="Marco legal">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Marco legal</span>
+        <h2 class="fl-title">Operamos dentro <em>de la ley.</em></h2>
+        <p class="fl-lead">
           Flora es una asociación civil de cultivo compartido. El acceso es como socio,
           dentro de la Ley 27.350 y el marco REPROCANN. Con todo por escrito.
         </p>
-      </div>
+      </header>
 
-      <div class="legal-body">
-        <div class="ed-list" role="list">
+      <div class="fl-legal-body">
+        <ol class="fl-ed-list" role="list">
           {legales.map((l, i) => (
-            <article class="ed-row reveal" role="listitem" data-reveal-delay={i * 70}>
-              <span class="ed-num" aria-hidden="true">0{i + 1}</span>
-              <div class="ed-body">
-                <h3 class="ed-title">{l.titulo}</h3>
-                <p class="ed-desc">{l.desc}</p>
+            <li class="fl-ed-row" role="listitem">
+              <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
+              <div class="fl-ed-body">
+                <h3 class="fl-ed-title">{l.titulo}</h3>
+                <p class="fl-ed-desc">{l.desc}</p>
               </div>
-            </article>
+            </li>
           ))}
-        </div>
+        </ol>
 
-        <aside class="legal-aside reveal" aria-label="Registro y consulta">
-          <span class="eyebrow">Registro habilitado · REPROCANN</span>
-          <p class="legal-aside-text">
+        <aside class="fl-legal-aside" aria-label="Registro y consulta">
+          <span class="fl-eyebrow">Registro habilitado · REPROCANN</span>
+          <p class="fl-legal-aside-text">
             ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
             con una persona del equipo.
           </p>
-          <a class="legal-aside-cta ed-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
+          <a class="fl-card-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
             Consultar por WhatsApp <span aria-hidden="true">→</span>
           </a>
         </aside>
@@ -621,69 +491,62 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- MEMBRESÍAS — grilla estática (escena ink)   -->
+  <!-- MEMBRESÍAS — planes de flores (light)       -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="membresias-section" id="membresias" aria-label="Membresías">
-    <div class="membresias-inner">
-      <div class="membresias-head">
-        <span class="eyebrow reveal">Membresías</span>
-        <h2 class="section-title reveal" data-reveal-delay="80">Elegí cómo<br><em>acceder.</em></h2>
-      </div>
+  <section class="fl-section fl-plans" id="membresias" aria-label="Membresía de flores">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Membresía de flores</span>
+        <h2 class="fl-title">Elegí <em>tu plan.</em></h2>
+        <p class="fl-lead">
+          Cada plan es tu parte del cultivo compartido, mes a mes. Desde
+          <strong class="fl-price-from">$—</strong> por mes según los gramos.
+        </p>
+      </header>
 
-      <div class="membresias-grid" role="list">
-        {memberships.map((m, i) => (
+      <div class="fl-plan-grid" role="list">
+        {memberships.map((m) => (
           <article
-            class={m.featured ? 'plan-card featured reveal' : 'plan-card reveal'}
+            class={m.featured ? 'fl-plan featured' : 'fl-plan'}
             role="listitem"
-            aria-label={`Membresía ${m.name}: ${m.grams} gramos por mes`}
-            data-reveal-delay={120 + i * 80}
+            aria-label={`Plan ${m.name}: ${m.grams} gramos por mes`}
           >
-            {m.badge && <span class="plan-badge">{m.badge}</span>}
-            <h3 class="plan-name">{m.name}</h3>
-            <div class="plan-grams" aria-label={`${m.grams} gramos`}>
-              {m.grams}<span class="plan-grams-unit">g</span>
+            {m.badge && <span class="fl-plan-badge">{m.badge}</span>}
+            <span class="fl-plan-name">{m.name}</span>
+            <div class="fl-plan-grams" aria-label={`${m.grams} gramos por mes`}>
+              {m.grams}<span>g/mes</span>
             </div>
-            <p class="plan-unit">por mes · cultivo compartido</p>
-            <ul class="plan-features" aria-label="Características incluidas">
+            <ul class="fl-plan-features" aria-label="Qué incluye">
               {m.features.map((f) => <li>{f}</li>)}
             </ul>
-            <a
-              href={m.waLink}
-              class="plan-cta"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Consultar membresía ${m.name} por WhatsApp`}
-            >
-              Consultar por WhatsApp
+            <a class="fl-card-cta" href={m.waLink} target="_blank" rel="noopener noreferrer">
+              Consultar plan <span aria-hidden="true">→</span>
             </a>
           </article>
         ))}
       </div>
 
-      <p class="membresias-legal reveal">
-        Cada membresía es tu parte de un cultivo colectivo, dentro del marco de la Ley&nbsp;27.350.
-      </p>
+      <p class="fl-plan-note">Cada plan es tu parte de un cultivo colectivo, dentro del marco de la Ley&nbsp;27.350.</p>
     </div>
   </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- CÓMO FUNCIONA                              -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="steps-section" id="como-funciona" aria-label="Cómo funciona">
-    <div class="steps-inner">
+  <section class="fl-section fl-steps" id="como-funciona" aria-label="Cómo funciona">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Cómo asociarte</span>
+        <h2 class="fl-title">Cuatro pasos <em>y estás adentro.</em></h2>
+      </header>
 
-      <div class="steps-head">
-        <span class="eyebrow on-light reveal">Proceso</span>
-        <h2 class="section-title reveal" data-reveal-delay="80">Cuatro pasos<br><em>y estás adentro.</em></h2>
-      </div>
-
-      <ol class="ed-list" aria-label="Pasos para asociarse">
-        {steps.map((step, i) => (
-          <li class="ed-row reveal" data-reveal-delay={i * 70}>
-            <span class="ed-num" aria-hidden="true">{step.num}</span>
-            <div class="ed-body">
-              <h3 class="ed-title">{step.title}</h3>
-              <p class="ed-desc">{step.desc}</p>
+      <ol class="fl-ed-list" aria-label="Pasos para asociarse">
+        {steps.map((step) => (
+          <li class="fl-ed-row">
+            <span class="fl-ed-num" aria-hidden="true">{step.num}</span>
+            <div class="fl-ed-body">
+              <h3 class="fl-ed-title">{step.title}</h3>
+              <p class="fl-ed-desc">{step.desc}</p>
             </div>
           </li>
         ))}
@@ -694,26 +557,23 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="programa-section" id="programa" aria-label="Programa Espacio libre de prejuicios">
-    <div class="programa-inner">
-      <div class="programa-head">
-        <span class="eyebrow reveal">Programa en YouTube</span>
-        <h2 class="section-title on-dark reveal" data-reveal-delay="80">Espacio libre<br><em>de prejuicios.</em></h2>
-        <p class="programa-lead reveal" data-reveal-delay="140">
+  <section class="fl-section fl-programa" id="programa" aria-label="Programa Espacio libre de prejuicios">
+    <div class="fl-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Programa en YouTube</span>
+        <h2 class="fl-title">Espacio libre <em>de prejuicios.</em></h2>
+        <p class="fl-lead">
           Conversaciones sin vueltas sobre cannabis medicinal: acceso, legalidad y
           bienestar. Para sumar información a la conversación.
         </p>
-        <a class="programa-cta reveal" data-reveal-delay="200" href={ytChannel} target="_blank" rel="noopener noreferrer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-          </svg>
-          Ver el canal
+        <a class="fl-card-cta" href={ytChannel} target="_blank" rel="noopener noreferrer">
+          Ver el canal <span aria-hidden="true">→</span>
         </a>
-      </div>
+      </header>
 
-      <ul class="programa-episodes" role="list">
+      <ul class="fl-episodes" role="list">
         {episodes.map((ep, i) => (
-          <li class="episode-card reveal" data-reveal-delay={i * 90}>
+          <li class="fl-episode">
             <button
               class="yt-facade"
               data-id={ep.id}
@@ -733,9 +593,9 @@ const igFallback = [
               </span>
               <span class="yt-dur" aria-hidden="true">{ep.dur}</span>
             </button>
-            <div class="episode-meta">
-              <span class="episode-eyebrow">Episodio 0{i + 1}</span>
-              <h3>{ep.title}</h3>
+            <div class="fl-episode-meta">
+              <span class="fl-episode-num">Episodio 0{i + 1}</span>
+              <h3 class="fl-episode-title">{ep.title}</h3>
             </div>
           </li>
         ))}
@@ -746,13 +606,13 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- INSTAGRAM — slider en vivo                 -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="ig-section" id="instagram" aria-label="Flora en Instagram">
-    <div class="ig-inner">
+  <section class="fl-section ig-section" id="instagram" aria-label="Flora en Instagram">
+    <div class="fl-wrap ig-inner">
       <div class="ig-head">
         <div class="ig-head-text">
-          <span class="eyebrow reveal">Comunidad</span>
-          <h2 class="section-title on-dark reveal" data-reveal-delay="80">Lo último<br><em>en Instagram.</em></h2>
-          <p class="ig-lead reveal" data-reveal-delay="140">
+          <span class="fl-eyebrow">Comunidad</span>
+          <h2 class="fl-title">Lo último <em>en Instagram.</em></h2>
+          <p class="fl-lead">
             Educación, cultivo y comunidad, día a día. Esto se actualiza solo con
             nuestros últimos posteos.
           </p>
@@ -802,50 +662,50 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- FOOTER                                     -->
   <!-- ══════════════════════════════════════════ -->
-  <footer class="footer" id="contacto">
-    <div class="footer-cta-band">
-      <h3 class="footer-closer reveal">Empezá <em>hoy</em><br>tu acceso legal.</h3>
-      <a href={waFooter} class="btn-primary reveal" data-reveal-delay="80" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
-        Asociarme por WhatsApp
-      </a>
-    </div>
-
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <h4>Flora ONG</h4>
-        <p>
-          Club de cultivo de cannabis medicinal. Legal bajo Ley 27.350.
-          Neuquén, Patagonia.
-        </p>
+  <footer class="fl-footer" id="contacto">
+    <div class="fl-wrap">
+      <div class="fl-footer-cta">
+        <h3 class="fl-footer-closer">Empezá <em>hoy</em> tu acceso legal.</h3>
+        <a href={waFooter} class="fl-footer-btn" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
+          Asociarme por WhatsApp <span aria-hidden="true">→</span>
+        </a>
       </div>
 
-      <nav class="footer-col" aria-label="Navegación del sitio">
-        <h5>Navegación</h5>
-        <ul>
-          <li><a href="#nosotros">Nosotros</a></li>
-          <li><a href="#perfiles">Para qué sirve</a></li>
-          <li><a href="#flora">Por qué Flora</a></li>
-          <li><a href="#productos">Productos</a></li>
-          <li><a href="#legalidad">Legalidad</a></li>
-          <li><a href="#membresias">Membresías</a></li>
-          <li><a href="#como-funciona">Cómo funciona</a></li>
-        </ul>
-      </nav>
+      <div class="fl-footer-grid">
+        <div class="fl-footer-brand">
+          <span class="fl-footer-logo">FLORA</span>
+          <p>
+            Asociación civil de cultivo de cannabis medicinal.
+            Ley 27.350 · REPROCANN. Neuquén, Patagonia.
+          </p>
+        </div>
 
-      <nav class="footer-col" aria-label="Información legal">
-        <h5>Legal</h5>
-        <ul>
-          <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350</a></li>
-          <li><a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN</a></li>
-          <li><a href="#legalidad">Marco legal</a></li>
-          <li><a href="#como-funciona">Cómo asociarte</a></li>
-        </ul>
-      </nav>
-    </div>
+        <nav class="fl-footer-col" aria-label="Navegación del sitio">
+          <h4>Navegación</h4>
+          <ul>
+            <li><a href="#perfiles">En qué te ayuda</a></li>
+            <li><a href="#productos">Productos</a></li>
+            <li><a href="#membresias">Membresías</a></li>
+            <li><a href="#como-funciona">Cómo funciona</a></li>
+            <li><a href="#legalidad">Legalidad</a></li>
+          </ul>
+        </nav>
 
-    <div class="footer-bottom">
-      <p>© 2026 Flora ONG · Neuquén, Patagonia</p>
-      <p>Cultivamos conciencia</p>
+        <nav class="fl-footer-col" aria-label="Legal y comunidad">
+          <h4>Más</h4>
+          <ul>
+            <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350</a></li>
+            <li><a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN</a></li>
+            <li><a href="#programa">Programa</a></li>
+            <li><a href={igProfile} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="fl-footer-bottom">
+        <p>© 2026 Flora · Asociación civil · Neuquén, Patagonia</p>
+        <p>Cultivamos conciencia</p>
+      </div>
     </div>
   </footer>
 

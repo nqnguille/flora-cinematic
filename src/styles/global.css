@@ -2860,3 +2860,81 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* spec: em verde + CTA pedir análisis */
 .fl-spec-title em { font-style: normal; color: var(--fl-green); }
 .fl-spec-download { margin-top: 18px; }
+
+/* ── Membresías: planes de flores (light, mobile-first) ── */
+.fl-plan-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: clamp(32px, 4vw, 48px); }
+.fl-plan { position: relative; background: var(--fl-paper-2); border: 1px solid var(--fl-line); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; }
+.fl-plan.featured { background: var(--fl-violet); border-color: var(--fl-violet); color: #fff; }
+.fl-plan-badge { align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fl-violet); background: #fff; padding: 5px 11px; border-radius: 999px; margin-bottom: 14px; }
+.fl-plan-name { font-family: var(--font-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fl-violet); }
+.fl-plan.featured .fl-plan-name { color: rgba(255,255,255,0.8); }
+.fl-plan-grams { font-family: var(--font-ui); font-weight: 800; font-size: clamp(40px, 9vw, 56px); letter-spacing: -0.03em; color: var(--fl-ink); line-height: 1; margin: 8px 0 16px; }
+.fl-plan.featured .fl-plan-grams { color: #fff; }
+.fl-plan-grams span { font-size: 0.32em; font-weight: 600; color: var(--fl-green); margin-left: 4px; letter-spacing: 0; }
+.fl-plan.featured .fl-plan-grams span { color: rgba(255,255,255,0.7); }
+.fl-plan-features { list-style: none; padding: 18px 0 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 9px; flex: 1; border-top: 1px solid var(--fl-line); }
+.fl-plan.featured .fl-plan-features { border-top-color: rgba(255,255,255,0.18); }
+.fl-plan-features li { position: relative; padding-left: 18px; font-family: var(--font-ui); font-size: 14px; line-height: 1.45; color: rgba(28,22,38,0.66); }
+.fl-plan.featured .fl-plan-features li { color: rgba(255,255,255,0.85); }
+.fl-plan-features li::before { content: ''; position: absolute; left: 0; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--fl-green); }
+.fl-plan.featured .fl-plan-features li::before { background: #fff; }
+.fl-plan .fl-card-cta { color: var(--fl-violet); }
+.fl-plan.featured .fl-card-cta { color: #fff; }
+.fl-price-from { color: var(--fl-violet); font-weight: 800; }
+.fl-plan-note { margin-top: clamp(24px, 3vw, 36px); font-family: var(--font-ui); font-size: 13px; color: rgba(28,22,38,0.5); text-align: center; }
+@media (min-width: 760px) { .fl-plan-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Lista editorial light (Pasos · Legalidad) + aside legal ── */
+.fl-ed-list { display: flex; flex-direction: column; margin-top: clamp(28px, 4vw, 44px); padding: 0; list-style: none; }
+.fl-ed-row { display: grid; grid-template-columns: auto 1fr; gap: clamp(14px, 3vw, 36px); align-items: start; padding: clamp(22px, 3vw, 32px) 0; border-top: 1px solid var(--fl-line); }
+.fl-ed-row:last-child { border-bottom: 1px solid var(--fl-line); }
+.fl-ed-num { font-family: var(--font-ui); font-weight: 800; font-size: clamp(26px, 4vw, 42px); letter-spacing: -0.02em; color: var(--fl-violet); line-height: 1; }
+.fl-ed-title { font-family: var(--font-ui); font-weight: 800; font-size: clamp(19px, 2.4vw, 26px); letter-spacing: -0.01em; color: var(--fl-ink); margin-bottom: 8px; }
+.fl-ed-title em { font-style: normal; color: var(--fl-green); }
+.fl-ed-desc { font-family: var(--font-ui); font-size: 15px; line-height: 1.55; color: rgba(28,22,38,0.62); max-width: 60ch; }
+
+.fl-legal-body { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 48px); margin-top: clamp(28px, 4vw, 44px); align-items: start; }
+.fl-legal-aside { background: var(--fl-violet); color: #fff; border-radius: 18px; padding: clamp(26px, 3vw, 36px); display: flex; flex-direction: column; gap: 14px; }
+.fl-legal-aside .fl-eyebrow { color: #fff; opacity: 0.8; margin: 0; }
+.fl-legal-aside-text { font-family: var(--font-ui); font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,0.85); margin: 0; }
+.fl-legal-aside .fl-card-cta { color: #fff; }
+.fl-legal .fl-ed-list { margin-top: 0; }
+@media (min-width: 860px) { .fl-legal-body { grid-template-columns: 1.7fr 1fr; } }
+
+/* ── Programa: episodios (light) ── */
+.fl-episodes { list-style: none; padding: 0; margin: clamp(28px, 4vw, 44px) 0 0; display: grid; grid-template-columns: 1fr; gap: clamp(18px, 3vw, 28px); }
+.fl-episode .yt-facade { position: relative; display: block; width: 100%; border: none; padding: 0; border-radius: 16px; overflow: hidden; cursor: pointer; aspect-ratio: 16 / 9; background: #000; }
+.fl-episode .yt-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fl-episode-meta { padding-top: 14px; }
+.fl-episode-num { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fl-green); }
+.fl-episode-title { font-family: var(--font-ui); font-weight: 800; font-size: clamp(18px, 2vw, 24px); letter-spacing: -0.01em; color: var(--fl-ink); margin-top: 6px; }
+@media (min-width: 760px) { .fl-episodes { grid-template-columns: 1fr 1fr; } }
+
+/* ── Instagram (override a light sobre el v1 oscuro) ── */
+.ig-section.fl-section { background: var(--fl-paper-2); }
+.ig-head { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; margin-bottom: clamp(28px, 4vw, 40px); }
+.ig-cta { display: inline-flex; align-items: center; gap: 8px; color: var(--fl-violet); font-family: var(--font-ui); font-weight: 700; font-size: 14px; text-decoration: none; }
+.ig-card-link { background: #fff; border: 1px solid var(--fl-line); border-radius: 16px; color: var(--fl-ink); box-shadow: none; }
+.ig-card-link:hover { transform: translateY(-3px); box-shadow: 0 16px 36px -18px rgba(56,31,86,0.3); border-color: rgba(56,31,86,0.2); }
+.ig-card-caption { color: rgba(28,22,38,0.8); }
+.ig-card-cue, .ig-card-date { color: var(--fl-violet); }
+.ig-card-media { background: linear-gradient(135deg, var(--fl-violet), var(--fl-green)); color: rgba(255,255,255,0.6); }
+.ig-nav { background: #fff; border: 1px solid var(--fl-line); color: var(--fl-violet); }
+@media (min-width: 760px) { .ig-head { flex-direction: row; justify-content: space-between; align-items: flex-end; } }
+
+/* ── Footer: banda violeta de marca ── */
+.fl-footer { background: var(--fl-violet); color: #fff; padding: clamp(56px, 8vw, 96px) clamp(24px, 6vw, 80px) clamp(32px, 4vw, 48px); }
+.fl-footer-cta { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; padding-bottom: clamp(40px, 5vw, 64px); border-bottom: 1px solid rgba(255,255,255,0.16); margin-bottom: clamp(40px, 5vw, 56px); }
+.fl-footer-closer { font-family: var(--font-ui); font-weight: 800; font-size: clamp(28px, 5vw, 52px); letter-spacing: -0.02em; line-height: 1.05; }
+.fl-footer-closer em { font-style: normal; color: #8FE3A4; }
+.fl-footer-btn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--fl-violet); font-family: var(--font-ui); font-weight: 700; font-size: 15px; padding: 15px 26px; border-radius: 999px; text-decoration: none; white-space: nowrap; transition: transform 0.2s ease; }
+.fl-footer-btn:hover { transform: translateY(-2px); }
+.fl-footer-grid { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 40px); }
+.fl-footer-logo { font-family: var(--font-ui); font-weight: 800; font-size: 22px; letter-spacing: 0.04em; }
+.fl-footer-brand p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7); max-width: 42ch; margin-top: 12px; }
+.fl-footer-col h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
+.fl-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.fl-footer-col a { color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-ui); font-size: 15px; }
+.fl-footer-col a:hover { color: #fff; }
+.fl-footer-bottom { display: flex; flex-direction: column; gap: 6px; margin-top: clamp(40px, 5vw, 56px); padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.16); font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.6); }
+@media (min-width: 760px) { .fl-footer-cta { flex-direction: row; justify-content: space-between; align-items: center; } .fl-footer-grid { grid-template-columns: 2fr 1fr 1fr; } .fl-footer-bottom { flex-direction: row; justify-content: space-between; } }
