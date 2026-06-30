@@ -2820,6 +2820,94 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-spec-vals dd { font-family: var(--font-ui); font-weight: 800; font-size: 20px; color: var(--fl-ink); margin-top: 3px; }
 .fl-spec-vals dd i { display: block; font-style: normal; font-size: 9px; font-weight: 600; color: rgba(28,22,38,0.4); }
 
+/* ── Sello del último lote (cromatografía) ── */
+.fl-lote {
+  display: flex; flex-direction: column; gap: 16px;
+  background: linear-gradient(135deg, #fff, var(--fl-paper-2));
+  border: 1px solid var(--fl-line); border-radius: 16px;
+  padding: 20px 22px; margin-bottom: clamp(20px, 3vw, 30px);
+}
+.fl-lote-eyebrow { display: block; font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fl-green); margin-bottom: 7px; }
+.fl-lote-text { font-family: var(--font-ui); font-size: 13.5px; line-height: 1.55; color: rgba(28,22,38,0.66); margin: 0; }
+.fl-lote-text strong { color: var(--fl-ink); font-weight: 700; }
+.fl-lote-files { display: flex; flex-wrap: wrap; gap: 10px; }
+.fl-lote-file {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: #fff; border: 1px solid var(--fl-line); border-radius: 11px;
+  padding: 9px 14px; text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fl-lote-file:hover { transform: translateY(-2px); border-color: rgba(56,31,86,0.3); box-shadow: 0 12px 24px -16px rgba(56,31,86,0.4); }
+.fl-lote-file-code { font-family: var(--font-ui); font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
+.fl-lote-file-label { font-family: var(--font-ui); font-size: 12px; font-weight: 600; color: rgba(28,22,38,0.55); line-height: 1.1; }
+.fl-lote-file-label i { display: block; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--fl-violet); }
+
+/* ── Aceites: card con fotoproducto + gráfico de barras de cannabinoides ── */
+.fl-oil-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; background: #fff; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.fl-oil-card:hover { transform: translateY(-4px); box-shadow: 0 22px 48px -26px rgba(56,31,86,0.32); border-color: color-mix(in srgb, var(--oil) 40%, var(--fl-line)); }
+.fl-oil-photo { position: relative; aspect-ratio: 1 / 1; background: linear-gradient(150deg, #F3EBE4, #EFE6DC); overflow: hidden; }
+.fl-oil-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; display: block; }
+.fl-oil-badge {
+  position: absolute; top: 14px; left: 14px; z-index: 2;
+  font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: 0.02em;
+  color: #fff; background: var(--oil, var(--fl-violet)); border-radius: 999px; padding: 6px 14px;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--oil) 70%, transparent);
+}
+.fl-oil-ratio {
+  position: absolute; bottom: 14px; right: 14px; z-index: 2;
+  font-family: var(--font-ui); font-weight: 700; font-size: 12px; letter-spacing: 0.01em;
+  color: var(--fl-ink); background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);
+  border-radius: 999px; padding: 5px 12px; box-shadow: 0 6px 16px -10px rgba(28,22,38,0.5);
+}
+.fl-oil-body { padding: 24px; display: flex; flex-direction: column; flex: 1; }
+.fl-oil-title { font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--fl-green); margin: 0 0 10px; }
+.fl-oil-desc { font-family: var(--font-ui); font-size: 14px; line-height: 1.55; color: rgba(28,22,38,0.64); margin: 0 0 20px; }
+
+/* Gráfico de barras */
+.fl-oil-bars { display: flex; flex-direction: column; gap: 13px; margin-bottom: 20px; }
+.fl-oil-bar-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.fl-oil-bar-top span { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(28,22,38,0.55); }
+.fl-oil-bar-top strong { font-family: var(--font-ui); font-weight: 800; font-size: 16px; color: var(--fl-ink); }
+.fl-oil-bar-top strong i { font-style: normal; font-size: 10px; font-weight: 600; color: rgba(28,22,38,0.42); margin-left: 3px; }
+.fl-oil-track { display: block; height: 9px; border-radius: 999px; background: var(--fl-line); overflow: hidden; }
+.fl-oil-fill { display: block; height: 100%; width: 0; border-radius: 999px; transform-origin: left; animation: oilBarGrow 1s cubic-bezier(0.22,1,0.36,1) forwards; }
+.fl-oil-bar-cbd .fl-oil-fill { background: var(--fl-green); }
+.fl-oil-bar-thc .fl-oil-fill { background: var(--fl-violet); }
+.fl-oil-bar-cbg .fl-oil-fill { background: #c8983a; }
+@keyframes oilBarGrow { from { width: 0; } to { width: var(--w); } }
+@media (prefers-reduced-motion: reduce) { .fl-oil-fill { animation: none; width: var(--w); } }
+
+/* Para qué puede acompañar */
+.fl-oil-para { border-top: 1px solid var(--fl-line); padding-top: 16px; margin-bottom: 22px; }
+.fl-oil-para-label { display: block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(28,22,38,0.45); margin-bottom: 9px; }
+.fl-oil-para-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fl-oil-para-list li {
+  font-family: var(--font-ui); font-size: 13.5px; font-weight: 600; color: var(--fl-ink);
+  padding-left: 18px; position: relative;
+}
+.fl-oil-para-list li::before {
+  content: ''; position: absolute; left: 0; top: 7px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--oil, var(--fl-green));
+}
+
+/* Acciones */
+.fl-oil-actions { margin-top: auto; display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.fl-oil-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--oil, var(--fl-violet)); color: #fff; text-decoration: none;
+  font-family: var(--font-ui); font-weight: 700; font-size: 14px;
+  padding: 13px 18px; border-radius: 12px;
+  transition: filter 0.2s ease, gap 0.2s ease, transform 0.2s ease;
+}
+.fl-oil-btn:hover { filter: brightness(1.08); gap: 12px; transform: translateY(-1px); }
+.fl-oil-download {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-ui); font-weight: 700; font-size: 13px;
+  color: rgba(28,22,38,0.6); text-decoration: none;
+  padding: 4px; transition: color 0.2s ease;
+}
+.fl-oil-download:hover { color: var(--oil, var(--fl-violet)); }
+
 @media (min-width: 760px) {
   .fl-cards { grid-template-columns: repeat(3, 1fr); }
   .fl-spec-grid { grid-template-columns: repeat(3, 1fr); }

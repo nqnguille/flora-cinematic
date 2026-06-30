@@ -47,8 +47,12 @@ const aceites = [
       { k: 'CBG', v: '6,9' },
     ],
     usos: ['Uso nocturno', 'Dolor intenso', 'Descanso'],
+    para: ['Dolor agudo o intenso', 'Insomnio severo', 'Náuseas y falta de apetito'],
     href: wa('Hola Flora, me interesa el aceite Q1 🌿'),
     pdf: '/analisis/Q1.pdf',
+    img: '/img/prod-aceite-q1.jpg',
+    color: '#C9396B',
+    ratio: 'THC:CBD ≈ 2,3:1',
   },
   {
     codigo: 'Q2',
@@ -60,8 +64,12 @@ const aceites = [
       { k: 'CBG', v: '1,3' },
     ],
     usos: ['Día y noche', 'Dolor moderado', 'Uso continuo'],
+    para: ['Dolor crónico y artritis', 'Migrañas', 'Dolores menstruales'],
     href: wa('Hola Flora, me interesa el aceite Q2 🌿'),
     pdf: '/analisis/Q2.pdf',
+    img: '/img/prod-aceite-q2.jpg',
+    color: '#6E54C8',
+    ratio: 'CBD:THC ≈ 1,4:1',
   },
   {
     codigo: 'Q3',
@@ -73,10 +81,17 @@ const aceites = [
       { k: 'CBG', v: '0,3' },
     ],
     usos: ['Uso diurno', 'Ansiedad', 'Inicio suave'],
+    para: ['Ansiedad y estrés', 'Dificultad para dormir', 'Dolor neuropático'],
     href: wa('Hola Flora, me interesa el aceite Q3 🌿'),
     pdf: '/analisis/Q3.pdf',
+    img: '/img/prod-aceite-q3.jpg',
+    color: '#1F9389',
+    ratio: 'CBD:THC ≈ 27:1',
   },
 ]
+const maxCannabinoid = Math.max(
+  ...aceites.flatMap((a) => a.perfil.map((p) => Number(p.v.replace(',', '.'))))
+)
 const cremas = [
   {
     presentacion: '50 cc',
@@ -170,35 +185,35 @@ const episodes = [
 const faqs = [
   {
     q: '¿Necesito el REPROCANN para asociarme?',
-    a: 'El REPROCANN es lo que habilita el acceso legal. Si todavía no lo tenés, el primer paso es una entrevista médica: un profesional evalúa tu caso y, si corresponde, te inscribe. Te acompañamos en todo el trámite.',
+    a: 'Sí, pero es mucho más sencillo de lo que parece. Si todavía no lo tenés, te guiamos paso a paso: coordinamos la consulta con un profesional y te acompañamos hasta que tu inscripción esté lista.',
   },
   {
     q: '¿Tengo que cultivar yo?',
-    a: 'No hace falta. Cultivamos la parte que le corresponde a cada socio que no puede hacerlo en su casa, y vos accedés a esa parte todos los meses.',
+    a: 'No. Justamente esa es una de las ventajas de ser parte de Flora. Nosotros nos ocupamos del cultivo y vos recibís mensualmente la parte que te corresponde como socio.',
   },
   {
     q: '¿Cuánto es el aporte?',
-    a: 'Es un aporte mensual que sostiene el cultivo. Arranca en $170.000 y varía según la cantidad. Te sugerimos empezar por la más baja.',
+    a: 'El aporte mensual sostiene todo el proceso de cultivo y el funcionamiento del club. Los planes comienzan desde $170.000 y varían según la cantidad que necesites. Si es tu primera vez, te ayudamos a elegir la opción que mejor se adapte a vos.',
   },
   {
     q: '¿Es legal?',
-    a: 'Sí. Funcionamos como Asociación Civil Cann de Cannabis Medicinal (I.G.J. N° 1994128), dentro de la Ley 27.350 y el REPROCANN, con cada socio inscripto y todo por escrito.',
+    a: 'Sí. Flora funciona como Asociación Civil Cann de Cannabis Medicinal (I.G.J. N.º 1994128), dentro del marco de la Ley 27.350 y el REPROCANN. Todo el proceso se realiza de forma legal, transparente y con la documentación correspondiente para cada socio.',
   },
   {
     q: 'Nunca consumí cannabis, ¿puedo igual?',
-    a: 'Sí. Mucha gente llega sin experiencia previa. El profesional y el equipo te orientan sobre cómo empezar, con perfiles suaves y dosis bajas.',
+    a: 'Sí, por supuesto. Muchas personas llegan a Flora sin experiencia previa. Nuestro equipo y los profesionales que nos acompañan te orientan para que puedas comenzar de forma segura, con el perfil y la dosis más adecuada para vos.',
   },
   {
     q: '¿A qué productos accedo?',
-    a: 'A las flores, por el aporte mensual; a los aceites y las cremas, por consulta. Cada aceite tiene su análisis de laboratorio para descargar.',
+    a: 'Como socio, accedés a las flores correspondientes a tu plan mensual. Además, contamos con aceites y cremas disponibles por consulta. Todos nuestros aceites incluyen su análisis de laboratorio para que conozcas su composición y calidad.',
   },
   {
     q: '¿Dónde están y cómo coordino?',
-    a: 'Estamos en Neuquén, Patagonia. Cada caso lo coordinamos por WhatsApp, paso a paso.',
+    a: 'Estamos en Neuquén capital. Todo el proceso se coordina de forma personalizada por WhatsApp, desde el primer contacto hasta la incorporación al club.',
   },
   {
     q: '¿Cómo doy el primer paso?',
-    a: 'Escribinos por WhatsApp y coordinamos tu entrevista médica. Desde ahí avanzamos juntos.',
+    a: 'Es muy simple. Escribinos por WhatsApp y coordinamos una entrevista con un profesional. A partir de ahí, te guiamos en cada etapa para que puedas asociarte de forma clara, segura y sin complicaciones.',
   },
 ]
 
@@ -390,9 +405,9 @@ const igFallback = [
         <span class="fl-eyebrow">Nuestros productos</span>
         <h2 class="fl-title">De la planta, <em>a tu mano.</em></h2>
         <p class="fl-lead">
-          Cultivamos en sala propia, sin pesticidas, y controlamos cada lote en laboratorio.
-          De la flor a los extractos y la crema, todo nace del mismo cultivo y llega con su
-          análisis y nuestro acompañamiento.
+          Detrás de cada flor, cada extracto y cada crema hay un proceso que cuidamos de
+          principio a fin. Cultivamos en salas propias, sin pesticidas y con análisis de
+          laboratorio para ofrecer productos en los que podés confiar.
         </p>
       </header>
 
@@ -407,13 +422,13 @@ const igFallback = [
           </span>
         </a>
 
-        <a class="fl-panel fl-panel-2" href={wa('Hola Flora, quiero consultar por los aceites medicinales 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Aceites">
-          <img class="fl-panel-img" src="/img/prod-aceites.jpg" alt="" loading="lazy" width="1400" height="1750" />
+        <a class="fl-panel fl-panel-2" href="#analisis" role="listitem" aria-label="Aceites">
+          <img class="fl-panel-img" src="/img/prod-aceite-q2.jpg" alt="" loading="lazy" width="1100" height="1100" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Aceites</span>
             <span class="fl-panel-desc">Tres extractos sublinguales —Q1, Q2 y Q3—, uno para cada perfil. Vemos juntos cuál te conviene.</span>
-            <span class="fl-panel-cta">Pedir un aceite <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-cta">Ver los tres aceites <span aria-hidden="true">→</span></span>
           </span>
         </a>
 
@@ -422,7 +437,7 @@ const igFallback = [
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>
-            <span class="fl-panel-desc">Fórmula tópica en 50 y 100 cc, para dolor localizado. De acceso libre, sin trámite de REPROCANN.</span>
+            <span class="fl-panel-desc">Crema tópica de 30 ml formulada para brindar alivio localizado. De acceso libre, sin necesidad de REPROCANN.</span>
             <span class="fl-panel-cta">Pedir la crema <span aria-hidden="true">→</span></span>
           </span>
         </a>
@@ -659,27 +674,79 @@ const igFallback = [
     <div class="fl-wrap">
       <div class="fl-spec">
         <div class="fl-spec-head">
-          <span class="fl-eyebrow">Análisis de laboratorio</span>
-          <h2 class="fl-spec-title">Lo que medimos, <em>lo publicamos.</em></h2>
+          <span class="fl-eyebrow">Nuestros aceites</span>
+          <h2 class="fl-spec-title">Tres perfiles. <em>Uno es para vos.</em></h2>
           <p class="fl-spec-sub">
-            Cannabinoides del último lote, medidos en mg/mL por cromatografía
-            (HPLC-UV · IACA Laboratorios · extracción 02/06/2026). Descargá el informe
-            de cada aceite acá abajo.
+            Cada aceite nace del mismo cultivo y se mide planta por planta. Elegí por
+            objetivo —descanso, equilibrio o calma diurna— y mirá su composición exacta.
+            Todo lo que ves acá sale del análisis del último lote.
           </p>
+        </div>
+
+        <div class="fl-lote">
+          <div class="fl-lote-info">
+            <span class="fl-lote-eyebrow" aria-hidden="true">Cromatografía · último lote</span>
+            <p class="fl-lote-text">
+              Medido en mg/mL por <strong>HPLC-UV</strong> en <strong>IACA Laboratorios</strong>.
+              Extracción del <strong>02/06/2026</strong>. Cada aceite tiene su informe firmado para descargar.
+            </p>
+          </div>
+          <div class="fl-lote-files">
+            {aceites.map((a) => (
+              <a class="fl-lote-file" href={a.pdf} download>
+                <span class="fl-lote-file-code" style={`color:${a.color}`}>{a.codigo}</span>
+                <span class="fl-lote-file-label">Análisis<i>PDF ↓</i></span>
+              </a>
+            ))}
+          </div>
         </div>
         <div class="fl-spec-grid">
           {aceites.map((a) => (
-            <article class="fl-spec-card">
-              <span class="fl-spec-code">{a.codigo}</span>
-              <span class="fl-spec-sublabel">{a.sub}</span>
-              <dl class="fl-spec-vals" aria-label={`Perfil de ${a.codigo} en mg/mL`}>
-                {a.perfil.map((p) => (
-                  <div><dt>{p.k}</dt><dd>{p.v}<i>mg/mL</i></dd></div>
-                ))}
-              </dl>
-              <a class="fl-card-cta" href={a.pdf} download>
-                Descargar análisis <span aria-hidden="true">↓</span>
-              </a>
+            <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color}`}>
+              <div class="fl-oil-photo">
+                <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="1100" height="1100" />
+                <span class="fl-oil-badge">{a.codigo}</span>
+                <span class="fl-oil-ratio">{a.ratio}</span>
+              </div>
+
+              <div class="fl-oil-body">
+                <h3 class="fl-oil-title">{a.sub}</h3>
+                <p class="fl-oil-desc">{a.desc}</p>
+
+                <div class="fl-oil-bars" aria-label={`Gráfico de cannabinoides de ${a.codigo} en mg/mL`}>
+                  {a.perfil.map((p) => {
+                    const value = Number(p.v.replace(',', '.'))
+                    const pct = Math.max(3, Math.round((value / maxCannabinoid) * 100))
+                    return (
+                      <div class={`fl-oil-bar fl-oil-bar-${p.k.toLowerCase()}`}>
+                        <div class="fl-oil-bar-top">
+                          <span>{p.k}</span>
+                          <strong>{p.v}<i>mg/mL</i></strong>
+                        </div>
+                        <span class="fl-oil-track" aria-hidden="true">
+                          <span class="fl-oil-fill" style={`--w:${pct}%`}></span>
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div class="fl-oil-para">
+                  <span class="fl-oil-para-label">Puede acompañar en</span>
+                  <ul class="fl-oil-para-list">
+                    {a.para.map((c) => <li>{c}</li>)}
+                  </ul>
+                </div>
+
+                <div class="fl-oil-actions">
+                  <a class="fl-oil-btn" href={a.href} target="_blank" rel="noopener noreferrer">
+                    Consultar este aceite <span aria-hidden="true">→</span>
+                  </a>
+                  <a class="fl-oil-download" href={a.pdf} download>
+                    <span aria-hidden="true">↓</span> Análisis del lote (PDF)
+                  </a>
+                </div>
+              </div>
             </article>
           ))}
         </div>
