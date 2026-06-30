@@ -539,29 +539,43 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-programa" id="programa" aria-label="Programa Espacio libre de prejuicios">
-    <div class="fl-wrap">
-      <header class="fl-head">
-        <span class="fl-eyebrow">Nuestro canal de YouTube</span>
-        <h2 class="fl-title">Espacio libre <em>de prejuicios.</em></h2>
-        <p class="fl-lead">
-          Conversaciones sin vueltas sobre cannabis medicinal. Mirá los capítulos acá mismo,
-          o abrilos en YouTube y suscribite al canal.
-        </p>
-        <a class="fl-yt-cta" href={`${ytChannel}?sub_confirmation=1`} target="_blank" rel="noopener noreferrer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
-          Suscribite al canal
-        </a>
-      </header>
+  <section class="fl-section fl-channel" id="programa" aria-label="Nuestro canal de YouTube">
+    <!-- Decoración YouTube -->
+    <span class="fl-channel-deco fl-channel-deco-1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg></span>
+    <span class="fl-channel-deco fl-channel-deco-2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
 
-      <ul class="fl-episodes" role="list">
+    <div class="fl-wrap">
+      <!-- Header tipo página de canal -->
+      <div class="fl-channel-head">
+        <span class="fl-channel-avatar">
+          <img src="/favicon.png" alt="" width="512" height="512" />
+        </span>
+        <div class="fl-channel-id">
+          <span class="fl-channel-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            Podcast en YouTube
+          </span>
+          <h2 class="fl-channel-name">Espacio libre <em>de prejuicios.</em></h2>
+          <span class="fl-channel-handle">@FloraCultivamosConciencia · {episodes.length} episodios</span>
+        </div>
+        <a class="fl-channel-sub" href={`${ytChannel}?sub_confirmation=1`} target="_blank" rel="noopener noreferrer">
+          Suscribirte
+        </a>
+      </div>
+
+      <p class="fl-channel-lead">
+        Conversaciones sin vueltas sobre cannabis medicinal. Dale play acá o entrá al canal.
+      </p>
+
+      <!-- Episodios estilo YouTube -->
+      <ul class="fl-channel-eps" role="list">
         {episodes.map((ep, i) => (
-          <li class="fl-episode">
+          <li class="fl-ep">
             <button
-              class="yt-facade fl-episode-thumb"
+              class="yt-facade fl-ep-thumb"
               data-id={ep.id}
               data-title={ep.title}
-              aria-label={`Reproducir acá: ${ep.title}`}
+              aria-label={`Reproducir: ${ep.title}`}
             >
               <img
                 class="yt-thumb"
@@ -571,18 +585,14 @@ const igFallback = [
                 width="480"
                 height="360"
               />
-              <span class="yt-play" aria-hidden="true">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span class="fl-ep-play" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               </span>
               <span class="yt-dur" aria-hidden="true">{ep.dur}</span>
             </button>
-            <div class="fl-episode-meta">
-              <span class="fl-episode-num">Episodio 0{i + 1}</span>
-              <h3 class="fl-episode-title">{ep.title}</h3>
-              <a class="fl-episode-yt" href={`https://www.youtube.com/watch?v=${ep.id}`} target="_blank" rel="noopener noreferrer">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
-                Verlo en YouTube y suscribirte <span aria-hidden="true">↗</span>
-              </a>
+            <div class="fl-ep-meta">
+              <h3 class="fl-ep-title">{ep.title}</h3>
+              <span class="fl-ep-sub">Episodio {String(i + 1).padStart(2, '0')} · {ep.dur}</span>
             </div>
           </li>
         ))}

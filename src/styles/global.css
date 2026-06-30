@@ -3062,3 +3062,47 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* ── Remate del hero: "Bienvenido a" + logo FLORA (reemplaza la palabra) ── */
 .welcome-line-final { display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 3vh, 32px); }
 .welcome-line-logo { width: clamp(240px, 42vw, 440px); height: auto; display: block; }
+
+/* ══════════════════════════════════════════ */
+/* CANAL DE YOUTUBE / PODCAST — módulo oscuro decorado */
+/* ══════════════════════════════════════════ */
+.fl-channel {
+  position: relative; overflow: hidden;
+  background: radial-gradient(130% 110% at 82% -15%, rgba(255, 0, 0, 0.16), transparent 52%), #100D16;
+  color: #fff;
+}
+.fl-channel-deco { position: absolute; pointer-events: none; z-index: 0; }
+.fl-channel-deco svg { width: 100%; height: 100%; }
+.fl-channel-deco-1 { width: clamp(180px, 26vw, 380px); top: -50px; right: -40px; color: #FF0000; opacity: 0.10; }
+.fl-channel-deco-2 { width: clamp(110px, 16vw, 190px); bottom: 24px; left: -34px; color: #fff; opacity: 0.04; }
+.fl-channel .fl-wrap { position: relative; z-index: 1; }
+
+.fl-channel-head { display: flex; align-items: center; gap: clamp(14px, 2vw, 20px); flex-wrap: wrap; }
+.fl-channel-avatar { flex-shrink: 0; width: clamp(58px, 8vw, 78px); height: clamp(58px, 8vw, 78px); border-radius: 50%; background: #fff; display: grid; place-items: center; overflow: hidden; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08); }
+.fl-channel-avatar img { width: 80%; height: 80%; object-fit: contain; }
+.fl-channel-id { flex: 1; min-width: 200px; }
+.fl-channel-kicker { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+.fl-channel-kicker svg { color: #FF0000; }
+.fl-channel-name { font-family: var(--font-ui); font-weight: 800; font-size: clamp(26px, 4vw, 44px); letter-spacing: -0.02em; line-height: 1.04; color: #fff; margin: 7px 0 5px; }
+.fl-channel-name em { font-style: normal; color: #8FE3A4; }
+.fl-channel-handle { font-family: var(--font-ui); font-size: 14px; color: rgba(255, 255, 255, 0.5); }
+.fl-channel-sub { align-self: center; display: inline-flex; align-items: center; gap: 9px; background: #fff; color: #100D16; font-family: var(--font-ui); font-weight: 700; font-size: 15px; padding: 11px 24px; border-radius: 999px; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease; }
+.fl-channel-sub::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #FF0000; }
+.fl-channel-sub:hover { transform: translateY(-2px); background: #efefef; }
+.fl-channel-lead { font-family: var(--font-ui); font-size: clamp(15px, 1.8vw, 18px); line-height: 1.6; color: rgba(255, 255, 255, 0.68); max-width: 58ch; margin: clamp(22px, 3vw, 34px) 0 0; }
+
+.fl-channel-eps { list-style: none; padding: 0; margin: clamp(26px, 3.5vw, 42px) 0 0; display: grid; grid-template-columns: 1fr; gap: clamp(18px, 2.5vw, 26px); }
+.fl-ep-thumb { position: relative; display: block; width: 100%; border: 0; padding: 0; cursor: pointer; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; }
+.fl-ep-thumb .yt-thumb { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease, opacity 0.3s ease; }
+.fl-ep-thumb:hover .yt-thumb { transform: scale(1.04); opacity: 0.82; }
+.fl-ep-thumb[data-loaded] iframe { width: 100%; height: 100%; border: 0; display: block; }
+.fl-ep-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62px; height: 62px; border-radius: 50%; background: #FF0000; color: #fff; display: grid; place-items: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); transition: transform 0.25s ease, background 0.2s ease; z-index: 2; }
+.fl-ep-play svg { margin-left: 3px; }
+.fl-ep-thumb:hover .fl-ep-play { transform: translate(-50%, -50%) scale(1.08); background: #ff1a1a; }
+.fl-ep-thumb[data-loaded] .fl-ep-play, .fl-ep-thumb[data-loaded] .yt-dur { display: none; }
+.fl-channel .yt-dur { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.85); color: #fff; font-family: var(--font-ui); font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 4px; z-index: 2; }
+.fl-ep-meta { padding-top: 12px; }
+.fl-ep-title { font-family: var(--font-ui); font-weight: 700; font-size: clamp(17px, 2vw, 21px); line-height: 1.25; color: #fff; }
+.fl-ep-sub { display: block; font-family: var(--font-ui); font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 6px; }
+@media (min-width: 700px) { .fl-channel-eps { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 760px) { .fl-channel-sub { margin-left: auto; } }
