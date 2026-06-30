@@ -1,0 +1,19 @@
+{
+ "04-calidad": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/welcome/04-calidad.mp4",
+  "type": "video",
+  "photographer": "CESAR CASANOVA",
+  "pexels_id": 4561105,
+  "source_url": "https://www.pexels.com/video/a-person-applying-a-massage-oil-4561105/",
+  "alt": "",
+  "keyword_final": "cannabis oil",
+  "width": 1920,
+  "height": 1080,
+  "duration": 18.2,
+  "filesize": 9331183,
+  "poster_out": "/home/guillenqn/proyectos/flora-cinematic/public/welcome/04-calidad_poster.jpg",
+  "aspect_real": 1.778,
+  "ok": true,
+  "snippet": "<video src=\"/04-calidad.mp4\" poster=\"/04-calidad_poster.jpg\" autoplay muted loop playsinline></video>"
+ }
+}

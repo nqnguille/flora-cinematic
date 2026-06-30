@@ -369,7 +369,11 @@ function initHeroEntrance() {
   if (scrollInd) gsap.set(scrollInd, { opacity: 0 })
   if (ticker)  gsap.set(ticker, { opacity: 0 })
 
-  const tl = gsap.timeline({ delay: 0.15 })
+  // El manifiesto ya no es lo primero (lo precede el welcome): la entrada se
+  // dispara al llegar scrolleando, no en la carga.
+  const tl = gsap.timeline({
+    scrollTrigger: { trigger: '.hero', start: 'top 72%' },
+  })
 
   if (eyebrow) tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' })
 
@@ -611,7 +615,7 @@ function initProductTabs() {
 // ── WhatsApp flotante: oculto en el hero, aparece al pasarlo ──
 function initWhatsAppFloat() {
   const float = document.querySelector<HTMLElement>('.wa-float')
-  const hero = document.querySelector<HTMLElement>('.hero')
+  const hero = document.querySelector<HTMLElement>('.welcome') || document.querySelector<HTMLElement>('.hero')
   if (!float || !hero) return
 
   ScrollTrigger.create({
@@ -713,6 +717,99 @@ function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
     .join('')
 }
 
+// ── Welcome: relato de bienvenida con fondos que evolucionan ──
+function initWelcome() {
+  const section = document.querySelector<HTMLElement>('.welcome')
+  if (!section) return
+  const stage = section.querySelector<HTMLElement>('.welcome-stage')
+  const imgs = gsap.utils.toArray<HTMLElement>('.welcome-img')
+  const lines = gsap.utils.toArray<HTMLElement>('.welcome-line')
+  const outro = section.querySelector<HTMLElement>('.welcome-outro')
+  const cue = section.querySelector<HTMLElement>('.welcome-cue')
+  if (!stage || imgs.length === 0 || lines.length === 0) return
+
+  const steps = lines.length
+
+  // Reproduce sólo el video activo (ahorra CPU/datos); el resto en pausa con su poster
+  const playOnly = (idx: number) => {
+    imgs.forEach((el, k) => {
+      if (!(el instanceof HTMLVideoElement)) return
+      if (k === idx) { const p = el.play(); if (p && typeof p.catch === 'function') p.catch(() => {}) }
+      else el.pause()
+    })
+  }
+
+  // Reduced motion: mostramos el cierre del relato (poster estático), sin pin ni scrub
+  if (prefersReducedMotion) {
+    gsap.set(imgs, { opacity: 0 })
+    gsap.set(imgs[steps - 1], { opacity: 1 })
+    gsap.set(lines, { opacity: 0 })
+    gsap.set(lines[steps - 1], { opacity: 1 })
+    if (outro) gsap.set(outro, { opacity: 1, y: 0 })
+    if (cue) gsap.set(cue, { opacity: 0 })
+    return
+  }
+
+  // Estado inicial (GSAP setea el from, no el CSS)
+  gsap.set(imgs, { opacity: 0, scale: 1.12 })
+  gsap.set(imgs[0], { opacity: 1 })
+  gsap.set(lines, { opacity: 0, y: 36 })
+  gsap.set(lines[0], { opacity: 1, y: 0 })
+  if (outro) gsap.set(outro, { opacity: 0, y: 36 })
+
+  playOnly(0) // arranca el primer clip
+
+  const TRANS = 0.6   // crossfade
+  const HOLD = 1.0    // permanencia de cada beat
+
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: 'top top',
+      end: () => '+=' + Math.round(window.innerHeight * steps * 1.15),
+      pin: stage,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+    },
+  })
+
+  for (let i = 0; i < steps; i++) {
+    // Reproduce el clip de este beat (fire en ambos sentidos del scrub)
+    tl.call(() => playOnly(i), undefined, i === 0 ? 0 : '<')
+
+    // Ken Burns: la imagen activa se asienta de 1.12 → 1.0 durante su beat
+    tl.to(imgs[i], { scale: 1.0, duration: HOLD + TRANS, ease: 'none' }, i === 0 ? 0 : '<')
+
+    if (i > 0) {
+      tl.to(imgs[i], { opacity: 1, duration: TRANS }, '<')
+      tl.to(imgs[i - 1], { opacity: 0, duration: TRANS }, '<')
+      tl.to(lines[i], { opacity: 1, y: 0, duration: TRANS * 0.9 }, '<0.1')
+    }
+
+    tl.to({}, { duration: HOLD }) // hold
+
+    if (i < steps - 1) {
+      tl.to(lines[i], { opacity: 0, y: -36, duration: TRANS * 0.8 })
+    }
+  }
+
+  if (outro) tl.to(outro, { opacity: 1, y: 0, duration: TRANS }, '-=0.1')
+
+  // El cue desaparece apenas se empieza a scrollear
+  if (cue) {
+    gsap.to(cue, {
+      opacity: 0,
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: '+=' + Math.round(window.innerHeight * 0.5),
+        scrub: true,
+      },
+    })
+  }
+}
+
 function init() {
   initLoader()
   initNav()
@@ -726,6 +823,7 @@ function init() {
   splitWords()
   ScrollTrigger.refresh()
 
+  initWelcome()
   initHeroEntrance()
   initHeroParallax()
   animateSplitWords()

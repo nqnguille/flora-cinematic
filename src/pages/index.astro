@@ -287,9 +287,55 @@ const igFallback = [
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- HERO                                       -->
+  <!-- WELCOME — relato de bienvenida (scroll-story) -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="hero" id="inicio" aria-label="Inicio">
+  <section class="welcome" id="inicio" aria-label="Bienvenida a Flora">
+    <div class="welcome-stage">
+
+      <!-- Fondos en video que evolucionan — decorativos -->
+      <div class="welcome-bg" aria-hidden="true">
+        <video class="welcome-img" data-bg="0" src="/welcome/01-llegada.mp4" poster="/welcome/01-llegada_poster.jpg" muted loop playsinline preload="auto" width="1600" height="900"></video>
+        <video class="welcome-img" data-bg="1" src="/welcome/02-recibida.mp4" poster="/welcome/02-recibida_poster.jpg" muted loop playsinline preload="none" width="1600" height="900"></video>
+        <video class="welcome-img" data-bg="2" src="/welcome/03-acompanamiento.mp4" poster="/welcome/03-acompanamiento_poster.jpg" muted loop playsinline preload="none" width="1600" height="900"></video>
+        <video class="welcome-img" data-bg="3" src="/welcome/04-calidad.mp4" poster="/welcome/04-calidad_poster.jpg" muted loop playsinline preload="none" width="1600" height="900"></video>
+        <video class="welcome-img" data-bg="4" src="/welcome/05-flora.mp4" poster="/welcome/05-flora_poster.jpg" muted loop playsinline preload="none" width="1600" height="900"></video>
+        <div class="welcome-scrim"></div>
+      </div>
+
+      <!-- Relato -->
+      <div class="welcome-content">
+        <div class="welcome-lines">
+          <p class="welcome-line" data-line="0">Qué bueno que llegaste.</p>
+          <p class="welcome-line" data-line="1">Acá no hay estigmas.</p>
+          <p class="welcome-line" data-line="2">Solo acompañamiento,</p>
+          <p class="welcome-line" data-line="3">calidad y acceso legal.</p>
+          <p class="welcome-line welcome-line-final" data-line="4">Bienvenido a <em>Flora</em>.</p>
+        </div>
+
+        <div class="welcome-outro">
+          <span class="welcome-badge">Ley 27.350 · REPROCANN · Neuquén, Patagonia</span>
+          <div class="welcome-ctas">
+            <a href={waAsociarse} class="btn-primary" target="_blank" rel="noopener noreferrer">
+              Quiero asociarme
+            </a>
+            <a href="#perfiles" class="btn-secondary">Conocer Flora</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicador de scroll -->
+      <div class="welcome-cue" aria-hidden="true">
+        <span class="welcome-cue-label">deslizá</span>
+        <span class="welcome-cue-line"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- MANIFIESTO (antes hero)                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="hero" id="manifiesto" aria-label="Cultivamos lo que la ley te permite">
 
     <!-- Fondo de video — decorativo. Poster local = imagen LCP y fallback reduced-motion -->
     <div class="hero-visual" aria-hidden="true">
@@ -350,12 +396,6 @@ const igFallback = [
           <a href="#membresias" class="btn-secondary">Ver membresías</a>
         </div>
       </div>
-    </div>
-
-    <!-- Scroll indicator -->
-    <div class="scroll-indicator" aria-hidden="true">
-      <div class="scroll-line"></div>
-      <span class="scroll-label">scroll</span>
     </div>
 
     <!-- Ticker -->

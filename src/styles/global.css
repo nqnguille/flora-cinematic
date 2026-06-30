@@ -2131,3 +2131,143 @@ body.cursor-hover .cursor-ring {
   .ig-nav { display: none; }
   .ig-card { width: 80vw; }
 }
+
+/* ══════════════════════════════════════════ */
+/* WELCOME — relato de bienvenida (scroll-story) */
+/* ══════════════════════════════════════════ */
+.welcome {
+  position: relative;
+  background: var(--ink);
+}
+
+.welcome-stage {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* Fondos */
+.welcome-bg { position: absolute; inset: 0; z-index: 0; }
+.welcome-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.welcome-img[data-bg="0"] { opacity: 1; }
+
+/* Capa de legibilidad */
+.welcome-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(10,18,12,0.25) 0%, rgba(10,18,12,0.55) 60%, rgba(10,18,12,0.82) 100%),
+    linear-gradient(180deg, rgba(10,18,12,0.55) 0%, rgba(10,18,12,0.25) 35%, rgba(10,18,12,0.45) 70%, rgba(10,18,12,0.85) 100%);
+}
+
+/* Relato */
+.welcome-content { position: absolute; inset: 0; z-index: 2; }
+
+.welcome-lines { position: absolute; inset: 0; display: grid; place-items: center; padding: 0 6vw; }
+.welcome-line {
+  grid-area: 1 / 1;
+  margin: 0;
+  max-width: 18ch;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 7vw, 5.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  color: var(--bone);
+  text-shadow: 0 2px 30px rgba(0,0,0,0.35);
+  opacity: 0;
+}
+.welcome-line[data-line="0"] { opacity: 1; }
+.welcome-line em { font-style: italic; color: var(--leaf); }
+.welcome-line-final { font-size: clamp(2.8rem, 8.5vw, 6.4rem); max-width: 16ch; }
+
+/* Outro: badge + CTAs (aparece al final) */
+.welcome-outro {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: clamp(3.2rem, 11vh, 7.5rem);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(18px, 3vh, 30px);
+  padding: 0 6vw;
+  opacity: 0;
+}
+.welcome-badge {
+  font-family: var(--font-ui);
+  font-size: clamp(0.62rem, 1.4vw, 0.74rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bone);
+  opacity: 0.78;
+  border: 1px solid rgba(244,241,230,0.25);
+  border-radius: 999px;
+  padding: 8px 18px;
+  backdrop-filter: blur(4px);
+}
+.welcome-ctas { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+
+/* Cue */
+.welcome-cue {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.6rem, 4vh, 2.6rem);
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.welcome-cue-label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--bone);
+  opacity: 0.7;
+}
+.welcome-cue-line {
+  width: 1px;
+  height: 46px;
+  background: linear-gradient(180deg, rgba(244,241,230,0.7), rgba(244,241,230,0));
+  animation: welcomeCue 2.2s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes welcomeCue {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
+  50%      { transform: scaleY(1);    opacity: 0.9; }
+}
+
+/* Fallback sin JS: mostramos el cierre del relato */
+html.no-js .welcome-img[data-bg="0"] { opacity: 0; }
+html.no-js .welcome-img[data-bg="4"] { opacity: 1; }
+html.no-js .welcome-line[data-line="0"] { opacity: 0; }
+html.no-js .welcome-line-final { opacity: 1; }
+html.no-js .welcome-outro { opacity: 1; }
+html.no-js .welcome-cue { display: none; }
+
+@media (max-width: 600px) {
+  .welcome-line { max-width: 14ch; }
+  .welcome-ctas { width: 100%; }
+  .welcome-ctas .btn-primary,
+  .welcome-ctas .btn-secondary { flex: 1 1 auto; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-cue-line { animation: none; }
+}
