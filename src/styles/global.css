@@ -3052,3 +3052,9 @@ html.no-js .reveal { opacity: 1; transform: none; }
   opacity: 0.96;
   pointer-events: none;
 }
+
+/* ── Logo (imagen) en nav y footer ── */
+.nav-logo { display: inline-flex; align-items: center; }
+.nav-logo-img { height: 22px; width: auto; display: block; }
+.fl-footer-logo-img { height: 30px; width: auto; display: block; }
+@media (min-width: 760px) { .nav-logo-img { height: 24px; } }
