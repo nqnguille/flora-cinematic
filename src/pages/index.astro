@@ -9,10 +9,10 @@ const wa = (t: string) => `${WA}?text=${encodeURIComponent(t)}`
 const perfiles = [
   {
     tag: 'Dolor & inflamación',
-    title: 'Para quienes buscan una alternativa real.',
-    desc: 'El CBD y el THC pueden acompañar el dolor crónico, articular o muscular, trabajando sobre la inflamación y la forma en que percibís el dolor.',
+    title: 'Para quienes buscan otra forma de tratar el dolor.',
+    desc: 'El CBD y el THC pueden acompañar el dolor crónico, articular o muscular, y la forma en que percibís el dolor.',
     cta: 'Hablar sobre dolor',
-    href: wa('Hola Flora, me interesa el club para manejo del dolor crónico 🌿'),
+    href: wa('Hola Flora, me interesa asociarme a Flora para manejo del dolor crónico 🌿'),
     img: '/img/perfil-dolor.jpg',
   },
   {
@@ -20,15 +20,15 @@ const perfiles = [
     title: 'Para quienes buscan recuperar el descanso.',
     desc: 'El THC en dosis justas y ciertos cannabinoides pueden ayudarte a conciliar y sostener el sueño, para el insomnio y la mente que no para.',
     cta: 'Hablar sobre sueño',
-    href: wa('Hola Flora, me interesa el club para mejorar mi sueño 🌿'),
+    href: wa('Hola Flora, me interesa asociarme a Flora para mejorar mi sueño 🌿'),
     img: '/img/perfil-sueno.jpg',
   },
   {
     tag: 'Bienestar & ansiedad',
-    title: 'Para quienes buscan equilibrio en el día a día.',
-    desc: 'El CBD acompaña la ansiedad y el estrés del día a día sin alterarte, pensado para uso diurno y como una práctica continua de bienestar.',
+    title: 'Para quienes buscan equilibrio, todos los días.',
+    desc: 'El CBD acompaña la ansiedad y el estrés de la rutina sin alterarte, pensado para el día y como una práctica de bienestar.',
     cta: 'Hablar sobre bienestar',
-    href: wa('Hola Flora, me interesa el club para bienestar y ansiedad 🌿'),
+    href: wa('Hola Flora, me interesa asociarme a Flora para bienestar y ansiedad 🌿'),
     img: '/img/perfil-ansiedad.jpg',
   },
 ]
@@ -106,7 +106,7 @@ const productIconsSvg = [
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="4" y="5.5" width="16" height="4.5" rx="1"/></svg>`,
 ]
 
-const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20al%20club.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
+const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
 const waLegal = `${WA}?text=Hola%20Flora%2C%20tengo%20una%20consulta%20sobre%20mi%20situaci%C3%B3n%20legal%20(Ley%2027.350%20%2F%20REPROCANN).%20%C2%BFMe%20orientan%3F`
 
@@ -173,7 +173,7 @@ const igHandle = '@flora.cultivamosconciencia'
 const igProfile = 'https://www.instagram.com/flora.cultivamosconciencia/'
 const igFeedUrl = 'https://feeds.behold.so/BdL7J34neXVcfDDQ3Qe2'
 const igFallback = [
-  { caption: 'Efecto séquito: por qué la planta entera funciona mejor que un cannabinoide aislado.' },
+  { caption: 'Efecto séquito: por qué se estudia la planta entera frente a un cannabinoide aislado.' },
   { caption: 'Cómo elegir tu aceite: quimiotipo, relación CBD:THC y para qué sirve cada uno.' },
   { caption: 'Punto de corte: cuándo se cosecha y por qué cambia el efecto final.' },
   { caption: 'REPROCANN al día: qué cambió en la última resolución y cómo te afecta.' },
@@ -207,7 +207,7 @@ const igFallback = [
     <ul class="nav-links" role="list">
       <li><a href="#perfiles">En qué te ayuda</a></li>
       <li><a href="#productos">Productos</a></li>
-      <li><a href="#membresias">Acceso</a></li>
+      <li><a href="#acceso">Acceso</a></li>
       <li><a href="#entrevista">REPROCANN</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
@@ -240,7 +240,7 @@ const igFallback = [
       <ul role="list">
         <li><a href="#perfiles">En qué te ayuda</a></li>
         <li><a href="#productos">Productos</a></li>
-        <li><a href="#membresias">Acceso</a></li>
+        <li><a href="#acceso">Acceso</a></li>
         <li><a href="#entrevista">REPROCANN</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
@@ -277,7 +277,7 @@ const igFallback = [
           <p class="welcome-line" data-line="1">Acá no hay estigmas.</p>
           <p class="welcome-line" data-line="2">Solo acompañamiento,</p>
           <p class="welcome-line" data-line="3">calidad y acceso legal.</p>
-          <p class="welcome-line welcome-line-final" data-line="4">Bienvenido a <em>Flora</em>.</p>
+          <p class="welcome-line welcome-line-final" data-line="4">Llegaste a <em>Flora</em>.</p>
         </div>
 
         <div class="welcome-outro">
@@ -347,17 +347,17 @@ const igFallback = [
         <span class="fl-eyebrow">Nuestros productos</span>
         <h2 class="fl-title">De la planta, <em>a tu mano.</em></h2>
         <p class="fl-lead">
-          Todo de cultivo propio, con el acompañamiento del equipo en cada paso.
+          Todo de cultivo propio. Cada formato lo consultás directo por WhatsApp.
         </p>
       </header>
 
       <div class="fl-gateway fl-prod-gateway" role="list">
-        <a class="fl-panel fl-panel-1" href="#membresias" role="listitem" aria-label="Flores">
+        <a class="fl-panel fl-panel-1" href="#acceso" role="listitem" aria-label="Flores">
           <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Flores</span>
-            <span class="fl-panel-desc">Cultivamos tu parte del material vegetal, mes a mes, con un aporte solidario para quienes no pueden hacerlo en casa.</span>
+            <span class="fl-panel-desc">Tu parte del cultivo del mes, en flor. La elegís según lo que necesites.</span>
             <span class="fl-panel-cta">Cómo acceder <span aria-hidden="true">→</span></span>
           </span>
         </a>
@@ -367,8 +367,8 @@ const igFallback = [
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Aceites</span>
-            <span class="fl-panel-desc">Tres extractos sublinguales —Q1, Q2 y Q3— cada uno con su análisis de laboratorio. Los encargás al equipo según tu caso.</span>
-            <span class="fl-panel-cta">Consultar <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-desc">Tres extractos sublinguales —Q1, Q2 y Q3—, uno para cada perfil. Vemos juntos cuál te conviene.</span>
+            <span class="fl-panel-cta">Pedir un aceite <span aria-hidden="true">→</span></span>
           </span>
         </a>
 
@@ -377,8 +377,8 @@ const igFallback = [
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>
-            <span class="fl-panel-desc">Fórmula tópica de uso externo, en 50 y 100 cc, para dolor localizado. No requiere REPROCANN. La encargás al equipo.</span>
-            <span class="fl-panel-cta">Consultar <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-desc">Fórmula tópica en 50 y 100 cc, para dolor localizado. De acceso libre, sin trámite de REPROCANN.</span>
+            <span class="fl-panel-cta">Pedir la crema <span aria-hidden="true">→</span></span>
           </span>
         </a>
       </div>
@@ -408,15 +408,14 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-acceso" id="membresias" aria-label="Acceso a material vegetal">
+  <section class="fl-section fl-acceso" id="acceso" aria-label="Acceso a material vegetal">
     <div class="fl-wrap">
       <div class="fl-acceso-intro">
         <span class="fl-eyebrow">Acceso a material vegetal</span>
         <h2 class="fl-title">Cultivamos lo que <em>la ley te permite.</em></h2>
         <p class="fl-acceso-story">
-          Hay personas que necesitan cannabis y no pueden cultivarlo en su casa.
-          Para ellas cultivamos nosotros. Tu aporte mensual sostiene ese cultivo y
-          mantiene viva cada planta.
+          Hay personas que necesitan cannabis y no pueden cultivarlo en casa.
+          Lo hacemos nosotros, y tu aporte mensual mantiene viva cada planta.
         </p>
       </div>
 
@@ -438,7 +437,7 @@ const igFallback = [
         </div>
 
         <p class="fl-acceso-detail">
-          <span data-acceso-amount>10</span>&nbsp;g de material vegetal por mes ·
+          <span data-acceso-amount>10</span>&nbsp;g por mes ·
           mismo cuidado y variedades para todos.
         </p>
 
@@ -447,8 +446,8 @@ const igFallback = [
         </a>
 
         <p class="fl-acceso-note">
-          El aporte arranca en <strong>$170.000</strong> por mes y acompaña la cantidad;
-          lo conversamos según tu caso. Te sugerimos empezar por la más baja.
+          El aporte arranca en <strong>$170.000</strong> por mes y sube con la cantidad;
+          lo vemos con vos. Te sugerimos empezar por la más baja.
         </p>
       </div>
     </div>
@@ -485,8 +484,8 @@ const igFallback = [
         <aside class="fl-legal-aside" aria-label="Registro y consulta">
           <span class="fl-eyebrow">Registro habilitado · REPROCANN</span>
           <p class="fl-legal-aside-text">
-            ¿Tenés dudas sobre tu situación o tu trámite? Te orientamos sin compromiso,
-            con una persona del equipo.
+            ¿Querés ver cómo encaja tu caso en este marco legal? Lo revisamos con vos,
+            sin vueltas.
           </p>
           <a class="fl-card-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
             Consultar por WhatsApp <span aria-hidden="true">→</span>
@@ -614,7 +613,7 @@ const igFallback = [
       <div class="fl-spec">
         <div class="fl-spec-head">
           <span class="fl-eyebrow">Análisis de laboratorio</span>
-          <h2 class="fl-spec-title">Los últimos análisis <em>de nuestros aceites.</em></h2>
+          <h2 class="fl-spec-title">Lo que medimos, <em>lo publicamos.</em></h2>
           <p class="fl-spec-sub">
             Cannabinoides del último lote, medidos en mg/mL por cromatografía
             (HPLC-UV · IACA Laboratorios · extracción 02/06/2026). Descargá el informe
@@ -647,9 +646,9 @@ const igFallback = [
   <footer class="fl-footer" id="contacto">
     <div class="fl-wrap">
       <div class="fl-footer-cta">
-        <h3 class="fl-footer-closer">Empezá <em>hoy</em> tu acceso legal.</h3>
+        <h3 class="fl-footer-closer">Empezá hoy, <em>en regla</em> y acompañado.</h3>
         <a href={waFooter} class="fl-footer-btn" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
-          Asociarme por WhatsApp <span aria-hidden="true">→</span>
+          Escribirnos para asociarme <span aria-hidden="true">→</span>
         </a>
       </div>
 
@@ -667,7 +666,7 @@ const igFallback = [
           <ul>
             <li><a href="#perfiles">En qué te ayuda</a></li>
             <li><a href="#productos">Productos</a></li>
-            <li><a href="#membresias">Acceso</a></li>
+            <li><a href="#acceso">Acceso</a></li>
             <li><a href="#entrevista">REPROCANN</a></li>
             <li><a href="#legalidad">Legalidad</a></li>
           </ul>
