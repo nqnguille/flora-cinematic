@@ -2938,3 +2938,25 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-footer-col a:hover { color: #fff; }
 .fl-footer-bottom { display: flex; flex-direction: column; gap: 6px; margin-top: clamp(40px, 5vw, 56px); padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.16); font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.6); }
 @media (min-width: 760px) { .fl-footer-cta { flex-direction: row; justify-content: space-between; align-items: center; } .fl-footer-grid { grid-template-columns: 2fr 1fr 1fr; } .fl-footer-bottom { flex-direction: row; justify-content: space-between; } }
+
+/* ── Acceso a material vegetal: relato + selector de cantidad (no-card) ── */
+.fl-acceso .fl-wrap { max-width: 860px; }
+.fl-acceso-intro { text-align: center; margin-bottom: clamp(36px, 5vw, 56px); }
+.fl-acceso-intro .fl-title { margin-left: auto; margin-right: auto; max-width: 18ch; }
+.fl-acceso-story { font-family: var(--font-ui); font-size: clamp(17px, 2.2vw, 21px); line-height: 1.6; color: rgba(28,22,38,0.72); max-width: 50ch; margin: 20px auto 0; }
+.fl-acceso-picker { background: var(--fl-paper-2); border: 1px solid var(--fl-line); border-radius: 24px; padding: clamp(28px, 4vw, 48px); text-align: center; }
+.fl-acceso-q { display: block; font-family: var(--font-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fl-violet); margin-bottom: 20px; }
+.fl-amounts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
+.fl-amount { font-family: var(--font-ui); font-weight: 800; font-size: clamp(24px, 5vw, 32px); letter-spacing: -0.02em; color: var(--fl-ink); background: #fff; border: 1.5px solid var(--fl-line); border-radius: 14px; padding: 18px 10px; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+.fl-amount span { font-size: 0.5em; font-weight: 600; color: var(--fl-green); margin-left: 2px; }
+.fl-amount:hover { border-color: var(--fl-violet); }
+.fl-amount.is-active { background: var(--fl-violet); border-color: var(--fl-violet); color: #fff; }
+.fl-amount.is-active span { color: rgba(255,255,255,0.7); }
+.fl-amount:focus-visible { outline: 3px solid var(--fl-violet); outline-offset: 3px; }
+.fl-acceso-detail { font-family: var(--font-ui); font-size: 15px; color: rgba(28,22,38,0.62); margin: 24px 0 0; }
+.fl-acceso-detail [data-acceso-amount] { font-weight: 800; color: var(--fl-violet); }
+.fl-acceso-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; background: var(--fl-violet); color: #fff; font-family: var(--font-ui); font-weight: 700; font-size: 15px; padding: 15px 30px; border-radius: 999px; text-decoration: none; transition: transform 0.2s ease; }
+.fl-acceso-cta:hover { transform: translateY(-2px); }
+.fl-acceso-note { font-family: var(--font-ui); font-size: 13px; line-height: 1.55; color: rgba(28,22,38,0.52); max-width: 48ch; margin: 22px auto 0; }
+.fl-acceso-note strong { color: var(--fl-violet); }
+@media (min-width: 540px) { .fl-amounts { grid-template-columns: repeat(4, 1fr); max-width: none; } }

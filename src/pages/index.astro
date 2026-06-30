@@ -120,58 +120,14 @@ const legales = [
   },
 ]
 
-// Acceso a material vegetal — niveles de cultivo solidario.
-// Sugerimos siempre arrancar por el más bajo (Semilla, 10g).
-const niveles = [
-  {
-    name: 'Semilla',
-    grams: '10',
-    features: [
-      'El punto de partida que sugerimos',
-      'Tu parte del cultivo, cada mes',
-      'Cultivado sin pesticidas',
-      'Acompañamiento del equipo',
-    ],
-    featured: true,
-    badge: 'Sugerido para empezar',
-    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Semilla (10g). ¿Me orientan para empezar?'),
-  },
-  {
-    name: 'Raíz',
-    grams: '20',
-    features: [
-      'Tu parte del cultivo, cada mes',
-      'Elección de variedad disponible',
-      'Orientación para elegir',
-      'Acompañamiento por WhatsApp',
-    ],
-    featured: false,
-    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Raíz (20g). ¿Me orientan?'),
-  },
-  {
-    name: 'Cosecha',
-    grams: '30',
-    features: [
-      'Tu parte del cultivo, cada mes',
-      'Prioridad en variedades nuevas',
-      'Orientación inicial con el equipo',
-      'Acompañamiento directo',
-    ],
-    featured: false,
-    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Cosecha (30g). ¿Me orientan?'),
-  },
-  {
-    name: 'Tierra',
-    grams: '40',
-    features: [
-      'Tu parte del cultivo, cada mes',
-      'Acceso a todas las variedades',
-      'Acceso a los aceites con análisis (Q1·Q2·Q3)',
-      'Acompañamiento prioritario',
-    ],
-    featured: false,
-    waLink: wa('Hola Flora, quiero acceder al material vegetal — nivel Tierra (40g). ¿Me orientan?'),
-  },
+// Acceso a material vegetal — cultivo solidario. Lo único que varía es la cantidad
+// (gramos por mes). Mismo acompañamiento y variedades para todos. Sugerimos empezar
+// por la cantidad más baja (10 g).
+const accesoAmounts = [
+  { g: '10', wa: wa('Hola Flora, quiero acceder al material vegetal: 10 g por mes. ¿Me orientan para empezar?') },
+  { g: '20', wa: wa('Hola Flora, quiero acceder al material vegetal: 20 g por mes. ¿Me orientan?') },
+  { g: '30', wa: wa('Hola Flora, quiero acceder al material vegetal: 30 g por mes. ¿Me orientan?') },
+  { g: '40', wa: wa('Hola Flora, quiero acceder al material vegetal: 40 g por mes. ¿Me orientan?') },
 ]
 
 const steps = [
@@ -495,42 +451,50 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-plans" id="membresias" aria-label="Acceso a material vegetal">
+  <section class="fl-section fl-acceso" id="membresias" aria-label="Acceso a material vegetal">
     <div class="fl-wrap">
-      <header class="fl-head">
+      <div class="fl-acceso-intro">
         <span class="fl-eyebrow">Acceso a material vegetal</span>
-        <h2 class="fl-title">Cultivamos <em>para vos.</em></h2>
-        <p class="fl-lead">
-          Somos una asociación civil sin fines de lucro. Dentro del REPROCANN, cultivamos
-          el material vegetal de cada socio que no puede hacerlo en su casa. Tu aporte
-          mensual sostiene ese cultivo —desde <strong class="fl-price-from">$170.000</strong>,
-          según la cantidad que te corresponde.
+        <h2 class="fl-title">Cultivamos lo que <em>vos no podés.</em></h2>
+        <p class="fl-acceso-story">
+          Hay personas que necesitan cannabis y no pueden cultivarlo en su casa.
+          Para ellas cultivamos nosotros. No es un negocio: somos una asociación civil
+          sin fines de lucro, y tu aporte mensual es lo que mantiene viva cada planta,
+          dentro del REPROCANN.
         </p>
-      </header>
-
-      <div class="fl-plan-grid" role="list">
-        {niveles.map((m) => (
-          <article
-            class={m.featured ? 'fl-plan featured' : 'fl-plan'}
-            role="listitem"
-            aria-label={`Nivel ${m.name}: ${m.grams} gramos de material vegetal por mes`}
-          >
-            {m.badge && <span class="fl-plan-badge">{m.badge}</span>}
-            <span class="fl-plan-name">{m.name}</span>
-            <div class="fl-plan-grams" aria-label={`${m.grams} gramos por mes`}>
-              {m.grams}<span>g/mes</span>
-            </div>
-            <ul class="fl-plan-features" aria-label="Qué incluye">
-              {m.features.map((f) => <li>{f}</li>)}
-            </ul>
-            <a class="fl-card-cta" href={m.waLink} target="_blank" rel="noopener noreferrer">
-              Quiero acceder <span aria-hidden="true">→</span>
-            </a>
-          </article>
-        ))}
       </div>
 
-      <p class="fl-plan-note">El aporte sostiene el cultivo compartido, sin fines de lucro, dentro de la Ley&nbsp;27.350 y el REPROCANN.</p>
+      <div class="fl-acceso-picker">
+        <span class="fl-acceso-q">¿Cuánto necesitás por mes?</span>
+
+        <div class="fl-amounts" role="group" aria-label="Cantidad de material vegetal por mes">
+          {accesoAmounts.map((a, i) => (
+            <button
+              type="button"
+              class={i === 0 ? 'fl-amount is-active' : 'fl-amount'}
+              data-g={a.g}
+              data-wa={a.wa}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              {a.g}<span>g</span>
+            </button>
+          ))}
+        </div>
+
+        <p class="fl-acceso-detail">
+          <span data-acceso-amount>10</span>&nbsp;g de material vegetal por mes ·
+          mismo cuidado y variedades para todos.
+        </p>
+
+        <a class="fl-acceso-cta" data-acceso-cta href={accesoAmounts[0].wa} target="_blank" rel="noopener noreferrer">
+          Quiero acceder <span aria-hidden="true">→</span>
+        </a>
+
+        <p class="fl-acceso-note">
+          El aporte arranca en <strong>$170.000</strong> por mes y acompaña la cantidad;
+          lo conversamos según tu caso. Te sugerimos empezar por la más baja.
+        </p>
+      </div>
     </div>
   </section>
 
