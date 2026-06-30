@@ -166,6 +166,42 @@ const episodes = [
   { id: '69kQ-XoVmuU', title: 'Ansiedad y estrés', dur: '29:41' },
 ]
 
+// Preguntas frecuentes (acordeón + datos estructurados FAQPage para SEO)
+const faqs = [
+  {
+    q: '¿Necesito el REPROCANN para asociarme?',
+    a: 'El REPROCANN es lo que habilita el acceso legal. Si todavía no lo tenés, el primer paso es una entrevista médica: un profesional evalúa tu caso y, si corresponde, te inscribe. Te acompañamos en todo el trámite.',
+  },
+  {
+    q: '¿Tengo que cultivar yo?',
+    a: 'No hace falta. Cultivamos la parte que le corresponde a cada socio que no puede hacerlo en su casa, y vos accedés a esa parte todos los meses.',
+  },
+  {
+    q: '¿Cuánto es el aporte?',
+    a: 'Es un aporte mensual que sostiene el cultivo. Arranca en $170.000 y varía según la cantidad. Te sugerimos empezar por la más baja.',
+  },
+  {
+    q: '¿Es legal?',
+    a: 'Sí. Funcionamos como Asociación Civil Cann de Cannabis Medicinal (I.G.J. N° 1994128), dentro de la Ley 27.350 y el REPROCANN, con cada socio inscripto y todo por escrito.',
+  },
+  {
+    q: 'Nunca consumí cannabis, ¿puedo igual?',
+    a: 'Sí. Mucha gente llega sin experiencia previa. El profesional y el equipo te orientan sobre cómo empezar, con perfiles suaves y dosis bajas.',
+  },
+  {
+    q: '¿A qué productos accedo?',
+    a: 'A las flores, por el aporte mensual; a los aceites y las cremas, por consulta. Cada aceite tiene su análisis de laboratorio para descargar.',
+  },
+  {
+    q: '¿Dónde están y cómo coordino?',
+    a: 'Estamos en Neuquén, Patagonia. Cada caso lo coordinamos por WhatsApp, paso a paso.',
+  },
+  {
+    q: '¿Cómo doy el primer paso?',
+    a: 'Escribinos por WhatsApp y coordinamos tu entrevista médica. Desde ahí avanzamos juntos.',
+  },
+]
+
 // Instagram — slider en vivo. El feed lo sirve Behold (behold.so): JSON con
 // imágenes hosteadas estables + CORS, refresco automático del token. Si no
 // responde, se muestran estas tarjetas de respaldo y el botón al perfil.
@@ -641,6 +677,40 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- FAQ — preguntas frecuentes (acordeón)       -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-faq" id="faq" aria-label="Preguntas frecuentes">
+    <div class="fl-wrap fl-faq-wrap">
+      <header class="fl-head">
+        <span class="fl-eyebrow">Preguntas frecuentes</span>
+        <h2 class="fl-title">Lo que <em>más nos preguntan.</em></h2>
+      </header>
+
+      <div class="fl-faq-list">
+        {faqs.map((f) => (
+          <details class="fl-faq-item">
+            <summary class="fl-faq-q">
+              <span>{f.q}</span>
+              <span class="fl-faq-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="fl-faq-a"><p>{f.a}</p></div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  })} />
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- FOOTER                                     -->
   <!-- ══════════════════════════════════════════ -->
   <footer class="fl-footer" id="contacto">
@@ -669,6 +739,7 @@ const igFallback = [
             <li><a href="#acceso">Acceso</a></li>
             <li><a href="#entrevista">REPROCANN</a></li>
             <li><a href="#legalidad">Legalidad</a></li>
+            <li><a href="#faq">Preguntas frecuentes</a></li>
           </ul>
         </nav>
 
