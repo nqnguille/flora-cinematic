@@ -137,11 +137,17 @@ const jsonLd = {
           var vk = 'floraong_view_' + location.pathname;
           if (sessionStorage.getItem(vk) !== '1') { sessionStorage.setItem(vk, '1'); send('view'); }
         } catch (e) { send('view'); }
-        // Clics en CTAs marcados con data-cta
+        // Clics: CTAs marcados con data-cta + TODOS los links a WhatsApp (auto-detectados)
         document.addEventListener('click', function (e) {
-          var el = e.target && e.target.closest ? e.target.closest('[data-cta]') : null;
-          if (!el) return;
-          send('click', el.getAttribute('data-cta') || (el.textContent || '').trim().slice(0, 40) || 'cta');
+          var t = e.target;
+          if (!t || !t.closest) return;
+          var el = t.closest('[data-cta]');
+          if (el) { send('click', el.getAttribute('data-cta') || (el.textContent || '').trim().slice(0, 40) || 'cta'); return; }
+          var wa = t.closest('a[href*="wa.me"], a[href*="whatsapp"], a[href*="api.whatsapp"]');
+          if (wa) {
+            var label = (wa.getAttribute('aria-label') || wa.textContent || '').trim().slice(0, 30);
+            send('click', 'WhatsApp' + (label ? ' · ' + label : ''));
+          }
         }, true);
       })();
     </script>
