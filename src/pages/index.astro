@@ -512,30 +512,42 @@ const igFallback = [
         </p>
       </header>
 
-      <div class="fl-legal-body">
-        <ol class="fl-ed-list" role="list">
-          {legales.map((l, i) => (
-            <li class="fl-ed-row" role="listitem">
-              <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
-              <div class="fl-ed-body">
-                <h3 class="fl-ed-title">{l.titulo}</h3>
-                <p class="fl-ed-desc">{l.desc}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        <aside class="fl-legal-aside" aria-label="Registro y consulta">
-          <span class="fl-eyebrow">Registro habilitado · REPROCANN</span>
-          <p class="fl-legal-aside-text">
-            ¿Querés ver cómo encaja tu caso en este marco legal? Lo revisamos con vos,
-            sin vueltas.
-          </p>
-          <a class="fl-card-cta" href={waLegal} target="_blank" rel="noopener noreferrer">
-            Consultar por WhatsApp <span aria-hidden="true">→</span>
-          </a>
-        </aside>
+      <!-- Credencial oficial (inspirada en el cartel REPROCANN) -->
+      <div class="fl-credencial">
+        <div class="fl-credencial-body">
+          <span class="fl-credencial-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            ONG aprobada en REPROCANN
+          </span>
+          <span class="fl-credencial-prog">Registro del Programa Cannabis · Ministerio de Salud</span>
+          <h3 class="fl-credencial-name">Asociación Civil Cann de Cannabis Medicinal</h3>
+          <dl class="fl-credencial-data">
+            <div><dt>CUIT</dt><dd>30-71827609-4</dd></div>
+            <div><dt>Personería jurídica</dt><dd>I.G.J. N° 1994128</dd></div>
+            <div><dt>Vigencia REPROCANN</dt><dd>Julio 2027</dd></div>
+          </dl>
+        </div>
+        <div class="fl-credencial-seal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <span>República Argentina<br>Ministerio de Salud</span>
+        </div>
       </div>
+
+      <ol class="fl-ed-list fl-legal-list" role="list">
+        {legales.map((l, i) => (
+          <li class="fl-ed-row" role="listitem">
+            <span class="fl-ed-num" aria-hidden="true">0{i + 1}</span>
+            <div class="fl-ed-body">
+              <h3 class="fl-ed-title">{l.titulo}</h3>
+              <p class="fl-ed-desc">{l.desc}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <a class="fl-card-cta fl-legal-consulta" href={waLegal} target="_blank" rel="noopener noreferrer">
+        ¿Dudas con tu situación legal? Consultanos <span aria-hidden="true">→</span>
+      </a>
     </div>
   </section>
 

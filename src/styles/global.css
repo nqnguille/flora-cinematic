@@ -3113,3 +3113,26 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-ep-sub { display: block; font-family: var(--font-ui); font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 6px; }
 @media (min-width: 700px) { .fl-channel-eps { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 760px) { .fl-channel-sub { margin-left: auto; } }
+
+/* ── Credencial oficial (respaldo legal, inspirada en el cartel REPROCANN) ── */
+.fl-credencial { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; margin-top: clamp(28px, 4vw, 40px); box-shadow: 0 24px 60px -30px rgba(56, 31, 86, 0.45); }
+.fl-credencial-body { background: var(--fl-violet); color: #fff; padding: clamp(28px, 4vw, 44px); flex: 1; }
+.fl-credencial-badge { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-ui); font-weight: 800; font-size: clamp(15px, 2vw, 20px); letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.1; }
+.fl-credencial-badge svg { width: 22px; height: 22px; color: #8FE3A4; flex-shrink: 0; }
+.fl-credencial-prog { display: block; font-family: var(--font-ui); font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-top: 8px; letter-spacing: 0.02em; }
+.fl-credencial-name { font-family: var(--font-ui); font-weight: 700; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -0.01em; color: #fff; margin: clamp(20px, 2.6vw, 28px) 0 clamp(18px, 2.2vw, 24px); }
+.fl-credencial-data { display: grid; grid-template-columns: 1fr; gap: 0; }
+.fl-credencial-data > div { border-top: 1px solid rgba(255, 255, 255, 0.16); padding: 13px 0; }
+.fl-credencial-data dt { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
+.fl-credencial-data dd { font-family: var(--font-ui); font-weight: 700; font-size: clamp(16px, 2vw, 21px); color: #fff; margin-top: 4px; }
+.fl-credencial-seal { background: #271640; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: clamp(30px, 4vw, 44px); text-align: center; }
+.fl-credencial-seal svg { width: clamp(58px, 8vw, 82px); height: auto; color: #8FE3A4; }
+.fl-credencial-seal span { font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); line-height: 1.7; }
+.fl-legal-list { margin-top: clamp(32px, 4vw, 52px); }
+.fl-legal-consulta { margin-top: clamp(24px, 3vw, 36px); color: var(--fl-violet); }
+@media (min-width: 700px) {
+  .fl-credencial { flex-direction: row; }
+  .fl-credencial-data { grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 2vw, 28px); }
+  .fl-credencial-data > div { border-top: none; border-left: 1px solid rgba(255, 255, 255, 0.16); padding: 2px 0 2px clamp(14px, 1.6vw, 20px); }
+  .fl-credencial-seal { flex: 0 0 clamp(210px, 28%, 290px); }
+}
