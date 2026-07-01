@@ -1120,45 +1120,76 @@ body::after {
 .page-loader {
   position: fixed;
   inset: 0;
-  background: var(--ink);
+  background: var(--fl-paper, #FFFFFF);
   z-index: 200000;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 14px;
   pointer-events: all;
 }
 
-.loader-logo {
+/* El sello grande: la "O" es un anillo de progreso real que se llena
+   mientras carga la página; la chala verde queda fija en el centro. */
+.loader-ring {
+  width: clamp(150px, 34vw, 230px);
+  height: clamp(150px, 34vw, 230px);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: translateY(14px) scale(0.94);
+}
+.loader-ring-track, .loader-ring-fill, .loader-leaf { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
+/* El anillo real del logo, muy tenue, como referencia de la forma completa */
+.loader-ring-track { opacity: 0.12; }
+/* El mismo anillo real, revelado angularmente a medida que --pct avanza de 0 a 100 */
+.loader-ring-fill {
+  --pct: 0;
+  -webkit-mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+          mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+}
+
+/* Gate de mayoría de edad — pregunta + dos botones reales, simétricos */
+.loader-cue {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+}
+.loader-gate-question {
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 400;
-  color: var(--bone);
-  opacity: 0;
-  transform: translateY(12px);
-  letter-spacing: 0.04em;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  color: var(--fl-ink, #1C1626);
+  margin: 0;
 }
-
-.loader-tagline {
+.loader-gate-actions { display: flex; align-items: center; gap: 12px; }
+.loader-gate-yes, .loader-gate-no {
   font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(244, 241, 230, 0.35);
-  opacity: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 11px 24px;
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
-
-.loader-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: #4FC79E;
-  width: 0%;
-  transition: none;
+.loader-gate-yes {
+  color: #fff;
+  background: var(--fl-violet, #381F56);
+  border: none;
 }
+.loader-gate-yes:hover, .loader-gate-yes:focus-visible { filter: brightness(1.1); }
+.loader-gate-yes:active { transform: scale(0.97); }
+.loader-gate-no {
+  color: var(--fl-ink, #1C1626);
+  background: transparent;
+  border: 1.5px solid var(--fl-line, rgba(56, 31, 86, 0.16));
+}
+.loader-gate-no:hover, .loader-gate-no:focus-visible { border-color: var(--fl-violet, #381F56); color: var(--fl-violet, #381F56); }
+.loader-gate-yes:focus-visible, .loader-gate-no:focus-visible { outline: 2px solid var(--fl-violet, #381F56); outline-offset: 3px; }
 
 /* Scroll progress bar */
 .scroll-progress {
@@ -1617,7 +1648,11 @@ body::after {
   font-family: var(--font-ui); font-size: 12px; font-weight: 600;
   padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em;
 }
-.yt-facade iframe { width: 100%; height: 100%; border: 0; display: block; }
+.yt-facade iframe { width: 100%; height: 100%; border: 0; display: block; position: relative; z-index: 3; }
+/* Una vez cargado el iframe, el overlay decorativo y el botón de play dejan de capturar clics */
+.yt-facade[data-loaded]::after,
+.yt-facade[data-loaded] .yt-play,
+.yt-facade[data-loaded] .yt-dur { display: none; }
 
 .episode-meta .episode-eyebrow {
   font-family: var(--font-ui); font-size: 10px; font-weight: 600;
@@ -2188,13 +2223,13 @@ body.cursor-hover .cursor-ring {
 }
 .welcome-line[data-line="0"] { opacity: 1; }
 .welcome-line em { font-style: italic; color: var(--leaf); }
-.welcome-line-final { font-size: clamp(2.8rem, 8.5vw, 6.4rem); max-width: 16ch; }
+.welcome-line-final { font-size: clamp(2rem, 8.5vw, 6.4rem); max-width: 16ch; }
 
 /* Outro: badge + CTAs (aparece al final) */
 .welcome-outro {
   position: absolute;
   left: 0; right: 0;
-  bottom: clamp(3.2rem, 11vh, 7.5rem);
+  bottom: calc(clamp(3.2rem, 11vh, 7.5rem) + env(safe-area-inset-bottom, 0px));
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -2221,7 +2256,7 @@ body.cursor-hover .cursor-ring {
 .welcome-cue {
   position: absolute;
   left: 50%;
-  bottom: clamp(1.6rem, 4vh, 2.6rem);
+  bottom: calc(clamp(1.6rem, 4vh, 2.6rem) + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 3;
   display: flex;
@@ -2263,6 +2298,18 @@ html.no-js .welcome-cue { display: none; }
   .welcome-ctas { width: 100%; }
   .welcome-ctas .btn-primary,
   .welcome-ctas .btn-secondary { flex: 1 1 auto; text-align: center; }
+
+  /* En mobile el recorte 9:16 pierde el sujeto si queda centrado (default);
+     estos dos videos lo tienen corrido del centro en su encuadre original. */
+  .welcome-img[data-bg="1"] { object-position: 72% center; } /* "Acá no hay estigmas" */
+  .welcome-img[data-bg="2"] { object-position: 28% center; }
+}
+
+/* Mobile en landscape o celulares muy bajos: el bloque final (texto+logo)
+   y los CTAs quedan con poco colchón entre sí — se lo achica un poco. */
+@media (max-height: 480px) {
+  .welcome-line-final { gap: 12px; }
+  .welcome-outro { bottom: calc(1.6rem + env(safe-area-inset-bottom, 0px)); gap: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3139,19 +3186,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-analisis { background: var(--fl-paper); }
 .fl-faq { background: var(--fl-paper-2); }
 
-/* ── Logo de marca en el hero (versión blanca sobre el video oscuro) ── */
-.welcome-logo {
-  position: absolute;
-  top: clamp(84px, 13vh, 140px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: clamp(150px, 22vw, 230px);
-  height: auto;
-  z-index: 3;
-  opacity: 0.96;
-  pointer-events: none;
-}
-
 /* ── Logo (imagen) en nav y footer ── */
 .nav-logo { display: inline-flex; align-items: center; }
 .nav-logo-img { height: 22px; width: auto; display: block; }
@@ -3160,7 +3194,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 
 /* ── Remate del hero: "Bienvenido a" + logo FLORA (reemplaza la palabra) ── */
 .welcome-line-final { display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 3vh, 32px); }
-.welcome-line-logo { width: clamp(240px, 42vw, 440px); height: auto; display: block; }
+.welcome-line-logo { width: clamp(180px, 42vw, 440px); height: auto; display: block; }
 
 /* ══════════════════════════════════════════ */
 /* CANAL DE YOUTUBE / PODCAST — módulo oscuro decorado */

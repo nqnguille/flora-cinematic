@@ -417,34 +417,97 @@ function initStats() {
   })
 }
 
-// ── Page loader ──
+// ── Page loader / gate de mayoría de edad ──
+// La "O" del sello es un anillo de progreso real: avanza mientras la página
+// carga y remata a 100% cuando fuentes + primer video del hero están listos
+// de verdad (con un tope de seguridad para no colgar a nadie con mala
+// conexión). Una vez completo, aparece la pregunta con dos botones reales:
+// "Sí, soy mayor" revela el sitio; "No" es un link que sale a otra página.
+// Nada de gestos genéricos (scroll/tecla) como confirmación — tiene que ser
+// un clic deliberado.
 function initLoader() {
   const loader = document.querySelector<HTMLElement>('.page-loader')
   if (!loader) return
 
-  const logo    = loader.querySelector<HTMLElement>('.loader-logo')
-  const tagline = loader.querySelector<HTMLElement>('.loader-tagline')
-  const bar     = loader.querySelector<HTMLElement>('.loader-progress')
+  const ring     = loader.querySelector<HTMLElement>('.loader-ring')
+  const ringFill = loader.querySelector<HTMLElement>('.loader-ring-fill')
+  const cue      = loader.querySelector<HTMLElement>('.loader-cue')
+  const srMsg    = loader.querySelector<HTMLElement>('.loader-sr-msg')
+  const yesBtn   = loader.querySelector<HTMLButtonElement>('.loader-gate-yes')
 
-  if (prefersReducedMotion) {
-    loader.style.display = 'none'
+  // markReady: el contenido real ya está — se anuncia por accesibilidad,
+  // pero el loader queda visible en pantalla (gate de edad completo).
+  // finish: recién oculta el loader, y solo la dispara el clic en "Sí".
+  const markReady = () => {
+    loader.setAttribute('aria-busy', 'false')
+    if (srMsg) srMsg.textContent = 'Flora ONG lista'
+  }
+  const finish = () => {
     document.body.style.overflow = ''
-    return
+    loader.style.display = 'none'
   }
 
   document.body.style.overflow = 'hidden'
 
-  const tl = gsap.timeline({
-    onComplete: () => {
-      document.body.style.overflow = ''
-    }
-  })
+  // El anillo real del logo se revela angularmente: --pct va de 0 a 100 y
+  // un conic-gradient en el mask-image del PNG del anillo lo va "dibujando".
+  const pctProxy = { v: 0 }
+  const setPct = (v: number) => { if (ringFill) ringFill.style.setProperty('--pct', `${v}`) }
 
-  tl.to(logo,    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
-    .to(tagline, { opacity: 1, duration: 0.35, ease: 'power2.out' }, '-=0.1')
-    .to(bar,     { width: '100%', duration: 0.5, ease: 'power1.inOut' }, 0)
-    .to(loader,  { yPercent: -100, duration: 0.7, ease: 'power3.inOut', delay: 0.1 })
-    .set(loader, { display: 'none' })
+  let tl: ReturnType<typeof gsap.timeline> | null = null
+
+  let confirmed = false
+  const confirmYes = () => {
+    if (confirmed) return
+    confirmed = true
+    tl?.kill()
+    setPct(100)
+    markReady()
+    gsap.to(loader, { yPercent: -100, duration: 0.5, ease: 'power2.inOut', onComplete: finish })
+  }
+  if (yesBtn) yesBtn.addEventListener('click', confirmYes)
+
+  if (prefersReducedMotion) {
+    // Sin animación, pero el gate sigue en pie: se muestra completo de
+    // entrada y espera el clic del usuario para revelar el sitio.
+    setPct(100)
+    if (ring) gsap.set(ring, { opacity: 1, y: 0, scale: 1 })
+    if (cue) gsap.set(cue, { opacity: 1 })
+    markReady()
+    return
+  }
+
+  const fontsReady: Promise<unknown> = document.fonts?.ready ?? Promise.resolve()
+  const heroVideo = document.querySelector<HTMLVideoElement>('.welcome-img[data-bg="0"]')
+  const heroReady = new Promise<void>((resolve) => {
+    if (!heroVideo || heroVideo.readyState >= 2) { resolve(); return }
+    heroVideo.addEventListener('canplay', () => resolve(), { once: true })
+    heroVideo.addEventListener('error',   () => resolve(), { once: true })
+  })
+  const safetyTimeout = new Promise<void>((resolve) => setTimeout(resolve, 2600))
+  const ready = Promise.race([Promise.all([fontsReady, heroReady]), safetyTimeout])
+
+  // Si la carga real termina ANTES de que la animación cosmética llegue a la
+  // pausa, no hay nada que "resumir" todavía — por eso guardamos la posta en
+  // isReady y la consultamos también desde el propio callback de la pausa,
+  // para que ambos órdenes posibles queden cubiertos.
+  let isReady = false
+  tl = gsap.timeline()
+
+  // Termina con el anillo al 100% y el gate (pregunta + invitación) visible
+  // — sin slide automático. El sitio queda "listo" (markReady) pero el
+  // loader se mantiene en pantalla hasta que el usuario responda.
+  tl.to(ring,     { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power2.out' })
+    .to(pctProxy, { v: 88, duration: 1.1, ease: 'power1.inOut', onUpdate: () => setPct(pctProxy.v) }, '-=0.15')
+    .addPause(undefined, () => { if (isReady) tl!.resume() })
+    .to(pctProxy, { v: 100, duration: 0.35, ease: 'power2.out', onUpdate: () => setPct(pctProxy.v) })
+    .to(cue,      { opacity: 1, duration: 0.4, ease: 'power2.out' }, '+=0.05')
+    .call(markReady)
+
+  ready.then(() => {
+    isReady = true
+    if (!confirmed && tl && tl.paused()) tl.resume()
+  })
 }
 
 // ── Scroll progress bar ──

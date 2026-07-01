@@ -244,10 +244,20 @@ const igFallback = [
   <a class="skip-link" href="#inicio">Ir al contenido principal</a>
 
   <!-- Page loader -->
-  <div class="page-loader" role="status" aria-label="Cargando Flora ONG">
-    <span class="loader-logo">Flora</span>
-    <span class="loader-tagline">Cannabis medicinal</span>
-    <div class="loader-progress" aria-hidden="true"></div>
+  <div class="page-loader" role="status" aria-live="polite" aria-busy="true">
+    <div class="loader-ring" aria-hidden="true">
+      <img class="loader-ring-track" src="/img/loader-ring.png" alt="" />
+      <img class="loader-ring-fill" src="/img/loader-ring.png" alt="" />
+      <img class="loader-leaf" src="/img/loader-leaf.png" alt="" />
+    </div>
+    <div class="loader-cue">
+      <p class="loader-gate-question">¿Sos mayor de 18 años?</p>
+      <div class="loader-gate-actions">
+        <button type="button" class="loader-gate-yes">Sí, soy mayor</button>
+        <a class="loader-gate-no" href="https://www.google.com">No</a>
+      </div>
+    </div>
+    <span class="sr-only loader-sr-msg">Cargando Flora ONG…</span>
   </div>
 
   <!-- Scroll progress bar -->
@@ -400,6 +410,25 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
+  <!-- REPROCANN — hook: el primer paso (entrevista médica) -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-reprocann" id="entrevista" aria-label="Cómo tramitar tu REPROCANN">
+    <div class="fl-wrap fl-reprocann-wrap">
+      <span class="fl-eyebrow on-dark">Tu REPROCANN</span>
+      <h2 class="fl-title">¿Cómo se tramita el <em>REPROCANN?</em></h2>
+      <p class="fl-reprocann-lead">
+        El primer paso es una entrevista con un profesional de la salud: evalúa tu caso
+        y, si corresponde, te inscribe en el REPROCANN. Es también lo que te habilita a
+        asociarte a Flora.
+      </p>
+      <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
+        Pedir mi entrevista médica <span aria-hidden="true">→</span>
+      </a>
+      <p class="fl-reprocann-note">Sin compromiso. Te orientamos en cada paso del trámite.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-access" id="productos" aria-label="Qué hacemos y cómo accedés">
@@ -426,7 +455,7 @@ const igFallback = [
         </a>
 
         <a class="fl-panel fl-panel-2" href="#analisis" role="listitem" aria-label="Aceites">
-          <img class="fl-panel-img" src="/img/prod-aceite-q2.jpg" alt="" loading="lazy" width="1100" height="1100" />
+          <img class="fl-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" width="1448" height="1010" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Aceites</span>
@@ -440,7 +469,7 @@ const igFallback = [
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>
-            <span class="fl-panel-desc">Crema tópica de 30 ml formulada para brindar alivio localizado. De acceso libre, sin necesidad de REPROCANN.</span>
+            <span class="fl-panel-desc">Crema tópica de 30 ml formulada para brindar alivio localizado.</span>
             <span class="fl-panel-cta">Pedir la crema <span aria-hidden="true">→</span></span>
           </span>
         </a>
@@ -534,25 +563,6 @@ const igFallback = [
           ))}
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- REPROCANN — hook: el primer paso (entrevista médica) -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-reprocann" id="entrevista" aria-label="Cómo tramitar tu REPROCANN">
-    <div class="fl-wrap fl-reprocann-wrap">
-      <span class="fl-eyebrow on-dark">Tu REPROCANN</span>
-      <h2 class="fl-title">¿Cómo se tramita el <em>REPROCANN?</em></h2>
-      <p class="fl-reprocann-lead">
-        El primer paso es una entrevista con un profesional de la salud: evalúa tu caso
-        y, si corresponde, te inscribe en el REPROCANN. Es también lo que te habilita a
-        asociarte a Flora.
-      </p>
-      <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
-        Pedir mi entrevista médica <span aria-hidden="true">→</span>
-      </a>
-      <p class="fl-reprocann-note">Sin compromiso. Te orientamos en cada paso del trámite.</p>
     </div>
   </section>
 
