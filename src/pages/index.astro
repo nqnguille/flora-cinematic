@@ -251,10 +251,19 @@ const igFallback = [
       <img class="loader-leaf" src="/img/loader-leaf.png" alt="" />
     </div>
     <div class="loader-cue">
-      <p class="loader-gate-question">¿Sos mayor de 18 años?</p>
-      <div class="loader-gate-actions">
-        <button type="button" class="loader-gate-yes">Sí, soy mayor</button>
-        <a class="loader-gate-no" href="https://www.google.com">No</a>
+      <div class="loader-gate-ask">
+        <p class="loader-gate-question">¿Sos mayor de 18 años?</p>
+        <div class="loader-gate-actions">
+          <button type="button" class="loader-gate-yes">Sí, soy mayor</button>
+          <a class="loader-gate-no" href="/verificacion-edad">No</a>
+        </div>
+      </div>
+      <div class="loader-slide-cue" aria-hidden="true">
+        <span class="loader-cue-label">Deslizá para comenzar</span>
+        <svg class="loader-cue-mouse" viewBox="0 0 24 38">
+          <rect x="1.5" y="1.5" width="21" height="35" rx="10.5" />
+          <circle class="loader-cue-wheel" cx="12" cy="11" r="2.4" />
+        </svg>
       </div>
     </div>
     <span class="sr-only loader-sr-msg">Cargando Flora ONG…</span>

@@ -422,22 +422,23 @@ function initStats() {
 // carga y remata a 100% cuando fuentes + primer video del hero están listos
 // de verdad (con un tope de seguridad para no colgar a nadie con mala
 // conexión). Una vez completo, aparece la pregunta con dos botones reales:
-// "Sí, soy mayor" revela el sitio; "No" es un link que sale a otra página.
-// Nada de gestos genéricos (scroll/tecla) como confirmación — tiene que ser
-// un clic deliberado.
+// "Sí, soy mayor" muestra la invitación a deslizar (un gesto más, recién ahí
+// se revela el sitio); "No" es un link que va a la página de verificación.
 function initLoader() {
-  const loader = document.querySelector<HTMLElement>('.page-loader')
+  const loader   = document.querySelector<HTMLElement>('.page-loader')
   if (!loader) return
 
-  const ring     = loader.querySelector<HTMLElement>('.loader-ring')
-  const ringFill = loader.querySelector<HTMLElement>('.loader-ring-fill')
-  const cue      = loader.querySelector<HTMLElement>('.loader-cue')
-  const srMsg    = loader.querySelector<HTMLElement>('.loader-sr-msg')
-  const yesBtn   = loader.querySelector<HTMLButtonElement>('.loader-gate-yes')
+  const ring      = loader.querySelector<HTMLElement>('.loader-ring')
+  const ringFill  = loader.querySelector<HTMLElement>('.loader-ring-fill')
+  const cue       = loader.querySelector<HTMLElement>('.loader-cue')
+  const askStep   = loader.querySelector<HTMLElement>('.loader-gate-ask')
+  const slideStep = loader.querySelector<HTMLElement>('.loader-slide-cue')
+  const srMsg     = loader.querySelector<HTMLElement>('.loader-sr-msg')
+  const yesBtn    = loader.querySelector<HTMLButtonElement>('.loader-gate-yes')
 
   // markReady: el contenido real ya está — se anuncia por accesibilidad,
   // pero el loader queda visible en pantalla (gate de edad completo).
-  // finish: recién oculta el loader, y solo la dispara el clic en "Sí".
+  // finish: recién oculta el loader, y solo la dispara el gesto final.
   const markReady = () => {
     loader.setAttribute('aria-busy', 'false')
     if (srMsg) srMsg.textContent = 'Flora ONG lista'
@@ -456,20 +457,51 @@ function initLoader() {
 
   let tl: ReturnType<typeof gsap.timeline> | null = null
 
-  let confirmed = false
-  const confirmYes = () => {
-    if (confirmed) return
-    confirmed = true
+  // Paso final: un gesto real (scroll, deslizar el dedo, tecla) revela el
+  // sitio — solo queda activo después de confirmar "Sí, soy mayor".
+  let revealed = false
+  const revealSite = () => {
+    if (revealed) return
+    revealed = true
     tl?.kill()
+    gsap.to(loader, { yPercent: -100, duration: 0.5, ease: 'power2.inOut', onComplete: finish })
+  }
+
+  // Ruedita del mouse animada con GSAP (evita líos de transform-box en SVG).
+  const wheelDot = loader.querySelector<SVGCircleElement>('.loader-cue-wheel')
+  if (wheelDot) {
+    gsap.to(wheelDot, { y: 9, opacity: 0, duration: 0.7, ease: 'power1.in', repeat: -1, yoyo: true, repeatDelay: 0.3 })
+  }
+
+  let answered = false
+  const confirmYes = () => {
+    if (answered) return
+    answered = true
     setPct(100)
     markReady()
-    gsap.to(loader, { yPercent: -100, duration: 0.5, ease: 'power2.inOut', onComplete: finish })
+
+    if (prefersReducedMotion) {
+      // Sin la animación de "deslizar": confirmar ya revela el sitio.
+      revealSite()
+      return
+    }
+
+    if (askStep) {
+      gsap.to(askStep, { opacity: 0, duration: 0.3, ease: 'power1.out', onComplete: () => {
+        askStep.style.visibility = 'hidden'
+        askStep.setAttribute('aria-hidden', 'true')
+      }})
+    }
+    if (slideStep) gsap.to(slideStep, { opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.15 })
+    ;(['wheel', 'touchmove', 'keydown'] as const).forEach(evt =>
+      window.addEventListener(evt, revealSite, { once: true, passive: true })
+    )
   }
   if (yesBtn) yesBtn.addEventListener('click', confirmYes)
 
   if (prefersReducedMotion) {
     // Sin animación, pero el gate sigue en pie: se muestra completo de
-    // entrada y espera el clic del usuario para revelar el sitio.
+    // entrada y espera la respuesta del usuario.
     setPct(100)
     if (ring) gsap.set(ring, { opacity: 1, y: 0, scale: 1 })
     if (cue) gsap.set(cue, { opacity: 1 })
@@ -506,7 +538,7 @@ function initLoader() {
 
   ready.then(() => {
     isReady = true
-    if (!confirmed && tl && tl.paused()) tl.resume()
+    if (!answered && tl && tl.paused()) tl.resume()
   })
 }
 

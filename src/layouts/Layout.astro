@@ -4,6 +4,7 @@ interface Props {
   description?: string
   ogImage?: string
   canonical?: string
+  noindex?: boolean
 }
 
 const {
@@ -11,6 +12,7 @@ const {
   description = 'Club de cultivo de cannabis medicinal bajo Ley 27.350 y marco REPROCANN. Cultivo propio, aceites con cromatografía y acompañamiento real. Neuquén, Patagonia.',
   ogImage = 'https://floraong.ar/og-image.jpg',
   canonical = 'https://floraong.ar',
+  noindex = false,
 } = Astro.props
 
 const jsonLd = {
@@ -61,7 +63,7 @@ const jsonLd = {
     <!-- Primary meta -->
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
     <meta name="theme-color" content="#381F56" />
 
     <!-- Open Graph -->

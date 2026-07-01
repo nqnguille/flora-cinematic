@@ -1,0 +1,132 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+
+<Layout
+  title="Acceso restringido por edad — Flora ONG"
+  description="Este sitio está restringido a personas mayores de 18 años. Información sobre el marco legal del cannabis medicinal en Argentina y cómo proceder si sos menor de edad."
+  noindex={true}
+>
+  <main class="ve-main">
+    <div class="ve-card">
+      <img class="ve-seal" src="/favicon.png" alt="Flora" width="72" height="72" />
+
+      <span class="ve-eyebrow">Acceso restringido</span>
+      <h1 class="ve-title">Este sitio es para personas <em>mayores de 18 años.</em></h1>
+
+      <p class="ve-p">
+        Flora es la <strong>Asociación Civil Cann de Cannabis Medicinal</strong> (Personería
+        Jurídica I.G.J. N.º 1994128, CUIT 30-71827609-4), una organización civil sin fines de
+        lucro que acompaña el acceso al cannabis medicinal bajo el marco de la
+        <strong>Ley 27.350</strong> y el <strong>REPROCANN</strong>. Por responsabilidad
+        institucional, el acceso general a este sitio —que incluye información sobre
+        asociación, productos y procedimientos— está restringido a personas mayores de edad.
+      </p>
+
+      <div class="ve-note">
+        <span class="ve-note-label">Importante</span>
+        <p class="ve-p ve-p-tight">
+          Esta restricción es una política de acceso al sitio web, <strong>no una condición
+          del tratamiento médico</strong>. La Ley 27.350 contempla el uso de cannabis
+          medicinal en pacientes de cualquier edad, incluida la población pediátrica, siempre
+          bajo indicación y seguimiento de un profesional de la salud. Si sos madre, padre o
+          tutor/a y buscás información sobre un tratamiento para un/a niño/a o adolescente, te
+          recomendamos consultar directamente con un profesional de la salud, o contactarnos
+          por los canales de Flora como persona adulta responsable.
+        </p>
+      </div>
+
+      <p class="ve-p">
+        El <strong>REPROCANN</strong> (Registro del Programa de Cannabis) es el mecanismo que
+        habilita el cultivo, la tenencia y el acceso al cannabis con fines medicinales en la
+        Argentina. Para inscribirse, el primer paso es siempre una entrevista con un
+        profesional de la salud, quien evalúa cada caso en particular.
+      </p>
+
+      <p class="ve-p">
+        Si confirmaste que sos menor de 18 años, te pedimos que no continúes navegando este
+        sitio. Podés volver a ingresar cuando alcances la mayoría de edad, o pedirle a una
+        persona adulta responsable que te acompañe en la consulta con un profesional de la
+        salud.
+      </p>
+
+      <p class="ve-legal">
+        Asociación Civil Cann de Cannabis Medicinal · I.G.J. N.º 1994128 · CUIT
+        30-71827609-4 · Neuquén, Argentina.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .ve-main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--fl-paper-2, #F6F4F2);
+    padding: clamp(24px, 6vw, 64px) 20px;
+  }
+  .ve-card {
+    max-width: 620px;
+    background: var(--fl-paper, #fff);
+    border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    border-radius: 20px;
+    padding: clamp(28px, 5vw, 48px);
+    box-shadow: 0 32px 64px -40px rgba(56, 31, 86, 0.28);
+  }
+  .ve-seal { display: block; margin: 0 0 20px; }
+  .ve-eyebrow {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fl-green, #0A503C);
+    margin-bottom: 10px;
+  }
+  .ve-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1.25;
+    color: var(--fl-ink, #1C1626);
+    margin: 0 0 22px;
+  }
+  .ve-title em { font-style: normal; color: var(--fl-violet, #381F56); }
+  .ve-p {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.65;
+    color: rgba(28, 22, 38, 0.72);
+    margin: 0 0 18px;
+  }
+  .ve-p strong { color: var(--fl-ink, #1C1626); font-weight: 700; }
+  .ve-p-tight { margin-bottom: 0; }
+  .ve-note {
+    background: var(--fl-paper-2, #F6F4F2);
+    border-left: 3px solid var(--fl-green, #0A503C);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 0 0 20px;
+  }
+  .ve-note-label {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fl-green, #0A503C);
+    margin-bottom: 8px;
+  }
+  .ve-legal {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: rgba(28, 22, 38, 0.45);
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    padding-top: 16px;
+    margin: 8px 0 0;
+  }
+</style>

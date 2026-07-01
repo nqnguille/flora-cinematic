@@ -1150,14 +1150,40 @@ body::after {
           mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
 }
 
-/* Gate de mayoría de edad — pregunta + dos botones reales, simétricos */
+/* Gate de mayoría de edad, en dos pasos que se cruzan en el mismo lugar:
+   1) pregunta + botones Sí/No · 2) tras el Sí, invitación a deslizar */
 .loader-cue {
   margin-top: 12px;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+}
+.loader-gate-ask, .loader-slide-cue {
+  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  opacity: 0;
+}
+.loader-gate-ask { gap: 16px; }
+.loader-slide-cue { gap: 10px; opacity: 0; pointer-events: none; }
+.loader-cue-label {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--fl-green, #0A503C);
+  opacity: 0.75;
+}
+.loader-cue-mouse { width: 22px; height: 34px; overflow: visible; }
+.loader-cue-mouse rect {
+  fill: none;
+  stroke: var(--fl-violet, #381F56);
+  stroke-width: 1.4;
+  opacity: 0.55;
+}
+.loader-cue-wheel {
+  fill: var(--fl-violet, #381F56);
+  transform-origin: 12px 11px;
 }
 .loader-gate-question {
   font-family: var(--font-display);
