@@ -103,6 +103,28 @@ function initHeroVideo() {
   video.load()
 }
 
+// ── Video de fondo de Acceso ──
+// Sin autoplay en el HTML: con reduced-motion queda el poster (no se
+// descargan los 5.5MB); si hay movimiento, carga y reproduce recién al
+// acercarse la sección, y pausa al salir de pantalla.
+function initAccesoVideo() {
+  const video = document.querySelector<HTMLVideoElement>('.fl-acceso-video')
+  if (!video) return
+  if (prefersReducedMotion) return
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const p = video.play()
+        if (p && typeof p.catch === 'function') p.catch(() => {})
+      } else {
+        video.pause()
+      }
+    })
+  }, { rootMargin: '200px 0px' })
+  io.observe(video)
+}
+
 // ── Split words ──
 // IMPORTANTE: No ponemos opacity:0 en CSS. GSAP setea el from sólo si hay animaciones.
 function splitWords() {
@@ -151,51 +173,6 @@ function animateSplitWords() {
   })
 }
 
-// ── Parallax hero ──
-function initHeroParallax() {
-  if (prefersReducedMotion) return
-
-  const heroVisual = document.querySelector<HTMLElement>('.hero-visual')
-  if (!heroVisual) return
-
-  gsap.to(heroVisual, {
-    yPercent: -25,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: true,
-    }
-  })
-}
-
-// ── Contadores ──
-function initCounters() {
-  if (prefersReducedMotion) return
-
-  gsap.utils.toArray<HTMLElement>('.count-up').forEach(el => {
-    const target = parseInt(el.dataset.target || '0')
-    const suffix = el.dataset.suffix || ''
-    const obj = { val: 0 }
-
-    gsap.to(obj, {
-      val: target,
-      duration: 1.6,
-      ease: 'power2.out',
-      snap: { val: 1 },
-      onUpdate() {
-        el.textContent = Math.round(obj.val).toString() + suffix
-      },
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 80%',
-        once: true
-      }
-    })
-  })
-}
-
 // ── Clip-path reveal — CRÍTICO: estado base VISIBLE en CSS, GSAP setea el from ──
 function initClipReveal() {
   if (prefersReducedMotion) return
@@ -228,205 +205,6 @@ function initFadeIn() {
       ease: 'power2.out',
       scrollTrigger: {
         trigger: el,
-        start: 'top 85%',
-      }
-    })
-  })
-}
-
-// ── Horizontal scroll membresías ──
-function initHorizontalScroll() {
-  const mm = gsap.matchMedia()
-
-  mm.add('(min-width: 768px)', () => {
-    if (prefersReducedMotion) return
-
-    const track = document.querySelector<HTMLElement>('.cards-track')
-    const section = document.querySelector<HTMLElement>('.horizontal-section')
-    if (!track || !section) return
-
-    const cards = gsap.utils.toArray<HTMLElement>('.membresia-card')
-
-    ScrollTrigger.refresh()
-
-    // Distancia a trasladar = overflow real del track respecto del ANCHO VISIBLE
-    // del wrapper (no del viewport). La sección tiene una columna de label a la
-    // izquierda, así que el área visible del slider es más angosta que la ventana;
-    // usar window.innerWidth dejaba la 4ª card (Tierra) fuera de pantalla.
-    const wrapper = track.parentElement as HTMLElement | null
-    const getTotal = () => {
-      const last = cards[cards.length - 1]
-      if (!last || !wrapper) return 0
-      const x = (gsap.getProperty(track, 'x') as number) || 0
-      const lastRight = last.getBoundingClientRect().right - x // borde derecho sin transform
-      const wrapRight = wrapper.getBoundingClientRect().right
-      return Math.max(0, lastRight - wrapRight + 40)
-    }
-
-    const tween = gsap.to(track, {
-      x: () => -getTotal(),
-      ease: 'none',
-      scrollTrigger: {
-        trigger: section,
-        start: 'top top',
-        end: () => `+=${getTotal() + window.innerHeight}`,
-        pin: true,
-        scrub: 1.2,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-      }
-    })
-
-    // Hover tilt suave
-    cards.forEach(card => {
-      card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / rect.width - 0.5
-        const y = (e.clientY - rect.top) / rect.height - 0.5
-        gsap.to(card, {
-          rotateY: x * 8,
-          rotateX: -y * 8,
-          duration: 0.5,
-          ease: 'power2.out',
-          transformPerspective: 900
-        })
-      })
-
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, {
-          rotateY: 0,
-          rotateX: 0,
-          duration: 0.7,
-          ease: 'elastic.out(1, 0.5)'
-        })
-      })
-    })
-
-    return () => {
-      tween.kill()
-    }
-  })
-}
-
-// ── Step line draw ──
-function initStepLine() {
-  const line = document.querySelector<HTMLElement>('.step-line')
-  if (!line) return
-
-  if (prefersReducedMotion) {
-    // Sin animación: mostrar la línea directamente
-    line.style.transform = 'scaleY(1)'
-    return
-  }
-
-  gsap.to(line, {
-    scaleY: 1,
-    transformOrigin: 'top center',
-    ease: 'power2.inOut',
-    scrollTrigger: {
-      trigger: '.steps-section',
-      start: 'top 65%',
-      end: 'bottom 75%',
-      scrub: 0.6,
-    }
-  })
-}
-
-// ── Bento items stagger ──
-function initBentoItems() {
-  if (prefersReducedMotion) return
-
-  const items = gsap.utils.toArray<HTMLElement>('.bento-item')
-  items.forEach((item, i) => {
-    gsap.set(item, { opacity: 0, y: 20 })
-    gsap.to(item, {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      delay: i * 0.07,
-      scrollTrigger: {
-        trigger: item,
-        start: 'top 88%',
-      }
-    })
-  })
-
-  // Statement editorial
-  const statement = document.querySelector<HTMLElement>('.bento-statement')
-  if (statement) {
-    gsap.set(statement, { opacity: 0, y: 16 })
-    gsap.to(statement, {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: statement,
-        start: 'top 85%',
-      }
-    })
-  }
-}
-
-// ── Hero entrance ──
-function initHeroEntrance() {
-  if (prefersReducedMotion) return
-
-  const eyebrow = document.querySelector<HTMLElement>('.hero-eyebrow')
-  const title   = document.querySelector<HTMLElement>('.hero-title')
-  const bottom  = document.querySelector<HTMLElement>('.hero-bottom')
-  const scrollInd = document.querySelector<HTMLElement>('.scroll-indicator')
-  const ticker  = document.querySelector<HTMLElement>('.hero-ticker')
-
-  // Setear estados iniciales con GSAP
-  if (eyebrow) gsap.set(eyebrow, { opacity: 0, y: 12 })
-  if (bottom)  gsap.set(bottom,  { opacity: 0, y: 18 })
-  if (scrollInd) gsap.set(scrollInd, { opacity: 0 })
-  if (ticker)  gsap.set(ticker, { opacity: 0 })
-
-  // El manifiesto ya no es lo primero (lo precede el welcome): la entrada se
-  // dispara al llegar scrolleando, no en la carga.
-  const tl = gsap.timeline({
-    scrollTrigger: { trigger: '.hero', start: 'top 72%' },
-  })
-
-  if (eyebrow) tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' })
-
-  if (title) {
-    const inners = title.querySelectorAll<HTMLElement>('.word-inner')
-    if (inners.length > 0) {
-      // Setear estado inicial
-      gsap.set(inners, { yPercent: 110, opacity: 0 })
-      tl.to(inners, {
-        yPercent: 0,
-        opacity: 1,
-        duration: 0.9,
-        stagger: 0.055,
-        ease: 'power3.out',
-      }, '-=0.15')
-    }
-  }
-
-  if (bottom) tl.to(bottom, { opacity: 1, y: 0, duration: 0.65, ease: 'power2.out' }, '-=0.45')
-  if (scrollInd) tl.to(scrollInd, { opacity: 1, duration: 0.5 }, '-=0.35')
-  if (ticker) tl.to(ticker, { opacity: 1, duration: 0.5 }, '-=0.4')
-}
-
-// ── Stat items ──
-function initStats() {
-  if (prefersReducedMotion) return
-
-  gsap.utils.toArray<HTMLElement>('.stat-item').forEach((item, i) => {
-    gsap.set(item, { opacity: 0, y: 16 })
-    gsap.to(item, {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      delay: i * 0.08,
-      scrollTrigger: {
-        trigger: item,
         start: 'top 85%',
       }
     })
@@ -577,62 +355,6 @@ function initScrollProgress() {
       end: 'bottom bottom',
       scrub: 0.1,
     }
-  })
-}
-
-// ── Custom cursor ──
-function initCursor() {
-  const isTouch = window.matchMedia('(hover: none)').matches
-  if (isTouch || prefersReducedMotion) return
-
-  // Recién acá ocultamos el cursor nativo: el custom ya existe
-  document.body.classList.add('custom-cursor')
-
-  const dot  = document.createElement('div')
-  const ring = document.createElement('div')
-  dot.className  = 'cursor-dot'
-  ring.className = 'cursor-ring'
-  document.body.append(dot, ring)
-
-  let mx = 0, my = 0, rx = 0, ry = 0
-
-  document.addEventListener('mousemove', (e) => {
-    mx = e.clientX
-    my = e.clientY
-    gsap.set(dot, { x: mx, y: my })
-  })
-
-  ;(function animateRing() {
-    rx += (mx - rx) * 0.1
-    ry += (my - ry) * 0.1
-    gsap.set(ring, { x: rx, y: ry })
-    requestAnimationFrame(animateRing)
-  })()
-
-  document.querySelectorAll('a, button, .membresia-card, .btn-primary, .btn-secondary').forEach(el => {
-    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'))
-    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'))
-  })
-
-  document.addEventListener('mouseleave', () => gsap.to([dot, ring], { opacity: 0, duration: 0.25 }))
-  document.addEventListener('mouseenter', () => gsap.to([dot, ring], { opacity: 1, duration: 0.25 }))
-}
-
-// ── Magnetic buttons ──
-function initMagnetic() {
-  const isTouch = window.matchMedia('(hover: none)').matches
-  if (isTouch || prefersReducedMotion) return
-
-  document.querySelectorAll<HTMLElement>('.btn-primary, .btn-secondary, .footer-cta-band .btn-primary').forEach(btn => {
-    btn.addEventListener('mousemove', (e) => {
-      const r = btn.getBoundingClientRect()
-      const x = (e.clientX - r.left - r.width  / 2)
-      const y = (e.clientY - r.top  - r.height / 2)
-      gsap.to(btn, { x: x * 0.22, y: y * 0.22, duration: 0.4, ease: 'power2.out' })
-    })
-    btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.45)' })
-    })
   })
 }
 
@@ -1019,9 +741,9 @@ function init() {
   initMobileDrawer()
   initHeroImage()
   initHeroVideo()
+  initAccesoVideo()
   initYouTubeFacades()
   initParticles()
-  // initCursor() — desactivado: se usa el cursor nativo (flecha + manito)
 
   splitWords()
   ScrollTrigger.refresh()
@@ -1033,7 +755,6 @@ function init() {
   initClipReveal()
   initFadeIn()
   initScrollProgress()
-  initMagnetic()
   initProductTabs()
   initWhatsAppFloat()
   initInstagramFeed()

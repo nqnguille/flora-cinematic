@@ -150,9 +150,6 @@ const aceites = [
     ratioStd: '20:1',
   },
 ]
-const maxCannabinoid = Math.max(
-  ...aceites.flatMap((a) => a.perfil.map((p) => Number(p.v.replace(',', '.'))))
-)
 const cremas = [
   {
     presentacion: '50 cc',
@@ -193,50 +190,9 @@ const productIconsSvg = [
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
-const waLegal = `${WA}?text=Hola%20Flora%2C%20tengo%20una%20consulta%20sobre%20mi%20situaci%C3%B3n%20legal%20(Ley%2027.350%20%2F%20REPROCANN).%20%C2%BFMe%20orientan%3F`
-
-// Marco legal — los instrumentos bajo los que funciona la ONG (la entidad va en el lead)
-const legales = [
-  {
-    titulo: 'Ley 27.350',
-    desc: 'El marco nacional que regula el acceso al cannabis con fines medicinales en Argentina.',
-  },
-  {
-    titulo: 'REPROCANN',
-    desc: 'Cada socio se inscribe en el registro del programa; ahí queda amparado su acceso.',
-  },
-  {
-    titulo: 'Decreto 883/2020',
-    desc: 'Reglamenta el funcionamiento del programa y el cultivo solidario entre personas asociadas.',
-  },
-]
-
 // Acceso a material vegetal — cultivo solidario. La cantidad (10 a 40 g por mes)
 // se elige una vez adentro, por WhatsApp. Mismo acompañamiento y variedades para todos.
 const accesoWa = wa('Hola Flora, quiero acceder al material vegetal. ¿Me orientan para empezar?')
-
-const steps = [
-  {
-    num: '01',
-    title: 'Completás el formulario de ingreso',
-    desc: 'Dos minutos. Nos contás tu situación, si tenés REPROCANN o si estás en trámite. Sin papeles físicos por ahora.',
-  },
-  {
-    num: '02',
-    title: 'Revisamos tu solicitud',
-    desc: 'El equipo de Flora la revisa en 24 a 48 horas hábiles. Te avisamos por WhatsApp cuando está aprobada.',
-  },
-  {
-    num: '03',
-    title: 'Elegís tu nivel de acceso',
-    desc: 'Una vez adentro, elegís el nivel que se ajusta a lo que necesitás. Lo podés cambiar cuando quieras.',
-  },
-  {
-    num: '04',
-    title: 'Accedés al cultivo compartido',
-    desc: 'Recibís tu parte del cultivo del mes, dentro del marco legal del club, con acceso directo y acompañado.',
-  },
-]
 
 // Programa de YouTube — "Espacio libre de prejuicios"
 const ytChannel = 'https://www.youtube.com/@FloraCultivamosConciencia'
@@ -348,7 +304,7 @@ const igFallback = [
       <li><a href="#acceso">Acceso</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
-        <a href="/socios/genetica" class="nav-socios">
+        <a href="/socios/genetica/" class="nav-socios">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
           Acceso socios
         </a>
@@ -394,7 +350,7 @@ const igFallback = [
           </a>
         </li>
         <li>
-          <a href="/socios/genetica" class="drawer-cta drawer-cta--socios">
+          <a href="/socios/genetica/" class="drawer-cta drawer-cta--socios">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
             Acceso socios
           </a>
@@ -674,10 +630,10 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario + catálogo de flores -->
+  <!-- ACCESO A MATERIAL VEGETAL — escena 16:9: título+historia / CTAs socios sobre video -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-acceso" id="acceso" aria-label="Acceso a material vegetal">
-    <video class="fl-acceso-video" src="/hero/socios-genetica.mp4" poster="/hero/socios-genetica_poster.jpg" muted loop playsinline autoplay preload="none" aria-hidden="true"></video>
+    <video class="fl-acceso-video" src="/hero/socios-genetica.mp4" poster="/hero/socios-genetica_poster.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
     <div class="fl-acceso-scrim" aria-hidden="true"></div>
 
     <div class="fl-wrap fl-acceso-content">
@@ -688,8 +644,8 @@ const igFallback = [
         </span>
         <h2 class="fl-title">Cultivamos lo que <em>la ley te permite.</em></h2>
         <p class="fl-acceso-story">
-          Hay personas que necesitan cannabis y no pueden cultivarlo en casa. Lo hacemos
-          nosotros, con genéticas que rotan cada mes, y tu aporte mensual mantiene viva
+          Cultivamos para quienes necesitan cannabis y prefieren dejarlo en manos
+          expertas: genéticas que rotan cada mes, y tu aporte mensual mantiene viva
           cada planta.
         </p>
       </div>
@@ -699,7 +655,7 @@ const igFallback = [
           <a class="fl-acceso-cta" href={accesoWa} target="_blank" rel="noopener noreferrer">
             Quiero ser socio <span aria-hidden="true">→</span>
           </a>
-          <a class="fl-acceso-cta fl-acceso-cta--ghost" href="/socios/genetica">
+          <a class="fl-acceso-cta fl-acceso-cta--ghost" href="/socios/genetica/">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
             Ya soy socio
           </a>
