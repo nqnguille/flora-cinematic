@@ -2865,6 +2865,58 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-panel { transition: box-shadow 0.3s ease; }
 }
 
+/* ── Perfiles (Cómo puede ayudarte): carrusel horizontal, no gateway fijo —
+   son 10 cards, no 3, así que se exploran deslizando en vez de mostrarse
+   todas de una. La descripción queda siempre visible (no hover-gated). ── */
+.fl-perfiles-carousel-wrap { position: relative; display: flex; align-items: center; gap: 10px; margin-top: clamp(28px, 3.4vw, 48px); }
+.fl-perfiles-carousel {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  scroll-behavior: smooth; padding: 4px 2px 12px; margin: -4px -2px -12px;
+  scrollbar-width: none;
+}
+.fl-perfiles-carousel::-webkit-scrollbar { display: none; }
+.fl-perfil-card {
+  position: relative; flex: 0 0 auto; width: clamp(240px, 25vw, 296px);
+  aspect-ratio: 3 / 4.1; scroll-snap-align: start; overflow: hidden;
+  border-radius: 20px; text-decoration: none; color: #fff;
+  box-shadow: 0 20px 40px -24px rgba(28,22,38,0.35);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.fl-perfil-card:hover, .fl-perfil-card:focus-visible { transform: translateY(-4px); box-shadow: 0 28px 54px -24px rgba(28,22,38,0.45); outline: none; }
+.fl-perfil-card:focus-visible { outline: 3px solid var(--fl-violet); outline-offset: 3px; }
+.fl-perfil-card-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.1, 1);
+}
+.fl-perfil-card:hover .fl-perfil-card-img, .fl-perfil-card:focus-visible .fl-perfil-card-img { transform: scale(1.06); }
+.fl-perfil-card::before {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgba(20,16,28,0.05) 0%, rgba(20,16,28,0.35) 55%, rgba(15,10,20,0.92) 100%);
+}
+.fl-perfil-card-icon { position: absolute; z-index: 2; top: 20px; left: 20px; width: 32px; height: 32px; opacity: 0.9; }
+.fl-perfil-card-icon svg { display: block; width: 100%; height: 100%; }
+.fl-perfil-card-body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: 18px 20px; display: flex; flex-direction: column; }
+.fl-perfil-card-tag { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.82; margin-bottom: 6px; }
+.fl-perfil-card-title { font-family: var(--font-ui); font-weight: 700; font-size: 16px; line-height: 1.25; }
+.fl-perfil-card-desc { font-family: var(--font-ui); font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.82); margin-top: 8px; }
+.fl-perfil-card-cta { font-family: var(--font-ui); font-weight: 700; font-size: 12.5px; margin-top: 10px; }
+
+.fl-carousel-arrow {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%; background: #fff;
+  border: 1px solid var(--fl-line); color: var(--fl-violet); cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.fl-carousel-arrow:hover { background: var(--fl-paper-2); transform: scale(1.06); }
+.fl-carousel-arrow:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+.fl-carousel-arrow svg { width: 18px; height: 18px; }
+
+@media (max-width: 760px) {
+  .fl-carousel-arrow { display: none; }
+  .fl-perfiles-carousel { scroll-padding-left: 20px; }
+  .fl-perfil-card { width: 72vw; }
+}
+
 /* ── Cómo accedés: cards de acceso + spec highlights HPLC (mobile-first) ── */
 .fl-access .fl-title { max-width: 20ch; }
 

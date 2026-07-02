@@ -986,6 +986,33 @@ function initReveal() {
   els.forEach((el) => io.observe(el))
 }
 
+// ── Perfiles: flechas del carrusel horizontal ──
+function initPerfilesCarousel() {
+  const track = document.querySelector<HTMLElement>('[data-carousel-track]')
+  const prevBtn = document.querySelector<HTMLButtonElement>('[data-carousel-prev]')
+  const nextBtn = document.querySelector<HTMLButtonElement>('[data-carousel-next]')
+  if (!track || !prevBtn || !nextBtn) return
+
+  const cardGap = 16
+  const scrollByCard = (dir: 1 | -1) => {
+    const card = track.querySelector<HTMLElement>('.fl-perfil-card')
+    const step = (card?.offsetWidth ?? 280) + cardGap
+    track.scrollBy({ left: step * dir, behavior: 'smooth' })
+  }
+
+  const updateArrows = () => {
+    const max = track.scrollWidth - track.clientWidth - 2
+    prevBtn.disabled = track.scrollLeft <= 2
+    nextBtn.disabled = track.scrollLeft >= max
+  }
+
+  prevBtn.addEventListener('click', () => scrollByCard(-1))
+  nextBtn.addEventListener('click', () => scrollByCard(1))
+  track.addEventListener('scroll', updateArrows, { passive: true })
+  window.addEventListener('resize', updateArrows)
+  updateArrows()
+}
+
 // ── Acceso: selector de cantidad de material vegetal ──
 function initAcceso() {
   const picker = document.querySelector<HTMLElement>('.fl-acceso-picker')
@@ -1023,6 +1050,7 @@ function init() {
 
   initWelcome()
   initReveal()
+  initPerfilesCarousel()
   initAcceso()
   animateSplitWords()
   initClipReveal()
