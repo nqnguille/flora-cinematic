@@ -31,18 +31,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <!-- ── Carta (fullscreen · carrusel) ── -->
     <div id="gn-content" class="gn-content" hidden>
       <div class="gn-filters">
-        <div class="gn-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
-          <input id="gn-search" class="gn-search" type="search" placeholder="Buscar…" autocomplete="off" />
-        </div>
         <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
         <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
         <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
         <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
-        <button id="gn-logout" class="gn-logout" type="button" aria-label="Cerrar sesión">Salir</button>
       </div>
 
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
+
+      <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
+        <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+        <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
+        <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
+      </div>
+
+      <button id="gn-logout" class="gn-logout gn-logout-corner" type="button" aria-label="Cerrar sesión">Salir</button>
     </div>
   </main>
 
@@ -217,11 +220,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return true
     }
 
-    /* ── Carrusel auto-deslizante (marquesina continua) ── */
+    /* ── Carrusel: auto-deslizante + controles (pausa / adelantar / rebobinar) ── */
     const SPEED = 0.55 // px por frame
-    let loopOffset = 0 // ancho de una copia del listado (para el loop sin costura)
-    let singleCount = 0 // cantidad de tarjetas de UNA copia
-    let paused = false
+    let loopOffset = 0   // ancho de una copia (para el loop sin costura)
+    let singleCount = 0  // tarjetas de UNA copia
+    let pendingRecenter = false
+    let userPaused = false   // pausa explícita (botón)
+    let hoverPaused = false  // pausa temporal (mouse encima / arrastrando)
+    let touchPaused = false  // pausa temporal (touch/wheel/prev/next reciente)
     let resumeTimer = null
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -229,11 +235,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const track = document.getElementById('gn-grid')
       const secondCopyStart = track.children[singleCount]
       loopOffset = secondCopyStart ? secondCopyStart.offsetLeft : 0
+      // Arrancamos en la 2ª copia para poder rebobinar sin toparse con el borde.
+      if (pendingRecenter && loopOffset > 0) { track.scrollLeft = loopOffset; pendingRecenter = false }
     }
 
-    function resumeSoon(delay) {
+    function pauseTouchSoon(delay) {
+      touchPaused = true
       clearTimeout(resumeTimer)
-      resumeTimer = setTimeout(() => { paused = false }, delay || 3500)
+      resumeTimer = setTimeout(() => { touchPaused = false }, delay || 4000)
+    }
+
+    function stepAmount(track) {
+      const item = track.querySelector('.gn-item')
+      const w = item ? item.getBoundingClientRect().width : 320
+      return w + 20
     }
 
     let carouselStarted = false
@@ -241,16 +256,52 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (carouselStarted) return
       carouselStarted = true
       const track = document.getElementById('gn-grid')
-      track.addEventListener('mouseenter', () => { paused = true })
-      track.addEventListener('mouseleave', () => { paused = false })
-      track.addEventListener('touchstart', () => { paused = true }, { passive: true })
-      track.addEventListener('touchend', () => resumeSoon(4000), { passive: true })
-      track.addEventListener('wheel', () => { paused = true; resumeSoon(4000) }, { passive: true })
+      const playpause = document.getElementById('gn-playpause')
+
+      track.addEventListener('mouseenter', () => { hoverPaused = true })
+      track.addEventListener('mouseleave', () => { hoverPaused = false })
+      track.addEventListener('touchstart', () => { touchPaused = true; clearTimeout(resumeTimer) }, { passive: true })
+      track.addEventListener('touchend', () => pauseTouchSoon(4000), { passive: true })
+      track.addEventListener('wheel', () => pauseTouchSoon(4000), { passive: true })
       window.addEventListener('resize', () => requestAnimationFrame(measure))
+
+      // Arrastrar con el mouse para mover el carrusel a gusto
+      let dragging = false, lastX = 0
+      track.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse') return
+        dragging = true; lastX = e.clientX; track.classList.add('is-grabbing')
+      })
+      window.addEventListener('pointermove', (e) => {
+        if (!dragging) return
+        track.scrollLeft -= (e.clientX - lastX); lastX = e.clientX
+      })
+      window.addEventListener('pointerup', () => {
+        if (!dragging) return
+        dragging = false; track.classList.remove('is-grabbing')
+      })
+
+      // Adelantar / rebobinar de a una tarjeta
+      document.getElementById('gn-prev').addEventListener('click', () => {
+        track.scrollLeft -= stepAmount(track); pauseTouchSoon(4000)
+      })
+      document.getElementById('gn-next').addEventListener('click', () => {
+        track.scrollLeft += stepAmount(track); pauseTouchSoon(4000)
+      })
+      // Pausa / reproducir explícito
+      playpause.addEventListener('click', () => {
+        userPaused = !userPaused
+        playpause.classList.toggle('is-paused', userPaused)
+        playpause.setAttribute('aria-label', userPaused ? 'Reproducir' : 'Pausar')
+      })
+
       function frame() {
-        if (!paused && !reduceMotion && loopOffset > 0) {
-          track.scrollLeft += SPEED
-          if (track.scrollLeft >= loopOffset) track.scrollLeft -= loopOffset
+        if (loopOffset > 0) {
+          if (!userPaused && !hoverPaused && !touchPaused && !reduceMotion) {
+            track.scrollLeft += SPEED
+          }
+          // Loop infinito en ambos sentidos: mantener en [loopOffset, 2·loopOffset)
+          if (track.scrollLeft < loopOffset) track.scrollLeft += loopOffset
+          else if (track.scrollLeft >= loopOffset * 2) track.scrollLeft -= loopOffset
         }
         requestAnimationFrame(frame)
       }
@@ -267,14 +318,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         track.scrollLeft = 0
         track.innerHTML = `<p class="gn-empty">${allGeneticas.length === 0 ? 'No hay genéticas cargadas por el momento.' : 'Ninguna genética coincide con esos filtros.'}</p>`
       } else {
-        // Repetimos el listado las veces necesarias para llenar la pantalla y que
-        // el loop nunca deje huecos; el corte se hace al ancho de UNA copia.
-        const copies = Math.max(2, Math.ceil((window.innerWidth * 1.6) / (list.length * 320)))
+        // Repetimos el listado con buffer a ambos lados para loop sin huecos y
+        // poder rebobinar; el corte se hace al ancho de UNA copia.
+        const copies = Math.max(3, Math.ceil((window.innerWidth * 2.4) / (list.length * 320)) + 1)
         let html = ''
         for (let c = 0; c < copies; c++) html += list.map((g, i) => card(g, i)).join('')
         track.innerHTML = html
         singleCount = list.length
-        track.scrollLeft = 0
+        pendingRecenter = true
         requestAnimationFrame(measure)
       }
     }
@@ -371,11 +422,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       renderDropdown('efecto', toOpts('efecto', present.efecto))
       renderDropdown('sabor', toOpts('sabor', present.sabor))
     }
-
-    document.getElementById('gn-search').addEventListener('input', (e) => {
-      filters.q = e.target.value.trim().toLowerCase()
-      applyFilters()
-    })
 
     /* ── Sesión ── */
 
@@ -617,17 +663,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-logout:hover { border-color: var(--gn-violet); }
 
-  /* Filtros en una sola línea */
+  /* Filtros centrados en una sola línea */
   .gn-filters {
     flex: 0 0 auto;
     position: relative;
     z-index: 20;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.55rem;
     flex-wrap: wrap;
+    padding: 0 5rem; /* deja aire para el "Salir" de la esquina */
   }
-  .gn-filters .gn-logout { margin-left: auto; }
+
+  /* "Salir" discreto en la esquina superior derecha */
+  .gn-logout-corner {
+    position: absolute;
+    top: clamp(12px, 1.6vh, 22px);
+    right: clamp(14px, 2vw, 30px);
+    z-index: 25;
+  }
 
   .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
   .gn-search-wrap svg {
@@ -734,6 +789,54 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     scrollbar-width: none;
   }
   .gn-track::-webkit-scrollbar { display: none; }
+  .gn-track { cursor: grab; }
+  .gn-track.is-grabbing { cursor: grabbing; user-select: none; }
+
+  /* ── Controles del carrusel (pausa / adelantar / rebobinar) ── */
+  .gn-ctrls {
+    position: absolute;
+    bottom: clamp(14px, 2.5vh, 30px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem;
+    border-radius: 999px;
+    background: rgba(19, 13, 28, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(244, 241, 247, 0.14);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.7);
+  }
+  .gn-ctrl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: var(--gn-cream);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  .gn-ctrl:hover { background: rgba(244, 241, 247, 0.1); }
+  .gn-ctrl:active { transform: scale(0.92); }
+  .gn-ctrl svg { width: 22px; height: 22px; }
+  .gn-ctrl-pp {
+    background: var(--gn-violet);
+    color: #130d1c;
+    width: 48px;
+    height: 48px;
+  }
+  .gn-ctrl-pp:hover { background: #c8b2ec; }
+  .gn-ctrl-pp .ic-play { display: none; }
+  .gn-ctrl-pp.is-paused .ic-play { display: block; }
+  .gn-ctrl-pp.is-paused .ic-pause { display: none; }
+  .gn-ctrl:focus-visible { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
 
   .gn-item {
     flex: 0 0 auto;
@@ -1027,8 +1130,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (max-width: 640px) {
-    .gn-bar .gn-title { display: none; }
-    .gn-welcome { display: none; }
+    .gn-filters { padding: 0 3.5rem 0 0.5rem; }
     .gn-item { width: 80vw; }
     .gn-circle { width: 50px; height: 50px; }
     .gn-circle svg { width: 22px; height: 22px; }
