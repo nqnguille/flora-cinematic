@@ -462,21 +462,52 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- REPROCANN — hook: el primer paso (entrevista médica) -->
+  <!-- REPROCANN — guía del trámite en 3 pasos + doble camino -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-reprocann" id="entrevista" aria-label="Cómo tramitar tu REPROCANN">
     <div class="fl-wrap fl-reprocann-wrap">
       <span class="fl-eyebrow on-dark">Tu REPROCANN</span>
       <h2 class="fl-title">¿Cómo se tramita el <em>REPROCANN?</em></h2>
       <p class="fl-reprocann-lead">
-        El primer paso es una entrevista con un profesional de la salud: evalúa tu caso
-        y, si corresponde, te inscribe en el REPROCANN. Es también lo que te habilita a
-        asociarte a Flora.
+        Es más simple de lo que parece: son tres pasos y te acompañamos en cada uno.
       </p>
-      <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
-        Pedir mi entrevista médica <span aria-hidden="true">→</span>
-      </a>
-      <p class="fl-reprocann-note">Sin compromiso. Te orientamos en cada paso del trámite.</p>
+
+      <ol class="fl-rp-steps">
+        <li class="fl-rp-step">
+          <span class="fl-rp-num" aria-hidden="true">01</span>
+          <h3>Asesoramiento y formularios</h3>
+          <p>
+            Te asesoramos por WhatsApp, completás los formularios y generás tu
+            código de vinculación con el médico. Te guiamos pantalla por pantalla.
+          </p>
+        </li>
+        <li class="fl-rp-step">
+          <span class="fl-rp-num" aria-hidden="true">02</span>
+          <h3>Entrevista por Meet</h3>
+          <p>
+            El médico evalúa tu caso en una videollamada y carga tu solicitud
+            en el REPROCANN.
+          </p>
+        </li>
+        <li class="fl-rp-step">
+          <span class="fl-rp-num" aria-hidden="true">03</span>
+          <h3>Aprobación y acceso</h3>
+          <p>
+            Con la credencial aprobada ya podés asociarte a Flora y acceder
+            al cultivo dentro del marco legal.
+          </p>
+        </li>
+      </ol>
+
+      <div class="fl-rp-ctas">
+        <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero coordinar una entrevista médica para tramitar mi REPROCANN y empezar a asociarme 🌿')} target="_blank" rel="noopener noreferrer">
+          Pedir mi entrevista médica <span aria-hidden="true">→</span>
+        </a>
+        <a class="fl-reprocann-cta fl-reprocann-cta--ghost" href={wa('Hola Flora, ya tengo mi REPROCANN y quiero asociarme 🌿')} target="_blank" rel="noopener noreferrer">
+          Ya tengo REPROCANN: asociarme
+        </a>
+      </div>
+      <p class="fl-reprocann-note">La entrevista se coordina por WhatsApp y te orientamos en cada paso del trámite.</p>
     </div>
   </section>
 
