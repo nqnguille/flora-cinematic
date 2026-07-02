@@ -30,6 +30,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     <!-- ── Carta (fullscreen · carrusel) ── -->
     <div id="gn-content" class="gn-content" hidden>
+      <div class="gn-topbar">
+        <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
+          <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
+          <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
+        </div>
+        <button id="gn-logout" class="gn-logout" type="button" aria-label="Cerrar sesión">Salir</button>
+      </div>
+
       <div class="gn-filters">
         <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
         <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
@@ -38,14 +47,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
-
-      <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
-        <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
-        <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
-        <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
-      </div>
-
-      <button id="gn-logout" class="gn-logout gn-logout-corner" type="button" aria-label="Cerrar sesión">Salir</button>
     </div>
   </main>
 
@@ -673,15 +674,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     justify-content: center;
     gap: 0.55rem;
     flex-wrap: wrap;
-    padding: 0 5rem; /* deja aire para el "Salir" de la esquina */
+    padding: 0 clamp(0px, 2vw, 40px);
   }
 
-  /* "Salir" discreto en la esquina superior derecha */
-  .gn-logout-corner {
+  /* Barra superior derecha: controles discretos + Salir */
+  .gn-topbar {
     position: absolute;
     top: clamp(12px, 1.6vh, 22px);
     right: clamp(14px, 2vw, 30px);
     z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
@@ -792,47 +796,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-track { cursor: grab; }
   .gn-track.is-grabbing { cursor: grabbing; user-select: none; }
 
-  /* ── Controles del carrusel (pausa / adelantar / rebobinar) ── */
+  /* ── Controles del carrusel: discretos, arriba a la derecha ── */
   .gn-ctrls {
-    position: absolute;
-    bottom: clamp(14px, 2.5vh, 30px);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 15;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem;
-    border-radius: 999px;
-    background: rgba(19, 13, 28, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(244, 241, 247, 0.14);
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.7);
+    gap: 0.1rem;
   }
   .gn-ctrl {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: none;
-    color: var(--gn-cream);
+    color: var(--gn-muted);
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.08s ease;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.08s ease;
   }
-  .gn-ctrl:hover { background: rgba(244, 241, 247, 0.1); }
-  .gn-ctrl:active { transform: scale(0.92); }
-  .gn-ctrl svg { width: 22px; height: 22px; }
-  .gn-ctrl-pp {
-    background: var(--gn-violet);
-    color: #130d1c;
-    width: 48px;
-    height: 48px;
-  }
-  .gn-ctrl-pp:hover { background: #c8b2ec; }
+  .gn-ctrl:hover { color: var(--gn-cream); background: rgba(244, 241, 247, 0.08); }
+  .gn-ctrl:active { transform: scale(0.9); }
+  .gn-ctrl svg { width: 16px; height: 16px; }
+  .gn-ctrl-pp { color: var(--gn-cream); }
   .gn-ctrl-pp .ic-play { display: none; }
   .gn-ctrl-pp.is-paused .ic-play { display: block; }
   .gn-ctrl-pp.is-paused .ic-pause { display: none; }
@@ -1130,7 +1116,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (max-width: 640px) {
-    .gn-filters { padding: 0 3.5rem 0 0.5rem; }
+    .gn-filters { padding: 2.4rem 0.5rem 0; }
     .gn-item { width: 80vw; }
     .gn-circle { width: 50px; height: 50px; }
     .gn-circle svg { width: 22px; height: 22px; }
