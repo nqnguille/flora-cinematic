@@ -1,0 +1,386 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Panel de genéticas — admin | Flora ONG"
+  description="Panel interno para gestionar el catálogo de genéticas."
+  noindex={true}
+>
+  <main class="ad-main">
+    <div class="ad-wrap">
+      <span class="ad-eyebrow">Panel interno</span>
+      <h1 class="ad-title">Catálogo de genéticas</h1>
+
+      <div id="ad-login" class="ad-login">
+        <div id="g_id_button"></div>
+        <p id="ad-login-msg" class="ad-msg" hidden></p>
+      </div>
+
+      <div id="ad-forbidden" class="ad-msg" hidden>
+        Tu cuenta de Google inició sesión pero no tiene permisos de administrador.
+      </div>
+
+      <div id="ad-content" class="ad-content" hidden>
+        <p class="ad-help">
+          Tildá <strong>«Disponible este mes»</strong> en las genéticas que hay en stock ahora.
+          Solo esas se muestran en la carta pública. Los cambios no se guardan hasta que apretés
+          <strong>«Guardar cambios»</strong>.
+        </p>
+        <div id="ad-list" class="ad-list"></div>
+        <button id="ad-add" type="button" class="ad-btn ad-btn-ghost">+ Agregar genética</button>
+
+        <div class="ad-savebar">
+          <span id="ad-save-status" class="ad-save-status"></span>
+          <button id="ad-save" type="button" class="ad-btn ad-btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script src="/socios/icons.js" is:inline></script>
+  <script src="/socios/bancos.js" is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    let CATALOG = []
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    }
+
+    function tagPickerHtml(category, selected, idx) {
+      const items = window.FLORA_TAG_ICONS[category]
+      return Object.entries(items)
+        .map(([key, def]) => {
+          const checked = selected.includes(key) ? 'checked' : ''
+          return `
+          <label class="ad-tag ${checked ? 'is-checked' : ''}">
+            <input type="checkbox" data-idx="${idx}" data-cat="${category}" value="${key}" ${checked} />
+            <span class="ad-tag-icon">${def.svg}</span>
+            <span>${esc(def.label)}</span>
+          </label>`
+        })
+        .join('')
+    }
+
+    function bancoOptionsHtml(current) {
+      const bancos = window.FLORA_BANCOS
+      return Object.entries(bancos)
+        .map(([slug, b]) => `<option value="${slug}" ${slug === current ? 'selected' : ''}>${esc(b.nombre)}</option>`)
+        .join('') + `<option value="" ${!(current in bancos) ? 'selected' : ''}>Otro / no listado</option>`
+    }
+
+    function rowHtml(g, idx) {
+      return `
+      <article class="ad-card" data-idx="${idx}">
+        <div class="ad-card-top">
+          <input class="ad-input ad-input-nombre" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre de la genética" />
+          <label class="ad-activo">
+            <input type="checkbox" data-field="activo" data-idx="${idx}" ${g.activo ? 'checked' : ''} />
+            Disponible este mes
+          </label>
+          <button type="button" class="ad-del" data-idx="${idx}" aria-label="Eliminar">×</button>
+        </div>
+
+        <div class="ad-formatos">
+          <span class="ad-formatos-label">Formato disponible</span>
+          <label class="ad-fmt ${(g.formatos || ['flor']).includes('flor') ? 'is-on' : ''}">
+            <input type="checkbox" data-fmt="flor" data-idx="${idx}" ${(g.formatos || ['flor']).includes('flor') ? 'checked' : ''} />
+            Flor (a granel)
+          </label>
+          <label class="ad-fmt ${(g.formatos || []).includes('preroll') ? 'is-on' : ''}">
+            <input type="checkbox" data-fmt="preroll" data-idx="${idx}" ${(g.formatos || []).includes('preroll') ? 'checked' : ''} />
+            Preroll (1g)
+          </label>
+        </div>
+
+        <div class="ad-grid">
+          <label class="ad-field">
+            <span>Banco</span>
+            <select data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
+          </label>
+          <label class="ad-field">
+            <span>Tipo</span>
+            <select data-field="tipo" data-idx="${idx}">
+              ${['sativa', 'indica', 'hibrida', 'cbd']
+                .map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${t === 'hibrida' ? 'Híbrida' : t === 'cbd' ? 'Full CBD' : t[0].toUpperCase() + t.slice(1)}</option>`)
+                .join('')}
+            </select>
+          </label>
+          <label class="ad-field">
+            <span>Predominancia</span>
+            <input class="ad-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% Sativa | 30% Indica" />
+          </label>
+          <label class="ad-field">
+            <span>THC</span>
+            <input class="ad-input" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="25% THC" />
+          </label>
+          <label class="ad-field">
+            <span>CBD</span>
+            <input class="ad-input" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="1% CBD" />
+          </label>
+          <label class="ad-field ad-field-wide">
+            <span>Foto (URL)</span>
+            <input class="ad-input" data-field="foto" data-idx="${idx}" value="${esc(g.foto || '')}" placeholder="https://..." />
+          </label>
+        </div>
+
+        <div class="ad-tags-block">
+          <span class="ad-tags-label">Sabor / aroma (elegí hasta 2)</span>
+          <div class="ad-tags">${tagPickerHtml('sabor', g.sabores || [], idx)}</div>
+        </div>
+        <div class="ad-tags-block">
+          <span class="ad-tags-label">Efecto (elegí hasta 2)</span>
+          <div class="ad-tags">${tagPickerHtml('efecto', g.efectos || [], idx)}</div>
+        </div>
+      </article>`
+    }
+
+    function render() {
+      document.getElementById('ad-list').innerHTML = CATALOG.map(rowHtml).join('')
+    }
+
+    function slugify(s) {
+      return String(s)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+    }
+
+    document.addEventListener('input', (e) => {
+      const t = e.target
+      const idx = t.getAttribute('data-idx')
+      if (idx === null) return
+      const i = Number(idx)
+      const field = t.getAttribute('data-field')
+      const cat = t.getAttribute('data-cat')
+
+      const fmt = t.getAttribute('data-fmt')
+
+      if (fmt) {
+        let arr = Array.isArray(CATALOG[i].formatos) ? [...CATALOG[i].formatos] : ['flor']
+        if (t.checked) { if (!arr.includes(fmt)) arr.push(fmt) }
+        else arr = arr.filter((v) => v !== fmt)
+        CATALOG[i].formatos = arr
+        t.closest('.ad-fmt').classList.toggle('is-on', t.checked)
+      } else if (field === 'activo') {
+        CATALOG[i].activo = t.checked
+      } else if (field) {
+        CATALOG[i][field] = t.value
+      } else if (cat) {
+        const key = cat === 'sabor' ? 'sabores' : 'efectos'
+        let arr = CATALOG[i][key] || []
+        if (t.checked) {
+          if (arr.length >= 2) {
+            t.checked = false
+            return
+          }
+          arr = [...arr, t.value]
+        } else {
+          arr = arr.filter((v) => v !== t.value)
+        }
+        CATALOG[i][key] = arr
+        render()
+      }
+    })
+
+    document.addEventListener('click', (e) => {
+      const del = e.target.closest('.ad-del')
+      if (del) {
+        CATALOG.splice(Number(del.getAttribute('data-idx')), 1)
+        render()
+      }
+    })
+
+    document.getElementById('ad-add').addEventListener('click', () => {
+      CATALOG.push({
+        id: `nueva-${Date.now()}`,
+        nombre: '',
+        banco: '',
+        bancoSlug: '',
+        predominancia: '',
+        tipo: 'hibrida',
+        thc: '',
+        cbd: '',
+        sabores: [],
+        efectos: [],
+        formatos: ['flor'],
+        foto: null,
+        activo: false,
+      })
+      render()
+    })
+
+    document.getElementById('ad-save').addEventListener('click', async () => {
+      const status = document.getElementById('ad-save-status')
+      status.textContent = 'Guardando…'
+      CATALOG.forEach((g) => {
+        if (!g.id) g.id = slugify(g.nombre) || `genetica-${Date.now()}`
+        g.banco = (window.FLORA_BANCOS[g.bancoSlug] || {}).nombre || g.banco || ''
+      })
+      try {
+        const res = await fetch('/api/socios/admin/geneticas', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ geneticas: CATALOG }),
+        })
+        const data = await res.json()
+        status.textContent = res.ok && data.ok ? 'Guardado ✓' : `Error: ${data.error || res.status}`
+      } catch {
+        status.textContent = 'Error de red al guardar.'
+      }
+      setTimeout(() => (status.textContent = ''), 4000)
+    })
+
+    function showLoginError(message) {
+      const msg = document.getElementById('ad-login-msg')
+      msg.textContent = message
+      msg.hidden = false
+    }
+
+    async function loadCatalog() {
+      const res = await fetch('/api/socios/admin/geneticas', { credentials: 'include' })
+      if (res.status === 401) return false
+      if (res.status === 403) {
+        document.getElementById('ad-login').hidden = true
+        document.getElementById('ad-forbidden').hidden = false
+        return true
+      }
+      const data = await res.json()
+      CATALOG = data.geneticas || []
+      document.getElementById('ad-login').hidden = true
+      document.getElementById('ad-content').hidden = false
+      render()
+      return true
+    }
+
+    window.handleGoogleCredential = async (response) => {
+      try {
+        const res = await fetch('/api/socios/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ credential: response.credential }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.ok) {
+          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+          return
+        }
+        await loadCatalog()
+      } catch {
+        showLoginError('Error de red al verificar con Google.')
+      }
+    }
+
+    if (googleClientId) {
+      window.onload = () => {
+        google.accounts.id.initialize({ client_id: googleClientId, callback: window.handleGoogleCredential })
+        google.accounts.id.renderButton(document.getElementById('g_id_button'), { theme: 'outline', size: 'large', text: 'signin_with' })
+      }
+    } else {
+      showLoginError('Falta configurar el Google Client ID del sitio.')
+    }
+
+    loadCatalog()
+  </script>
+</Layout>
+
+<style>
+  .ad-main {
+    min-height: 100svh;
+    padding: var(--space-m) var(--space-s);
+    background: var(--fl-paper-2, #f6f4f2);
+    font-family: var(--font-ui);
+  }
+  .ad-wrap { max-width: 900px; margin: 0 auto; }
+
+  .ad-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fl-violet, #381f56);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .ad-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    color: var(--fl-ink, #1c1626);
+    margin: 0 0 1.5rem;
+  }
+
+  .ad-login[hidden], .ad-content[hidden] { display: none; }
+  .ad-login { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .ad-msg { color: #a3312a; font-size: 0.9rem; background: #fff; padding: 1rem; border-radius: 10px; }
+  .ad-help {
+    background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14)); border-radius: 12px;
+    padding: 0.9rem 1.1rem; font-size: 0.88rem; line-height: 1.5; color: var(--fl-ink); margin-bottom: 1.2rem;
+  }
+
+  .ad-list { display: flex; flex-direction: column; gap: 1rem; }
+  .ad-card {
+    background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+    border-radius: 16px; padding: 1.1rem 1.2rem;
+  }
+  .ad-card-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.9rem; }
+  .ad-input-nombre { flex: 1; font-weight: 700; font-size: 1rem; }
+  .ad-activo { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; white-space: nowrap; }
+  .ad-del {
+    background: none; border: 1px solid var(--fl-line, rgba(56,31,86,0.2)); border-radius: 8px;
+    width: 30px; height: 30px; font-size: 1.1rem; line-height: 1; cursor: pointer; color: #a3312a;
+  }
+
+  .ad-input, select.ad-input, .ad-field select, .ad-field input {
+    width: 100%; font-family: var(--font-ui); font-size: 0.88rem;
+    border: 1px solid var(--fl-line, rgba(56,31,86,0.2)); border-radius: 8px; padding: 0.45rem 0.6rem;
+    color: var(--fl-ink); background: #fff;
+  }
+
+  .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; margin-bottom: 0.9rem; }
+  .ad-field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; opacity: 0.85; }
+  .ad-field-wide { grid-column: span 2; }
+
+  .ad-formatos { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .ad-formatos-label { font-size: 0.75rem; opacity: 0.7; }
+  .ad-fmt {
+    display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem;
+    border: 1px solid var(--fl-line, rgba(56,31,86,0.2)); border-radius: 999px;
+    padding: 0.3rem 0.75rem; cursor: pointer; color: var(--fl-ink); opacity: 0.6;
+  }
+  .ad-fmt.is-on { opacity: 1; background: var(--fl-paper-2, #f6f4f2); border-color: var(--fl-green, #0a503c); font-weight: 600; }
+  .ad-fmt input { margin: 0; }
+
+  .ad-tags-block { margin-top: 0.6rem; }
+  .ad-tags-label { display: block; font-size: 0.75rem; opacity: 0.7; margin-bottom: 0.4rem; }
+  .ad-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .ad-tag {
+    display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem;
+    border: 1px solid var(--fl-line, rgba(56,31,86,0.2)); border-radius: 999px; padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+    cursor: pointer; color: var(--fl-ink); opacity: 0.6;
+  }
+  .ad-tag.is-checked { opacity: 1; background: var(--fl-paper-2, #f6f4f2); border-color: var(--fl-violet, #381f56); font-weight: 600; }
+  .ad-tag input { margin: 0; }
+  .ad-tag-icon { width: 15px; height: 15px; display: inline-flex; }
+  .ad-tag-icon :global(svg) { width: 100%; height: 100%; }
+
+  .ad-btn {
+    font-family: var(--font-ui); font-weight: 700; font-size: 0.88rem; border-radius: 999px;
+    padding: 0.6rem 1.3rem; cursor: pointer; border: none;
+  }
+  .ad-btn-ghost { background: none; border: 1.5px dashed var(--fl-line, rgba(56,31,86,0.3)); color: var(--fl-violet); margin-top: 1rem; }
+  .ad-btn-primary { background: var(--fl-violet, #381f56); color: #fff; }
+
+  .ad-savebar {
+    position: sticky; bottom: 0; margin-top: 1.5rem; padding: 1rem;
+    background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14)); border-radius: 14px;
+    display: flex; align-items: center; justify-content: flex-end; gap: 1rem;
+  }
+  .ad-save-status { font-size: 0.85rem; opacity: 0.7; }
+</style>

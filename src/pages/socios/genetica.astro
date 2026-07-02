@@ -1,0 +1,1037 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Carta de genéticas — solo socios | Flora ONG"
+  description="Stock de genéticas disponible, exclusivo para socios verificados de Flora."
+  noindex={true}
+>
+  <main class="gn-main">
+    <!-- ── Login ── -->
+    <div id="gn-login" class="gn-login">
+      <div class="gn-login-card">
+        <div class="gn-brand">
+          <svg class="gn-brand-leaf" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="gn-brand-name">Flora <em>club</em></span>
+        </div>
+        <h1 class="gn-title">Carta de <em>genéticas</em></h1>
+        <p class="gn-sub">
+          Sección exclusiva para socios verificados de Flora. Ingresá con la cuenta de
+          Google que registraste como socio.
+        </p>
+        <div id="g_id_button"></div>
+        <p id="gn-login-msg" class="gn-msg" hidden></p>
+        <a href="/" class="gn-back">← Volver al sitio</a>
+      </div>
+    </div>
+
+    <!-- ── Carta (fullscreen · carrusel) ── -->
+    <div id="gn-content" class="gn-content" hidden>
+      <div class="gn-filters">
+        <div class="gn-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+          <input id="gn-search" class="gn-search" type="search" placeholder="Buscar…" autocomplete="off" />
+        </div>
+        <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
+        <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
+        <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
+        <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
+        <button id="gn-logout" class="gn-logout" type="button" aria-label="Cerrar sesión">Salir</button>
+      </div>
+
+      <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script src="/socios/icons.js" is:inline></script>
+  <script src="/socios/bancos.js" is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    }
+
+    const TIPO_LABEL = { sativa: 'Sativa', indica: 'Indica', hibrida: 'Híbrida', cbd: 'Full CBD' }
+    const LEAF_SVG = '<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+
+    // Formatos: FLORES = hoja de cannabis (silueta, la más legible en chico) ·
+    // PREROLL = porro cónico con humo.
+    const ICON_FLOR = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 16.9c-1.3-.8-2.7-1.2-4.2-1.4 1.6-1.6 2.9-3.4 3.7-5.6.2-.4-.2-.9-.6-.9-.1 0-.2 0-.2 0-2.2.8-4.1 2.1-5.6 3.7.2-1.4.2-2.9-.2-4.4-.7-2.6-2.3-4.9-4.5-6.5-.3-.2-.7-.2-1 0-2.2 1.6-3.8 3.8-4.5 6.5-.4 1.4-.4 2.9-.2 4.4-1.5-1.6-3.4-2.9-5.6-3.7 0 0-.1 0-.2 0-.5 0-.8.5-.6.9.8 2.2 2.2 4 3.7 5.6-1.5.2-2.9.6-4.2 1.4-.4.2-.4.8 0 1 1.3.8 2.7 1.2 4.2 1.4-1.6 1.6-2.9 3.4-3.7 5.6-.2.4.2.9.6.9.1 0 .2 0 .2 0 2.2-.8 4.1-2.1 5.6-3.7-.1.6-.1 1.2-.1 1.9 0 1 .1 2 .3 2.9.1.3.3.4.6.4h9.4c.3 0 .5-.2.6-.4.2-.9.3-1.9.3-2.9 0-.6 0-1.2-.1-1.9 1.5 1.6 3.4 2.9 5.6 3.7 0 0 .1 0 .2 0 .5 0 .8-.5.6-.9-.8-2.2-2.2-4-3.7-5.6 1.5-.2 2.9-.6 4.2-1.4.4-.2.4-.8 0-1z"/></svg>'
+    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20.6 8.9 10Q8.7 8.3 10.4 8.3H13.6Q15.3 8.3 15.1 10L14 20.6Q13.9 21.6 12 21.6Q10.1 21.6 10 20.6Z"/><path d="M9.4 17.8H14.6"/><path d="M11.9 8.3Q10.7 6.6 11.9 5.2Q13.1 3.8 11.9 2.3"/></svg>'
+    const FORMATO = {
+      flor: { label: 'Flores', svg: ICON_FLOR },
+      preroll: { label: 'Preroll', svg: ICON_PREROLL },
+    }
+
+    // Formatos de una genética; por compatibilidad, sin dato = ['flor'].
+    function formatosDe(g) {
+      return Array.isArray(g.formatos) && g.formatos.length ? g.formatos : ['flor']
+    }
+
+    let allGeneticas = []
+    // Cada dimensión es un Set: multi-selección (OR dentro de la dimensión, AND entre dimensiones).
+    const filters = { q: '', tipo: new Set(), formato: new Set(), efecto: new Set(), sabor: new Set() }
+
+    /* ── Helpers de datos ── */
+
+    // "70% Sativa | 30% Indica" → { sativa: 70, indica: 30 } (null si no se puede leer)
+    function parsePredominancia(pred) {
+      if (!pred) return null
+      const s = /(\d+)\s*%\s*sativa/i.exec(pred)
+      const i = /(\d+)\s*%\s*indica/i.exec(pred)
+      if (!s && !i) return null
+      const sat = s ? Number(s[1]) : 100 - Number(i[1])
+      return { sativa: sat, indica: 100 - sat }
+    }
+
+    // "25% THC" → 25 (null si no es un porcentaje legible, ej. "1:1")
+    function parsePct(v) {
+      const m = /([\d.]+)\s*%/.exec(String(v ?? ''))
+      return m ? Number(m[1]) : null
+    }
+
+    // 22 → "22%" · 23.5 → "23,5%" · 0.28 → "<1%"
+    function fmtPct(n) {
+      if (n < 1) return '&lt;1<em>%</em>'
+      const v = Number.isInteger(n) ? String(n) : String(n).replace('.', ',')
+      return `${v}<em>%</em>`
+    }
+
+    /* ── Piezas de la tarjeta ── */
+
+    // "70% Sativa · 30% Índica | Silver River"
+    function infoLine(g) {
+      const p = parsePredominancia(g.predominancia)
+      const gen = p
+        ? `<span class="gn-gen">${p.sativa}% Sativa</span><i>·</i><span class="gn-gen">${p.indica}% Índica</span>`
+        : `<span class="gn-gen">${escapeHtml(TIPO_LABEL[g.tipo] || g.tipo || '')}</span>`
+      const banco = g.banco ? `<b>|</b><span class="gn-bank">${escapeHtml(g.banco)}</span>` : ''
+      return `<p class="gn-info">${gen}${banco}</p><span class="gn-rule"></span>`
+    }
+
+    // Medidor: etiqueta, número y barra con perilla + escala. Sin dato → slot "—"
+    // para que todas las tarjetas conserven la misma geometría.
+    function meter(label, rawValue, scaleMax) {
+      if (rawValue == null || rawValue === '') {
+        return `<div class="gn-meter"><span class="gn-meter-label">${label}</span><span class="gn-meter-num gn-meter-raw">—</span></div>`
+      }
+      const pct = parsePct(rawValue)
+      if (pct === null) {
+        return `<div class="gn-meter"><span class="gn-meter-label">${label}</span><span class="gn-meter-num gn-meter-raw">${escapeHtml(String(rawValue))}</span></div>`
+      }
+      const max = scaleMax ?? (pct <= 5 ? 5 : pct <= 20 ? 20 : 30)
+      const w = Math.min(100, (pct / max) * 100)
+      return `
+        <div class="gn-meter">
+          <span class="gn-meter-label">${label}</span>
+          <span class="gn-meter-num">${fmtPct(pct)}</span>
+          <div class="gn-meter-track"><span class="gn-meter-fill" style="width:${w}%"><i class="gn-meter-knob"></i></span></div>
+          <div class="gn-meter-scale"><span>0%</span><span>${max}%</span></div>
+        </div>`
+    }
+
+    // Ítems de círculo (icono + etiqueta) de una categoría. La etiqueta sale del
+    // texto libre ("Mermelada cítrica | Skittlez de uva") si la cantidad coincide
+    // con los iconos; si no, se usa la etiqueta genérica del icono.
+    function circleItems(category, keys, texto) {
+      if (!keys || !keys.length) return []
+      const segments = String(texto || '')
+        .split(/[|·]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+      const useSegments = segments.length === keys.length
+      return keys
+        .map((key, idx) => {
+          const def = (window.FLORA_TAG_ICONS[category] || {})[key]
+          if (!def) return ''
+          const label = useSegments ? segments[idx] : def.label
+          return `
+            <div class="gn-circle-item">
+              <span class="gn-circle">${def.svg}</span>
+              <span class="gn-circle-label">${escapeHtml(label)}</span>
+            </div>`
+        })
+        .filter(Boolean)
+    }
+
+    // Un grupo (efecto o sabor) con su etiqueta de referencia y sus círculos.
+    function circleGroup(labelText, items) {
+      if (!items.length) return ''
+      return `<div class="gn-circle-group"><span class="gn-circle-grouplabel">${labelText}</span><div class="gn-circle-cluster">${items.join('')}</div></div>`
+    }
+
+    // Los 4 iconos en una fila: efectos | sabores, con separador en el medio.
+    function circleStrip(g) {
+      const groups = [
+        circleGroup('Efecto', circleItems('efecto', g.efectos, g.efectoTexto)),
+        circleGroup('Sabor', circleItems('sabor', g.sabores, g.saborTexto)),
+      ].filter(Boolean)
+      if (!groups.length) return ''
+      return `<div class="gn-circle-row">${groups.join('<span class="gn-circle-sep"></span>')}</div>`
+    }
+
+    function card(g, idx) {
+      const tipo = ['sativa', 'indica', 'hibrida', 'cbd'].includes(g.tipo) ? g.tipo : 'hibrida'
+      // Foto por convención: /socios/geneticas/<id>.webp — si falla, la tarjeta
+      // cae al placeholder de marca (la hoja) manteniendo la geometría. `g.foto`
+      // (URL cargada desde el admin) tiene prioridad.
+      const fotoSrc = g.foto || (g.id ? `/socios/geneticas/${g.id}.webp` : '')
+      const delay = Math.min(idx || 0, 8) * 45
+      const thcMax = parsePct(g.thc) !== null && parsePct(g.thc) <= 5 ? 5 : 30
+      // Sellos circulares: Flores (izquierda) y Preroll (derecha), solo icono.
+      const seals = formatosDe(g)
+        .map((f) => FORMATO[f] ? `<span class="gn-seal gn-seal-${f}" title="${FORMATO[f].label}" aria-label="${FORMATO[f].label}">${FORMATO[f].svg}</span>` : '')
+        .join('')
+      return `
+        <article class="gn-item" data-tipo="${tipo}" style="--d:${delay}ms">
+          <div class="gn-item-hero${fotoSrc ? '' : ' is-nophoto'}">
+            ${fotoSrc ? `<img class="gn-item-img" src="${escapeHtml(fotoSrc)}" alt="${escapeHtml(g.nombre)}" loading="lazy" onerror="this.remove();this.closest('.gn-item-hero').classList.add('is-nophoto')" />` : ''}
+            <span class="gn-item-watermark">${LEAF_SVG}</span>
+            ${seals}
+            <h3 class="gn-item-name">${escapeHtml(g.nombre)}</h3>
+          </div>
+          <div class="gn-item-body">
+            ${infoLine(g)}
+            <div class="gn-meters">
+              ${meter('THC', g.thc, thcMax)}
+              ${meter('CBD', g.cbd, 5)}
+            </div>
+            ${circleStrip(g)}
+          </div>
+        </article>`
+    }
+
+    /* ── Filtros ── */
+
+    function matches(g) {
+      if (filters.tipo.size && !filters.tipo.has(g.tipo)) return false
+      if (filters.formato.size && !formatosDe(g).some((f) => filters.formato.has(f))) return false
+      if (filters.efecto.size && !(g.efectos || []).some((e) => filters.efecto.has(e))) return false
+      if (filters.sabor.size && !(g.sabores || []).some((s) => filters.sabor.has(s))) return false
+      if (filters.q) {
+        const hay = `${g.nombre} ${g.banco || ''}`.toLowerCase()
+        if (!hay.includes(filters.q)) return false
+      }
+      return true
+    }
+
+    /* ── Carrusel auto-deslizante (marquesina continua) ── */
+    const SPEED = 0.55 // px por frame
+    let loopOffset = 0 // ancho de una copia del listado (para el loop sin costura)
+    let singleCount = 0 // cantidad de tarjetas de UNA copia
+    let paused = false
+    let resumeTimer = null
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    function measure() {
+      const track = document.getElementById('gn-grid')
+      const secondCopyStart = track.children[singleCount]
+      loopOffset = secondCopyStart ? secondCopyStart.offsetLeft : 0
+    }
+
+    function resumeSoon(delay) {
+      clearTimeout(resumeTimer)
+      resumeTimer = setTimeout(() => { paused = false }, delay || 3500)
+    }
+
+    let carouselStarted = false
+    function startCarousel() {
+      if (carouselStarted) return
+      carouselStarted = true
+      const track = document.getElementById('gn-grid')
+      track.addEventListener('mouseenter', () => { paused = true })
+      track.addEventListener('mouseleave', () => { paused = false })
+      track.addEventListener('touchstart', () => { paused = true }, { passive: true })
+      track.addEventListener('touchend', () => resumeSoon(4000), { passive: true })
+      track.addEventListener('wheel', () => { paused = true; resumeSoon(4000) }, { passive: true })
+      window.addEventListener('resize', () => requestAnimationFrame(measure))
+      function frame() {
+        if (!paused && !reduceMotion && loopOffset > 0) {
+          track.scrollLeft += SPEED
+          if (track.scrollLeft >= loopOffset) track.scrollLeft -= loopOffset
+        }
+        requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+    }
+
+    function applyFilters() {
+      const list = allGeneticas.filter(matches)
+      const track = document.getElementById('gn-grid')
+
+      if (!list.length) {
+        singleCount = 0
+        loopOffset = 0
+        track.scrollLeft = 0
+        track.innerHTML = `<p class="gn-empty">${allGeneticas.length === 0 ? 'No hay genéticas cargadas por el momento.' : 'Ninguna genética coincide con esos filtros.'}</p>`
+      } else {
+        // Repetimos el listado las veces necesarias para llenar la pantalla y que
+        // el loop nunca deje huecos; el corte se hace al ancho de UNA copia.
+        const copies = Math.max(2, Math.ceil((window.innerWidth * 1.6) / (list.length * 320)))
+        let html = ''
+        for (let c = 0; c < copies; c++) html += list.map((g, i) => card(g, i)).join('')
+        track.innerHTML = html
+        singleCount = list.length
+        track.scrollLeft = 0
+        requestAnimationFrame(measure)
+      }
+    }
+
+    /* ── Desplegables tildables (multi-selección con checkboxes) ── */
+    const DIM_LABEL = { tipo: 'Tipo', formato: 'Formato', efecto: 'Efecto', sabor: 'Sabor' }
+    const STATIC_OPTS = {
+      tipo: [['sativa', 'Sativa'], ['indica', 'Indica'], ['hibrida', 'Híbrida'], ['cbd', 'Full CBD']],
+      formato: [['flor', 'Flores'], ['preroll', 'Prerolls']],
+    }
+
+    function closeAllPanels(except) {
+      document.querySelectorAll('.gn-dd-panel').forEach((p) => {
+        if (p !== except) {
+          p.hidden = true
+          const t = p.previousElementSibling
+          if (t) t.classList.remove('is-open')
+        }
+      })
+    }
+    document.addEventListener('click', () => closeAllPanels(null))
+
+    function updateDdCount(dim) {
+      const el = document.getElementById('gn-dd-' + dim)
+      const n = filters[dim].size
+      const c = el.querySelector('.gn-dd-count')
+      if (n === 0) { c.textContent = 'Todos'; c.classList.add('is-all') }
+      else { c.textContent = n; c.classList.remove('is-all') }
+      el.querySelector('.gn-dd-toggle').classList.toggle('has-sel', n > 0)
+    }
+
+    function renderDropdown(dim, options) {
+      const el = document.getElementById('gn-dd-' + dim)
+      if (!options.length) { el.hidden = true; return }
+      el.hidden = false
+      const allChecked = filters[dim].size === 0 ? 'checked' : ''
+      const allRow = `<label class="gn-dd-opt gn-dd-all"><input type="checkbox" class="gn-dd-allcb" ${allChecked} /><span class="gn-dd-check"></span>Todos</label><div class="gn-dd-divider"></div>`
+      const opts = options
+        .map(([val, lab]) => {
+          const checked = filters[dim].has(val) ? 'checked' : ''
+          return `<label class="gn-dd-opt"><input type="checkbox" class="gn-dd-cb" value="${escapeHtml(val)}" ${checked} /><span class="gn-dd-check"></span>${escapeHtml(lab)}</label>`
+        })
+        .join('')
+      el.innerHTML = `
+        <button class="gn-dd-toggle" type="button">
+          <span class="gn-dd-name">${DIM_LABEL[dim]}</span>
+          <span class="gn-dd-count"></span>
+          <svg class="gn-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="gn-dd-panel" hidden>${allRow}${opts}</div>`
+      const toggle = el.querySelector('.gn-dd-toggle')
+      const panel = el.querySelector('.gn-dd-panel')
+      const allcb = panel.querySelector('.gn-dd-allcb')
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const willOpen = panel.hidden
+        closeAllPanels(willOpen ? panel : null)
+        panel.hidden = !willOpen
+        toggle.classList.toggle('is-open', willOpen)
+      })
+      panel.addEventListener('click', (e) => e.stopPropagation())
+
+      // "Todos" = sin filtro. Tocarlo limpia la dimensión y destilda lo específico.
+      allcb.addEventListener('change', () => {
+        filters[dim].clear()
+        panel.querySelectorAll('.gn-dd-cb').forEach((c) => { c.checked = false })
+        allcb.checked = true
+        updateDdCount(dim)
+        applyFilters()
+      })
+
+      panel.querySelectorAll('.gn-dd-cb').forEach((cb) => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) filters[dim].add(cb.value)
+          else filters[dim].delete(cb.value)
+          allcb.checked = filters[dim].size === 0
+          updateDdCount(dim)
+          applyFilters()
+        })
+      })
+      updateDdCount(dim)
+    }
+
+    function buildFilters() {
+      renderDropdown('tipo', STATIC_OPTS.tipo)
+      renderDropdown('formato', STATIC_OPTS.formato)
+      const present = { efecto: new Set(), sabor: new Set() }
+      for (const g of allGeneticas) {
+        for (const e of g.efectos || []) present.efecto.add(e)
+        for (const s of g.sabores || []) present.sabor.add(s)
+      }
+      const toOpts = (cat, set) =>
+        [...set].sort().map((k) => [k, (window.FLORA_TAG_ICONS[cat] || {})[k]?.label || k])
+      renderDropdown('efecto', toOpts('efecto', present.efecto))
+      renderDropdown('sabor', toOpts('sabor', present.sabor))
+    }
+
+    document.getElementById('gn-search').addEventListener('input', (e) => {
+      filters.q = e.target.value.trim().toLowerCase()
+      applyFilters()
+    })
+
+    /* ── Sesión ── */
+
+    function showContent(list) {
+      allGeneticas = list
+      document.getElementById('gn-login').hidden = true
+      document.getElementById('gn-content').hidden = false
+      buildFilters()
+      applyFilters()
+      startCarousel()
+    }
+
+    function showLoginError(message) {
+      const msg = document.getElementById('gn-login-msg')
+      msg.textContent = message
+      msg.hidden = false
+    }
+
+    async function loadGeneticas(email) {
+      const res = await fetch('/api/socios/geneticas', { credentials: 'include' })
+      if (!res.ok) return false
+      const data = await res.json()
+      showContent(data.geneticas || [])
+      return true
+    }
+
+    window.handleGoogleCredential = async (response) => {
+      try {
+        const res = await fetch('/api/socios/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ credential: response.credential }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.ok) {
+          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+          return
+        }
+        await loadGeneticas(data.email)
+      } catch (err) {
+        showLoginError('Error de red al verificar con Google.')
+      }
+    }
+
+    document.getElementById('gn-logout').addEventListener('click', async () => {
+      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+      location.reload()
+    })
+
+    if (googleClientId) {
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: window.handleGoogleCredential,
+        })
+        google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          theme: 'filled_black',
+          size: 'large',
+          text: 'signin_with',
+        })
+      }
+    } else {
+      showLoginError('Falta configurar el Google Client ID del sitio.')
+    }
+
+    loadGeneticas()
+  </script>
+</Layout>
+
+<style is:global>
+  /* ═══════════════════════════════════════════════
+     CARTA DE GENÉTICAS — Flora de noche
+     Violeta de marca al mando · verde bosque para datos
+     Fondo violeta profundo (#130d1c) · texto crema
+     Cormorant (serif de marca) en títulos y nombres · sin neón
+  ═══════════════════════════════════════════════ */
+
+  .gn-main {
+    --gn-bg:      #130d1c;  /* violeta casi negro (deriva del #381F56) */
+    --gn-card:    #1c1430;
+    --gn-card-2:  #251a3d;
+    --gn-line:    rgba(244, 241, 247, 0.1);
+    --gn-cream:   #f4f1f7;  /* texto principal */
+    --gn-muted:   rgba(244, 241, 247, 0.55);
+    --gn-violet:  #b79de6;  /* violeta de marca aclarado — voz de marca */
+    --gn-green:   #3cb492;  /* verde bosque (#0A503C) aclarado — dato vivo */
+    --gn-green-d: #0a503c;
+
+    min-height: 100svh;
+    background: var(--gn-bg);
+    font-family: var(--font-ui);
+    color: var(--gn-cream);
+    position: relative;
+  }
+
+  /* Atmósfera de marca, muy sutil */
+  .gn-main::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(55% 40% at 85% 0%, rgba(56, 31, 86, 0.45), transparent 70%),
+      radial-gradient(50% 35% at 5% 100%, rgba(10, 80, 60, 0.14), transparent 70%);
+    z-index: 0;
+  }
+  .gn-main > * { position: relative; z-index: 1; }
+
+  /* ── Marca ── */
+  .gn-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--gn-violet);
+  }
+  .gn-brand-leaf { width: 30px; height: 30px; }
+  .gn-brand-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gn-cream);
+  }
+  .gn-brand-name em {
+    font-style: normal;
+    color: var(--gn-violet);
+    font-weight: 600;
+  }
+
+  .gn-tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--gn-violet);
+    text-align: right;
+  }
+
+  /* Título de página en Cormorant, con palabra-acento en verde itálica */
+  .gn-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+    line-height: 1;
+    letter-spacing: 0.005em;
+    margin: 0;
+    color: var(--gn-cream);
+  }
+  .gn-title em {
+    font-style: italic;
+    color: var(--gn-green);
+  }
+
+  .gn-back {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gn-muted);
+    text-decoration: none;
+  }
+  .gn-back:hover { color: var(--gn-cream); }
+
+  /* ── Login ── */
+  .gn-login {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-m) var(--space-s);
+  }
+  .gn-login[hidden] { display: none; }
+
+  .gn-login-card {
+    width: 100%;
+    max-width: 500px;
+    background: var(--gn-card);
+    border: 1px solid var(--gn-line);
+    border-radius: 22px;
+    padding: clamp(30px, 4vw, 48px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  }
+  .gn-login-card .gn-title { font-size: clamp(2rem, 5vw, 2.9rem); }
+
+  .gn-sub {
+    line-height: 1.6;
+    color: var(--gn-muted);
+    font-size: 0.95rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .gn-msg {
+    color: var(--gn-violet);
+    font-size: 0.9rem;
+  }
+
+  /* ── Carta (fullscreen · carrusel) ── */
+  .gn-content {
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.1vh, 16px);
+    padding: clamp(12px, 1.6vh, 22px) clamp(14px, 2vw, 30px);
+    overflow: hidden;
+  }
+  .gn-content[hidden] { display: none; }
+
+  /* Barra superior slim */
+  .gn-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem clamp(1rem, 2vw, 2rem);
+    flex-wrap: wrap;
+  }
+  .gn-bar .gn-title {
+    font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+    line-height: 1;
+    flex: 1 1 auto;
+  }
+  .gn-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+  .gn-count { font-size: 0.8rem; color: var(--gn-muted); white-space: nowrap; }
+  .gn-count strong { font-size: 1.05rem; font-weight: 800; color: var(--gn-green); margin-right: 0.12rem; }
+  .gn-welcome {
+    font-size: 0.75rem; color: var(--gn-muted);
+    max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gn-logout {
+    background: none; border: 1px solid var(--gn-line); border-radius: 999px;
+    padding: 0.32rem 0.85rem; font-family: var(--font-ui); font-size: 0.76rem; font-weight: 600;
+    cursor: pointer; color: var(--gn-cream); white-space: nowrap; transition: border-color 0.15s ease;
+  }
+  .gn-logout:hover { border-color: var(--gn-violet); }
+
+  /* Filtros en una sola línea */
+  .gn-filters {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .gn-filters .gn-logout { margin-left: auto; }
+
+  .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
+  .gn-search-wrap svg {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px; color: var(--gn-muted); pointer-events: none;
+  }
+  .gn-search {
+    width: 100%; font-family: var(--font-ui); font-size: 0.82rem;
+    padding: 0.48rem 0.8rem 0.48rem 2.15rem;
+    border: 1px solid var(--gn-line); border-radius: 999px;
+    background: var(--gn-card); color: var(--gn-cream);
+  }
+  .gn-search::placeholder { color: rgba(244, 241, 247, 0.35); }
+  .gn-search:focus { outline: none; border-color: var(--gn-violet); }
+
+  /* Desplegables tildables (multi-selección) */
+  .gn-dd { position: relative; flex: 0 0 auto; }
+  .gn-dd[hidden] { display: none; }
+  .gn-dd-toggle {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+    color: var(--gn-cream); background: var(--gn-card);
+    border: 1px solid var(--gn-line); border-radius: 999px;
+    padding: 0.48rem 0.95rem; cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.3); }
+  .gn-dd-toggle.has-sel { border-color: var(--gn-violet); }
+  .gn-dd-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.15rem; height: 1.15rem; padding: 0 0.35rem;
+    font-size: 0.66rem; font-weight: 800; border-radius: 999px;
+    background: var(--gn-violet); color: #130d1c;
+  }
+  /* Estado "Todos": texto tenue, sin pastilla */
+  .gn-dd-count.is-all {
+    min-width: auto; height: auto; padding: 0;
+    background: none; color: var(--gn-muted);
+    font-size: 0.78rem; font-weight: 600;
+  }
+  .gn-dd-divider { height: 1px; background: var(--gn-line); margin: 0.35rem 0.3rem; }
+  .gn-dd-all { font-weight: 700; }
+  .gn-dd-chev { width: 12px; height: 12px; color: var(--gn-violet); transition: transform 0.18s ease; }
+  .gn-dd-toggle.is-open .gn-dd-chev { transform: rotate(180deg); }
+
+  .gn-dd-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+    min-width: 190px; max-height: min(58vh, 380px); overflow-y: auto;
+    background: var(--gn-card-2); border: 1px solid var(--gn-line);
+    border-radius: 14px; padding: 0.4rem;
+    box-shadow: 0 20px 48px -14px rgba(0, 0, 0, 0.75);
+  }
+  .gn-dd-panel[hidden] { display: none; }
+  .gn-dd-opt {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.45rem 0.6rem; border-radius: 9px; cursor: pointer;
+    font-size: 0.86rem; color: var(--gn-cream);
+    transition: background 0.12s ease;
+  }
+  .gn-dd-opt:hover { background: rgba(244, 241, 247, 0.06); }
+  .gn-dd-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .gn-dd-check {
+    width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0;
+    border: 1.6px solid rgba(244, 241, 247, 0.3);
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .gn-dd-opt input:checked + .gn-dd-check { background: var(--gn-violet); border-color: var(--gn-violet); }
+  .gn-dd-opt input:checked + .gn-dd-check::after {
+    content: ''; width: 5px; height: 9px;
+    border: solid #130d1c; border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-0.5px, -1px);
+  }
+  .gn-dd-opt input:focus-visible + .gn-dd-check { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
+
+  /* ── Sellos de formato sobre la foto (círculo sólido, solo icono) ── */
+  .gn-seal {
+    position: absolute;
+    top: 0.8rem;
+    z-index: 1;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 6px 18px -4px rgba(0, 0, 0, 0.7),
+      inset 0 0 0 1.7px rgba(255, 255, 255, 0.32);
+  }
+  .gn-seal svg { width: 28px; height: 28px; }
+  .gn-seal-flor { left: 0.8rem; background: var(--gn-green); color: #08160f; }
+  .gn-seal-preroll { right: 0.8rem; background: var(--gn-violet); color: #170c2b; }
+
+  /* ── Carrusel horizontal (marquesina) ── */
+  .gn-track {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    gap: clamp(0.9rem, 1.4vw, 1.4rem);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .gn-track::-webkit-scrollbar { display: none; }
+
+  .gn-item {
+    flex: 0 0 auto;
+    width: clamp(288px, 22vw, 380px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--gn-card);
+    border: 1px solid var(--gn-line);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  }
+  .gn-item:hover {
+    border-color: rgba(183, 157, 230, 0.4);
+    box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.85);
+  }
+
+  /* Hero: foto con el nombre montado sobre el degradé (mini-póster) */
+  .gn-item-hero {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 130px;
+    overflow: hidden;
+    background: var(--gn-card-2);
+  }
+  .gn-item-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .gn-item:hover .gn-item-img { transform: scale(1.05); }
+  .gn-item-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      transparent 32%,
+      rgba(19, 13, 28, 0.35) 55%,
+      rgba(19, 13, 28, 0.82) 80%,
+      var(--gn-card) 100%);
+  }
+  /* Placeholder de marca cuando no hay foto */
+  .gn-item-hero.is-nophoto {
+    background: linear-gradient(150deg, #2a1f47 0%, #17251d 100%);
+  }
+  .gn-item-watermark {
+    display: none;
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-60%);
+    width: 120px;
+    height: 120px;
+    color: var(--gn-cream);
+    opacity: 0.08;
+  }
+  .gn-item-hero.is-nophoto .gn-item-watermark { display: block; }
+  .gn-item-watermark svg { width: 100%; height: 100%; }
+
+  .gn-item-name {
+    position: absolute;
+    left: clamp(1rem, 2vw, 1.35rem);
+    right: clamp(1rem, 2vw, 1.35rem);
+    bottom: 0.7rem;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.9rem, 3vw, 2.5rem);
+    line-height: 1;
+    margin: 0;
+    color: var(--gn-cream);
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
+  }
+
+  .gn-item-body {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    padding: clamp(1rem, 1.6vw, 1.4rem);
+  }
+
+  /* "70% Sativa · 30% Índica | Silver River" */
+  .gn-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .gn-info .gn-gen { color: var(--gn-violet); }
+  .gn-info i { font-style: normal; color: var(--gn-violet); opacity: 0.7; }
+  .gn-info b { font-weight: 400; color: var(--gn-muted); }
+  .gn-info .gn-bank { color: var(--gn-green); }
+
+  .gn-rule {
+    display: block;
+    width: 64px;
+    height: 1px;
+    background: var(--gn-line);
+    margin: 0.8rem 0 1rem;
+  }
+
+  /* ── Medidores THC / CBD (lado a lado) ── */
+  .gn-meters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1.3rem;
+    margin-bottom: 1.1rem;
+  }
+  .gn-meter-label {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gn-violet);
+    margin-bottom: 0.05rem;
+  }
+  .gn-meter-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--gn-cream);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 0.35rem;
+  }
+  .gn-meter-num em { font-style: normal; font-size: 0.62em; font-weight: 600; }
+  .gn-meter-raw { color: var(--gn-muted); }
+
+  .gn-meter-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(244, 241, 247, 0.14);
+    overflow: visible;
+  }
+  .gn-meter-fill {
+    position: relative;
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--gn-violet), var(--gn-green));
+    animation: gn-fill 0.7s cubic-bezier(0.33, 1, 0.68, 1) 0.25s both;
+  }
+  @keyframes gn-fill { from { width: 0; } }
+  .gn-meter-knob {
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  }
+  .gn-meter-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--gn-muted);
+    margin-top: 0.42rem;
+  }
+
+  /* ── Secciones con círculos ── */
+  .gn-section { margin-bottom: 1.05rem; }
+  .gn-section:last-child { margin-bottom: 0.2rem; }
+
+  .gn-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gn-violet);
+    margin: 0 0 0.8rem;
+  }
+  .gn-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gn-line);
+  }
+
+  .gn-circle-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.7rem;
+    margin-top: 0.4rem;
+  }
+  .gn-circle-group {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .gn-circle-grouplabel {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gn-muted);
+    text-align: center;
+  }
+  .gn-circle-cluster {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .gn-circle-sep {
+    width: 1px;
+    background: var(--gn-line);
+    align-self: stretch;
+    flex-shrink: 0;
+  }
+  .gn-circle-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 82px;
+    text-align: center;
+  }
+  .gn-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(244, 241, 247, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gn-green);
+    flex-shrink: 0;
+  }
+  .gn-circle svg { width: 24px; height: 24px; }
+  .gn-circle-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--gn-cream);
+    opacity: 0.85;
+    line-height: 1.25;
+  }
+
+  /* ── Footer slim ── */
+  .gn-foot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    color: var(--gn-violet);
+    opacity: 0.8;
+  }
+  .gn-foot-text {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .gn-foot-leaf { width: 26px; height: 26px; flex-shrink: 0; color: var(--gn-green); }
+
+  .gn-empty { color: var(--gn-muted); }
+
+  /* Foco por teclado con identidad de marca */
+  .gn-sel:focus-visible,
+  .gn-search:focus-visible,
+  .gn-logout:focus-visible,
+  .gn-back:focus-visible {
+    outline: 2px solid var(--gn-violet);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gn-meter-fill, .gn-item-img { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 640px) {
+    .gn-bar .gn-title { display: none; }
+    .gn-welcome { display: none; }
+    .gn-item { width: 80vw; }
+    .gn-circle { width: 50px; height: 50px; }
+    .gn-circle svg { width: 22px; height: 22px; }
+  }
+</style>
