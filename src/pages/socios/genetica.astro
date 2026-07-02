@@ -120,13 +120,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // Medidor de cannabinoides: barra sin números. Sin dato → slot "—"
     // para que todas las tarjetas conserven la misma geometría.
+    // IMPORTANTE: THC y CBD comparten la misma escala dentro de la tarjeta,
+    // así los anchos relativos son comparables entre sí.
     function meter(label, rawValue, scaleMax) {
       const pct = parsePct(rawValue)
       if (pct === null) {
         return `<div class="gn-meter"><span class="gn-meter-label">${label}</span><span class="gn-meter-raw">—</span></div>`
       }
-      const max = scaleMax ?? (pct <= 5 ? 5 : pct <= 20 ? 20 : 30)
-      const w = Math.min(100, Math.max(3, (pct / max) * 100))
+      const w = Math.min(100, Math.max(3, (pct / scaleMax) * 100))
       return `
         <div class="gn-meter">
           <span class="gn-meter-label">${label}</span>
@@ -181,7 +182,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       // (URL cargada desde el admin) tiene prioridad.
       const fotoSrc = g.foto || (g.id ? `/socios/geneticas/${g.id}.webp` : '')
       const delay = Math.min(idx || 0, 8) * 45
-      const thcMax = parsePct(g.thc) !== null && parsePct(g.thc) <= 5 ? 5 : 30
+      // Escala compartida THC/CBD: 0-30 salvo que ambos sean bajos (0-5)
+      const vThc = parsePct(g.thc) ?? 0
+      const vCbd = parsePct(g.cbd) ?? 0
+      const scaleMax = Math.max(vThc, vCbd) <= 5 ? 5 : 30
       // Sellos circulares: Flores (izquierda) y Preroll (derecha), solo icono.
       const seals = formatosDe(g)
         .map((f) => FORMATO[f] ? `<span class="gn-seal gn-seal-${f}" title="${FORMATO[f].label}" aria-label="${FORMATO[f].label}">${FORMATO[f].svg}</span>` : '')
@@ -197,8 +201,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div class="gn-item-body">
             ${infoLine(g)}
             <div class="gn-meters">
-              ${meter('THC', g.thc, thcMax)}
-              ${meter('CBD', g.cbd, 5)}
+              ${meter('THC', g.thc, scaleMax)}
+              ${meter('CBD', g.cbd, scaleMax)}
             </div>
             ${circleStrip(g)}
           </div>
