@@ -98,43 +98,39 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return m ? Number(m[1]) : null
     }
 
-    // 22 → "22%" · 23.5 → "23,5%" · 0.28 → "<1%"
-    function fmtPct(n) {
-      if (n < 1) return '&lt;1<em>%</em>'
-      const v = Number.isInteger(n) ? String(n) : String(n).replace('.', ',')
-      return `${v}<em>%</em>`
-    }
-
     /* ── Piezas de la tarjeta ── */
 
-    // "70% Sativa · 30% Índica | Silver River"
-    function infoLine(g) {
+    // Predominancia genética sin números: "Sativa predominante | Silver River"
+    function predGenetica(g) {
       const p = parsePredominancia(g.predominancia)
-      const gen = p
-        ? `<span class="gn-gen">${p.sativa}% Sativa</span><i>·</i><span class="gn-gen">${p.indica}% Índica</span>`
-        : `<span class="gn-gen">${escapeHtml(TIPO_LABEL[g.tipo] || g.tipo || '')}</span>`
+      if (p) {
+        if (p.sativa >= 57) return 'Sativa predominante'
+        if (p.sativa <= 43) return 'Índica predominante'
+        return 'Híbrida equilibrada'
+      }
+      return TIPO_LABEL[g.tipo] || g.tipo || ''
+    }
+
+    function infoLine(g) {
+      const gen = `<span class="gn-gen">${escapeHtml(predGenetica(g))}</span>`
       const banco = g.banco ? `<b>|</b><span class="gn-bank">${escapeHtml(g.banco)}</span>` : ''
       return `<p class="gn-info">${gen}${banco}</p><span class="gn-rule"></span>`
     }
 
-    // Medidor: etiqueta, número y barra con perilla + escala. Sin dato → slot "—"
-    // para que todas las tarjetas conserven la misma geometría.
-    function meter(label, rawValue, scaleMax) {
-      if (rawValue == null || rawValue === '') {
-        return `<div class="gn-meter"><span class="gn-meter-label">${label}</span><span class="gn-meter-num gn-meter-raw">—</span></div>`
-      }
-      const pct = parsePct(rawValue)
-      if (pct === null) {
-        return `<div class="gn-meter"><span class="gn-meter-label">${label}</span><span class="gn-meter-num gn-meter-raw">${escapeHtml(String(rawValue))}</span></div>`
-      }
-      const max = scaleMax ?? (pct <= 5 ? 5 : pct <= 20 ? 20 : 30)
-      const w = Math.min(100, (pct / max) * 100)
+    // Perfil de cannabinoides como predominancia (sin porcentajes).
+    // Misma geometría en todas las tarjetas; sin dato → "—".
+    function perfil(g) {
+      const thc = parsePct(g.thc)
+      const cbd = parsePct(g.cbd)
+      let val
+      if (thc === null && cbd === null) val = '—'
+      else if (cbd === null || cbd < 1 || (thc !== null && thc >= cbd * 2)) val = 'THC predominante'
+      else if (thc === null || thc < 1 || cbd >= thc * 2) val = 'CBD predominante'
+      else val = 'THC · CBD equilibrado'
       return `
-        <div class="gn-meter">
-          <span class="gn-meter-label">${label}</span>
-          <span class="gn-meter-num">${fmtPct(pct)}</span>
-          <div class="gn-meter-track"><span class="gn-meter-fill" style="width:${w}%"><i class="gn-meter-knob"></i></span></div>
-          <div class="gn-meter-scale"><span>0%</span><span>${max}%</span></div>
+        <div class="gn-perfil">
+          <span class="gn-perfil-label">Perfil</span>
+          <span class="gn-perfil-val${val === '—' ? ' gn-perfil-raw' : ''}">${val}</span>
         </div>`
     }
 
@@ -185,7 +181,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       // (URL cargada desde el admin) tiene prioridad.
       const fotoSrc = g.foto || (g.id ? `/socios/geneticas/${g.id}.webp` : '')
       const delay = Math.min(idx || 0, 8) * 45
-      const thcMax = parsePct(g.thc) !== null && parsePct(g.thc) <= 5 ? 5 : 30
       // Sellos circulares: Flores (izquierda) y Preroll (derecha), solo icono.
       const seals = formatosDe(g)
         .map((f) => FORMATO[f] ? `<span class="gn-seal gn-seal-${f}" title="${FORMATO[f].label}" aria-label="${FORMATO[f].label}">${FORMATO[f].svg}</span>` : '')
@@ -200,10 +195,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           </div>
           <div class="gn-item-body">
             ${infoLine(g)}
-            <div class="gn-meters">
-              ${meter('THC', g.thc, thcMax)}
-              ${meter('CBD', g.cbd, 5)}
-            </div>
+            ${perfil(g)}
             ${circleStrip(g)}
           </div>
         </article>`
@@ -954,68 +946,27 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   /* ── Medidores THC / CBD (lado a lado) ── */
-  .gn-meters {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem 1.3rem;
+  /* ── Perfil de cannabinoides (predominancia, sin números) ── */
+  .gn-perfil {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
     margin-bottom: 1.1rem;
   }
-  .gn-meter-label {
-    display: block;
+  .gn-perfil-label {
     font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--gn-violet);
-    margin-bottom: 0.05rem;
   }
-  .gn-meter-num {
-    display: block;
-    font-size: 1.35rem;
+  .gn-perfil-val {
+    font-size: 1.05rem;
     font-weight: 700;
-    line-height: 1.05;
     letter-spacing: -0.01em;
     color: var(--gn-cream);
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 0.35rem;
   }
-  .gn-meter-num em { font-style: normal; font-size: 0.62em; font-weight: 600; }
-  .gn-meter-raw { color: var(--gn-muted); }
-
-  .gn-meter-track {
-    height: 6px;
-    border-radius: 999px;
-    background: rgba(244, 241, 247, 0.14);
-    overflow: visible;
-  }
-  .gn-meter-fill {
-    position: relative;
-    display: block;
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--gn-violet), var(--gn-green));
-    animation: gn-fill 0.7s cubic-bezier(0.33, 1, 0.68, 1) 0.25s both;
-  }
-  @keyframes gn-fill { from { width: 0; } }
-  .gn-meter-knob {
-    position: absolute;
-    right: -7px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
-  }
-  .gn-meter-scale {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--gn-muted);
-    margin-top: 0.42rem;
-  }
+  .gn-perfil-raw { color: var(--gn-muted); }
 
   /* ── Secciones con círculos ── */
   .gn-section { margin-bottom: 1.05rem; }
@@ -1132,7 +1083,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .gn-meter-fill, .gn-item-img { animation: none !important; transition: none !important; }
+    .gn-item-img { animation: none !important; transition: none !important; }
   }
 
   @media (max-width: 640px) {
