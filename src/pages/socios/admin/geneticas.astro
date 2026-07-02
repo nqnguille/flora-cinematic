@@ -32,12 +32,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
         <!-- ── Pestaña Genéticas ── -->
         <div id="tab-geneticas" class="ad-tab-panel">
-          <p class="ad-help">
-            Tildá <strong>«Disponible este mes»</strong> en las genéticas que hay en stock ahora.
-            Solo esas se muestran en la carta pública. Los cambios no se guardan hasta que apretés
-            <strong>«Guardar cambios»</strong>.
-          </p>
-          <div id="ad-list" class="ad-list"></div>
+          <div class="ad-toolbar">
+            <div class="ad-availfilter" role="group" aria-label="Filtrar por disponibilidad">
+              <button class="ad-avail is-active" data-avail="" type="button">Todas</button>
+              <button class="ad-avail" data-avail="on" type="button">Disponibles</button>
+              <button class="ad-avail" data-avail="off" type="button">No disponibles</button>
+            </div>
+            <input id="ad-search" class="ad-input ad-search" type="search" placeholder="Buscar por nombre…" autocomplete="off" />
+            <span id="ad-count" class="ad-count"></span>
+          </div>
+
+          <div class="ad-genscroll">
+            <div class="ad-rows-head">
+              <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
+              <span>Predominancia</span><span>THC</span><span>CBD</span>
+              <span>Formato</span><span>Sabor</span><span>Efecto</span><span>Foto</span><span></span>
+            </div>
+            <div id="ad-list" class="ad-rows"></div>
+          </div>
           <button id="ad-add" type="button" class="ad-btn ad-btn-ghost">+ Agregar genética</button>
 
           <div class="ad-savebar">
@@ -74,148 +86,163 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
     }
 
-    function tagPickerHtml(category, selected, idx) {
-      const items = window.FLORA_TAG_ICONS[category]
-      return Object.entries(items)
-        .map(([key, def]) => {
-          const checked = selected.includes(key) ? 'checked' : ''
-          return `
-          <label class="ad-tag ${checked ? 'is-checked' : ''}">
-            <input type="checkbox" data-idx="${idx}" data-cat="${category}" value="${key}" ${checked} />
-            <span class="ad-tag-icon">${def.svg}</span>
-            <span>${esc(def.label)}</span>
-          </label>`
-        })
-        .join('')
-    }
+    function tipoLabel(t) { return t === 'hibrida' ? 'Híbrida' : t === 'cbd' ? 'Full CBD' : t[0].toUpperCase() + t.slice(1) }
 
     function bancoOptionsHtml(current) {
       const bancos = window.FLORA_BANCOS
       return Object.entries(bancos)
         .map(([slug, b]) => `<option value="${slug}" ${slug === current ? 'selected' : ''}>${esc(b.nombre)}</option>`)
-        .join('') + `<option value="" ${!(current in bancos) ? 'selected' : ''}>Otro / no listado</option>`
+        .join('') + `<option value="" ${!(current in bancos) ? 'selected' : ''}>Otro</option>`
+    }
+
+    // ── Desplegable tildable (formato / sabor / efecto) ──
+    const DD_LABEL = { formato: 'Formato', sabor: 'Sabor', efecto: 'Efecto' }
+    function ddOptions(dim) {
+      if (dim === 'formato') return [['flor', 'Flor a granel', ''], ['preroll', 'Preroll 1g', '']]
+      const cat = window.FLORA_TAG_ICONS[dim] || {}
+      return Object.entries(cat).map(([k, def]) => [k, def.label, def.svg])
+    }
+    function ddHtml(dim, idx, selected) {
+      const sel = selected || []
+      const opts = ddOptions(dim).map(([val, lab, icon]) => {
+        const on = sel.includes(val)
+        return `<label class="ad-ddopt ${on ? 'is-on' : ''}"><input type="checkbox" data-dd="${dim}" data-idx="${idx}" value="${esc(val)}" ${on ? 'checked' : ''} />${icon ? `<span class="ad-ddicon">${icon}</span>` : ''}<span>${esc(lab)}</span></label>`
+      }).join('')
+      const n = sel.length
+      return `<div class="ad-dd" data-ddwrap="${dim}-${idx}">
+        <button type="button" class="ad-dd-toggle ${n ? 'has' : ''}"><span class="ad-dd-txt">${DD_LABEL[dim]}${n ? ` · ${n}` : ''}</span><svg class="ad-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="ad-dd-panel" hidden>${opts}</div>
+      </div>`
+    }
+    function updateDd(i, dim) {
+      const wrap = document.querySelector(`[data-ddwrap="${dim}-${i}"]`)
+      if (!wrap) return
+      const key = dim === 'formato' ? 'formatos' : dim === 'sabor' ? 'sabores' : 'efectos'
+      const sel = CATALOG[i][key] || []
+      wrap.querySelector('.ad-dd-txt').textContent = DD_LABEL[dim] + (sel.length ? ` · ${sel.length}` : '')
+      wrap.querySelector('.ad-dd-toggle').classList.toggle('has', sel.length > 0)
+      wrap.querySelectorAll('.ad-ddopt').forEach((opt) => opt.classList.toggle('is-on', opt.querySelector('input').checked))
     }
 
     function rowHtml(g, idx) {
+      const fotoSrc = g.foto || (g.id ? `/socios/geneticas/${g.id}.webp` : '')
       return `
-      <article class="ad-card" data-idx="${idx}">
-        <div class="ad-card-top">
-          <input class="ad-input ad-input-nombre" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre de la genética" />
-          <label class="ad-activo">
-            <input type="checkbox" data-field="activo" data-idx="${idx}" ${g.activo ? 'checked' : ''} />
-            Disponible este mes
-          </label>
-          <button type="button" class="ad-del" data-idx="${idx}" aria-label="Eliminar">×</button>
+      <div class="ad-row" data-idx="${idx}">
+        <label class="ad-avail-toggle" title="Disponible en la carta">
+          <input type="checkbox" data-field="activo" data-idx="${idx}" ${g.activo ? 'checked' : ''} />
+        </label>
+        <input class="ad-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" />
+        <select class="ad-input" data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
+        <select class="ad-input" data-field="tipo" data-idx="${idx}">${['sativa', 'indica', 'hibrida', 'cbd'].map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${tipoLabel(t)}</option>`).join('')}</select>
+        <input class="ad-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% S | 30% I" />
+        <input class="ad-input ad-cell-num" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="THC" />
+        <input class="ad-input ad-cell-num" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="CBD" />
+        ${ddHtml('formato', idx, g.formatos && g.formatos.length ? g.formatos : ['flor'])}
+        ${ddHtml('sabor', idx, g.sabores || [])}
+        ${ddHtml('efecto', idx, g.efectos || [])}
+        <div class="ad-foto">
+          <div class="ad-foto-thumb">${fotoSrc ? `<img src="${esc(fotoSrc)}" alt="" onerror="this.remove()" />` : ''}</div>
+          <input type="file" accept="image/jpeg,image/png,image/webp" id="ad-foto-${idx}" class="ad-foto-input" data-foto-idx="${idx}" hidden />
+          <label for="ad-foto-${idx}" class="ad-foto-btn" title="Subir imagen">📷</label>
+          <span class="ad-foto-status" data-fotostatus-idx="${idx}"></span>
         </div>
-
-        <div class="ad-formatos">
-          <span class="ad-formatos-label">Formato disponible</span>
-          <label class="ad-fmt ${(g.formatos || ['flor']).includes('flor') ? 'is-on' : ''}">
-            <input type="checkbox" data-fmt="flor" data-idx="${idx}" ${(g.formatos || ['flor']).includes('flor') ? 'checked' : ''} />
-            Flor (a granel)
-          </label>
-          <label class="ad-fmt ${(g.formatos || []).includes('preroll') ? 'is-on' : ''}">
-            <input type="checkbox" data-fmt="preroll" data-idx="${idx}" ${(g.formatos || []).includes('preroll') ? 'checked' : ''} />
-            Preroll (1g)
-          </label>
-        </div>
-
-        <div class="ad-grid">
-          <label class="ad-field">
-            <span>Banco</span>
-            <select data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
-          </label>
-          <label class="ad-field">
-            <span>Tipo</span>
-            <select data-field="tipo" data-idx="${idx}">
-              ${['sativa', 'indica', 'hibrida', 'cbd']
-                .map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${t === 'hibrida' ? 'Híbrida' : t === 'cbd' ? 'Full CBD' : t[0].toUpperCase() + t.slice(1)}</option>`)
-                .join('')}
-            </select>
-          </label>
-          <label class="ad-field">
-            <span>Predominancia</span>
-            <input class="ad-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% Sativa | 30% Indica" />
-          </label>
-          <label class="ad-field">
-            <span>THC</span>
-            <input class="ad-input" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="25% THC" />
-          </label>
-          <label class="ad-field">
-            <span>CBD</span>
-            <input class="ad-input" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="1% CBD" />
-          </label>
-          <div class="ad-field ad-field-wide">
-            <span>Foto</span>
-            <div class="ad-foto">
-              <div class="ad-foto-thumb">${(g.foto || g.id) ? `<img src="${esc(g.foto || `/socios/geneticas/${g.id}.webp`)}" alt="" onerror="this.remove()" />` : ''}</div>
-              <input type="file" accept="image/jpeg,image/png,image/webp" id="ad-foto-${idx}" class="ad-foto-input" data-foto-idx="${idx}" hidden />
-              <label for="ad-foto-${idx}" class="ad-foto-btn">Subir imagen</label>
-              ${g.foto ? `<button type="button" class="ad-foto-clear" data-fotoclear-idx="${idx}">Quitar</button>` : ''}
-              <span class="ad-foto-status" data-fotostatus-idx="${idx}"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="ad-tags-block">
-          <span class="ad-tags-label">Sabor / aroma (elegí hasta 2)</span>
-          <div class="ad-tags">${tagPickerHtml('sabor', g.sabores || [], idx)}</div>
-        </div>
-        <div class="ad-tags-block">
-          <span class="ad-tags-label">Efecto (elegí hasta 2)</span>
-          <div class="ad-tags">${tagPickerHtml('efecto', g.efectos || [], idx)}</div>
-        </div>
-      </article>`
+        <button type="button" class="ad-del" data-idx="${idx}" aria-label="Eliminar">×</button>
+      </div>`
     }
 
+    let availFilter = ''
+    let searchQ = ''
+    function updateCount() {
+      const disp = CATALOG.filter((g) => g.activo).length
+      const el = document.getElementById('ad-count')
+      if (el) el.textContent = `${disp} disponible(s) · ${CATALOG.length} en total`
+    }
     function render() {
-      document.getElementById('ad-list').innerHTML = CATALOG.map(rowHtml).join('')
+      const q = searchQ.toLowerCase()
+      const html = CATALOG.map((g, i) => {
+        if (availFilter === 'on' && !g.activo) return ''
+        if (availFilter === 'off' && g.activo) return ''
+        if (q && !String(g.nombre || '').toLowerCase().includes(q)) return ''
+        return rowHtml(g, i)
+      }).join('')
+      document.getElementById('ad-list').innerHTML = html || '<p class="ad-empty">Ninguna genética coincide con el filtro.</p>'
+      updateCount()
     }
 
     function slugify(s) {
-      return String(s)
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+      return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     }
 
+    let statusTimer = null
+    function flashStatus(msg) {
+      const el = document.getElementById('ad-save-status')
+      el.textContent = msg
+      clearTimeout(statusTimer)
+      statusTimer = setTimeout(() => (el.textContent = ''), 3000)
+    }
+    async function autoSaveActivo(i) {
+      const g = CATALOG[i]
+      if (!g.id || String(g.id).startsWith('nueva-')) { flashStatus('Guardá para aplicar la disponibilidad'); return }
+      try {
+        const res = await fetch('/api/socios/admin/geneticas', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ id: g.id, activo: g.activo }),
+        })
+        flashStatus(res.ok ? 'Disponibilidad guardada ✓' : 'Error al guardar')
+      } catch { flashStatus('Error de red') }
+    }
+
+    // Filtros del panel (disponibilidad + buscador)
+    document.querySelectorAll('.ad-avail').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.ad-avail').forEach((x) => x.classList.remove('is-active'))
+      b.classList.add('is-active'); availFilter = b.dataset.avail; render()
+    }))
+    document.getElementById('ad-search').addEventListener('input', (e) => { searchQ = e.target.value.trim(); render() })
+
+    // Edición de campos + dropdowns + toggle disponible (autoguardado)
     document.addEventListener('input', (e) => {
       const t = e.target
       const idx = t.getAttribute('data-idx')
       if (idx === null) return
       const i = Number(idx)
       const field = t.getAttribute('data-field')
-      const cat = t.getAttribute('data-cat')
+      const dd = t.getAttribute('data-dd')
 
-      const fmt = t.getAttribute('data-fmt')
-
-      if (fmt) {
-        let arr = Array.isArray(CATALOG[i].formatos) ? [...CATALOG[i].formatos] : ['flor']
-        if (t.checked) { if (!arr.includes(fmt)) arr.push(fmt) }
-        else arr = arr.filter((v) => v !== fmt)
-        CATALOG[i].formatos = arr
-        t.closest('.ad-fmt').classList.toggle('is-on', t.checked)
-      } else if (field === 'activo') {
-        CATALOG[i].activo = t.checked
-      } else if (field) {
-        CATALOG[i][field] = t.value
-      } else if (cat) {
-        const key = cat === 'sabor' ? 'sabores' : 'efectos'
-        let arr = CATALOG[i][key] || []
+      if (dd) {
+        const key = dd === 'formato' ? 'formatos' : dd === 'sabor' ? 'sabores' : 'efectos'
+        const max = dd === 'formato' ? 99 : 2
+        let arr = Array.isArray(CATALOG[i][key]) ? [...CATALOG[i][key]] : []
         if (t.checked) {
-          if (arr.length >= 2) {
-            t.checked = false
-            return
-          }
-          arr = [...arr, t.value]
+          if (arr.length >= max) { t.checked = false; return }
+          if (!arr.includes(t.value)) arr.push(t.value)
         } else {
           arr = arr.filter((v) => v !== t.value)
         }
         CATALOG[i][key] = arr
-        render()
+        updateDd(i, dd)
+      } else if (field === 'activo') {
+        CATALOG[i].activo = t.checked
+        autoSaveActivo(i)
+        updateCount()
+        if (availFilter) render()
+      } else if (field) {
+        CATALOG[i][field] = t.value
       }
+    })
+
+    // Abrir/cerrar los desplegables tildables
+    document.addEventListener('click', (e) => {
+      const tgl = e.target.closest('.ad-dd-toggle')
+      const panels = document.querySelectorAll('.ad-dd-panel')
+      if (tgl) {
+        const panel = tgl.nextElementSibling
+        const willOpen = panel.hidden
+        panels.forEach((p) => { if (p !== panel) { p.hidden = true; p.previousElementSibling.classList.remove('open') } })
+        panel.hidden = !willOpen
+        tgl.classList.toggle('open', willOpen)
+        return
+      }
+      if (!e.target.closest('.ad-dd-panel')) panels.forEach((p) => { p.hidden = true; p.previousElementSibling.classList.remove('open') })
     })
 
     document.addEventListener('click', (e) => {
@@ -489,7 +516,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   html, body { background-color: #130d1c; }
 
-  .ad-wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; }
+  .ad-wrap { position: relative; z-index: 1; max-width: 1460px; margin: 0 auto; }
 
   .ad-eyebrow {
     display: inline-flex; align-items: center; gap: 0.5rem;
@@ -630,6 +657,75 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .ad-tab.is-active { color: var(--ad-cream); border-bottom-color: var(--ad-violet); }
   .ad-tab[hidden] { display: none; }
   .ad-tab-panel[hidden] { display: none; }
+
+  /* ── Genéticas: toolbar (filtros + buscador) ── */
+  .ad-toolbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .ad-availfilter { display: flex; gap: 0.3rem; }
+  .ad-avail {
+    background: none; border: 1px solid var(--ad-line); border-radius: 999px;
+    padding: 0.42rem 0.95rem; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+    color: var(--ad-muted); cursor: pointer;
+  }
+  .ad-avail:hover { color: var(--ad-cream); }
+  .ad-avail.is-active { background: var(--ad-violet); border-color: var(--ad-violet); color: #130d1c; }
+  .ad-search { width: auto; flex: 1 1 220px; max-width: 320px; }
+  .ad-count { font-size: 0.8rem; color: var(--ad-muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── Filas de una línea ── */
+  .ad-genscroll { overflow: visible; }
+  .ad-rows-head, .ad-row {
+    display: grid;
+    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px minmax(120px, 1.2fr) 60px 60px 104px 104px 104px 76px 32px;
+    gap: 0.4rem;
+    align-items: center;
+    min-width: 1080px;
+  }
+  .ad-rows-head {
+    padding: 0 0.2rem 0.5rem;
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ad-muted); border-bottom: 1px solid var(--ad-line);
+  }
+  .ad-rows { display: flex; flex-direction: column; }
+  .ad-row { padding: 0.45rem 0.2rem; border-bottom: 1px solid var(--ad-line); }
+  .ad-row:hover { background: rgba(244, 241, 247, 0.02); }
+  .ad-row .ad-input { padding: 0.42rem 0.55rem; font-size: 0.82rem; border-radius: 8px; min-width: 0; }
+  .ad-cell-num { text-align: center; }
+  .ad-avail-toggle { display: flex; align-items: center; justify-content: center; }
+  .ad-avail-toggle input { width: 20px; height: 20px; cursor: pointer; }
+  .ad-empty { color: var(--ad-muted); padding: 1.4rem 0.3rem; min-width: auto; }
+
+  /* Foto compacta en la fila */
+  .ad-row .ad-foto { flex-wrap: nowrap; gap: 0.3rem; align-items: center; }
+  .ad-row .ad-foto-thumb { width: 42px; height: 30px; border-radius: 6px; }
+  .ad-row .ad-foto-btn { padding: 0.3rem 0.45rem; font-size: 1rem; line-height: 1; border-radius: 8px; }
+
+  /* ── Desplegable tildable (formato/sabor/efecto) ── */
+  .ad-dd { position: relative; min-width: 0; }
+  .ad-dd-toggle {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;
+    background: var(--ad-card-2); border: 1px solid var(--ad-line); border-radius: 8px;
+    padding: 0.42rem 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--ad-cream); cursor: pointer;
+  }
+  .ad-dd-toggle.has { border-color: var(--ad-violet); }
+  .ad-dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ad-dd-chev { width: 12px; height: 12px; color: var(--ad-violet); flex-shrink: 0; transition: transform 0.15s ease; }
+  .ad-dd-toggle.open .ad-dd-chev { transform: rotate(180deg); }
+  .ad-dd-panel {
+    position: absolute; top: calc(100% + 4px); left: 0; z-index: 40;
+    min-width: 210px; max-height: 320px; overflow-y: auto;
+    background: var(--ad-card-2); border: 1px solid var(--ad-line); border-radius: 12px; padding: 0.35rem;
+    box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.8);
+  }
+  .ad-dd-panel[hidden] { display: none; }
+  .ad-ddopt {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.42rem 0.5rem; border-radius: 8px;
+    font-size: 0.82rem; color: var(--ad-muted); cursor: pointer;
+  }
+  .ad-ddopt:hover { background: rgba(244, 241, 247, 0.05); }
+  .ad-ddopt.is-on { color: var(--ad-cream); }
+  .ad-ddopt input { accent-color: var(--ad-violet); flex-shrink: 0; }
+  .ad-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--ad-violet); flex-shrink: 0; }
+  .ad-ddicon svg { width: 100%; height: 100%; }
 
   /* ── Subida de foto ── */
   .ad-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
