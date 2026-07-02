@@ -1013,28 +1013,6 @@ function initPerfilesCarousel() {
   updateArrows()
 }
 
-// ── Acceso: selector de cantidad de material vegetal ──
-function initAcceso() {
-  const picker = document.querySelector<HTMLElement>('.fl-acceso-picker')
-  if (!picker) return
-  const buttons = Array.from(picker.querySelectorAll<HTMLButtonElement>('.fl-amount'))
-  const amountEl = picker.querySelector<HTMLElement>('[data-acceso-amount]')
-  const cta = picker.querySelector<HTMLAnchorElement>('[data-acceso-cta]')
-
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      buttons.forEach((b) => {
-        b.classList.remove('is-active')
-        b.setAttribute('aria-pressed', 'false')
-      })
-      btn.classList.add('is-active')
-      btn.setAttribute('aria-pressed', 'true')
-      if (amountEl && btn.dataset.g) amountEl.textContent = btn.dataset.g
-      if (cta && btn.dataset.wa) cta.setAttribute('href', btn.dataset.wa)
-    })
-  })
-}
-
 function init() {
   initLoader()
   initNav()
@@ -1051,7 +1029,6 @@ function init() {
   initWelcome()
   initReveal()
   initPerfilesCarousel()
-  initAcceso()
   animateSplitWords()
   initClipReveal()
   initFadeIn()

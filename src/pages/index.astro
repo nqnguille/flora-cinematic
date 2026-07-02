@@ -211,15 +211,9 @@ const legales = [
   },
 ]
 
-// Acceso a material vegetal — cultivo solidario. Lo único que varía es la cantidad
-// (gramos por mes). Mismo acompañamiento y variedades para todos. Sugerimos empezar
-// por la cantidad más baja (10 g).
-const accesoAmounts = [
-  { g: '10', wa: wa('Hola Flora, quiero acceder al material vegetal: 10 g por mes. ¿Me orientan para empezar?') },
-  { g: '20', wa: wa('Hola Flora, quiero acceder al material vegetal: 20 g por mes. ¿Me orientan?') },
-  { g: '30', wa: wa('Hola Flora, quiero acceder al material vegetal: 30 g por mes. ¿Me orientan?') },
-  { g: '40', wa: wa('Hola Flora, quiero acceder al material vegetal: 40 g por mes. ¿Me orientan?') },
-]
+// Acceso a material vegetal — cultivo solidario. La cantidad (10 a 40 g por mes)
+// se elige una vez adentro, por WhatsApp. Mismo acompañamiento y variedades para todos.
+const accesoWa = wa('Hola Flora, quiero acceder al material vegetal. ¿Me orientan para empezar?')
 
 const steps = [
   {
@@ -686,44 +680,20 @@ const igFallback = [
           nosotros, con genéticas que rotan cada mes, y tu aporte mensual mantiene viva
           cada planta.
         </p>
-      </div>
 
-      <div class="fl-acceso-cols">
-        <div class="fl-acceso-picker">
-          <span class="fl-acceso-q">¿Cuánto necesitás por mes?</span>
-
-          <div class="fl-amounts" role="group" aria-label="Cantidad de material vegetal por mes">
-            {accesoAmounts.map((a, i) => (
-              <button
-                type="button"
-                class={i === 0 ? 'fl-amount is-active' : 'fl-amount'}
-                data-g={a.g}
-                data-wa={a.wa}
-                aria-pressed={i === 0 ? 'true' : 'false'}
-              >
-                {a.g}<span>g</span>
-              </button>
-            ))}
-          </div>
-
-          <p class="fl-acceso-detail">
-            <span data-acceso-amount>10</span>&nbsp;g por mes ·
-            mismo cuidado y variedades para todos.
-          </p>
-
-          <div class="fl-acceso-ctas">
-            <a class="fl-acceso-cta" data-acceso-cta href={accesoAmounts[0].wa} target="_blank" rel="noopener noreferrer">
-              Quiero acceder <span aria-hidden="true">→</span>
-            </a>
-          </div>
-
-          <p class="fl-acceso-note">
-            El aporte arranca en <strong>$170.000</strong> por mes y sube con la cantidad;
-            lo vemos con vos. Te sugerimos empezar por la más baja. Para acceder necesitás tu REPROCANN: si todavía no lo tenés, <a href="#entrevista" class="fl-acceso-link">empezá por la entrevista</a>.
-          </p>
+        <div class="fl-acceso-ctas">
+          <a class="fl-acceso-cta" href={accesoWa} target="_blank" rel="noopener noreferrer">
+            Quiero acceder <span aria-hidden="true">→</span>
+          </a>
         </div>
 
-        <div class="fl-carta" aria-label="La carta de genéticas de este mes">
+        <p class="fl-acceso-note">
+          De 10 a 40&nbsp;g por mes; el aporte arranca en <strong>$170.000</strong> y sube con la cantidad,
+          lo vemos con vos. Para acceder necesitás tu REPROCANN: si todavía no lo tenés, <a href="#entrevista" class="fl-acceso-link">empezá por la entrevista</a>.
+        </p>
+      </div>
+
+      <div class="fl-carta" aria-label="La carta de genéticas de este mes">
           <p class="fl-carta-label">La carta de este mes</p>
           <div class="fl-carta-grid" role="list">
             {[
@@ -747,7 +717,6 @@ const igFallback = [
             </a>
             <p class="fl-carta-note">La carta rota cada mes, con su cromatografía.</p>
           </div>
-        </div>
       </div>
     </div>
   </section>
