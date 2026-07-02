@@ -3211,11 +3211,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
   padding-top: clamp(64px, 9vw, 110px); padding-bottom: clamp(64px, 9vw, 110px);
 }
 .fl-acceso-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-/* Scrim de bordes: oscurece arriba y abajo (donde vive el contenido)
-   y deja el centro del fotograma limpio para el video */
+/* Scrim superior: oscurece solo la franja de arriba (donde vive el
+   contenido); el resto del fotograma queda limpio para el video */
 .fl-acceso-scrim {
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(180deg, rgba(12,8,17,0.6) 0%, rgba(15,10,20,0.12) 32%, rgba(15,10,20,0.08) 58%, rgba(12,8,17,0.68) 100%);
+  background: linear-gradient(180deg, rgba(12,8,17,0.68) 0%, rgba(15,10,20,0.42) 38%, rgba(15,10,20,0.08) 68%, rgba(12,8,17,0.18) 100%);
 }
 .fl-acceso-content { position: relative; z-index: 2; max-width: 1200px; width: 100%; }
 .fl-acceso-head { text-align: center; }
@@ -3228,30 +3228,29 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-head .fl-title { color: #fff; margin-left: auto; margin-right: auto; max-width: 18ch; text-shadow: 0 2px 28px rgba(0,0,0,0.6); }
 .fl-acceso-head .fl-title em { color: var(--leaf, #71CE6A); }
 .fl-acceso-story, .fl-acceso-note { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
-.fl-acceso-story { font-family: var(--font-ui); font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 40px auto 0; }
-.fl-acceso-foot-text { text-align: center; }
+.fl-acceso-story { font-family: var(--font-ui); font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
+.fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
 
-/* Desktop: fotograma 16:9 con el centro vacío — título arriba,
-   historia + CTAs abajo, video protagonista en el medio */
+/* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
+   el resto del cuadro queda libre para el video */
 @media (min-width: 881px) {
   .fl-acceso {
     aspect-ratio: 16 / 9;
-    display: flex; align-items: stretch;
     padding-top: 0; padding-bottom: 0;
   }
   .fl-acceso-content {
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding-top: clamp(48px, 6vh, 80px); padding-bottom: clamp(40px, 5vh, 64px);
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: clamp(32px, 5vw, 72px);
+    padding-top: clamp(40px, 5.5vh, 72px);
   }
   .fl-acceso-head { text-align: left; }
   .fl-acceso-head .fl-title { margin-left: 0; margin-right: 0; max-width: 15ch; }
-  .fl-acceso-foot {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    gap: clamp(32px, 5vw, 72px);
+  .fl-acceso-story { max-width: 44ch; margin: 18px 0 0; }
+  .fl-acceso-side {
+    display: flex; flex-direction: column; align-items: flex-end;
+    flex-shrink: 0; text-align: right; margin-top: 14px;
   }
-  .fl-acceso-foot-text { text-align: left; }
-  .fl-acceso-story { max-width: 44ch; margin: 0; }
   .fl-acceso-ctas { margin-top: 0; flex-wrap: nowrap; justify-content: flex-end; }
 }
 .fl-acceso-cta {
@@ -3272,7 +3271,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-cta--ghost svg { width: 15px; height: 15px; flex-shrink: 0; }
 .fl-acceso-note { font-family: var(--font-ui); font-size: 12.5px; line-height: 1.55; color: rgba(255,255,255,0.68); max-width: 56ch; margin: 12px auto 0; }
 .fl-acceso-note strong { color: #fff; }
-@media (min-width: 881px) { .fl-acceso-note { margin: 10px 0 0; max-width: 48ch; } }
+@media (min-width: 881px) { .fl-acceso-note { margin: 12px 0 0; max-width: 40ch; } }
 
 /* ── REPROCANN: banda violeta (hook del primer paso / entrevista médica) ── */
 .fl-reprocann { background: var(--fl-violet); color: #fff; }
