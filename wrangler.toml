@@ -9,3 +9,7 @@ id = "02022a171c04447f86fa4336cbe0c3e0"
 [[kv_namespaces]]
 binding = "GENETICAS"
 id = "9ba2f212388e4ccaa8df118ecca632a7"
+
+[[kv_namespaces]]
+binding = "FOTOS"
+id = "721e23b4adcc42df8b2871f3aad1604c"

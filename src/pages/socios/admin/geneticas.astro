@@ -25,17 +25,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <div id="ad-content" class="ad-content" hidden>
-        <p class="ad-help">
-          Tildá <strong>«Disponible este mes»</strong> en las genéticas que hay en stock ahora.
-          Solo esas se muestran en la carta pública. Los cambios no se guardan hasta que apretés
-          <strong>«Guardar cambios»</strong>.
-        </p>
-        <div id="ad-list" class="ad-list"></div>
-        <button id="ad-add" type="button" class="ad-btn ad-btn-ghost">+ Agregar genética</button>
+        <div class="ad-tabs" role="tablist">
+          <button class="ad-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
+          <button class="ad-tab" data-tab="socios" type="button">Socios</button>
+        </div>
 
-        <div class="ad-savebar">
-          <span id="ad-save-status" class="ad-save-status"></span>
-          <button id="ad-save" type="button" class="ad-btn ad-btn-primary">Guardar cambios</button>
+        <!-- ── Pestaña Genéticas ── -->
+        <div id="tab-geneticas" class="ad-tab-panel">
+          <p class="ad-help">
+            Tildá <strong>«Disponible este mes»</strong> en las genéticas que hay en stock ahora.
+            Solo esas se muestran en la carta pública. Los cambios no se guardan hasta que apretés
+            <strong>«Guardar cambios»</strong>.
+          </p>
+          <div id="ad-list" class="ad-list"></div>
+          <button id="ad-add" type="button" class="ad-btn ad-btn-ghost">+ Agregar genética</button>
+
+          <div class="ad-savebar">
+            <span id="ad-save-status" class="ad-save-status"></span>
+            <button id="ad-save" type="button" class="ad-btn ad-btn-primary">Guardar cambios</button>
+          </div>
+        </div>
+
+        <!-- ── Pestaña Socios ── -->
+        <div id="tab-socios" class="ad-tab-panel" hidden>
+          <p class="ad-help">
+            Cargá el <strong>email de la cuenta de Google</strong> con la que el socio va a entrar, y opcionalmente
+            una nota para reconocerlo. Apenas ingrese, su ficha se completa sola con el nombre y la foto de Google.
+          </p>
+          <form id="ad-socio-form" class="ad-socio-form">
+            <input id="ad-socio-email" type="email" class="ad-input" placeholder="email@gmail.com" autocomplete="off" required />
+            <input id="ad-socio-nota" type="text" class="ad-input" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
+            <button type="submit" class="ad-btn ad-btn-primary">Agregar socio</button>
+          </form>
+          <p id="ad-socio-status" class="ad-save-status"></p>
+          <div id="ad-socios-list" class="ad-socios-list"></div>
         </div>
       </div>
     </div>
@@ -122,10 +145,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <span>CBD</span>
             <input class="ad-input" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="1% CBD" />
           </label>
-          <label class="ad-field ad-field-wide">
-            <span>Foto (URL)</span>
-            <input class="ad-input" data-field="foto" data-idx="${idx}" value="${esc(g.foto || '')}" placeholder="https://..." />
-          </label>
+          <div class="ad-field ad-field-wide">
+            <span>Foto</span>
+            <div class="ad-foto">
+              <div class="ad-foto-thumb">${(g.foto || g.id) ? `<img src="${esc(g.foto || `/socios/geneticas/${g.id}.webp`)}" alt="" onerror="this.remove()" />` : ''}</div>
+              <input type="file" accept="image/jpeg,image/png,image/webp" id="ad-foto-${idx}" class="ad-foto-input" data-foto-idx="${idx}" hidden />
+              <label for="ad-foto-${idx}" class="ad-foto-btn">Subir imagen</label>
+              ${g.foto ? `<button type="button" class="ad-foto-clear" data-fotoclear-idx="${idx}">Quitar</button>` : ''}
+              <span class="ad-foto-status" data-fotostatus-idx="${idx}"></span>
+            </div>
+          </div>
         </div>
 
         <div class="ad-tags-block">
@@ -194,6 +223,34 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (del) {
         CATALOG.splice(Number(del.getAttribute('data-idx')), 1)
         render()
+        return
+      }
+      const clr = e.target.closest('.ad-foto-clear')
+      if (clr) {
+        CATALOG[Number(clr.getAttribute('data-fotoclear-idx'))].foto = null
+        render()
+      }
+    })
+
+    // Subida de foto: sube el archivo a KV y guarda la URL en la genética.
+    document.addEventListener('change', async (e) => {
+      const inp = e.target
+      if (!inp.classList || !inp.classList.contains('ad-foto-input')) return
+      const i = Number(inp.getAttribute('data-foto-idx'))
+      const file = inp.files && inp.files[0]
+      if (!file) return
+      const status = document.querySelector(`[data-fotostatus-idx="${i}"]`)
+      if (status) status.textContent = 'Subiendo…'
+      const fd = new FormData()
+      fd.append('id', CATALOG[i].id || slugify(CATALOG[i].nombre) || 'foto')
+      fd.append('file', file)
+      try {
+        const res = await fetch('/api/socios/admin/foto', { method: 'POST', credentials: 'include', body: fd })
+        const data = await res.json()
+        if (res.ok && data.ok) { CATALOG[i].foto = data.url; render() }
+        else if (status) status.textContent = 'Error: ' + (data.error || res.status)
+      } catch {
+        if (status) status.textContent = 'Error de red'
       }
     })
 
@@ -236,6 +293,109 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         status.textContent = 'Error de red al guardar.'
       }
       setTimeout(() => (status.textContent = ''), 4000)
+    })
+
+    /* ── Pestañas ── */
+    document.querySelectorAll('.ad-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const name = tab.dataset.tab
+        document.querySelectorAll('.ad-tab').forEach((t) => t.classList.toggle('is-active', t === tab))
+        document.getElementById('tab-geneticas').hidden = name !== 'geneticas'
+        document.getElementById('tab-socios').hidden = name !== 'socios'
+        if (name === 'socios') loadSocios()
+      })
+    })
+
+    /* ── Socios ── */
+    function fmtFecha(iso) {
+      if (!iso) return '—'
+      try {
+        const d = new Date(iso)
+        return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+          ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+      } catch { return iso }
+    }
+    function initials(s) {
+      const t = (s || '').trim()
+      if (!t) return '?'
+      const p = t.split(/\s+/)
+      return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'
+    }
+    function socioRow(s) {
+      const ava = `<span class="ad-socio-ava"><span class="ad-socio-ini">${esc(initials(s.name || s.email))}</span>${s.picture ? `<img src="${esc(s.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
+      const estado = s.lastLogin
+        ? '<span class="ad-socio-badge is-on">Ingresó</span>'
+        : '<span class="ad-socio-badge">Sin ingresar</span>'
+      const meta = s.lastLogin
+        ? `Último ingreso: ${fmtFecha(s.lastLogin)} · ${s.logins} ingreso(s)`
+        : 'Todavía no ingresó con esta cuenta'
+      return `
+        <article class="ad-socio">
+          ${ava}
+          <div class="ad-socio-main">
+            <div class="ad-socio-top">
+              <strong class="ad-socio-name">${esc(s.name || '(sin nombre aún)')}</strong>
+              ${estado}
+            </div>
+            <div class="ad-socio-email">${esc(s.email)}</div>
+            <input class="ad-input ad-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
+            <div class="ad-socio-meta">${meta}</div>
+          </div>
+          <button type="button" class="ad-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
+        </article>`
+    }
+    async function loadSocios() {
+      const list = document.getElementById('ad-socios-list')
+      list.innerHTML = '<p class="ad-save-status">Cargando…</p>'
+      try {
+        const res = await fetch('/api/socios/admin/socios', { credentials: 'include' })
+        const data = await res.json()
+        if (!res.ok || !data.ok) { list.innerHTML = `<p class="ad-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        list.innerHTML = data.socios.length
+          ? data.socios.map(socioRow).join('')
+          : '<p class="ad-save-status">Todavía no hay socios cargados.</p>'
+      } catch {
+        list.innerHTML = '<p class="ad-msg">Error de red al cargar socios.</p>'
+      }
+    }
+    async function saveSocio(email, nota) {
+      const res = await fetch('/api/socios/admin/socios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, nota }),
+      })
+      return res.ok
+    }
+    document.getElementById('ad-socio-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const emailEl = document.getElementById('ad-socio-email')
+      const notaEl = document.getElementById('ad-socio-nota')
+      const status = document.getElementById('ad-socio-status')
+      const email = emailEl.value.trim().toLowerCase()
+      if (!email) return
+      status.textContent = 'Guardando…'
+      const ok = await saveSocio(email, notaEl.value.trim())
+      status.textContent = ok ? 'Socio agregado ✓' : 'Error al agregar'
+      if (ok) { emailEl.value = ''; notaEl.value = ''; loadSocios() }
+      setTimeout(() => (status.textContent = ''), 3000)
+    })
+    document.addEventListener('change', (e) => {
+      const nota = e.target.closest && e.target.closest('.ad-socio-nota')
+      if (nota) saveSocio(nota.getAttribute('data-email'), nota.value)
+    })
+    document.addEventListener('click', async (e) => {
+      const del = e.target.closest && e.target.closest('.ad-socio-del')
+      if (!del) return
+      const email = del.getAttribute('data-email')
+      if (!confirm('¿Dar de baja a ' + email + '? No podrá entrar a la carta.')) return
+      await fetch('/api/socios/admin/socios', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email }),
+      })
+      loadSocios()
     })
 
     function showLoginError(message) {
@@ -384,4 +544,69 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: flex; align-items: center; justify-content: flex-end; gap: 1rem;
   }
   .ad-save-status { font-size: 0.85rem; opacity: 0.7; }
+
+  /* ── Pestañas ── */
+  .ad-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid var(--fl-line, rgba(56,31,86,0.14)); }
+  .ad-tab {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600;
+    padding: 0.6rem 0.9rem; color: var(--fl-ink); opacity: 0.5;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .ad-tab.is-active { opacity: 1; color: var(--fl-violet, #381f56); border-bottom-color: var(--fl-violet, #381f56); }
+  .ad-tab-panel[hidden] { display: none; }
+
+  /* ── Subida de foto ── */
+  .ad-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+  .ad-foto-thumb {
+    width: 64px; height: 48px; border-radius: 8px; overflow: hidden;
+    background: var(--fl-paper-2, #f6f4f2); border: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+    flex-shrink: 0;
+  }
+  .ad-foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ad-foto-btn {
+    font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--fl-line, rgba(56,31,86,0.25)); border-radius: 999px;
+    padding: 0.4rem 0.9rem; color: var(--fl-violet, #381f56); background: #fff;
+  }
+  .ad-foto-clear {
+    font-family: var(--font-ui); font-size: 0.78rem; cursor: pointer;
+    background: none; border: none; color: #a3312a; text-decoration: underline;
+  }
+  .ad-foto-status { font-size: 0.78rem; opacity: 0.7; }
+
+  /* ── Socios ── */
+  .ad-socio-form { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .ad-socio-form .ad-input { flex: 1 1 200px; width: auto; }
+  .ad-socio-form .ad-btn { flex-shrink: 0; }
+  .ad-socios-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1rem; }
+  .ad-socio {
+    display: flex; align-items: flex-start; gap: 0.9rem;
+    background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+    border-radius: 14px; padding: 0.9rem 1rem;
+  }
+  .ad-socio-ava {
+    position: relative; flex-shrink: 0;
+    width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
+    background: var(--fl-violet, #381f56); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ad-socio-ini { font-size: 0.9rem; font-weight: 700; }
+  .ad-socio-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ad-socio-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .ad-socio-top { display: flex; align-items: center; gap: 0.6rem; }
+  .ad-socio-name { font-size: 0.95rem; color: var(--fl-ink); }
+  .ad-socio-badge {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+    background: var(--fl-paper-2, #f6f4f2); color: var(--fl-ink); opacity: 0.55;
+  }
+  .ad-socio-badge.is-on { background: rgba(10,80,60,0.12); color: var(--fl-green, #0a503c); opacity: 1; }
+  .ad-socio-email { font-size: 0.82rem; opacity: 0.65; }
+  .ad-socio-nota { max-width: 340px; margin-top: 0.15rem; }
+  .ad-socio-meta { font-size: 0.72rem; opacity: 0.55; }
+  .ad-socio-del {
+    background: none; border: 1px solid var(--fl-line, rgba(56,31,86,0.2)); border-radius: 8px;
+    width: 30px; height: 30px; font-size: 1.1rem; line-height: 1; cursor: pointer; color: #a3312a; flex-shrink: 0;
+  }
 </style>

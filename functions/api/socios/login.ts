@@ -19,19 +19,37 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   let email: string;
+  let payload: Awaited<ReturnType<typeof verifyGoogleIdToken>>;
   try {
-    const payload = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID);
+    payload = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID);
     email = payload.email.toLowerCase();
   } catch (err: any) {
     return Response.json({ ok: false, error: `token de Google inválido: ${err.message}` }, { status: 401 });
   }
 
   const isSocio = await env.SOCIOS.get(email);
-  if (!isSocio) {
+  if (isSocio === null) {
     return Response.json(
       { ok: false, error: 'tu cuenta de Google no está en la lista de socios verificados' },
       { status: 403 }
     );
+  }
+
+  // Enriquecemos la ficha del socio con el perfil de Google + registro de ingreso.
+  try {
+    let rec: any = {};
+    try { rec = JSON.parse(isSocio); } catch { rec = {}; } // valor legado "ok" → {}
+    if (typeof rec !== 'object' || rec === null) rec = {};
+    const now = new Date().toISOString();
+    rec.name = payload.name || rec.name || '';
+    rec.picture = payload.picture || rec.picture || '';
+    rec.emailVerified = payload.email_verified;
+    if (!rec.firstLogin) rec.firstLogin = now;
+    rec.lastLogin = now;
+    rec.logins = (rec.logins || 0) + 1;
+    await env.SOCIOS.put(email, JSON.stringify(rec));
+  } catch {
+    // si falla el guardado del perfil, no bloqueamos el login
   }
 
   const cookie = await createSessionCookie(email, env.SESSION_SECRET);
