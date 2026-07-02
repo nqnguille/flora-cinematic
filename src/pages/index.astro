@@ -54,6 +54,7 @@ const aceites = [
     color: '#C9396B',
     ratio: 'THC:CBD ≈ 2,3:1',
     ratioStd: '1:3',
+    requiereEntrevista: true,
   },
   {
     codigo: 'Q2',
@@ -72,6 +73,7 @@ const aceites = [
     color: '#6E54C8',
     ratio: 'CBD:THC ≈ 1,4:1',
     ratioStd: '1:1',
+    requiereEntrevista: true,
   },
   {
     codigo: 'Q3',
@@ -117,11 +119,13 @@ const perfilIconsSvg = [
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h18"/></svg>`,
 ]
 
-// Iconos de los productos (flores / aceites / cremas) para sus paneles gateway
+// Iconos de los productos (aceites / cremas / extracciones / flores) para sus
+// paneles gateway — mismo orden alfabético que las cards.
 const productIconsSvg = [
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11M12 11c3.5-.4 6-3 6-7-3.5.4-6 3-6 7zM12 13C8.5 12.6 6 10 6 6c3.5.4 6 3 6 7z"/></svg>`,
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="4" y="5.5" width="16" height="4.5" rx="1"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 6h8l-1.2 3.4H9.2z"/><rect x="7.5" y="9.4" width="9" height="12.1" rx="2.5"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11M12 11c3.5-.4 6-3 6-7-3.5.4-6 3-6 7zM12 13C8.5 12.6 6 10 6 6c3.5.4 6 3 6 7z"/></svg>`,
 ]
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
@@ -374,6 +378,10 @@ const igFallback = [
       <div class="welcome-cue" aria-hidden="true">
         <span class="welcome-cue-label">deslizá</span>
         <span class="welcome-cue-line"></span>
+        <svg class="welcome-cue-mouse" viewBox="0 0 24 38">
+          <rect x="1.5" y="1.5" width="21" height="35" rx="10.5" />
+          <circle class="welcome-cue-wheel" cx="12" cy="11" r="2.4" />
+        </svg>
       </div>
 
     </div>
@@ -453,19 +461,9 @@ const igFallback = [
       </header>
 
       <div class="fl-gateway fl-prod-gateway" role="list">
-        <a class="fl-panel fl-panel-1" href="#acceso" role="listitem" aria-label="Flores">
-          <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
-          <span class="fl-panel-body">
-            <span class="fl-panel-title">Flores</span>
-            <span class="fl-panel-desc">Tu parte del cultivo del mes, en flor. La elegís según lo que necesites.</span>
-            <span class="fl-panel-cta">Cómo acceder <span aria-hidden="true">→</span></span>
-          </span>
-        </a>
-
-        <a class="fl-panel fl-panel-2" href="#analisis" role="listitem" aria-label="Aceites">
+        <a class="fl-panel fl-panel-1" href="#analisis" role="listitem" aria-label="Aceites">
           <img class="fl-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" width="1448" height="1010" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Aceites</span>
             <span class="fl-panel-desc">Tres extractos sublinguales —Q1, Q2 y Q3—, uno para cada perfil. Vemos juntos cuál te conviene.</span>
@@ -473,13 +471,33 @@ const igFallback = [
           </span>
         </a>
 
-        <a class="fl-panel fl-panel-3" href={wa('Hola Flora, quiero consultar por las cremas 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Cremas">
+        <a class="fl-panel fl-panel-2" href={wa('Hola Flora, quiero consultar por las cremas — ¿qué opciones tienen? 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Cremas">
           <img class="fl-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" width="1400" height="1750" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>
-            <span class="fl-panel-desc">Crema tópica de 30 ml formulada para brindar alivio localizado.</span>
-            <span class="fl-panel-cta">Pedir la crema <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-desc">Cremas tópicas formuladas para distintos tipos de alivio localizado. Te contamos las opciones y elegís la tuya.</span>
+            <span class="fl-panel-cta">Consultar por las cremas <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
+
+        <a class="fl-panel fl-panel-3" href={wa('Hola Flora, quiero consultar por cartuchos y baterías 510 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Extracciones">
+          <img class="fl-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" width="1003" height="1254" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Extracciones</span>
+            <span class="fl-panel-desc">Cartuchos y baterías 510 para uso discreto y dosificado. Te asesoramos sobre la combinación indicada.</span>
+            <span class="fl-panel-cta">Consultar por extracciones <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
+
+        <a class="fl-panel fl-panel-4" href="#acceso" role="listitem" aria-label="Flores">
+          <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[3]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Flores</span>
+            <span class="fl-panel-desc">Tu parte del cultivo del mes, en flor. La elegís según lo que necesites.</span>
+            <span class="fl-panel-cta">Cómo acceder <span aria-hidden="true">→</span></span>
           </span>
         </a>
       </div>
@@ -510,6 +528,7 @@ const igFallback = [
               <div class="fl-oil-photo">
                 <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="600" height="750" />
                 <span class="fl-oil-badge">{a.codigo}</span>
+                {a.requiereEntrevista && <span class="fl-req-badge">Requiere entrevista médica</span>}
               </div>
 
               <div class="fl-oil-body">
@@ -576,16 +595,23 @@ const igFallback = [
   </section>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario -->
+  <!-- ACCESO A MATERIAL VEGETAL — cultivo solidario + catálogo de flores -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-acceso" id="acceso" aria-label="Acceso a material vegetal">
-    <div class="fl-wrap">
+    <video class="fl-acceso-video" src="/hero/socios-genetica.mp4" poster="/hero/socios-genetica_poster.jpg" muted loop playsinline autoplay preload="none" aria-hidden="true"></video>
+    <div class="fl-acceso-scrim" aria-hidden="true"></div>
+
+    <div class="fl-wrap fl-acceso-content">
       <div class="fl-acceso-intro">
-        <span class="fl-eyebrow">Acceso a material vegetal</span>
+        <span class="fl-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          Acceso exclusivo
+        </span>
         <h2 class="fl-title">Cultivamos lo que <em>la ley te permite.</em></h2>
         <p class="fl-acceso-story">
-          Hay personas que necesitan cannabis y no pueden cultivarlo en casa.
-          Lo hacemos nosotros, y tu aporte mensual mantiene viva cada planta.
+          Hay personas que necesitan cannabis y no pueden cultivarlo en casa. Lo hacemos
+          nosotros, con genéticas que rotan cada mes, y tu aporte mensual mantiene viva
+          cada planta.
         </p>
       </div>
 
@@ -611,9 +637,15 @@ const igFallback = [
           mismo cuidado y variedades para todos.
         </p>
 
-        <a class="fl-acceso-cta" data-acceso-cta href={accesoAmounts[0].wa} target="_blank" rel="noopener noreferrer">
-          Quiero acceder <span aria-hidden="true">→</span>
-        </a>
+        <div class="fl-acceso-ctas">
+          <a class="fl-acceso-cta" data-acceso-cta href={accesoAmounts[0].wa} target="_blank" rel="noopener noreferrer">
+            Quiero acceder <span aria-hidden="true">→</span>
+          </a>
+          <a class="fl-acceso-cta fl-acceso-cta-ghost" href="/socios/genetica">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            Ya soy socio: ver genéticas de este mes
+          </a>
+        </div>
 
         <p class="fl-acceso-note">
           El aporte arranca en <strong>$170.000</strong> por mes y sube con la cantidad;

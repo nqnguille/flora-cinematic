@@ -1,0 +1,19 @@
+{
+ "asset": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-genetica.mp4",
+  "type": "video",
+  "photographer": "ArtHouse Studio",
+  "pexels_id": 7684717,
+  "source_url": "https://www.pexels.com/video/close-up-video-of-a-dried-cannabis-7684717/",
+  "alt": "",
+  "keyword_final": "cannabis indoor",
+  "width": 1920,
+  "height": 1080,
+  "duration": 8.1,
+  "filesize": 5525870,
+  "poster_out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-genetica_poster.jpg",
+  "aspect_real": 1.778,
+  "ok": true,
+  "snippet": "<video src=\"/socios-genetica.mp4\" poster=\"/socios-genetica_poster.jpg\" autoplay muted loop playsinline></video>"
+ }
+}

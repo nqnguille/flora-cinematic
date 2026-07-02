@@ -24,6 +24,22 @@ function raf(time: number) {
 }
 requestAnimationFrame(raf)
 
+// ── Bloqueo de scroll real ──
+// document.body.style.overflow SOLO no alcanza: en la mayoría de los
+// navegadores el elemento que realmente scrollea es <html>, no <body> —
+// y Lenis (smoothWheel: true) intercepta la rueda por su cuenta, scrolleando
+// igual aunque el overflow nativo esté en hidden. Hay que frenar los tres.
+const lockScroll = () => {
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+  lenis.stop()
+}
+const unlockScroll = () => {
+  document.documentElement.style.overflow = ''
+  document.body.style.overflow = ''
+  lenis.start()
+}
+
 // ── Nav scroll behavior ──
 function initNav() {
   const nav = document.querySelector<HTMLElement>('.site-nav')
@@ -444,11 +460,14 @@ function initLoader() {
     if (srMsg) srMsg.textContent = 'Flora ONG lista'
   }
   const finish = () => {
-    document.body.style.overflow = ''
+    unlockScroll()
     loader.style.display = 'none'
+    // Aviso para el hero: recién ahí puede empezar a escuchar sus propios
+    // gestos, para que el swipe que cierra el loader no le robe un paso.
+    window.dispatchEvent(new CustomEvent('flora:loader-done'))
   }
 
-  document.body.style.overflow = 'hidden'
+  lockScroll()
 
   // El anillo real del logo se revela angularmente: --pct va de 0 a 100 y
   // un conic-gradient en el mask-image del PNG del anillo lo va "dibujando".
@@ -652,7 +671,7 @@ function initMobileDrawer() {
   const openDrawer = () => {
     drawer.hidden = false
     hamburger.setAttribute('aria-expanded', 'true')
-    document.body.style.overflow = 'hidden'
+    lockScroll()
     // Foco al cierre para accesibilidad
     setTimeout(() => closeBtn?.focus(), 50)
   }
@@ -660,7 +679,7 @@ function initMobileDrawer() {
   const closeDrawer = () => {
     drawer.hidden = true
     hamburger.setAttribute('aria-expanded', 'false')
-    document.body.style.overflow = ''
+    unlockScroll()
     hamburger.focus()
   }
 
@@ -828,14 +847,27 @@ function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
 }
 
 // ── Welcome: relato de bienvenida con fondos que evolucionan ──
+// El relato del hero (5 beats: 4 líneas + "Bienvenido a Flora") es una
+// navegación paso a paso, no un scroll-scrub continuo: cada gesto (rueda,
+// swipe, tecla) avanza o retrocede EXACTAMENTE un beat, con el mismo "lock"
+// anti-ráfaga que el gate de edad, para que un movimiento brusco de dedo no
+// se salte líneas sin leerlas — como ir pasando reels, no scrolleando.
+// Recién al pedir avanzar desde el último beat (con los botones ya
+// visibles) se libera el scroll y el usuario sigue navegando el sitio.
+// El relato del hero vuelve a ser scroll-scrub continuo (no un lock por
+// pasos): el intento de "un swipe = un paso" bloqueaba el scroll real de la
+// página apenas el usuario no scrolleaba con el timing exacto que esperaba
+// el cooldown, y eso rompía la navegación del sitio entero. Para que un
+// swipe brusco no se salte todo el relato igual, la distancia de scroll
+// virtual es generosa (steps * 1.6 pantallas) sin llegar a bloquear nada.
 function initWelcome() {
-  const section = document.querySelector<HTMLElement>('.welcome')
+  const section  = document.querySelector<HTMLElement>('.welcome')
   if (!section) return
-  const stage = section.querySelector<HTMLElement>('.welcome-stage')
-  const imgs = gsap.utils.toArray<HTMLElement>('.welcome-img')
-  const lines = gsap.utils.toArray<HTMLElement>('.welcome-line')
-  const outro = section.querySelector<HTMLElement>('.welcome-outro')
-  const cue = section.querySelector<HTMLElement>('.welcome-cue')
+  const stage    = section.querySelector<HTMLElement>('.welcome-stage')
+  const imgs     = gsap.utils.toArray<HTMLElement>('.welcome-img')
+  const lines    = gsap.utils.toArray<HTMLElement>('.welcome-line')
+  const outro    = section.querySelector<HTMLElement>('.welcome-outro')
+  const cue      = section.querySelector<HTMLElement>('.welcome-cue')
   if (!stage || imgs.length === 0 || lines.length === 0) return
 
   const steps = lines.length
@@ -849,7 +881,7 @@ function initWelcome() {
     })
   }
 
-  // Reduced motion: mostramos el cierre del relato (poster estático), sin pin ni scrub
+  // Reduced motion: mostramos el cierre del relato (poster estático), sin scrub
   if (prefersReducedMotion) {
     gsap.set(imgs, { opacity: 0 })
     gsap.set(imgs[steps - 1], { opacity: 1 })
@@ -869,6 +901,13 @@ function initWelcome() {
 
   playOnly(0) // arranca el primer clip
 
+  // Ruedita del mouse (solo se ve en desktop, por CSS) animada con GSAP —
+  // evita líos de transform-box en SVG entre navegadores.
+  const cueWheel = section.querySelector<SVGCircleElement>('.welcome-cue-wheel')
+  if (cueWheel) {
+    gsap.to(cueWheel, { y: 9, opacity: 0, duration: 0.7, ease: 'power1.in', repeat: -1, yoyo: true, repeatDelay: 0.3 })
+  }
+
   const TRANS = 0.6   // crossfade
   const HOLD = 1.0    // permanencia de cada beat
 
@@ -876,7 +915,7 @@ function initWelcome() {
     scrollTrigger: {
       trigger: section,
       start: 'top top',
-      end: () => '+=' + Math.round(window.innerHeight * steps * 1.15),
+      end: () => '+=' + Math.round(window.innerHeight * steps * 1.6),
       pin: stage,
       scrub: 1,
       anticipatePin: 1,

@@ -15,12 +15,12 @@ import Layout from '../layouts/Layout.astro'
       <h1 class="ve-title">Este sitio es para personas <em>mayores de 18 años.</em></h1>
 
       <p class="ve-p">
-        Flora es la <strong>Asociación Civil Cann de Cannabis Medicinal</strong> (Personería
-        Jurídica I.G.J. N.º 1994128, CUIT 30-71827609-4), una organización civil sin fines de
-        lucro que acompaña el acceso al cannabis medicinal bajo el marco de la
-        <strong>Ley 27.350</strong> y el <strong>REPROCANN</strong>. Por responsabilidad
-        institucional, el acceso general a este sitio —que incluye información sobre
-        asociación, productos y procedimientos— está restringido a personas mayores de edad.
+        Flora es la <strong>Asociación Civil Cann de Cannabis Medicinal</strong>, una
+        organización civil sin fines de lucro que acompaña el acceso al cannabis medicinal
+        bajo el marco de la <strong>Ley 27.350</strong> y el <strong>REPROCANN</strong>. Por
+        responsabilidad institucional, el acceso general a este sitio —que incluye
+        información sobre asociación, productos y procedimientos— está restringido a
+        personas mayores de edad.
       </p>
 
       <div class="ve-note">
@@ -29,25 +29,32 @@ import Layout from '../layouts/Layout.astro'
           Esta restricción es una política de acceso al sitio web, <strong>no una condición
           del tratamiento médico</strong>. La Ley 27.350 contempla el uso de cannabis
           medicinal en pacientes de cualquier edad, incluida la población pediátrica, siempre
-          bajo indicación y seguimiento de un profesional de la salud. Si sos madre, padre o
-          tutor/a y buscás información sobre un tratamiento para un/a niño/a o adolescente, te
-          recomendamos consultar directamente con un profesional de la salud, o contactarnos
-          por los canales de Flora como persona adulta responsable.
+          bajo indicación y seguimiento de un profesional de la salud.
         </p>
       </div>
 
+      <h2 class="ve-h2">Si el tratamiento es para un niño, niña o adolescente</h2>
       <p class="ve-p">
-        El <strong>REPROCANN</strong> (Registro del Programa de Cannabis) es el mecanismo que
-        habilita el cultivo, la tenencia y el acceso al cannabis con fines medicinales en la
-        Argentina. Para inscribirse, el primer paso es siempre una entrevista con un
-        profesional de la salud, quien evalúa cada caso en particular.
+        El <strong>Decreto 883/2020</strong>, reglamentario de la Ley 27.350, prevé que
+        cuando la persona en tratamiento es menor de edad, la inscripción en el REPROCANN se
+        realice a través de un adulto que actúa como <strong>Responsable</strong> de esa
+        persona —habitualmente llamado <strong>responsable a cargo</strong>—: su madre,
+        padre, tutor/a o curador/a judicial. Es esa persona adulta quien gestiona la
+        inscripción, se vincula con el profesional de la salud tratante y coordina el acceso
+        al tratamiento, incluido el contacto con organizaciones como Flora.
+      </p>
+      <p class="ve-p">
+        Si sos ese adulto responsable, quien tiene que navegar este sitio y gestionar el
+        vínculo con Flora sos vos, no la persona menor de edad a tu cargo. Volvé a la
+        pantalla anterior y respondé <strong>"Sí, soy mayor"</strong>: el acceso está pensado
+        para que lo uses en representación suya.
       </p>
 
       <p class="ve-p">
-        Si confirmaste que sos menor de 18 años, te pedimos que no continúes navegando este
-        sitio. Podés volver a ingresar cuando alcances la mayoría de edad, o pedirle a una
-        persona adulta responsable que te acompañe en la consulta con un profesional de la
-        salud.
+        Si confirmaste que sos menor de 18 años y no estás navegando en representación de un
+        adulto responsable, te pedimos que no continúes en este sitio. Podés volver a
+        ingresar cuando alcances la mayoría de edad, o pedirle a tu madre, padre, tutor/a o
+        curador/a judicial que gestione el acceso al tratamiento en tu nombre.
       </p>
 
       <p class="ve-legal">
@@ -104,6 +111,13 @@ import Layout from '../layouts/Layout.astro'
   }
   .ve-p strong { color: var(--fl-ink, #1C1626); font-weight: 700; }
   .ve-p-tight { margin-bottom: 0; }
+  .ve-h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.1rem, 2.6vw, 1.3rem);
+    color: var(--fl-violet, #381F56);
+    margin: 28px 0 12px;
+  }
   .ve-note {
     background: var(--fl-paper-2, #F6F4F2);
     border-left: 3px solid var(--fl-green, #0A503C);
