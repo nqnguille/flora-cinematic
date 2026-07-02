@@ -1,8 +1,9 @@
-import { requireAdmin } from './_guard';
+import { requireAdmin, isSuperAdmin } from './_guard';
 
 interface Env {
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
+  SUPER_ADMIN_EMAILS?: string;
   GENETICAS: KVNamespace;
 }
 
@@ -15,7 +16,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const raw = await env.GENETICAS.get(CATALOG_KEY);
-  return Response.json({ ok: true, geneticas: raw ? JSON.parse(raw) : [] });
+  return Response.json({
+    ok: true,
+    geneticas: raw ? JSON.parse(raw) : [],
+    isSuperAdmin: isSuperAdmin(check.email, env),
+  });
 };
 
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {

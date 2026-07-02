@@ -1,8 +1,9 @@
-import { requireAdmin } from './_guard';
+import { requireSuperAdmin } from './_guard';
 
 interface Env {
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
+  SUPER_ADMIN_EMAILS?: string;
   SOCIOS: KVNamespace;
 }
 
@@ -19,10 +20,10 @@ function parseRec(raw: string | null): any {
 }
 
 async function guard(request: Request, env: Env) {
-  const check = await requireAdmin(request, env);
+  const check = await requireSuperAdmin(request, env);
   if (check.status !== 200) {
     return Response.json(
-      { ok: false, error: check.status === 401 ? 'no autenticado' : 'no autorizado' },
+      { ok: false, error: check.status === 401 ? 'no autenticado' : 'solo el super admin puede gestionar socios' },
       { status: check.status }
     );
   }

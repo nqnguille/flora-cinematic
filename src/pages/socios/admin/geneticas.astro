@@ -414,6 +414,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
       const data = await res.json()
       CATALOG = data.geneticas || []
+      // La pestaña Socios solo la ve el super admin.
+      if (!data.isSuperAdmin) {
+        const tabSocios = document.querySelector('.ad-tab[data-tab="socios"]')
+        if (tabSocios) tabSocios.hidden = true
+      }
       document.getElementById('ad-login').hidden = true
       document.getElementById('ad-content').hidden = false
       render()
