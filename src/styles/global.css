@@ -3189,8 +3189,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
   position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(180deg, rgba(20,16,28,0.55) 0%, rgba(15,10,20,0.72) 45%, rgba(12,8,17,0.9) 100%);
 }
-.fl-acceso-content { position: relative; z-index: 2; max-width: 860px; }
-.fl-acceso-intro { text-align: center; margin-bottom: clamp(36px, 5vw, 56px); }
+.fl-acceso-content { position: relative; z-index: 2; max-width: 1080px; }
+.fl-acceso-intro { text-align: center; margin-bottom: clamp(28px, 4vw, 44px); }
 .fl-acceso-intro .fl-eyebrow {
   display: inline-flex; align-items: center; gap: 8px; color: #fff;
   background: rgba(255,255,255,0.14); backdrop-filter: blur(6px);
@@ -3201,88 +3201,101 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-intro .fl-title em { color: var(--leaf, #71CE6A); }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(17px, 2.2vw, 21px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 50ch; margin: 20px auto 0; }
 
-/* ── La carta de este mes: tarjetas veladas → /socios/genetica ── */
-.fl-carta { margin-bottom: clamp(36px, 5vw, 56px); }
+/* ── Dos paneles lado a lado: picker (nuevos) + carta velada (socios) ── */
+.fl-acceso-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  align-items: stretch;
+}
+@media (max-width: 880px) {
+  .fl-acceso-cols { grid-template-columns: 1fr; }
+}
+
+/* ── La carta de este mes: panel de vidrio oscuro → /socios/genetica ── */
+.fl-carta {
+  display: flex; flex-direction: column;
+  background: rgba(20,16,28,0.55); backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.16); border-radius: 24px;
+  padding: clamp(24px, 3vw, 36px);
+}
 .fl-carta-label {
   font-family: var(--font-ui); font-size: 13px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: rgba(255,255,255,0.68); text-align: center; margin: 0 0 18px;
+  color: rgba(255,255,255,0.75); text-align: center; margin: 0 0 14px;
 }
-.fl-carta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.fl-carta-grid { display: flex; flex-direction: column; }
 .fl-carta-card {
-  position: relative; display: flex; flex-direction: column; align-items: flex-start;
-  gap: 10px; padding: 22px 20px 20px; text-decoration: none;
-  background: rgba(20,16,28,0.55); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.14); border-radius: 18px;
-  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  position: relative; display: grid;
+  grid-template-columns: 1fr auto; grid-template-areas: 'q q' 'name meta';
+  align-items: baseline; column-gap: 14px; row-gap: 3px;
+  padding: 13px 40px 13px 10px; text-decoration: none;
+  border-top: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  transition: background 0.2s ease;
 }
-.fl-carta-card:hover, .fl-carta-card:focus-visible {
-  transform: translateY(-4px); border-color: rgba(255,255,255,0.32);
-  background: rgba(20,16,28,0.72);
+.fl-carta-card:first-child { border-top: none; }
+.fl-carta-card:hover, .fl-carta-card:focus-visible { background: rgba(255,255,255,0.07); }
+.fl-carta-card:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fl-carta-lock {
+  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
+  width: 15px; height: 15px; color: rgba(255,255,255,0.55);
 }
-.fl-carta-card:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.fl-carta-lock { position: absolute; top: 18px; right: 18px; width: 16px; height: 16px; color: rgba(255,255,255,0.55); }
 .fl-carta-q {
-  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  grid-area: q; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
   letter-spacing: 0.09em; text-transform: uppercase; color: var(--leaf, #71CE6A);
 }
 .fl-carta-name {
-  font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 28px);
+  grid-area: name; font-family: var(--font-display); font-size: clamp(21px, 2.2vw, 25px);
   line-height: 1.1; color: #fff;
   filter: blur(7px); user-select: none; pointer-events: none;
   transition: filter 0.3s ease;
 }
 .fl-carta-meta {
-  font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.7);
+  grid-area: meta; font-family: var(--font-ui); font-size: 12px; color: rgba(255,255,255,0.7);
   filter: blur(5px); user-select: none; pointer-events: none;
-  transition: filter 0.3s ease;
+  transition: filter 0.3s ease; white-space: nowrap;
 }
 /* El hover afloja apenas el velo: se intuye, nunca se lee */
 .fl-carta-card:hover .fl-carta-name, .fl-carta-card:focus-visible .fl-carta-name { filter: blur(5px); }
 .fl-carta-card:hover .fl-carta-meta, .fl-carta-card:focus-visible .fl-carta-meta { filter: blur(4px); }
-.fl-carta-foot { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px; }
+.fl-carta-foot {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-top: auto; padding-top: 16px;
+}
 .fl-carta-cta {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: #fff; color: var(--fl-violet, #381F56);
   font-family: var(--font-ui); font-weight: 700; font-size: 15px;
-  padding: 15px 26px; border-radius: 999px; text-decoration: none;
+  padding: 14px 24px; border-radius: 999px; text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .fl-carta-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgba(0,0,0,0.6); }
 .fl-carta-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .fl-carta-cta svg { width: 16px; height: 16px; flex-shrink: 0; }
-.fl-carta-note { font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.62); margin: 0; text-align: center; }
-@media (max-width: 720px) {
-  .fl-carta-grid { grid-template-columns: 1fr; gap: 10px; }
-  .fl-carta-card { flex-direction: row; align-items: center; flex-wrap: wrap; column-gap: 14px; padding: 16px 48px 16px 18px; }
-  .fl-carta-q { width: 100%; }
-  .fl-carta-name { font-size: 22px; }
-  .fl-carta-lock { top: 50%; transform: translateY(-50%); }
-}
+.fl-carta-note { font-family: var(--font-ui); font-size: 12px; color: rgba(255,255,255,0.62); margin: 0; text-align: center; }
 
 .fl-acceso-picker {
+  display: flex; flex-direction: column;
   background: rgba(255,255,255,0.94); backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.5); border-radius: 24px;
-  padding: clamp(28px, 4vw, 48px); text-align: center;
+  padding: clamp(24px, 3vw, 36px); text-align: center;
   box-shadow: 0 30px 70px -30px rgba(0,0,0,0.5);
 }
-.fl-acceso-q { display: block; font-family: var(--font-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fl-violet); margin-bottom: 20px; }
-.fl-amounts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
-.fl-amount { font-family: var(--font-ui); font-weight: 800; font-size: clamp(24px, 5vw, 32px); letter-spacing: -0.02em; color: var(--fl-ink); background: #fff; border: 1.5px solid var(--fl-line); border-radius: 14px; padding: 18px 10px; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+.fl-acceso-q { display: block; font-family: var(--font-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fl-violet); margin-bottom: 14px; }
+.fl-amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 380px; margin: 0 auto; width: 100%; }
+.fl-amount { font-family: var(--font-ui); font-weight: 800; font-size: clamp(19px, 2vw, 24px); letter-spacing: -0.02em; color: var(--fl-ink); background: #fff; border: 1.5px solid var(--fl-line); border-radius: 14px; padding: 14px 6px; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
 .fl-amount span { font-size: 0.5em; font-weight: 600; color: var(--fl-green); margin-left: 2px; }
 .fl-amount:hover { border-color: var(--fl-violet); }
 .fl-amount.is-active { background: var(--fl-violet); border-color: var(--fl-violet); color: #fff; }
 .fl-amount.is-active span { color: rgba(255,255,255,0.7); }
 .fl-amount:focus-visible { outline: 3px solid var(--fl-violet); outline-offset: 3px; }
-.fl-acceso-detail { font-family: var(--font-ui); font-size: 15px; color: rgba(28,22,38,0.62); margin: 24px 0 0; }
+.fl-acceso-detail { font-family: var(--font-ui); font-size: 14px; color: rgba(28,22,38,0.62); margin: 14px 0 0; }
 .fl-acceso-detail [data-acceso-amount] { font-weight: 800; color: var(--fl-violet); }
-.fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
+.fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
 .fl-acceso-cta { display: inline-flex; align-items: center; gap: 8px; background: var(--fl-violet); color: #fff; font-family: var(--font-ui); font-weight: 700; font-size: 15px; padding: 15px 26px; border-radius: 999px; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
 .fl-acceso-cta:hover { transform: translateY(-2px); }
 .fl-acceso-cta-ghost { background: transparent; border: 1.5px solid var(--fl-line); color: var(--fl-violet); }
 .fl-acceso-cta-ghost:hover { background: var(--fl-paper-2); }
 .fl-acceso-cta-ghost svg { width: 16px; height: 16px; flex-shrink: 0; }
-.fl-acceso-note { font-family: var(--font-ui); font-size: 13px; line-height: 1.55; color: rgba(28,22,38,0.62); max-width: 52ch; margin: 22px auto 0; }
+.fl-acceso-note { font-family: var(--font-ui); font-size: 12.5px; line-height: 1.55; color: rgba(28,22,38,0.62); max-width: 52ch; margin: auto auto 0; padding-top: 14px; }
 .fl-acceso-note strong { color: var(--fl-violet); }
 @media (min-width: 540px) { .fl-amounts { grid-template-columns: repeat(4, 1fr); max-width: none; } }
 
