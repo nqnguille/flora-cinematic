@@ -1901,6 +1901,22 @@ body.cursor-hover .cursor-ring {
   opacity: 1;
 }
 
+/* Acceso rápido de socios en la topbar — outline, adaptativo */
+.nav-socios {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 16px;
+  border: 1.5px solid rgba(244, 241, 230, 0.45);
+  border-radius: 999px;
+  color: var(--bone) !important;
+  font-weight: 600 !important; font-size: 12px !important;
+  letter-spacing: 0.04em;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.nav-socios svg { width: 13px; height: 13px; flex-shrink: 0; }
+.nav-socios:hover { border-color: var(--bone); background: rgba(255,255,255,0.1); color: #fff !important; }
+.site-nav.scrolled .nav-links .nav-socios { border-color: rgba(56,31,86,0.35); color: var(--fl-violet) !important; }
+.site-nav.scrolled .nav-links .nav-socios:hover { border-color: var(--fl-violet); background: rgba(56,31,86,0.06); }
+
 /* ── Hamburguesa — solo mobile ── */
 .nav-hamburger {
   display: none;
@@ -2047,6 +2063,16 @@ body.cursor-hover .cursor-ring {
   background: var(--fl-violet-2);
   color: #fff !important;
 }
+
+.drawer-cta--socios {
+  gap: 8px;
+  margin-top: 12px;
+  background: transparent;
+  border: 1.5px solid rgba(56, 31, 86, 0.35);
+  color: var(--fl-violet) !important;
+}
+.drawer-cta--socios svg { width: 15px; height: 15px; flex-shrink: 0; }
+.drawer-cta--socios:hover { background: rgba(56, 31, 86, 0.06); color: var(--fl-violet) !important; }
 
 /* ═══════════════════════════════════════════════
    WHATSAPP FLOTANTE — oculto en hero, aparece al navegar
@@ -3259,18 +3285,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-carta-card:hover .fl-carta-meta, .fl-carta-card:focus-visible .fl-carta-meta { filter: blur(4px); }
 .fl-carta-foot {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  margin-top: auto; padding-top: 16px;
+  margin-top: auto; padding-top: 14px;
 }
-.fl-carta-cta {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: #fff; color: var(--fl-violet, #381F56);
-  font-family: var(--font-ui); font-weight: 700; font-size: 15px;
-  padding: 14px 24px; border-radius: 999px; text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.fl-carta-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgba(0,0,0,0.6); }
-.fl-carta-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.fl-carta-cta svg { width: 16px; height: 16px; flex-shrink: 0; }
 .fl-carta-note { font-family: var(--font-ui); font-size: 12px; color: rgba(255,255,255,0.62); margin: 0; text-align: center; }
 
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 26px; }
@@ -3283,6 +3299,13 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-acceso-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgba(0,0,0,0.6); }
 .fl-acceso-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.fl-acceso-cta--ghost {
+  background: transparent; color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.55);
+  box-shadow: none;
+}
+.fl-acceso-cta--ghost:hover { background: rgba(255,255,255,0.12); border-color: #fff; box-shadow: none; }
+.fl-acceso-cta--ghost svg { width: 15px; height: 15px; flex-shrink: 0; }
 .fl-acceso-note { font-family: var(--font-ui); font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.68); max-width: 56ch; margin: 16px auto 0; }
 .fl-acceso-note strong { color: #fff; }
 
