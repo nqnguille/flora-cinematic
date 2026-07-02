@@ -3200,6 +3200,66 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-intro .fl-title { color: #fff; margin-left: auto; margin-right: auto; max-width: 18ch; }
 .fl-acceso-intro .fl-title em { color: var(--leaf, #71CE6A); }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(17px, 2.2vw, 21px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 50ch; margin: 20px auto 0; }
+
+/* ── La carta de este mes: tarjetas veladas → /socios/genetica ── */
+.fl-carta { margin-bottom: clamp(36px, 5vw, 56px); }
+.fl-carta-label {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(255,255,255,0.68); text-align: center; margin: 0 0 18px;
+}
+.fl-carta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.fl-carta-card {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 10px; padding: 22px 20px 20px; text-decoration: none;
+  background: rgba(20,16,28,0.55); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 18px;
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.fl-carta-card:hover, .fl-carta-card:focus-visible {
+  transform: translateY(-4px); border-color: rgba(255,255,255,0.32);
+  background: rgba(20,16,28,0.72);
+}
+.fl-carta-card:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.fl-carta-lock { position: absolute; top: 18px; right: 18px; width: 16px; height: 16px; color: rgba(255,255,255,0.55); }
+.fl-carta-q {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--leaf, #71CE6A);
+}
+.fl-carta-name {
+  font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.1; color: #fff;
+  filter: blur(7px); user-select: none; pointer-events: none;
+  transition: filter 0.3s ease;
+}
+.fl-carta-meta {
+  font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.7);
+  filter: blur(5px); user-select: none; pointer-events: none;
+  transition: filter 0.3s ease;
+}
+/* El hover afloja apenas el velo: se intuye, nunca se lee */
+.fl-carta-card:hover .fl-carta-name, .fl-carta-card:focus-visible .fl-carta-name { filter: blur(5px); }
+.fl-carta-card:hover .fl-carta-meta, .fl-carta-card:focus-visible .fl-carta-meta { filter: blur(4px); }
+.fl-carta-foot { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px; }
+.fl-carta-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; color: var(--fl-violet, #381F56);
+  font-family: var(--font-ui); font-weight: 700; font-size: 15px;
+  padding: 15px 26px; border-radius: 999px; text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fl-carta-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgba(0,0,0,0.6); }
+.fl-carta-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.fl-carta-cta svg { width: 16px; height: 16px; flex-shrink: 0; }
+.fl-carta-note { font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.62); margin: 0; text-align: center; }
+@media (max-width: 720px) {
+  .fl-carta-grid { grid-template-columns: 1fr; gap: 10px; }
+  .fl-carta-card { flex-direction: row; align-items: center; flex-wrap: wrap; column-gap: 14px; padding: 16px 48px 16px 18px; }
+  .fl-carta-q { width: 100%; }
+  .fl-carta-name { font-size: 22px; }
+  .fl-carta-lock { top: 50%; transform: translateY(-50%); }
+}
+
 .fl-acceso-picker {
   background: rgba(255,255,255,0.94); backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.5); border-radius: 24px;

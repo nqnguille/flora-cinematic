@@ -688,6 +688,32 @@ const igFallback = [
         </p>
       </div>
 
+      <div class="fl-carta" aria-label="La carta de genéticas de este mes">
+        <p class="fl-carta-label">La carta de este mes</p>
+        <div class="fl-carta-grid" role="list">
+          {[
+            { n: '01', q: 'Quimiotipo I', veil: 'Skenra Vialu', meta: 'THC 24,1% · CBD 0,8%' },
+            { n: '02', q: 'Quimiotipo II', veil: 'Morvane Delsi', meta: 'THC 9,4% · CBD 11,2%' },
+            { n: '03', q: 'Quimiotipo III', veil: 'Auberi Solna', meta: 'THC 0,9% · CBD 18,6%' },
+          ].map((c) => (
+            <a class="fl-carta-card" href="/socios/genetica" role="listitem">
+              <svg class="fl-carta-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+              <span class="fl-carta-q">Genética {c.n} · {c.q}</span>
+              <span class="fl-carta-name" aria-hidden="true">{c.veil}</span>
+              <span class="fl-carta-meta" aria-hidden="true">{c.meta}</span>
+              <span class="sr-only">Nombre y análisis reservados para socios</span>
+            </a>
+          ))}
+        </div>
+        <div class="fl-carta-foot">
+          <a class="fl-carta-cta" href="/socios/genetica">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            Soy socio: ver la carta completa <span aria-hidden="true">→</span>
+          </a>
+          <p class="fl-carta-note">La carta rota cada mes y cada genética llega con su cromatografía.</p>
+        </div>
+      </div>
+
       <div class="fl-acceso-picker">
         <span class="fl-acceso-q">¿Cuánto necesitás por mes?</span>
 
@@ -713,10 +739,6 @@ const igFallback = [
         <div class="fl-acceso-ctas">
           <a class="fl-acceso-cta" data-acceso-cta href={accesoAmounts[0].wa} target="_blank" rel="noopener noreferrer">
             Quiero acceder <span aria-hidden="true">→</span>
-          </a>
-          <a class="fl-acceso-cta fl-acceso-cta-ghost" href="/socios/genetica">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            Ya soy socio: ver genéticas de este mes
           </a>
         </div>
 
