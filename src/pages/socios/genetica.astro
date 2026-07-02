@@ -35,6 +35,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
           <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
           <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
+          <button id="gn-fs" class="gn-ctrl gn-ctrl-fs" type="button" aria-label="Pantalla completa"><svg class="ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 0-1 1h-4"/></svg><svg class="ic-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v3a2 2 0 0 1-2 2H4M15 4v3a2 2 0 0 0 2 2h3M9 20v-3a2 2 0 0 0-2-2H4M15 20v-3a2 2 0 0 1 2-2h3"/></svg></button>
         </div>
         <button id="gn-logout" class="gn-logout" type="button" aria-label="Cerrar sesión">Salir</button>
       </div>
@@ -295,6 +296,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         playpause.setAttribute('aria-label', userPaused ? 'Reproducir' : 'Pausar')
       })
 
+      // Pantalla completa
+      const fsBtn = document.getElementById('gn-fs')
+      fsBtn.addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen()
+        else document.documentElement.requestFullscreen().catch(() => {})
+      })
+      document.addEventListener('fullscreenchange', () => {
+        const on = !!document.fullscreenElement
+        fsBtn.classList.toggle('is-fs', on)
+        fsBtn.setAttribute('aria-label', on ? 'Salir de pantalla completa' : 'Pantalla completa')
+      })
+
       function frame() {
         if (loopOffset > 0) {
           if (!userPaused && !hoverPaused && !touchPaused && !reduceMotion) {
@@ -500,6 +513,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      Fondo violeta profundo (#130d1c) · texto crema
      Cormorant (serif de marca) en títulos y nombres · sin neón
   ═══════════════════════════════════════════════ */
+
+  /* Fondo de la página al mismo violeta oscuro (evita el borde blanco) */
+  html, body { background-color: #130d1c; }
 
   .gn-main {
     --gn-bg:      #130d1c;  /* violeta casi negro (deriva del #381F56) */
@@ -822,6 +838,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-ctrl-pp .ic-play { display: none; }
   .gn-ctrl-pp.is-paused .ic-play { display: block; }
   .gn-ctrl-pp.is-paused .ic-pause { display: none; }
+  .gn-ctrl-fs .ic-compress { display: none; }
+  .gn-ctrl-fs.is-fs .ic-compress { display: block; }
+  .gn-ctrl-fs.is-fs .ic-expand { display: none; }
   .gn-ctrl:focus-visible { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
 
   .gn-item {
