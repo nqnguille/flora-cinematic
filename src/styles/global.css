@@ -3117,23 +3117,22 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-reprocann .fl-title { color: #fff; max-width: 17ch; margin: 0 auto; }
 .fl-reprocann .fl-title em { color: #4FC79E; }
 .fl-reprocann-lead { font-family: var(--font-ui); font-size: clamp(16px, 2vw, 20px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 54ch; margin: 22px auto 0; }
-/* Encabezado: título a la izquierda, credencial al lado */
+/* Encabezado: título a la izquierda, credencial entrando desde el borde
+   derecho de la pantalla (margen negativo hasta el viewport; el overflow
+   de la sección contiene el sangrado) */
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-.fl-rp-visual { display: flex; justify-content: center; }
-.fl-rp-visual img {
-  width: 100%; max-width: 420px; height: auto;
-  filter: drop-shadow(0 18px 40px rgba(0,0,0,0.3));
+.fl-rp-visual {
+  align-self: flex-end;
+  margin-right: calc((100% - 100vw) / 2);
+  width: min(84vw, 460px);
 }
+.fl-rp-visual img { width: 100%; height: auto; display: block; }
 @media (min-width: 900px) {
-  .fl-rp-head {
-    display: grid; grid-template-columns: 1.1fr 0.9fr;
-    gap: clamp(36px, 5vw, 72px); align-items: center;
-  }
-  .fl-rp-head-text { text-align: left; }
+  .fl-rp-head { flex-direction: row; align-items: center; justify-content: space-between; gap: clamp(24px, 3vw, 48px); }
+  .fl-rp-head-text { text-align: left; flex: 1 1 auto; }
   .fl-reprocann .fl-title { margin: 0; }
   .fl-reprocann-lead { margin-left: 0; margin-right: 0; }
-  .fl-rp-visual { justify-content: flex-end; }
-  .fl-rp-visual img { max-width: 460px; }
+  .fl-rp-visual { align-self: center; flex: 0 0 auto; width: min(42vw, 620px); }
 }
 /* Guía del trámite: 3 pasos editoriales sobre la banda violeta */
 .fl-rp-steps {
