@@ -254,14 +254,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // Tamaño del nombre según el ANCHO REAL de la card (no del viewport): grande y
     // protagonista en cualquier pantalla, con la palabra más larga entrando en 1 línea.
+    // Tamaño del nombre POR TARJETA: se agranda hasta que su palabra más larga
+    // llena el ancho. Nombres cortos → enormes (tope); largos → se agrandan y
+    // wrapean a 2-3 líneas. Mide con canvas en la fuente real (Bebas).
     function fitNames(track) {
       const first = track.querySelector('.gn-item')
       if (!first) return
       const w = first.getBoundingClientRect().width || first.clientWidth
       if (!w) { requestAnimationFrame(() => fitNames(track)); return } // aún sin layout: reintentar
-      // 6.98 = ancho de la palabra más larga (WATERMELON) por px de fuente → entra justa.
-      const fs = (w - 22) / 6.98
-      track.querySelectorAll('.gn-item-name').forEach((el) => { el.style.fontSize = fs + 'px' })
+      const usable = w - 22       // menos el padding lateral del nombre
+      const cap = w * 0.34        // tope generoso: nombres cortos ENORMES (pisan la foto, queda bien)
+      const ctx = (fitNames._c || (fitNames._c = document.createElement('canvas'))).getContext('2d')
+      track.querySelectorAll('.gn-item-name').forEach((el) => {
+        const words = (el.textContent || '').trim().split(/\s+/).filter(Boolean)
+        ctx.font = '100px "Bebas Neue", sans-serif'
+        let maxWordW = 1
+        for (const wd of words) maxWordW = Math.max(maxWordW, ctx.measureText(wd).width)
+        el.style.fontSize = Math.min(cap, (usable * 100) / maxWordW) + 'px'
+      })
     }
 
     function pauseTouchSoon(delay) {
@@ -282,6 +292,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       carouselStarted = true
       const track = document.getElementById('gn-grid')
       const playpause = document.getElementById('gn-playpause')
+
+      // Recalcular el tamaño de los nombres cuando Bebas terminó de cargar
+      // (el canvas mide bien recién ahí).
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitNames(track))
 
       track.addEventListener('mouseenter', () => { hoverPaused = true })
       track.addEventListener('mouseleave', () => { hoverPaused = false })
@@ -870,7 +884,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-item {
     flex: 0 0 auto;
-    width: clamp(380px, 33vw, 660px);
+    width: clamp(320px, 23.5vw, 460px);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -893,7 +907,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        hero de alto constante el nombre queda SIEMPRE a la misma Y en todas las
        tarjetas, sin importar cuánto mida el body. */
     flex: 0 0 auto;
-    height: clamp(340px, 57vh, 640px);
+    height: clamp(320px, 54vh, 600px);
     overflow: hidden;
     background: var(--gn-card-2);
   }
@@ -947,6 +961,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: clamp(2.4rem, 3vw, 3.5rem);
     line-height: 0.9;
     letter-spacing: 0.005em;
+    overflow-wrap: break-word;
     text-transform: uppercase;
     margin: 0;
     color: var(--gn-cream);
