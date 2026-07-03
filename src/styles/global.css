@@ -719,8 +719,13 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 }
 .nav-socios svg { width: 13px; height: 13px; flex-shrink: 0; }
 .nav-socios:hover { border-color: var(--bone); background: rgba(255,255,255,0.1); color: #fff !important; }
-.site-nav.scrolled .nav-links .nav-socios { border-color: rgba(56,31,86,0.35); color: var(--fl-violet) !important; }
-.site-nav.scrolled .nav-links .nav-socios:hover { border-color: var(--fl-violet); background: rgba(56,31,86,0.06); }
+.site-nav.scrolled .nav-socios { border-color: rgba(56,31,86,0.35); color: var(--fl-violet) !important; }
+.site-nav.scrolled .nav-socios:hover { border-color: var(--fl-violet); background: rgba(56,31,86,0.06); }
+/* Variante mobile: fuera del ul (que se oculta), pegada a la hamburguesa */
+.nav-socios--mobile { display: none; }
+@media (max-width: 940px) {
+  .nav-socios--mobile { display: inline-flex; margin-left: auto; margin-right: 14px; height: 40px; padding: 0 18px; }
+}
 
 /* ── Hamburguesa — solo mobile ── */
 .nav-hamburger {
