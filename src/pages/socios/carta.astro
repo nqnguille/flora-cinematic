@@ -710,10 +710,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .gn-logout {
-    background: none; border: 1px solid var(--gn-line); border-radius: 999px;
-    padding: 0.32rem 0.85rem; font-family: var(--font-ui); font-size: 0.76rem; font-weight: 600;
-    cursor: pointer; color: var(--gn-cream); white-space: nowrap; transition: border-color 0.15s ease;
+    background: rgba(244, 241, 247, 0.06); border: 1px solid var(--gn-line); border-radius: 999px;
+    padding: 0.5rem 1.15rem; font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; color: var(--gn-cream); white-space: nowrap; transition: border-color 0.15s ease, background 0.15s ease;
   }
+  .gn-logout:hover { background: rgba(244, 241, 247, 0.14); }
   .gn-logout:hover { border-color: var(--gn-violet); }
 
   /* Filtros centrados en una sola línea */
@@ -760,12 +761,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-dd { position: relative; flex: 0 0 auto; }
   .gn-dd[hidden] { display: none; }
   .gn-dd-toggle {
-    display: inline-flex; align-items: center; gap: 0.45rem;
-    font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-ui); font-size: 0.92rem; font-weight: 600;
     color: var(--gn-cream); background: var(--gn-card);
-    border: 1px solid var(--gn-line); border-radius: 999px;
-    padding: 0.48rem 0.95rem; cursor: pointer;
-    transition: border-color 0.15s ease;
+    border: 1px solid rgba(244, 241, 247, 0.2); border-radius: 999px;
+    padding: 0.58rem 1.2rem; cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
   .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.3); }
   .gn-dd-toggle.has-sel { border-color: var(--gn-violet); }
@@ -783,7 +784,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-dd-divider { height: 1px; background: var(--gn-line); margin: 0.35rem 0.3rem; }
   .gn-dd-all { font-weight: 700; }
-  .gn-dd-chev { width: 12px; height: 12px; color: var(--gn-violet); transition: transform 0.18s ease; }
+  .gn-dd-chev { width: 14px; height: 14px; color: var(--gn-violet); transition: transform 0.18s ease; }
   .gn-dd-toggle.is-open .gn-dd-chev { transform: rotate(180deg); }
 
   .gn-dd-panel {
@@ -860,19 +861,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    border: none;
-    background: none;
-    color: var(--gn-muted);
+    border: 1px solid var(--gn-line);
+    background: rgba(244, 241, 247, 0.06);
+    color: var(--gn-cream);
     cursor: pointer;
     transition: color 0.15s ease, background 0.15s ease, transform 0.08s ease;
   }
-  .gn-ctrl:hover { color: var(--gn-cream); background: rgba(244, 241, 247, 0.08); }
+  .gn-ctrl:hover { background: rgba(244, 241, 247, 0.16); }
   .gn-ctrl:active { transform: scale(0.9); }
-  .gn-ctrl svg { width: 16px; height: 16px; }
-  .gn-ctrl-pp { color: var(--gn-cream); }
+  .gn-ctrl svg { width: 20px; height: 20px; }
+  /* Play/pausa: botón lleno, resalta como control principal */
+  .gn-ctrl-pp { background: var(--gn-violet); border-color: var(--gn-violet); color: #130d1c; }
+  .gn-ctrl-pp:hover { background: #c8b2ec; }
   .gn-ctrl-pp .ic-play { display: none; }
   .gn-ctrl-pp.is-paused .ic-play { display: block; }
   .gn-ctrl-pp.is-paused .ic-pause { display: none; }
@@ -1215,10 +1218,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-meter-fill, .gn-item-img { animation: none !important; transition: none !important; }
   }
 
-  @media (max-width: 640px) {
-    .gn-filters { padding: 2.4rem 0.5rem 0; }
-    .gn-item { width: 80vw; }
-    .gn-circle { width: 50px; height: 50px; }
-    .gn-circle svg { width: 22px; height: 22px; }
+  @media (max-width: 760px) {
+    /* Topbar en 2 renglones: logo + controles arriba, filtros abajo (no se pisan) */
+    .gn-topbar { flex-wrap: wrap; row-gap: 0.7rem; }
+    .gn-logo { order: 1; }
+    .gn-topbar-right { order: 2; }
+    .gn-filters {
+      order: 3;
+      flex: 1 1 100%;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+    .gn-item { width: 82vw; }
+    .gn-circle { width: 46px; height: 46px; }
+    .gn-circle svg { width: 26px; height: 26px; }
   }
 </style>
