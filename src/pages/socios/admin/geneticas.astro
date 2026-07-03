@@ -46,7 +46,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <div class="ad-rows-head">
               <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
               <span>Predominancia</span><span>THC</span><span>CBD</span>
-              <span>Formato</span><span>Sabor</span><span>Efecto</span><span>Foto</span><span></span>
+              <span>Formato</span><span>Sabores</span><span>Efectos</span><span>Foto</span><span></span>
             </div>
             <div id="ad-list" class="ad-rows"></div>
           </div>
@@ -96,7 +96,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     // ── Desplegable tildable (formato / sabor / efecto) ──
-    const DD_LABEL = { formato: 'Formato', sabor: 'Sabor', efecto: 'Efecto' }
+    const DD_LABEL = { formato: 'Formato', sabor: 'Sabores', efecto: 'Efectos' }
     function ddOptions(dim) {
       if (dim === 'formato') return [['flor', 'Flor a granel', ''], ['preroll', 'Preroll 1g', '']]
       const cat = window.FLORA_TAG_ICONS[dim] || {}
