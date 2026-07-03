@@ -208,7 +208,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <h3 class="gn-item-name">${escapeHtml(g.nombre)}</h3>
           </div>
           <div class="gn-item-body">
-            ${infoLine(g)}
+            <div class="gn-head">${infoLine(g)}</div>
             <div class="gn-meters">
               ${meter('THC', g.thc, scaleMax)}
               ${meter('CBD', g.cbd, scaleMax)}
@@ -962,8 +962,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
+    /* Reparte encabezado · THC/CBD · iconos en todo el alto: sin hueco abajo. */
+    justify-content: space-between;
     padding: clamp(1rem, 1.6vw, 1.4rem);
   }
+  .gn-head { flex: 0 0 auto; }
 
   /* Renglón 1: predominancia / tipo · Renglón 2: banco */
   .gn-info {
@@ -1070,7 +1073,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   .gn-circle-row {
-    margin-top: auto; /* ancla los iconos al fondo del body: reparte el aire */
     display: flex;
     align-items: stretch;
     gap: 0.7rem;
