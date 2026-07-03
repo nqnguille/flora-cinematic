@@ -709,6 +709,28 @@ function initReveal() {
 }
 
 // ── Perfiles: flechas del carrusel horizontal ──
+// ── Perfiles: expandir card con tap (donde no hay hover) ──
+function initPerfilesExpand() {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.fl-perfil-card'))
+  if (!cards.length) return
+  cards.forEach((card) => {
+    const toggle = card.querySelector<HTMLButtonElement>('.fl-perfil-card-toggle')
+    if (!toggle) return
+    toggle.addEventListener('click', () => {
+      const open = card.classList.toggle('is-open')
+      toggle.setAttribute('aria-expanded', String(open))
+      if (open) {
+        cards.forEach((c) => {
+          if (c !== card) {
+            c.classList.remove('is-open')
+            c.querySelector('.fl-perfil-card-toggle')?.setAttribute('aria-expanded', 'false')
+          }
+        })
+      }
+    })
+  })
+}
+
 function initPerfilesCarousel() {
   const track = document.querySelector<HTMLElement>('[data-carousel-track]')
   const prevBtn = document.querySelector<HTMLButtonElement>('[data-carousel-prev]')
@@ -751,6 +773,7 @@ function init() {
   initWelcome()
   initReveal()
   initPerfilesCarousel()
+  initPerfilesExpand()
   animateSplitWords()
   initClipReveal()
   initFadeIn()

@@ -298,7 +298,7 @@ const igFallback = [
 
     <!-- Desktop links -->
     <ul class="nav-links" role="list">
-      <li><a href="#perfiles">En qué te ayuda</a></li>
+      <li><a href="#perfiles">Cómo ayudamos</a></li>
       <li><a href="#productos">Productos</a></li>
       <li><a href="#entrevista">REPROCANN</a></li>
       <li><a href="#acceso">Acceso</a></li>
@@ -343,7 +343,7 @@ const igFallback = [
         <span aria-hidden="true">✕</span>
       </button>
       <ul role="list">
-        <li><a href="#perfiles">En qué te ayuda</a></li>
+        <li><a href="#perfiles">Cómo ayudamos</a></li>
         <li><a href="#productos">Productos</a></li>
         <li><a href="#entrevista">REPROCANN</a></li>
         <li><a href="#acceso">Acceso</a></li>
@@ -421,11 +421,11 @@ const igFallback = [
   <!-- ══════════════════════════════════════════ -->
   <!-- NECESIDADES — ¿En qué te puede ayudar?     -->
   <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-perfiles" id="perfiles" aria-label="¿En qué te puede ayudar?">
+  <section class="fl-section fl-perfiles" id="perfiles" aria-label="¿Cómo podemos ayudarte?">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Cómo puede ayudarte</span>
-        <h2 class="fl-title">Cada necesidad,<br><em>su perfil.</em></h2>
+        <span class="fl-eyebrow">Estamos para acompañarte</span>
+        <h2 class="fl-title">¿Cómo podemos<br><em>ayudarte?</em></h2>
         <p class="fl-lead">
           El cannabis medicinal acompaña cada necesidad con un perfil distinto de
           CBD y THC. Estos son los abordajes más comunes; nuestro equipo te ayuda a
@@ -440,23 +440,23 @@ const igFallback = [
 
         <div class="fl-perfiles-carousel" role="list" data-carousel-track>
           {perfiles.map((p, i) => (
-            <a
-              class="fl-perfil-card"
-              href={p.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              role="listitem"
-              aria-label={`${p.tag}: ${p.title}`}
-            >
+            <article class="fl-perfil-card" role="listitem">
               <img class="fl-perfil-card-img" src={p.img} alt="" loading="lazy" width="1400" height="1750" />
               <span class="fl-perfil-card-icon" aria-hidden="true" set:html={perfilIconsSvg[i]} />
-              <span class="fl-perfil-card-body">
-                <span class="fl-perfil-card-tag">{p.tag}</span>
-                <span class="fl-perfil-card-title">{p.title}</span>
-                <span class="fl-perfil-card-desc">{p.desc}</span>
-                <span class="fl-perfil-card-cta">{p.cta} <span aria-hidden="true">→</span></span>
-              </span>
-            </a>
+              <div class="fl-perfil-card-body">
+                <button type="button" class="fl-perfil-card-toggle" aria-expanded="false">
+                  <span class="fl-perfil-card-tag">{p.tag}</span>
+                  <svg class="fl-perfil-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="fl-perfil-card-more">
+                  <div class="fl-perfil-card-more-inner">
+                    <span class="fl-perfil-card-title">{p.title}</span>
+                    <span class="fl-perfil-card-desc">{p.desc}</span>
+                    <a class="fl-perfil-card-cta" href={p.href} target="_blank" rel="noopener noreferrer">{p.cta} <span aria-hidden="true">→</span></a>
+                  </div>
+                </div>
+              </div>
+            </article>
           ))}
         </div>
 
@@ -928,7 +928,7 @@ const igFallback = [
         <nav class="fl-footer-col" aria-label="Navegación del sitio">
           <h4>Navegación</h4>
           <ul>
-            <li><a href="#perfiles">En qué te ayuda</a></li>
+            <li><a href="#perfiles">Cómo ayudamos</a></li>
             <li><a href="#productos">Productos</a></li>
             <li><a href="#acceso">Acceso</a></li>
             <li><a href="#entrevista">REPROCANN</a></li>

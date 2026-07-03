@@ -1378,11 +1378,33 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-perfil-card-icon { position: absolute; z-index: 2; top: 20px; left: 20px; width: 32px; height: 32px; opacity: 0.9; }
 .fl-perfil-card-icon svg { display: block; width: 100%; height: 100%; }
-.fl-perfil-card-body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: 18px 20px; display: flex; flex-direction: column; }
-.fl-perfil-card-tag { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.82; margin-bottom: 6px; }
-.fl-perfil-card-title { font-family: var(--font-ui); font-weight: 700; font-size: 16px; line-height: 1.25; }
+.fl-perfil-card-body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: 14px 20px 18px; display: flex; flex-direction: column; }
+/* Solo el título visible; el resto se expande en hover / tap / foco */
+.fl-perfil-card-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; background: none; border: none; padding: 0; cursor: pointer;
+  color: #fff; text-align: left;
+}
+.fl-perfil-card-tag { font-family: var(--font-ui); font-size: 18px; font-weight: 700; line-height: 1.2; }
+.fl-perfil-card-chev { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.8; transition: transform 0.35s ease; }
+.fl-perfil-card-more {
+  display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows 0.4s ease, opacity 0.3s ease;
+}
+.fl-perfil-card-more-inner { overflow: hidden; display: flex; flex-direction: column; }
+.fl-perfil-card-title { font-family: var(--font-ui); font-weight: 700; font-size: 14.5px; line-height: 1.35; margin-top: 10px; }
 .fl-perfil-card-desc { font-family: var(--font-ui); font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.82); margin-top: 8px; }
-.fl-perfil-card-cta { font-family: var(--font-ui); font-weight: 700; font-size: 12.5px; margin-top: 10px; }
+.fl-perfil-card-cta { font-family: var(--font-ui); font-weight: 700; font-size: 12.5px; margin-top: 12px; color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.fl-perfil-card-cta:hover { color: #E9FBEF; }
+/* Expansión: hover (desktop), foco de teclado, o .is-open (tap) */
+@media (hover: hover) {
+  .fl-perfil-card:hover .fl-perfil-card-more { grid-template-rows: 1fr; opacity: 1; }
+  .fl-perfil-card:hover .fl-perfil-card-chev { transform: rotate(180deg); }
+}
+.fl-perfil-card.is-open .fl-perfil-card-more,
+.fl-perfil-card:focus-within .fl-perfil-card-more { grid-template-rows: 1fr; opacity: 1; }
+.fl-perfil-card.is-open .fl-perfil-card-chev,
+.fl-perfil-card:focus-within .fl-perfil-card-chev { transform: rotate(180deg); }
 
 .fl-carousel-arrow {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
