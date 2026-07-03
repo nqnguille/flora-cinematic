@@ -263,16 +263,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const w = first.getBoundingClientRect().width || first.clientWidth
       if (!w) { requestAnimationFrame(() => fitNames(track)); return } // aún sin layout: reintentar
       const usable = w - 22       // menos el padding lateral del nombre
-      const cap = w * 0.34        // tope generoso: nombres cortos grandes (pisan la foto, queda bien)
       const SHRINK = 0.8          // -20% respecto del "lleno de ancho"
       const ctx = (fitNames._c || (fitNames._c = document.createElement('canvas'))).getContext('2d')
-      track.querySelectorAll('.gn-item-name').forEach((el) => {
-        const words = (el.textContent || '').trim().split(/\s+/).filter(Boolean)
-        ctx.font = '100px "Bebas Neue", sans-serif'
-        let maxWordW = 1
-        for (const wd of words) maxWordW = Math.max(maxWordW, ctx.measureText(wd).width)
-        el.style.fontSize = Math.min(cap, (usable * 100) / maxWordW) * SHRINK + 'px'
-      })
+      ctx.font = '100px "Bebas Neue", sans-serif'
+      // TODAS al mismo tamaño: el de "TROPICANA" (una palabra de ancho medio).
+      // Las palabras más largas (WATERMELON) igual entran a este tamaño.
+      const refW = ctx.measureText('TROPICANA').width
+      const fs = ((usable * 100) / refW) * SHRINK
+      track.querySelectorAll('.gn-item-name').forEach((el) => { el.style.fontSize = fs + 'px' })
     }
 
     function pauseTouchSoon(delay) {
