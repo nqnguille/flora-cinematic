@@ -51,6 +51,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
+
+      <footer class="gn-pagefoot">
+        <span class="gn-pf-brand">
+          <svg class="gn-pf-leaf" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Flora <em>club</em>
+        </span>
+        <span class="gn-pf-legal">Uso adulto responsable · +18</span>
+      </footer>
     </div>
   </main>
 
@@ -851,6 +859,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex: 0 0 auto;
     width: clamp(320px, 23vw, 450px);
     height: 100%;
+    container-type: inline-size; /* el nombre escala con el ancho de la card (cqw) */
     display: flex;
     flex-direction: column;
     background: var(--gn-card);
@@ -915,15 +924,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-item-name {
     position: absolute;
-    left: clamp(1rem, 2vw, 1.4rem);
-    right: clamp(1rem, 2vw, 1.4rem);
-    bottom: 0.7rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.6rem;
     z-index: 1;
     font-family: 'Bebas Neue', var(--font-ui);
     font-weight: 400;
-    font-size: clamp(2.6rem, 4vw, 3.8rem);
-    line-height: 0.92;
-    letter-spacing: 0.01em;
+    /* 12.7cqw = ~57px en una card de 450 → la palabra más larga (WATERMELON)
+       entra justa en una línea; los nombres de 2+ palabras wrapean por palabra. */
+    font-size: 12.7cqw;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
     text-transform: uppercase;
     margin: 0;
     color: var(--gn-cream);
@@ -948,9 +959,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     align-items: center;
     flex-wrap: wrap;
     gap: 0.35rem 0.45rem;
-    font-size: 0.76rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     margin: 0;
   }
@@ -958,9 +969,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-info i { font-style: normal; color: var(--gn-violet); opacity: 0.7; }
   .gn-bank-line {
     margin: 0.3rem 0 0;
-    font-size: 0.72rem;
+    font-size: 0.86rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--gn-green);
     white-space: nowrap;
@@ -968,12 +979,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     text-overflow: ellipsis;
   }
 
+  /* Separador full-width: divide el "encabezado" (predominancia + banco) de la
+     ficha técnica (medidores + iconos) que va debajo. */
   .gn-rule {
     display: block;
-    width: 64px;
+    width: 100%;
     height: 1px;
     background: var(--gn-line);
-    margin: 0.8rem 0 1rem;
+    margin: 0.85rem 0 1rem;
   }
 
   /* ── Medidores THC / CBD (lado a lado) ── */
@@ -1139,6 +1152,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-foot-leaf { width: 26px; height: 26px; flex-shrink: 0; color: var(--gn-green); }
 
   .gn-empty { color: var(--gn-muted); }
+
+  /* ── Footer de página ── */
+  .gn-pagefoot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: clamp(8px, 1.2vh, 16px);
+    margin-top: clamp(6px, 1vh, 12px);
+    border-top: 1px solid var(--gn-line);
+  }
+  .gn-pf-brand {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-size: 0.9rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gn-cream);
+  }
+  .gn-pf-brand em { font-style: normal; color: var(--gn-violet); font-weight: 600; }
+  .gn-pf-leaf { width: 22px; height: 22px; color: var(--gn-green); flex-shrink: 0; }
+  .gn-pf-legal {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gn-muted);
+  }
 
   /* Foco por teclado con identidad de marca */
   .gn-sel:focus-visible,
