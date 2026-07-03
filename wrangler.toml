@@ -13,3 +13,7 @@ id = "9ba2f212388e4ccaa8df118ecca632a7"
 [[kv_namespaces]]
 binding = "FOTOS"
 id = "721e23b4adcc42df8b2871f3aad1604c"
+
+[[kv_namespaces]]
+binding = "PEDIDOS"
+id = "f5f7e26245e641c6a3b9311351c187fe"

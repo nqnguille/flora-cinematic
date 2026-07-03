@@ -57,6 +57,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <footer class="gn-pagefoot">
         <p class="gn-disclaimer">Acceso exclusivo para pacientes vinculados a <strong>Asociación Civil Cann de Cannabis Medicinal</strong>, comprendido en el marco de la Ley 27.350 y el programa REPROCANN.</p>
       </footer>
+
+      <!-- ── Barra de pedido (flotante) ── -->
+      <div id="gn-cartbar" class="gn-cartbar" hidden>
+        <span id="gn-cartbar-txt" class="gn-cartbar-txt"></span>
+        <button id="gn-cartbar-btn" class="gn-btn-primary" type="button">Revisar pedido</button>
+      </div>
+
+      <!-- ── Modal de pedido ── -->
+      <div id="gn-modal" class="gn-modal" hidden>
+        <div class="gn-modal-card" role="dialog" aria-modal="true" aria-labelledby="gn-modal-title">
+          <h2 id="gn-modal-title" class="gn-modal-title">Tu <em>pedido</em></h2>
+          <div id="gn-modal-body"></div>
+          <p id="gn-modal-msg" class="gn-modal-msg" hidden></p>
+          <div id="gn-modal-actions" class="gn-modal-actions"></div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -184,6 +200,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return `<div class="gn-circle-row">${groups.join('<span class="gn-circle-sep"></span>')}</div>`
     }
 
+    // Steppers de pedido: una pastilla por formato (flor en gramos, preroll en unidades).
+    function orderStrip(g) {
+      const pills = formatosDe(g)
+        .filter((f) => FORMATO[f])
+        .map((f) => {
+          const key = `${g.id}|${f}`
+          const unit = f === 'flor' ? 'g' : 'u'
+          return `
+            <div class="gn-qty" data-order="${escapeHtml(key)}" data-unit="${unit}">
+              <span class="gn-qty-ic" title="${FORMATO[f].label}">${FORMATO[f].svg}</span>
+              <button class="gn-qty-btn" type="button" data-q="-1" aria-label="Quitar ${FORMATO[f].label}">−</button>
+              <span class="gn-qty-val">0 ${unit}</span>
+              <button class="gn-qty-btn" type="button" data-q="1" aria-label="Agregar ${FORMATO[f].label}">+</button>
+            </div>`
+        })
+        .join('')
+      return pills ? `<div class="gn-order"><span class="gn-order-label">Pedir</span>${pills}</div>` : ''
+    }
+
     function card(g, idx) {
       const tipo = ['sativa', 'indica', 'hibrida', 'cbd'].includes(g.tipo) ? g.tipo : 'hibrida'
       // Foto por convención: /socios/geneticas/<id>.webp — si falla, la tarjeta
@@ -214,6 +249,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               ${meter('CBD', g.cbd, scaleMax)}
             </div>
             ${circleStrip(g)}
+            ${orderStrip(g)}
           </div>
         </article>`
     }
@@ -377,6 +413,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         singleCount = list.length
         pendingRecenter = true
         requestAnimationFrame(measure)
+        // Re-pintar las cantidades del carrito en las tarjetas recién renderizadas
+        for (const key of cart.keys()) syncQty(key)
       }
     }
 
@@ -473,6 +511,197 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       renderDropdown('sabor', toOpts('sabor', present.sabor))
     }
 
+    /* ── Pedido (carrito + pedido activo) ── */
+    const cart = new Map() // "id|formato" → cantidad
+    let activePedido = null // pedido pendiente/listo del socio, si hay
+    const QTY_MAX = { flor: 50, preroll: 20 }
+    const ESTADO_TXT = {
+      pendiente: 'Tu pedido está en preparación',
+      listo: '¡Tu pedido está listo para retirar!',
+    }
+
+    function syncQty(key) {
+      const n = cart.get(key) || 0
+      document.querySelectorAll(`[data-order="${CSS.escape(key)}"]`).forEach((w) => {
+        w.querySelector('.gn-qty-val').textContent = `${n} ${w.getAttribute('data-unit')}`
+        w.classList.toggle('has-qty', n > 0)
+      })
+      updateCartBar()
+    }
+
+    function setPedidoMode() {
+      document.getElementById('gn-content').classList.toggle('has-pedido', !!activePedido)
+      updateCartBar()
+    }
+
+    function updateCartBar() {
+      const bar = document.getElementById('gn-cartbar')
+      const txt = document.getElementById('gn-cartbar-txt')
+      const btn = document.getElementById('gn-cartbar-btn')
+      if (activePedido) {
+        bar.hidden = false
+        bar.classList.toggle('is-listo', activePedido.estado === 'listo')
+        txt.textContent = ESTADO_TXT[activePedido.estado] || 'Tenés un pedido en curso'
+        btn.textContent = 'Ver pedido'
+      } else if (cart.size) {
+        let g = 0, u = 0
+        for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : (u += c)
+        bar.hidden = false
+        bar.classList.remove('is-listo')
+        txt.textContent = 'Tu pedido: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
+        btn.textContent = 'Revisar pedido'
+      } else {
+        bar.hidden = true
+      }
+    }
+
+    function cartItems() {
+      return [...cart.entries()].map(([key, cantidad]) => {
+        const [id, formato] = key.split('|')
+        const g = allGeneticas.find((x) => x.id === id)
+        return { id, formato, cantidad, nombre: g ? g.nombre : id }
+      })
+    }
+    function fmtItem(i) {
+      return `${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`
+    }
+
+    // Tocar +/− en cualquier copia de la tarjeta actualiza el carrito y TODAS las copias.
+    document.getElementById('gn-grid').addEventListener('click', (e) => {
+      const btn = e.target.closest('.gn-qty-btn')
+      if (!btn) return
+      const key = btn.closest('.gn-qty').getAttribute('data-order')
+      const formato = key.split('|')[1]
+      const next = Math.min(QTY_MAX[formato] || 20, Math.max(0, (cart.get(key) || 0) + Number(btn.getAttribute('data-q'))))
+      if (next === 0) cart.delete(key)
+      else cart.set(key, next)
+      syncQty(key)
+      pauseTouchSoon(6000)
+    })
+
+    /* ── Modal ── */
+    function showModalMsg(text, isError) {
+      const msg = document.getElementById('gn-modal-msg')
+      msg.textContent = text
+      msg.classList.toggle('is-error', !!isError)
+      msg.hidden = false
+    }
+
+    function openModal(successText) {
+      const body = document.getElementById('gn-modal-body')
+      const actions = document.getElementById('gn-modal-actions')
+      document.getElementById('gn-modal-msg').hidden = true
+      if (activePedido) {
+        const p = activePedido
+        body.innerHTML = `
+          <span class="gn-pedido-badge is-${escapeHtml(p.estado)}">${p.estado === 'listo' ? 'Listo para retirar' : 'En preparación'}</span>
+          <ul class="gn-modal-list">${p.items.map((i) => `<li>${escapeHtml(fmtItem(i))}</li>`).join('')}</ul>
+          ${p.nota ? `<p class="gn-modal-nota">Nota: ${escapeHtml(p.nota)}</p>` : ''}
+          <p class="gn-modal-hint">${p.estado === 'listo' ? 'Pasá por el club a retirarlo.' : 'Te avisamos apenas esté listo para retirar.'}</p>`
+        actions.innerHTML = `
+          ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar pedido</button>' : ''}
+          <button id="gn-modal-close" class="gn-btn-primary" type="button">Cerrar</button>`
+      } else {
+        const items = cartItems()
+        if (!items.length) { closeModal(); return }
+        body.innerHTML = `
+          <ul class="gn-modal-list">${items
+            .map((i) => `<li>${escapeHtml(fmtItem(i))}<button class="gn-modal-del" data-key="${escapeHtml(`${i.id}|${i.formato}`)}" type="button" aria-label="Quitar">×</button></li>`)
+            .join('')}</ul>
+          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2"></textarea>`
+        actions.innerHTML = `
+          <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
+          <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar pedido</button>`
+      }
+      document.getElementById('gn-modal').hidden = false
+      if (successText) showModalMsg(successText, false)
+    }
+    function closeModal() { document.getElementById('gn-modal').hidden = true }
+
+    async function sendPedido() {
+      const btn = document.getElementById('gn-modal-send')
+      btn.disabled = true
+      btn.textContent = 'Enviando…'
+      const nota = (document.getElementById('gn-modal-nota')?.value || '').trim()
+      const items = cartItems().map(({ id, formato, cantidad }) => ({ id, formato, cantidad }))
+      try {
+        const res = await fetch('/api/socios/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ items, nota }),
+        })
+        const data = await res.json()
+        if (res.ok && data.ok) {
+          const keys = [...cart.keys()]
+          cart.clear()
+          keys.forEach(syncQty)
+          activePedido = data.pedido
+          setPedidoMode()
+          openModal('Pedido enviado ✓')
+        } else if (res.status === 409 && data.activo) {
+          activePedido = data.activo
+          setPedidoMode()
+          openModal()
+          showModalMsg('Ya tenías un pedido en curso.', true)
+        } else {
+          btn.disabled = false
+          btn.textContent = 'Confirmar pedido'
+          showModalMsg(data.error || 'No se pudo enviar el pedido.', true)
+        }
+      } catch {
+        btn.disabled = false
+        btn.textContent = 'Confirmar pedido'
+        showModalMsg('Error de red al enviar el pedido.', true)
+      }
+    }
+
+    async function cancelPedido() {
+      if (!activePedido || !confirm('¿Cancelar tu pedido?')) return
+      try {
+        const res = await fetch('/api/socios/pedidos', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: activePedido.id }),
+        })
+        const data = await res.json()
+        if (res.ok && data.ok) {
+          activePedido = null
+          setPedidoMode()
+          closeModal()
+        } else {
+          showModalMsg(data.error || 'No se pudo cancelar.', true)
+        }
+      } catch {
+        showModalMsg('Error de red al cancelar.', true)
+      }
+    }
+
+    document.getElementById('gn-cartbar-btn').addEventListener('click', () => openModal())
+    document.getElementById('gn-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
+      if (e.target.id === 'gn-modal-close') closeModal()
+      else if (e.target.id === 'gn-modal-send') sendPedido()
+      else if (e.target.id === 'gn-pedido-cancel') cancelPedido()
+      else if (e.target.classList.contains('gn-modal-del')) {
+        cart.delete(e.target.getAttribute('data-key'))
+        syncQty(e.target.getAttribute('data-key'))
+        if (cart.size) openModal()
+        else closeModal()
+      }
+    })
+
+    async function loadPedidos() {
+      try {
+        const res = await fetch('/api/socios/pedidos', { credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        activePedido = data.activo || null
+        setPedidoMode()
+      } catch { /* sin red no bloqueamos la carta */ }
+    }
+
     /* ── Sesión ── */
 
     function showContent(list) {
@@ -482,6 +711,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       buildFilters()
       applyFilters()
       startCarousel()
+      loadPedidos()
     }
 
     function showLoginError(message) {
@@ -1185,6 +1415,216 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-empty { color: var(--gn-muted); }
 
+  /* ── Pedido: steppers en la tarjeta ── */
+  .gn-order {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--gn-line);
+  }
+  /* Con un pedido en curso se pide una sola vez: se ocultan los steppers */
+  .gn-content.has-pedido .gn-order { display: none; }
+  .gn-order-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gn-violet);
+    flex-shrink: 0;
+  }
+  .gn-qty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.3rem;
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid var(--gn-line);
+    border-radius: 999px;
+    padding: 0.22rem 0.3rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .gn-qty.has-qty { border-color: var(--gn-green); background: rgba(60, 180, 146, 0.1); }
+  .gn-qty-ic { width: 17px; height: 17px; display: inline-flex; color: var(--gn-muted); flex-shrink: 0; margin-left: 0.15rem; }
+  .gn-qty-ic svg { width: 100%; height: 100%; }
+  .gn-qty.has-qty .gn-qty-ic { color: var(--gn-green); }
+  .gn-qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(244, 241, 247, 0.08);
+    color: var(--gn-cream);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .gn-qty-btn:hover { background: var(--gn-violet); color: #130d1c; }
+  .gn-qty-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gn-muted);
+    white-space: nowrap;
+    text-align: center;
+    min-width: 3ch;
+  }
+  .gn-qty.has-qty .gn-qty-val { color: var(--gn-green); }
+
+  /* ── Barra de pedido flotante ── */
+  .gn-cartbar {
+    position: fixed;
+    left: 50%;
+    bottom: clamp(14px, 3vh, 28px);
+    transform: translateX(-50%);
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: min(92vw, 640px);
+    background: rgba(28, 20, 48, 0.92);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gn-violet);
+    border-radius: 999px;
+    padding: 0.6rem 0.7rem 0.6rem 1.3rem;
+    box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.8);
+  }
+  .gn-cartbar[hidden] { display: none; }
+  .gn-cartbar.is-listo { border-color: var(--gn-green); }
+  .gn-cartbar-txt { font-size: 0.9rem; font-weight: 600; color: var(--gn-cream); min-width: 0; }
+  .gn-cartbar.is-listo .gn-cartbar-txt { color: var(--gn-green); }
+
+  .gn-btn-primary {
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    padding: 0.6rem 1.35rem;
+    background: var(--gn-violet);
+    color: #130d1c;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  .gn-btn-primary:hover { background: #c8b2ec; }
+  .gn-btn-primary:active { transform: scale(0.97); }
+  .gn-btn-primary:disabled { opacity: 0.6; cursor: default; }
+  .gn-btn-ghost {
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 1px solid var(--gn-line);
+    border-radius: 999px;
+    padding: 0.6rem 1.35rem;
+    background: none;
+    color: var(--gn-cream);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s ease;
+  }
+  .gn-btn-ghost:hover { border-color: var(--gn-violet); }
+
+  /* ── Modal de pedido ── */
+  .gn-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(10, 6, 16, 0.7);
+    backdrop-filter: blur(6px);
+  }
+  .gn-modal[hidden] { display: none; }
+  .gn-modal-card {
+    width: 100%;
+    max-width: 480px;
+    max-height: 86svh;
+    overflow-y: auto;
+    background: var(--gn-card);
+    border: 1px solid var(--gn-line);
+    border-radius: 22px;
+    padding: clamp(22px, 3.5vw, 34px);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+  .gn-modal-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    line-height: 1;
+    margin: 0 0 1.1rem;
+    color: var(--gn-cream);
+  }
+  .gn-modal-title em { font-style: italic; color: var(--gn-green); }
+  .gn-modal-list { list-style: none; margin: 0 0 1rem; padding: 0; }
+  .gn-modal-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--gn-cream);
+    padding: 0.55rem 0.1rem;
+    border-bottom: 1px solid var(--gn-line);
+  }
+  .gn-modal-del {
+    background: none;
+    border: 1px solid var(--gn-line);
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+    line-height: 1;
+    color: rgba(242, 129, 138, 0.9);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gn-modal-del:hover { border-color: rgba(242, 129, 138, 0.9); }
+  .gn-modal-textarea {
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    color: var(--gn-cream);
+    background: var(--gn-card-2);
+    border: 1px solid var(--gn-line);
+    border-radius: 12px;
+    padding: 0.7rem 0.85rem;
+    resize: vertical;
+  }
+  .gn-modal-textarea::placeholder { color: rgba(244, 241, 247, 0.35); }
+  .gn-modal-textarea:focus { outline: none; border-color: var(--gn-violet); }
+  .gn-pedido-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem;
+    margin-bottom: 0.9rem;
+    background: rgba(183, 157, 230, 0.16);
+    color: var(--gn-violet);
+  }
+  .gn-pedido-badge.is-listo { background: rgba(60, 180, 146, 0.16); color: var(--gn-green); }
+  .gn-modal-nota { font-size: 0.85rem; color: var(--gn-muted); margin: 0 0 0.6rem; }
+  .gn-modal-hint { font-size: 0.85rem; color: var(--gn-muted); margin: 0; }
+  .gn-modal-msg { font-size: 0.88rem; font-weight: 600; color: var(--gn-green); margin: 0.9rem 0 0; }
+  .gn-modal-msg.is-error { color: #f2818a; }
+  .gn-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    margin-top: 1.3rem;
+    flex-wrap: wrap;
+  }
+
   /* ── Footer de página ── */
   .gn-pagefoot {
     flex: 0 0 auto;
@@ -1232,5 +1672,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-item { width: 82vw; }
     .gn-circle { width: 46px; height: 46px; }
     .gn-circle svg { width: 26px; height: 26px; }
+    /* En pantallas chicas el hero cede altura para que la ficha completa
+       (incluidos los steppers de pedido) entre sin recortarse; si aun así
+       falta alto, el body scrollea en vez de recortar. */
+    .gn-item-hero { height: clamp(240px, 42vh, 480px); }
+    .gn-item-body { overflow-y: auto; }
   }
 </style>

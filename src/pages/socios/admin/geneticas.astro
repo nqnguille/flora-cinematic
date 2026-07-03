@@ -27,6 +27,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div id="ad-content" class="ad-content" hidden>
         <div class="ad-tabs" role="tablist">
           <button class="ad-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
+          <button class="ad-tab" data-tab="pedidos" type="button">Pedidos<span id="ad-ped-dot" class="ad-ped-dot" hidden></span></button>
           <button class="ad-tab" data-tab="socios" type="button">Socios</button>
         </div>
 
@@ -56,6 +57,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <span id="ad-save-status" class="ad-save-status"></span>
             <button id="ad-save" type="button" class="ad-btn ad-btn-primary">Guardar cambios</button>
           </div>
+        </div>
+
+        <!-- ── Pestaña Pedidos ── -->
+        <div id="tab-pedidos" class="ad-tab-panel" hidden>
+          <div class="ad-toolbar">
+            <div class="ad-availfilter" role="group" aria-label="Filtrar pedidos">
+              <button class="ad-pedfilter ad-avail is-active" data-pedfilter="activos" type="button">Activos</button>
+              <button class="ad-pedfilter ad-avail" data-pedfilter="" type="button">Todos</button>
+            </div>
+            <button id="ad-ped-refresh" type="button" class="ad-btn ad-btn-ghost ad-btn-slim">↻ Actualizar</button>
+            <span id="ad-ped-count" class="ad-count"></span>
+          </div>
+          <div id="ad-pedidos-list" class="ad-socios-list"></div>
         </div>
 
         <!-- ── Pestaña Socios ── -->
@@ -327,10 +341,107 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       tab.addEventListener('click', () => {
         const name = tab.dataset.tab
         document.querySelectorAll('.ad-tab').forEach((t) => t.classList.toggle('is-active', t === tab))
-        document.getElementById('tab-geneticas').hidden = name !== 'geneticas'
-        document.getElementById('tab-socios').hidden = name !== 'socios'
+        ;['geneticas', 'pedidos', 'socios'].forEach((n) => {
+          const panel = document.getElementById('tab-' + n)
+          if (panel) panel.hidden = n !== name
+        })
         if (name === 'socios') loadSocios()
+        if (name === 'pedidos') loadPedidos()
       })
+    })
+
+    /* ── Pedidos ── */
+    let PEDIDOS = []
+    let pedFilter = 'activos'
+    const PED_BADGE = {
+      pendiente: ['Pendiente', ''],
+      listo: ['Listo para retirar', 'is-on'],
+      entregado: ['Entregado', 'is-done'],
+      cancelado: ['Cancelado', 'is-off'],
+    }
+    function pedidoItems(p) {
+      return p.items
+        .map((i) => `<li>${esc(`${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}`)}${i.formato === 'preroll' ? ' <span class="ad-ped-fmt">preroll</span>' : ''}</li>`)
+        .join('')
+    }
+    function pedidoAcciones(p) {
+      if (p.estado === 'pendiente') {
+        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar listo</button>
+                <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+      }
+      if (p.estado === 'listo') {
+        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregado</button>
+                <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+      }
+      return ''
+    }
+    function pedidoRow(p) {
+      const [label, cls] = PED_BADGE[p.estado] || [p.estado, '']
+      return `
+        <article class="ad-socio ad-pedido">
+          <div class="ad-socio-main">
+            <div class="ad-socio-top">
+              <strong class="ad-socio-name">${esc(p.name || p.email)}</strong>
+              <span class="ad-socio-badge ${cls}">${esc(label)}</span>
+              <span class="ad-socio-meta">${esc(fmtFecha(p.creado))}</span>
+            </div>
+            <div class="ad-socio-email">${esc(p.email)}</div>
+            <ul class="ad-ped-items">${pedidoItems(p)}</ul>
+            ${p.nota ? `<div class="ad-socio-meta">Nota: ${esc(p.nota)}</div>` : ''}
+          </div>
+          <div class="ad-ped-actions">${pedidoAcciones(p)}</div>
+        </article>`
+    }
+    function renderPedidos() {
+      const list = document.getElementById('ad-pedidos-list')
+      const filtered = pedFilter === 'activos'
+        ? PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo')
+        : PEDIDOS
+      const activos = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
+      document.getElementById('ad-ped-count').textContent = `${activos} activo(s) · ${PEDIDOS.length} en total`
+      const dot = document.getElementById('ad-ped-dot')
+      dot.hidden = activos === 0
+      dot.textContent = activos || ''
+      list.innerHTML = filtered.length
+        ? filtered.map(pedidoRow).join('')
+        : `<p class="ad-save-status">${pedFilter === 'activos' ? 'No hay pedidos activos.' : 'Todavía no entró ningún pedido.'}</p>`
+    }
+    async function loadPedidos() {
+      const list = document.getElementById('ad-pedidos-list')
+      if (!PEDIDOS.length) list.innerHTML = '<p class="ad-save-status">Cargando…</p>'
+      try {
+        const res = await fetch('/api/socios/admin/pedidos', { credentials: 'include' })
+        const data = await res.json()
+        if (!res.ok || !data.ok) { list.innerHTML = `<p class="ad-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        PEDIDOS = data.pedidos || []
+        renderPedidos()
+      } catch {
+        list.innerHTML = '<p class="ad-msg">Error de red al cargar pedidos.</p>'
+      }
+    }
+    document.querySelectorAll('.ad-pedfilter').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.ad-pedfilter').forEach((x) => x.classList.remove('is-active'))
+      b.classList.add('is-active')
+      pedFilter = b.dataset.pedfilter
+      renderPedidos()
+    }))
+    document.getElementById('ad-ped-refresh').addEventListener('click', loadPedidos)
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest && e.target.closest('.ad-ped-action')
+      if (!btn) return
+      const estado = btn.dataset.estado
+      if (estado === 'cancelado' && !confirm('¿Cancelar este pedido?')) return
+      btn.disabled = true
+      try {
+        const res = await fetch('/api/socios/admin/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: btn.dataset.id, estado }),
+        })
+        if (res.ok) await loadPedidos()
+        else btn.disabled = false
+      } catch { btn.disabled = false }
     })
 
     /* ── Socios ── */
@@ -449,6 +560,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       document.getElementById('ad-login').hidden = true
       document.getElementById('ad-content').hidden = false
       render()
+      loadPedidos() // completa el contador de pedidos activos en la pestaña
       return true
     }
 
@@ -782,4 +894,35 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: var(--ad-danger); flex-shrink: 0;
   }
   .ad-socio-del:hover { border-color: var(--ad-danger); }
+
+  /* ── Pedidos ── */
+  .ad-ped-dot {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.15rem; height: 1.15rem; padding: 0 0.32rem; margin-left: 0.45rem;
+    font-size: 0.66rem; font-weight: 800; border-radius: 999px;
+    background: var(--ad-green); color: #08160f;
+  }
+  .ad-ped-dot[hidden] { display: none; }
+  .ad-btn-slim { padding: 0.42rem 0.95rem; font-size: 0.82rem; margin-top: 0; }
+  .ad-pedido { align-items: stretch; }
+  .ad-ped-items { list-style: none; margin: 0.25rem 0 0.2rem; padding: 0; }
+  .ad-ped-items li {
+    font-size: 0.92rem; font-weight: 600; color: var(--ad-cream);
+    padding: 0.28rem 0; border-bottom: 1px dashed var(--ad-line);
+  }
+  .ad-ped-items li:last-child { border-bottom: none; }
+  .ad-ped-fmt {
+    font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.12rem 0.45rem; border-radius: 999px; margin-left: 0.3rem;
+    background: rgba(183, 157, 230, 0.16); color: var(--ad-violet);
+  }
+  .ad-ped-actions {
+    display: flex; flex-direction: column; align-items: stretch; justify-content: center;
+    gap: 0.45rem; flex-shrink: 0;
+  }
+  .ad-ped-actions .ad-btn-ghost { border-style: solid; }
+  .ad-ped-actions .is-danger { color: var(--ad-danger); }
+  .ad-ped-actions .is-danger:hover { border-color: var(--ad-danger); }
+  .ad-socio-badge.is-done { background: rgba(183, 157, 230, 0.16); color: var(--ad-violet); }
+  .ad-socio-badge.is-off { background: rgba(242, 129, 138, 0.12); color: var(--ad-danger); }
 </style>
