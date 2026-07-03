@@ -250,6 +250,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       loopOffset = secondCopyStart ? secondCopyStart.offsetLeft : 0
       // Arrancamos en la 2ª copia para poder rebobinar sin toparse con el borde.
       if (pendingRecenter && loopOffset > 0) { track.scrollLeft = loopOffset; pendingRecenter = false }
+      fitNames(track)
+    }
+
+    // Tamaño del nombre según el ANCHO REAL de la card (no del viewport): grande y
+    // protagonista en cualquier pantalla, con la palabra más larga entrando en 1 línea.
+    function fitNames(track) {
+      const first = track.querySelector('.gn-item')
+      if (!first) return
+      const fs = Math.max(30, (first.clientWidth - 16) / 7.1)
+      track.querySelectorAll('.gn-item-name').forEach((el) => { el.style.fontSize = fs + 'px' })
     }
 
     function pauseTouchSoon(delay) {
@@ -709,6 +719,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex: 0 0 auto;
     z-index: 25;
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
@@ -858,7 +869,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-item {
     flex: 0 0 auto;
-    width: clamp(320px, 23vw, 450px);
+    width: clamp(340px, 25vw, 490px);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -1094,15 +1105,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.45rem;
-    flex: 0 1 auto;
+    gap: 0.5rem;
+    flex: 1 1 0;
     min-width: 0;
-    max-width: 82px;
+    max-width: 120px;
     text-align: center;
   }
   .gn-circle {
-    width: 52px;
-    height: 52px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
     border: 1.5px solid rgba(244, 241, 247, 0.16);
     display: flex;
@@ -1111,7 +1122,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: var(--gn-green);
     flex-shrink: 0;
   }
-  .gn-circle svg { width: 24px; height: 24px; }
+  .gn-circle svg { width: 31px; height: 31px; }
   .gn-circle-label {
     font-size: 0.66rem;
     font-weight: 600;
