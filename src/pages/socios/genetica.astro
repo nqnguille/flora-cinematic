@@ -864,8 +864,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Hero: foto con el nombre montado sobre el degradé (mini-póster) */
   .gn-item-hero {
     position: relative;
-    flex: 1 1 auto;
-    min-height: 130px;
+    /* Altura FIJA e idéntica en todas las tarjetas: depende del viewport, no
+       del contenido. El nombre está anclado al fondo del hero, así que con el
+       hero de alto constante el nombre queda SIEMPRE a la misma Y en todas las
+       tarjetas, sin importar cuánto mida el body. */
+    flex: 0 0 auto;
+    height: clamp(300px, 48vh, 520px);
     overflow: hidden;
     background: var(--gn-card-2);
   }
@@ -924,7 +928,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-item-body {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto;
+    /* El body absorbe TODO el sobrante de la tarjeta (queda debajo del hero
+       fijo). El contenido se apoya arriba; el excedente queda como aire abajo,
+       con el color de la tarjeta, sin costura con el degradé del hero. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
     padding: clamp(1rem, 1.6vw, 1.4rem);
   }
 
@@ -932,18 +941,30 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-info {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    font-size: 0.78rem;
+    flex-wrap: nowrap;      /* una sola línea siempre */
+    gap: 0.4rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em; /* algo más ceñido para que entre en la card angosta */
     text-transform: uppercase;
     margin: 0;
+    white-space: nowrap;
+    min-width: 0;
   }
-  .gn-info .gn-gen { color: var(--gn-violet); }
+  /* La predominancia se mantiene; si algo no entra, se recorta el banco con
+     puntos suspensivos antes que envolver a una 2ª línea. */
+  .gn-info .gn-gen {
+    color: var(--gn-violet);
+    flex: 0 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis;
+  }
   .gn-info i { font-style: normal; color: var(--gn-violet); opacity: 0.7; }
-  .gn-info b { font-weight: 400; color: var(--gn-muted); }
-  .gn-info .gn-bank { color: var(--gn-green); }
+  .gn-info b { font-weight: 400; color: var(--gn-muted); flex: 0 0 auto; }
+  .gn-info .gn-bank {
+    color: var(--gn-green);
+    flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis;
+  }
 
   .gn-rule {
     display: block;
@@ -969,6 +990,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     text-transform: uppercase;
     color: var(--gn-violet);
     margin-bottom: 0.5rem;
+    white-space: nowrap;
   }
   .gn-meter-raw { color: var(--gn-muted); font-weight: 700; line-height: 1; }
   .gn-meter-track {
@@ -1075,11 +1097,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-circle svg { width: 24px; height: 24px; }
   .gn-circle-label {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 600;
     color: var(--gn-cream);
     opacity: 0.85;
-    line-height: 1.25;
+    line-height: 1.2;
+    width: 100%;
+    /* Reserva SIEMPRE 2 líneas y recorta con puntos suspensivos: el alto es
+       constante haya 1 o 2 palabras ("Cítrico" vs "Mermelada cítrica"), y un
+       texto largo nunca dispara una 3ª línea que rompa la geometría. */
+    min-height: calc(0.66rem * 1.2 * 2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
   }
 
   /* ── Footer slim ── */
