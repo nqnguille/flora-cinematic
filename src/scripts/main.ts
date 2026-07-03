@@ -125,6 +125,46 @@ function initAccesoVideo() {
   io.observe(video)
 }
 
+// ── Acceso: escena viva — revelado escalonado + parallax del video ──
+// Estados iniciales via gsap.set (nunca CSS) para no romper no-js/reduced-motion.
+function initAccesoScene() {
+  const section = document.querySelector<HTMLElement>('.fl-acceso')
+  if (!section || prefersReducedMotion) return
+
+  const items = [
+    section.querySelector('.fl-acceso-head .fl-eyebrow'),
+    section.querySelector('.fl-acceso-head .fl-title'),
+    section.querySelector('.fl-acceso-story'),
+    section.querySelector('.fl-acceso-datos'),
+    section.querySelector('.fl-acceso-ctas'),
+    section.querySelector('.fl-acceso-note'),
+  ].filter(Boolean)
+
+  gsap.set(items, { opacity: 0, y: 26 })
+  gsap.to(items, {
+    opacity: 1,
+    y: 0,
+    duration: 0.9,
+    stagger: 0.12,
+    ease: 'power3.out',
+    scrollTrigger: { trigger: section, start: 'top 68%' },
+  })
+
+  // El video respira: leve escala + deriva vertical mientras la escena cruza el viewport
+  const video = section.querySelector<HTMLElement>('.fl-acceso-video')
+  if (video) {
+    gsap.fromTo(video,
+      { yPercent: -6, scale: 1.12 },
+      {
+        yPercent: 6,
+        scale: 1.12,
+        ease: 'none',
+        scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true },
+      }
+    )
+  }
+}
+
 // ── Split words ──
 // IMPORTANTE: No ponemos opacity:0 en CSS. GSAP setea el from sólo si hay animaciones.
 function splitWords() {
@@ -637,7 +677,7 @@ function initWelcome() {
     scrollTrigger: {
       trigger: section,
       start: 'top top',
-      end: () => '+=' + Math.round(window.innerHeight * steps * 1.6),
+      end: () => '+=' + Math.round(window.innerHeight * steps * 1.0),
       pin: stage,
       scrub: 1,
       anticipatePin: 1,
@@ -764,6 +804,7 @@ function init() {
   initHeroImage()
   initHeroVideo()
   initAccesoVideo()
+  initAccesoScene()
   initYouTubeFacades()
   initParticles()
 
