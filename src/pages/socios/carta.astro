@@ -35,6 +35,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <div id="gn-content" class="gn-content" hidden>
       <div class="gn-topbar">
         <img class="gn-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        <div class="gn-filters">
+          <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
+          <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
+          <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
+          <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
+        </div>
         <div class="gn-topbar-right">
         <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
           <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
@@ -46,17 +52,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
       </div>
 
-      <div class="gn-filters">
-        <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
-        <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
-        <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
-        <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
-      </div>
-
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
 
       <footer class="gn-pagefoot">
-        <p class="gn-disclaimer">Acceso exclusivo para socios registrados de la <strong>Asociación Civil Cann de Cannabis Medicinal</strong> (I.G.J. N.º 1994128), en el marco de la Ley 27.350 y el programa REPROCANN. Uso adulto y responsable — no apto para menores de 18 años. La información no reemplaza el consejo de un profesional de la salud.</p>
+        <p class="gn-disclaimer">Acceso exclusivo para pacientes vinculados a <strong>Asociación Civil Cann de Cannabis Medicinal</strong>, comprendido en el marco de la Ley 27.350 y el programa REPROCANN.</p>
       </footer>
     </div>
   </main>
@@ -258,7 +257,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function fitNames(track) {
       const first = track.querySelector('.gn-item')
       if (!first) return
-      const fs = Math.max(30, (first.clientWidth - 16) / 7.1)
+      const w = first.getBoundingClientRect().width || first.clientWidth
+      if (!w) { requestAnimationFrame(() => fitNames(track)); return } // aún sin layout: reintentar
+      // 6.98 = ancho de la palabra más larga (WATERMELON) por px de fuente → entra justa.
+      const fs = (w - 22) / 6.98
       track.querySelectorAll('.gn-item-name').forEach((el) => { el.style.fontSize = fs + 'px' })
     }
 
@@ -702,16 +704,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-logout:hover { border-color: var(--gn-violet); }
 
   /* Filtros centrados en una sola línea */
+  /* Filtros dentro del topbar (en el medio, una sola línea) */
   .gn-filters {
-    flex: 0 0 auto;
-    position: relative;
-    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    flex-wrap: wrap;
-    padding: 0 clamp(0px, 2vw, 40px);
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   /* Barra superior derecha: controles discretos + Salir */
@@ -869,7 +870,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-item {
     flex: 0 0 auto;
-    width: clamp(340px, 25vw, 490px);
+    width: clamp(340px, 27vw, 540px);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -892,7 +893,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        hero de alto constante el nombre queda SIEMPRE a la misma Y en todas las
        tarjetas, sin importar cuánto mida el body. */
     flex: 0 0 auto;
-    height: clamp(340px, 55vh, 600px);
+    height: clamp(300px, 46vh, 540px);
     overflow: hidden;
     background: var(--gn-card-2);
   }
@@ -1092,8 +1093,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-circle-cluster {
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: space-evenly;
+    gap: 0.4rem;
+    width: 100%;
   }
   .gn-circle-sep {
     width: 1px;
@@ -1106,14 +1108,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-width: 0;
-    max-width: 120px;
+    max-width: 130px;
     text-align: center;
   }
   .gn-circle {
-    width: 68px;
-    height: 68px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 1.5px solid rgba(244, 241, 247, 0.16);
     display: flex;
@@ -1122,7 +1124,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: var(--gn-green);
     flex-shrink: 0;
   }
-  .gn-circle svg { width: 31px; height: 31px; }
+  .gn-circle svg { width: 28px; height: 28px; }
   .gn-circle-label {
     font-size: 0.66rem;
     font-weight: 600;
