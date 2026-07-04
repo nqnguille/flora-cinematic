@@ -183,18 +183,26 @@
 .td-pub-socios svg { width: 13px; height: 13px; }
 .td-pub-socios:hover { border-color: var(--fl-violet, #381F56); }
 
-/* Franja "¿sos socio?" */
+/* Invitación de socio — banda de club, violeta de marca */
 .td-gate {
-  display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
-  background: #F3EEFA; border-bottom: 1px solid rgba(56,31,86,0.14);
-  padding: 14px clamp(24px, 6vw, 80px);
-  font-family: var(--font-ui); font-size: 14px; color: var(--fl-ink, #1C1626);
+  background: linear-gradient(120deg, var(--fl-violet, #381F56) 0%, #4B2D6E 100%);
+  padding: 16px clamp(24px, 6vw, 80px);
+  font-family: var(--font-ui); color: #fff;
 }
 .td-gate[hidden] { display: none; }
-.td-gate p { margin: 0; }
-.td-gate-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.td-gate-o { color: rgba(28,22,38,0.5); font-size: 13px; }
-.td-gate-asociarme { color: var(--fl-violet, #381F56); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.td-gate-inner {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  max-width: 1240px; margin: 0 auto;
+}
+.td-gate-leaf { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.12); color: #4FC79E; display: flex; align-items: center; justify-content: center; }
+.td-gate-leaf svg { width: 24px; height: 24px; }
+.td-gate-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 220px; }
+.td-gate-text strong { font-size: 15px; font-weight: 800; }
+.td-gate-text span { font-size: 13px; color: rgba(255,255,255,0.75); }
+.td-gate-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.td-gate-asociarme { color: #fff; font-weight: 700; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; opacity: 0.85; }
+.td-gate-asociarme:hover { opacity: 1; }
+.td-gate .td-msg { max-width: 1240px; margin: 8px auto 0; color: #E9FBEF; }
 
 .td-activo-pub { margin: 18px clamp(24px, 6vw, 80px) 0; background: rgba(10,80,60,0.07); border-color: rgba(10,80,60,0.3); color: var(--fl-ink, #1C1626); }
 .td-activo-pub strong { color: var(--fl-green, #0A503C); }

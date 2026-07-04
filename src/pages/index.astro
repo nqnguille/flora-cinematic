@@ -242,12 +242,14 @@ const igFallback = [
         <a href={waAsociarse} class="nav-cta nav-cta--publico" target="_blank" rel="noopener noreferrer">
           Asociarme
         </a>
+        <span class="nav-hola" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</span>
         <a href="/socios/carta/" class="nav-cta nav-cta--carta">🌿 Mi carta</a>
       </li>
     </ul>
 
     <!-- Mobile: Asociarme (conversión) + Acceso socios compacto, siempre visibles -->
     <a href={waAsociarse} class="nav-cta nav-cta--mobile nav-cta--publico" target="_blank" rel="noopener noreferrer">Asociarme</a>
+    <span class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</span>
     <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta">🌿 Mi carta</a>
     <a href="/socios/" class="nav-socios nav-socios--mobile" aria-label="Acceso socios">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>

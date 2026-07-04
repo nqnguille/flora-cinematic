@@ -155,8 +155,20 @@
   }
   document.getElementById('td-bar-btn').addEventListener('click', reservar)
 
+  async function saludar() {
+    try {
+      const res = await fetch('/api/socios/yo', { credentials: 'include' })
+      if (!res.ok) return
+      const yo = await res.json()
+      const nombre = String(yo.name || '').trim().split(/\s+/)[0] || 'socio'
+      document.querySelectorAll('[data-socio-nombre]').forEach((el) => { el.textContent = nombre })
+      document.querySelectorAll('[data-socio-hola]').forEach((el) => { el.hidden = false })
+    } catch { /* el saludo nunca rompe nada */ }
+  }
+
   function showContent(precios) {
     document.body.classList.add('is-socio')
+    saludar()
     ITEMS = Array.isArray(precios[CFG.categoria]) ? precios[CFG.categoria] : []
     const login = document.getElementById('td-login')
     if (login) login.hidden = true

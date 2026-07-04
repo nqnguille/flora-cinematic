@@ -1805,3 +1805,17 @@ body.is-socio .fl-acceso-reserva.is-on strong { color: #4FC79E; }
   body.is-socio .fl-acceso-reserva.is-on { margin-left: auto; }
 }
 .td-done-landing { margin: 26px clamp(24px, 6vw, 80px); }
+
+/* Saludo al socio en la topbar */
+.nav-hola {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  color: var(--bone); letter-spacing: 0.02em; white-space: nowrap;
+}
+.nav-hola b { font-weight: 800; color: #4FC79E; }
+.site-nav.scrolled .nav-hola { color: var(--fl-ink); }
+.site-nav.scrolled .nav-hola b { color: var(--fl-green); }
+.nav-hola--mobile { display: none; }
+@media (max-width: 940px) {
+  body.is-socio .nav-hola--mobile:not([hidden]) { display: inline; margin-left: auto; margin-right: 12px; font-size: 12.5px; }
+  body.is-socio .nav-cta--carta.nav-cta--mobile { margin-left: 0; }
+}
