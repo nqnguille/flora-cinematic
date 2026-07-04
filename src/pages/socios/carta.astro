@@ -90,7 +90,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Formatos: FLORES = hoja de cannabis (Tabler, MIT) · PREROLL = cono con brasa
     // sólida y corte del papel a la altura del filtro (abajo).
     const ICON_FLOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20s0 -2 1 -3.5c-1.5 0 -2 -.5 -4 -1.5c0 0 1.839 -1.38 5 -1c-1.789 -.97 -3.279 -2.03 -5 -6c0 0 3.98 -.3 6.5 3.5c-2.284 -4.9 1.5 -9.5 1.5 -9.5c2.734 5.47 2.389 7.5 1.5 9.5c2.531 -3.77 6.5 -3.5 6.5 -3.5c-1.721 3.97 -3.211 5.03 -5 6c3.161 -.38 5 1 5 1c-2 1 -2.5 1.5 -4 1.5c1 1.5 1 3.5 1 3.5c-2 0 -4.438 -2.22 -5 -3c-.563 .78 -3 3 -5 3"/><path d="M12 22v-5"/></svg>'
-    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 20.9 9.5 8.7Q9.4 7.7 10.2 7.3L13.8 7.3Q14.6 7.7 14.5 8.7L13.2 20.9Q13.1 21.6 12 21.6Q10.9 21.6 10.8 20.9Z"/><path d="M10.6 17.6Q12 16.9 13.4 17.6"/><path d="M10.2 7.3Q12 5.3 13.8 7.3" fill="currentColor"/></svg>'
+    // stroke 1.25: compensa el scale(1.3) óptico para que el trazo final ≈1.6 armonice con la hoja
+    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 20.9 9.5 8.7Q9.4 7.7 10.2 7.3L13.8 7.3Q14.6 7.7 14.5 8.7L13.2 20.9Q13.1 21.6 12 21.6Q10.9 21.6 10.8 20.9Z"/><path d="M10.6 17.6Q12 16.9 13.4 17.6"/><path d="M10.2 7.3Q12 5.3 13.8 7.3" fill="currentColor"/></svg>'
     const FORMATO = {
       flor: { label: 'Flores', svg: ICON_FLOR },
       preroll: { label: 'Preroll', svg: ICON_PREROLL },
@@ -340,12 +341,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       track.addEventListener('touchstart', () => { touchPaused = true; clearTimeout(resumeTimer) }, { passive: true })
       track.addEventListener('touchend', () => pauseTouchSoon(4000), { passive: true })
       track.addEventListener('wheel', () => pauseTouchSoon(4000), { passive: true })
+      track.addEventListener('focusin', () => pauseTouchSoon(8000))
       window.addEventListener('resize', () => requestAnimationFrame(measure))
 
       // Arrastrar con el mouse para mover el carrusel a gusto
+      // (salvo desde el stepper de reserva: ahí el gesto es tocar, no arrastrar)
       let dragging = false, lastX = 0
       track.addEventListener('pointerdown', (e) => {
-        if (e.pointerType !== 'mouse') return
+        if (e.pointerType !== 'mouse' || e.target.closest('.gn-qty')) return
         dragging = true; lastX = e.clientX; track.classList.add('is-grabbing')
       })
       window.addEventListener('pointermove', (e) => {
@@ -385,7 +388,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       function frame() {
         if (loopOffset > 0) {
-          if (!userPaused && !hoverPaused && !touchPaused && !reduceMotion) {
+          // Con ítems en el carrito el carrusel no avanza solo: el socio está
+          // armando su reserva y la marquesina ya cumplió su rol.
+          if (!userPaused && !hoverPaused && !touchPaused && !reduceMotion && !cart.size) {
             track.scrollLeft += SPEED
           }
           // Loop infinito en ambos sentidos: mantener en [loopOffset, 2·loopOffset)
@@ -405,7 +410,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         singleCount = 0
         loopOffset = 0
         track.scrollLeft = 0
-        track.innerHTML = `<p class="gn-empty">${allGeneticas.length === 0 ? 'No hay genéticas cargadas por el momento.' : 'Ninguna genética coincide con esos filtros.'}</p>`
+        track.innerHTML = `<p class="gn-empty">${allGeneticas.length === 0 ? 'No hay genéticas cargadas por el momento.' : 'Ninguna genética coincide con esos filtros.'}${filters.formato.size ? ' <button id="gn-empty-reset" class="gn-btn-ghost" type="button">Ver todas</button>' : ''}</p>`
       } else {
         // Repetimos el listado con buffer a ambos lados para loop sin huecos y
         // poder rebobinar; el corte se hace al ancho de UNA copia.
@@ -429,8 +434,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // Selector de formato: LA decisión principal (flores vs prerolls) va en un
     // segmentado grande siempre visible, no escondida en un desplegable.
+    // Un formato sin genéticas activas se atenúa y no responde (evita el dead-end).
+    let paintSeg = () => {}
     function renderSegFormato() {
       const el = document.getElementById('gn-seg')
+      const counts = { flor: 0, preroll: 0 }
+      for (const g of allGeneticas) for (const f of formatosDe(g)) if (f in counts) counts[f]++
       const opts = [
         ['', 'Todas', ''],
         ['flor', 'Flores', ICON_FLOR],
@@ -438,22 +447,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       ]
       el.innerHTML = opts
         .map(([val, lab, icon]) =>
-          `<button class="gn-seg-btn${val ? ` is-${val}` : ''}" type="button" data-formato="${val}">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
+          `<button class="gn-seg-btn${val ? ` is-${val}` : ''}${val && !counts[val] ? ' is-empty' : ''}" type="button" data-formato="${val}">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
         )
         .join('')
-      const paint = () => {
+      paintSeg = () => {
         const sel = filters.formato.size === 1 ? [...filters.formato][0] : ''
         el.querySelectorAll('.gn-seg-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.formato === sel))
       }
       el.addEventListener('click', (e) => {
         const b = e.target.closest('.gn-seg-btn')
-        if (!b) return
+        if (!b || b.classList.contains('is-empty')) return
         filters.formato.clear()
         if (b.dataset.formato) filters.formato.add(b.dataset.formato)
-        paint()
+        paintSeg()
         applyFilters()
       })
-      paint()
+      paintSeg()
     }
 
     function closeAllPanels(except) {
@@ -584,6 +593,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       } else {
         bar.hidden = true
       }
+      // Con la barra visible, el pie reserva su alto: la barra no tapa ni los
+      // steppers de las tarjetas ni el disclaimer legal.
+      document.getElementById('gn-content').classList.toggle('has-cartbar', !bar.hidden)
     }
 
     function cartItems() {
@@ -597,18 +609,47 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return `${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`
     }
 
-    // Tocar +/− en cualquier copia de la tarjeta actualiza el carrito y TODAS las copias.
-    document.getElementById('gn-grid').addEventListener('click', (e) => {
-      const btn = e.target.closest('.gn-qty-btn')
-      if (!btn) return
+    function stepQty(btn) {
       const key = btn.closest('.gn-qty').getAttribute('data-order')
       const formato = key.split('|')[1]
       const next = Math.min(QTY_MAX[formato] || 20, Math.max(0, (cart.get(key) || 0) + Number(btn.getAttribute('data-q'))))
       if (next === 0) cart.delete(key)
       else cart.set(key, next)
       syncQty(key)
-      pauseTouchSoon(6000)
+      // Armando la reserva el carrusel espera mucho más (que no se lleve la tarjeta)
+      pauseTouchSoon(20000)
+    }
+
+    // Tocar +/− en cualquier copia actualiza el carrito y TODAS las copias.
+    // Mantener apretado repite (spinner): tras 400ms suma cada 90ms; el click
+    // que dispara el pointerup post-hold se ignora con holdFired.
+    let holdTimer = null, holdRepeat = null, holdFired = false
+    function stopHold() { clearTimeout(holdTimer); clearInterval(holdRepeat); holdTimer = holdRepeat = null }
+    const gridEl = document.getElementById('gn-grid')
+    gridEl.addEventListener('click', (e) => {
+      if (e.target.id === 'gn-empty-reset') {
+        filters.formato.clear()
+        paintSeg()
+        applyFilters()
+        return
+      }
+      const btn = e.target.closest('.gn-qty-btn')
+      if (!btn) return
+      if (holdFired) { holdFired = false; return }
+      stepQty(btn)
     })
+    gridEl.addEventListener('pointerdown', (e) => {
+      const btn = e.target.closest('.gn-qty-btn')
+      if (!btn) return
+      stopHold()
+      holdTimer = setTimeout(() => {
+        holdFired = true
+        stepQty(btn)
+        holdRepeat = setInterval(() => stepQty(btn), 90)
+      }, 400)
+    })
+    window.addEventListener('pointerup', stopHold)
+    window.addEventListener('pointercancel', stopHold)
 
     /* ── Modal ── */
     function showModalMsg(text, isError) {
@@ -621,6 +662,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function openModal(successText) {
       const body = document.getElementById('gn-modal-body')
       const actions = document.getElementById('gn-modal-actions')
+      // La nota sobrevive al re-render (ej: al quitar un ítem de la lista)
+      const prevNota = document.getElementById('gn-modal-nota')?.value || ''
       document.getElementById('gn-modal-msg').hidden = true
       if (activePedido) {
         const p = activePedido
@@ -639,7 +682,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <ul class="gn-modal-list">${items
             .map((i) => `<li>${escapeHtml(fmtItem(i))}<button class="gn-modal-del" data-key="${escapeHtml(`${i.id}|${i.formato}`)}" type="button" aria-label="Quitar">×</button></li>`)
             .join('')}</ul>
-          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2"></textarea>
+          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
           <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
         actions.innerHTML = `
           <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
@@ -647,8 +690,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
       document.getElementById('gn-modal').hidden = false
       if (successText) showModalMsg(successText, false)
+      ;(document.getElementById('gn-modal-send') || document.getElementById('gn-modal-close'))?.focus()
     }
     function closeModal() { document.getElementById('gn-modal').hidden = true }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('gn-modal').hidden) closeModal()
+    })
 
     async function sendPedido() {
       const btn = document.getElementById('gn-modal-send')
@@ -676,6 +723,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           setPedidoMode()
           openModal()
           showModalMsg('Ya tenías una reserva en curso.', true)
+        } else if (res.status === 401) {
+          showModalMsg('Tu sesión venció — te llevamos al ingreso…', true)
+          setTimeout(() => location.reload(), 1800)
         } else {
           btn.disabled = false
           btn.textContent = 'Confirmar reserva'
@@ -702,7 +752,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           activePedido = null
           setPedidoMode()
           closeModal()
+        } else if (res.status === 401) {
+          showModalMsg('Tu sesión venció — te llevamos al ingreso…', true)
+          setTimeout(() => location.reload(), 1800)
         } else {
+          // Ej: el club ya la marcó lista → refrescar al estado real del servidor
+          await loadPedidos()
+          openModal()
           showModalMsg(data.error || 'No se pudo cancelar.', true)
         }
       } catch {
@@ -1024,7 +1080,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 4px;
+    padding: 3px;
     background: var(--gn-card);
     border: 1px solid rgba(244, 241, 247, 0.2);
     border-radius: 999px;
@@ -1040,12 +1096,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--gn-muted);
-    padding: 0.55rem 1.2rem;
+    padding: 0.4rem 1.1rem;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
+    touch-action: manipulation;
     transition: background 0.15s ease, color 0.15s ease;
   }
+  /* Formato sin genéticas activas: atenuado y sin acción (evita el dead-end) */
+  .gn-seg-btn.is-empty { opacity: 0.38; cursor: default; }
   .gn-seg-btn:hover { color: var(--gn-cream); }
   /* El ícono es el protagonista: mismo sello circular que llevan las fotos
      (flores = círculo verde, preroll = círculo violeta) */
@@ -1084,7 +1143,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 0.92rem; font-weight: 600;
     color: var(--gn-cream); background: var(--gn-card);
     border: 1px solid rgba(244, 241, 247, 0.2); border-radius: 999px;
-    padding: 0.58rem 1.2rem; cursor: pointer;
+    padding: 0.78rem 1.2rem; cursor: pointer; /* misma altura que el segmentado */
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.3); }
@@ -1116,7 +1175,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-dd-panel[hidden] { display: none; }
   .gn-dd-opt {
     display: flex; align-items: center; gap: 0.65rem;
-    padding: 0.45rem 0.6rem; border-radius: 9px; cursor: pointer;
+    padding: 0.45rem 0.6rem; border-radius: 8px; cursor: pointer;
     font-size: 0.86rem; color: var(--gn-cream);
     transition: background 0.12s ease;
   }
@@ -1512,13 +1571,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-foot-leaf { width: 26px; height: 26px; flex-shrink: 0; color: var(--gn-green); }
 
-  .gn-empty { color: var(--gn-muted); }
+  .gn-empty { color: var(--gn-muted); display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
 
-  /* ── Reserva: steppers en la tarjeta ── */
+  /* ── Reserva: steppers en la tarjeta ──
+     UNA sola fila: etiqueta a la izquierda, pastillas a la derecha —
+     no estira la tarjeta en vertical. */
   .gn-order {
     display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
+    align-items: center;
+    gap: 0.5rem;
     margin-top: 0.6rem;
     padding-top: 0.55rem;
     border-top: 1px solid var(--gn-line);
@@ -1531,15 +1592,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--gn-muted);
-    text-align: center;
+    flex-shrink: 0;
   }
-  /* Pastillas compactas y CENTRADAS (no se estiran: con un solo formato queda
-     una pastilla prolija en el medio) */
   .gn-order-pills {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 0.5rem;
+    flex: 1 1 auto;
     min-width: 0;
   }
   .gn-qty {
@@ -1578,9 +1638,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex-shrink: 0;
   }
   .gn-qty-btn {
+    position: relative;
     width: 30px;
     height: 21px;
-    border-radius: 7px;
+    border-radius: 8px;
     border: none;
     background: rgba(244, 241, 247, 0.1);
     color: var(--gn-cream);
@@ -1589,9 +1650,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     line-height: 1;
     cursor: pointer;
     flex-shrink: 0;
+    touch-action: manipulation;
     transition: background 0.12s ease, color 0.12s ease;
   }
-  .gn-qty-btn:hover { background: var(--gn-violet); color: #130d1c; }
+  /* Área táctil ampliada sin cambiar el visual */
+  .gn-qty-btn::after { content: ''; position: absolute; inset: -5px -4px; }
+  /* El hover respeta el código de color del formato */
+  .gn-qty.is-flor .gn-qty-btn:hover { background: var(--gn-green); color: #08160f; }
+  .gn-qty.is-preroll .gn-qty-btn:hover { background: var(--gn-violet); color: #170c2b; }
   .gn-qty-val {
     font-size: 1rem;
     font-weight: 800;
@@ -1623,7 +1689,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-cartbar[hidden] { display: none; }
   .gn-cartbar.is-listo { border-color: var(--gn-green); }
-  .gn-cartbar-txt { font-size: 0.9rem; font-weight: 600; color: var(--gn-cream); min-width: 0; }
+  .gn-cartbar-txt {
+    font-size: 0.9rem; font-weight: 600; color: var(--gn-cream);
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Con la barra visible el pie reserva su alto: no tapa steppers ni disclaimer */
+  .gn-content.has-cartbar .gn-pagefoot { padding-bottom: 62px; }
   .gn-cartbar.is-listo .gn-cartbar-txt { color: var(--gn-green); }
 
   .gn-btn-primary {
@@ -1778,7 +1849,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-sel:focus-visible,
   .gn-search:focus-visible,
   .gn-logout:focus-visible,
-  .gn-back:focus-visible {
+  .gn-back:focus-visible,
+  .gn-qty-btn:focus-visible,
+  .gn-btn-primary:focus-visible,
+  .gn-btn-ghost:focus-visible,
+  .gn-dd-toggle:focus-visible,
+  .gn-modal-del:focus-visible {
     outline: 2px solid var(--gn-violet);
     outline-offset: 2px;
   }
@@ -1806,5 +1882,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        falta alto, el body scrollea en vez de recortar. */
     .gn-item-hero { height: clamp(240px, 42vh, 480px); }
     .gn-item-body { overflow-y: auto; }
+    /* Botones del spinner más grandes para el pulgar */
+    .gn-qty-btn { width: 38px; height: 26px; font-size: 1.1rem; }
   }
 </style>

@@ -79,8 +79,18 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const catalogo: any[] = rawCat ? JSON.parse(rawCat) : [];
   const porId = new Map(catalogo.map((g) => [g.id, g]));
 
-  const items: any[] = [];
+  // Ítems duplicados (misma genética+formato) se fusionan ANTES de validar,
+  // así el tope por formato no se puede evadir repitiendo el ítem.
+  const fusionados = new Map<string, { id: string; formato: string; cantidad: number }>();
   for (const it of rawItems) {
+    const k = `${String(it?.id || '')}|${String(it?.formato || '')}`;
+    const prev = fusionados.get(k);
+    if (prev) prev.cantidad += Number(it?.cantidad);
+    else fusionados.set(k, { id: String(it?.id || ''), formato: String(it?.formato || ''), cantidad: Number(it?.cantidad) });
+  }
+
+  const items: any[] = [];
+  for (const it of fusionados.values()) {
     const g = porId.get(String(it?.id || ''));
     const formato = String(it?.formato || '');
     const cantidad = Math.floor(Number(it?.cantidad));
