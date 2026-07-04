@@ -1,0 +1,205 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import '../../styles/global.css'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Mi cuenta — socios | Flora ONG"
+  description="Tu perfil de socio: reserva en curso e historial de reservas."
+  noindex={true}
+>
+  <link rel="stylesheet" href="/socios/tienda.css" />
+  <main class="td-main">
+    <!-- ── Login ── -->
+    <div id="cu-login" class="td-login">
+      <div class="td-login-card">
+        <div class="td-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="td-brand-name">Flora <em>club</em></span></div>
+        <h1 class="td-title">Mi <em>cuenta</em></h1>
+        <p class="td-sub">Ingresá con tu cuenta de Google de socio para ver tu perfil y tus reservas.</p>
+        <div id="g_id_button"></div>
+        <p id="cu-login-msg" class="td-msg" hidden></p>
+        <a href="/" class="td-back">← Volver al sitio</a>
+      </div>
+    </div>
+
+    <!-- ── Cuenta ── -->
+    <div id="cu-content" class="td-content" hidden>
+      <div class="td-head">
+        <a href="/" class="td-back">← Volver al sitio</a>
+        <div class="td-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="td-brand-name">Flora <em>club</em></span></div>
+        <button id="cu-logout" class="td-logout" type="button">Cerrar sesión</button>
+      </div>
+
+      <div class="cu-perfil">
+        <img id="cu-foto" class="cu-foto" alt="" width="64" height="64" hidden />
+        <div class="cu-perfil-datos">
+          <h1 class="td-title">Hola, <em id="cu-nombre">socio</em></h1>
+          <p id="cu-email" class="cu-email"></p>
+        </div>
+      </div>
+
+      <section class="cu-sec">
+        <h2 class="cu-sec-title">Reserva en curso</h2>
+        <div id="cu-activo" class="cu-lista"></div>
+        <p id="cu-sin-activo" class="cu-vacio" hidden>Sin reservas en curso. <a href="/socios/carta/">Abrí la carta del mes 🌿</a></p>
+      </section>
+
+      <section class="cu-sec">
+        <h2 class="cu-sec-title">Historial de reservas</h2>
+        <div id="cu-historial" class="cu-lista"></div>
+        <p id="cu-sin-historial" class="cu-vacio" hidden>Todavía no hiciste reservas.</p>
+      </section>
+
+      <div class="cu-links">
+        <a class="cu-carta" href="/socios/carta/">🌿 Abrir la carta del mes</a>
+        <a class="cu-link" href="/aceites/">Aceites</a>
+        <a class="cu-link" href="/cremas/">Cremas</a>
+        <a class="cu-link" href="/extracciones/">Extracciones</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    const FECHA = (iso) => {
+      try {
+        return new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
+      } catch { return '' }
+    }
+    const ESTADO = {
+      pendiente: ['En preparación', 'is-pendiente'],
+      listo: ['Lista para retirar', 'is-listo'],
+      entregado: ['Entregada', 'is-entregado'],
+      cancelado: ['Cancelada', 'is-cancelado'],
+    }
+    const badge = (estado) => {
+      const [txt, cls] = ESTADO[estado] || [estado, '']
+      return `<span class="td-cart-badge ${cls}">${esc(txt)}</span>`
+    }
+    const lineas = (p) => p.items
+      .map((i) => `${i.cantidad}${i.formato === 'flor' ? ' g' : ' ×'} ${esc(i.nombre)}${i.formato === 'preroll' ? ' (preroll)' : ''}`)
+      .join(' · ')
+
+    function pedidoCard(p, esActivo) {
+      return `
+        <article class="cu-pedido${esActivo ? ' is-activo' : ''}">
+          <div class="cu-pedido-head">
+            <span class="cu-pedido-fecha">${FECHA(p.creado)}</span>
+            ${badge(p.estado)}
+          </div>
+          <p class="cu-pedido-items">${lineas(p)}</p>
+          ${p.nota ? `<p class="cu-pedido-nota">📝 ${esc(p.nota)}</p>` : ''}
+        </article>`
+    }
+
+    async function cargar() {
+      const [yoRes, pedRes] = await Promise.all([
+        fetch('/api/socios/yo', { credentials: 'include' }),
+        fetch('/api/socios/pedidos', { credentials: 'include' }),
+      ])
+      if (!yoRes.ok || !pedRes.ok) return false
+      const yo = await yoRes.json()
+      const ped = await pedRes.json()
+
+      document.getElementById('cu-nombre').textContent = (yo.name || 'socio').split(/\s+/)[0]
+      document.getElementById('cu-email').textContent = yo.email || ''
+      if (yo.picture) {
+        const f = document.getElementById('cu-foto')
+        f.src = yo.picture
+        f.hidden = false
+      }
+
+      const activo = ped.activo
+      document.getElementById('cu-activo').innerHTML = activo ? pedidoCard(activo, true) : ''
+      document.getElementById('cu-sin-activo').hidden = !!activo
+
+      const resto = (ped.pedidos || []).filter((p) => !activo || p.id !== activo.id)
+      document.getElementById('cu-historial').innerHTML = resto.map((p) => pedidoCard(p, false)).join('')
+      document.getElementById('cu-sin-historial').hidden = resto.length > 0
+
+      document.getElementById('cu-login').hidden = true
+      document.getElementById('cu-content').hidden = false
+      return true
+    }
+
+    window.handleGoogleCredential = async (response) => {
+      try {
+        const res = await fetch('/api/socios/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ credential: response.credential }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.ok) {
+          const msg = document.getElementById('cu-login-msg')
+          msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
+          msg.hidden = false
+          return
+        }
+        await cargar()
+      } catch {
+        const msg = document.getElementById('cu-login-msg')
+        msg.textContent = 'Error de red al verificar con Google.'
+        msg.hidden = false
+      }
+    }
+
+    document.getElementById('cu-logout').addEventListener('click', async () => {
+      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+      location.href = '/'
+    })
+
+    if (googleClientId) {
+      window.onload = () => {
+        google.accounts.id.initialize({ client_id: googleClientId, callback: window.handleGoogleCredential })
+        google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          theme: 'filled_black', size: 'large', text: 'signin_with',
+        })
+      }
+    }
+
+    cargar()
+  </script>
+
+  <style is:global>
+    html, body { background-color: #130d1c; }
+    .cu-perfil { display: flex; align-items: center; gap: 18px; margin: 18px 0 30px; }
+    .cu-foto { border-radius: 50%; border: 2px solid rgba(183, 157, 230, 0.4); }
+    .cu-foto[hidden] { display: none; }
+    .cu-email { color: rgba(244, 241, 247, 0.55); font-size: 0.9rem; margin: 4px 0 0; }
+    .cu-sec { margin-bottom: 30px; }
+    .cu-sec-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: #b79de6; margin: 0 0 12px;
+    }
+    .cu-lista { display: flex; flex-direction: column; gap: 12px; }
+    .cu-pedido {
+      background: #1b1326; border: 1px solid rgba(183, 157, 230, 0.16);
+      border-radius: 16px; padding: 16px 18px;
+    }
+    .cu-pedido.is-activo { border-color: rgba(60, 180, 146, 0.45); }
+    .cu-pedido-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .cu-pedido-fecha { font-size: 0.82rem; color: rgba(244, 241, 247, 0.55); }
+    .cu-pedido-items { font-size: 0.95rem; color: #f4f1f7; line-height: 1.55; margin: 0; }
+    .cu-pedido-nota { font-size: 0.82rem; color: rgba(244, 241, 247, 0.55); margin: 8px 0 0; }
+    .td-cart-badge.is-entregado { background: rgba(244, 241, 247, 0.12); color: rgba(244, 241, 247, 0.7); }
+    .td-cart-badge.is-cancelado { background: rgba(255, 120, 120, 0.14); color: #ff9d9d; }
+    .cu-vacio { color: rgba(244, 241, 247, 0.55); font-size: 0.92rem; }
+    .cu-vacio a { color: #b79de6; }
+    .cu-vacio[hidden] { display: none; }
+    .cu-carta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #b79de6; color: #170c2b; text-decoration: none;
+      font-weight: 700; font-size: 0.95rem; padding: 13px 24px; border-radius: 999px;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .cu-carta:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .cu-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+    .cu-link { color: rgba(244, 241, 247, 0.7); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 3px; }
+    .cu-link:hover { color: #fff; }
+  </style>
+</Layout>

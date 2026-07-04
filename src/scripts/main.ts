@@ -267,6 +267,18 @@ function initLoader() {
   const loader   = document.querySelector<HTMLElement>('.page-loader')
   if (!loader) return
 
+  // El gate de edad se responde UNA sola vez: si ya confirmó, el loader ni aparece.
+  const EDAD_KEY = 'flora-edad-ok'
+  const EDAD_TTL = 180 * 24 * 60 * 60 * 1000 // 180 días
+  try {
+    const t = Number(localStorage.getItem(EDAD_KEY) || 0)
+    if (t && Date.now() - t < EDAD_TTL) {
+      loader.remove()
+      window.dispatchEvent(new CustomEvent('flora:loader-done'))
+      return
+    }
+  } catch { /* sin storage, el gate se muestra normal */ }
+
   const ring      = loader.querySelector<HTMLElement>('.loader-ring')
   const ringFill  = loader.querySelector<HTMLElement>('.loader-ring-fill')
   const cue       = loader.querySelector<HTMLElement>('.loader-cue')
@@ -319,6 +331,7 @@ function initLoader() {
   const confirmYes = () => {
     if (answered) return
     answered = true
+    try { localStorage.setItem(EDAD_KEY, String(Date.now())) } catch { /* sin storage */ }
     setPct(100)
     markReady()
 

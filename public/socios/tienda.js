@@ -286,6 +286,13 @@
     if (document.getElementById('td-cart')?.classList.contains('is-open')) renderCart()
   })
 
+  // Logout desde la topbar o el drawer
+  document.addEventListener('click', async (e) => {
+    if (!e.target.closest('.nav-logout, .nav-logout-action')) return
+    await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+    location.reload()
+  })
+
   // El botón Carrito de la topbar abre el panel (href queda de fallback sin JS)
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.nav-cta--carta, .td-pub-carrito')
@@ -354,6 +361,9 @@
       const yo = await res.json()
       const nombre = String(yo.name || '').trim().split(/\s+/)[0] || 'socio'
       document.querySelectorAll('[data-socio-nombre]').forEach((el) => { el.textContent = nombre })
+      if (yo.picture) {
+        document.querySelectorAll('[data-socio-foto]').forEach((el) => { el.src = yo.picture; el.hidden = false })
+      }
       document.querySelectorAll('[data-socio-hola]').forEach((el) => { el.hidden = false })
     } catch { /* el saludo nunca rompe nada */ }
   }

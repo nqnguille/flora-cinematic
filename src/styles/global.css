@@ -1832,3 +1832,27 @@ body.is-socio .drawer-cta--socios { display: none !important; }
   background: #4FC79E; color: #14231b; font-size: 11px; font-weight: 800;
 }
 .nav-carrito-n[hidden] { display: none; }
+
+/* Hola → Mi cuenta (link con avatar) + logout */
+.nav-hola { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.nav-hola:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.nav-hola-foto { border-radius: 50%; display: block; }
+.nav-hola-foto[hidden] { display: none; }
+.nav-logout {
+  display: none; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: none; border: 1.5px solid rgba(244, 241, 230, 0.4);
+  color: var(--bone); cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease;
+}
+body.is-socio .nav-logout:not([hidden]) { display: inline-flex; }
+.nav-logout svg { width: 15px; height: 15px; }
+.nav-logout:hover { border-color: #ff9d9d; color: #ff9d9d; }
+.site-nav.scrolled .nav-logout { border-color: rgba(56, 31, 86, 0.3); color: var(--fl-violet); }
+.site-nav.scrolled .nav-logout:hover { border-color: #c0392b; color: #c0392b; }
+/* Drawer: entradas solo-socio */
+.drawer-socio-only { display: none; }
+body.is-socio .drawer-socio-only { display: block; }
+.drawer-logout {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-ui); font-size: inherit; color: #b3453f;
+}

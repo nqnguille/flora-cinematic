@@ -242,14 +242,18 @@ const igFallback = [
         <a href={waAsociarse} class="nav-cta nav-cta--publico" target="_blank" rel="noopener noreferrer">
           Asociarme
         </a>
-        <span class="nav-hola" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</span>
+        <a href="/socios/cuenta/" class="nav-hola" data-socio-hola hidden title="Mi cuenta">
+          <img class="nav-hola-foto" data-socio-foto alt="" width="22" height="22" hidden />
+          ¡Hola, <b data-socio-nombre></b>!
+        </a>
         <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+        <button type="button" class="nav-logout" data-socio-hola hidden aria-label="Cerrar sesión" title="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
       </li>
     </ul>
 
     <!-- Mobile: Asociarme (conversión) + Acceso socios compacto, siempre visibles -->
     <a href={waAsociarse} class="nav-cta nav-cta--mobile nav-cta--publico" target="_blank" rel="noopener noreferrer">Asociarme</a>
-    <span class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</span>
+    <a href="/socios/cuenta/" class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</a>
     <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
     <a href="/socios/" class="nav-socios nav-socios--mobile" aria-label="Acceso socios">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
@@ -288,6 +292,8 @@ const igFallback = [
             Asociarme por WhatsApp
           </a>
         </li>
+        <li class="drawer-socio-only"><a href="/socios/cuenta/">Mi cuenta</a></li>
+        <li class="drawer-socio-only"><button type="button" class="drawer-logout nav-logout-action">Cerrar sesión</button></li>
         <li>
           <a href="/socios/" class="drawer-cta drawer-cta--socios">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
