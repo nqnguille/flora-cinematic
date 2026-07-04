@@ -873,23 +873,34 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       sin: (a, b) => Number(!!a.lastLogin) - Number(!!b.lastLogin), // sin ingresar primero
     }
 
+    // Filtros del padrón: las burbujas de stats filtran al tocarlas
+    let socioFiltro = ''
+    const SOCIO_FILTROS = {
+      activos30: (s) => s.lastLogin && Date.now() - Date.parse(s.lastLogin) < 30 * 86400000,
+      ingresaron: (s) => !!s.lastLogin,
+      sin: (s) => !s.lastLogin,
+    }
+
     function renderSocios() {
       const list = document.getElementById('pa-socios-list')
       let socios = [...SOCIOS_LIST].sort(SOCIO_SORTERS[socioSort.key])
       if (socioSort.dir === 1) socios.reverse()
+      if (socioFiltro && SOCIO_FILTROS[socioFiltro]) socios = socios.filter(SOCIO_FILTROS[socioFiltro])
       if (socioQ) {
         socios = socios.filter((s) =>
           `${s.name || ''} ${s.givenName || ''} ${s.familyName || ''} ${s.email} ${s.nota || ''}`.toLowerCase().includes(socioQ)
         )
       }
-      // Sub-estadísticas del padrón
-      const conIngreso = SOCIOS_LIST.filter((s) => s.lastLogin).length
-      const activos30 = SOCIOS_LIST.filter((s) => s.lastLogin && Date.now() - Date.parse(s.lastLogin) < 30 * 86400000).length
+      // Sub-estadísticas del padrón (clickeables: filtran)
+      const conIngreso = SOCIOS_LIST.filter(SOCIO_FILTROS.ingresaron).length
+      const activos30 = SOCIOS_LIST.filter(SOCIO_FILTROS.activos30).length
+      const chip = (filtro, html, title) =>
+        `<button type="button" class="pa-stat${socioFiltro === filtro ? ' is-active' : ''}" data-filtro="${filtro}" title="${title}">${html}</button>`
       document.getElementById('pa-socio-stats').innerHTML = [
-        `<span class="pa-stat"><strong>${SOCIOS_LIST.length}</strong> socio(s)</span>`,
-        `<span class="pa-stat"><strong class="is-green">${activos30}</strong> activo(s) últimos 30 días</span>`,
-        `<span class="pa-stat"><strong class="is-violet">${conIngreso}</strong> ingresaron alguna vez</span>`,
-        `<span class="pa-stat"><strong>${SOCIOS_LIST.length - conIngreso}</strong> sin ingresar</span>`,
+        chip('', `<strong>${SOCIOS_LIST.length}</strong> socio(s)`, 'Ver todos'),
+        chip('activos30', `<strong class="is-green">${activos30}</strong> activo(s) últimos 30 días`, 'Solo los que entraron este mes'),
+        chip('ingresaron', `<strong class="is-violet">${conIngreso}</strong> ingresaron alguna vez`, 'Solo los que ya usaron la carta'),
+        chip('sin', `<strong>${SOCIOS_LIST.length - conIngreso}</strong> sin ingresar`, 'Solo los que nunca entraron'),
       ].join('')
       // Flecha de dirección en el criterio activo
       document.querySelectorAll('#pa-socio-sort .pa-avail').forEach((b) => {
@@ -899,8 +910,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       })
       list.innerHTML = socios.length
         ? socios.map(socioRow).join('')
-        : `<p class="pa-empty">${socioQ ? 'Ningún socio coincide con la búsqueda.' : 'Todavía no hay socios cargados.'}</p>`
+        : `<p class="pa-empty">${socioQ || socioFiltro ? 'Ningún socio coincide con ese filtro.' : 'Todavía no hay socios cargados.'}</p>`
     }
+    document.getElementById('pa-socio-stats').addEventListener('click', (e) => {
+      const chip = e.target.closest('.pa-stat')
+      if (!chip) return
+      const f = chip.getAttribute('data-filtro')
+      socioFiltro = socioFiltro === f ? '' : f // tocar el activo lo limpia
+      renderSocios()
+    })
 
     async function loadSocios() {
       const list = document.getElementById('pa-socios-list')
@@ -1494,10 +1512,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-btn-danger { background: none; border: 1px solid rgba(242, 129, 138, 0.35); color: var(--pa-danger); }
   .pa-btn-danger:hover { border-color: var(--pa-danger); background: rgba(242, 129, 138, 0.08); }
 
-  /* ── Socios: sub-stats, verificada, reserva ── */
+  /* ── Socios: sub-stats clickeables (filtran el padrón) ── */
   .pa-stats-sub { margin: 0 0 0.9rem; }
-  .pa-stats-sub .pa-stat { cursor: default; }
-  .pa-stats-sub .pa-stat:hover { border-color: var(--pa-line); color: var(--pa-muted); }
+  .pa-stats-sub .pa-stat.is-active {
+    border-color: var(--pa-violet);
+    background: rgba(183, 157, 230, 0.14);
+    color: var(--pa-cream);
+  }
   .pa-socio-verif { color: var(--pa-green); font-weight: 800; margin: 0 0.35rem 0 0.15rem; }
   .pa-socio-badge.is-res { background: rgba(60, 180, 146, 0.16); color: var(--pa-green); }
   .pa-socio-meta strong { color: var(--pa-cream); font-weight: 700; }
