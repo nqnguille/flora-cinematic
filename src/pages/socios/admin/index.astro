@@ -6,14 +6,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 ---
 
 <Layout
-  title="Panel de genéticas — admin | Flora ONG"
-  description="Panel interno para gestionar el catálogo de genéticas."
+  title="Panel del club — admin | Flora ONG"
+  description="Back-office interno del club: genéticas, productos, reservas y socios."
   noindex={true}
 >
   <main class="pa-main">
     <div class="pa-wrap">
-      <span class="pa-eyebrow">Panel interno</span>
-      <h1 class="pa-title">Catálogo de genéticas</h1>
+      <div class="pa-head">
+        <div>
+          <span class="pa-eyebrow">Flora · Panel del club</span>
+          <h1 class="pa-title">Panel del club</h1>
+        </div>
+        <div id="pa-quien" class="pa-quien" hidden>
+          <span id="pa-quien-ini" class="pa-quien-ini"></span>
+          <span id="pa-quien-mail" class="pa-quien-mail"></span>
+          <button id="pa-logout" class="pa-logout" type="button">Salir</button>
+        </div>
+      </div>
 
       <div id="pa-login" class="pa-login">
         <div id="g_id_button"></div>
@@ -25,10 +34,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <div id="pa-content" class="pa-content" hidden>
+        <!-- Franja resumen: contexto de un vistazo, cada chip navega a su pestaña -->
+        <div id="pa-stats" class="pa-stats"></div>
+
         <div class="pa-tabs" role="tablist">
-          <button class="pa-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
-          <button class="pa-tab" data-tab="pedidos" type="button">Reservas<span id="pa-ped-dot" class="pa-ped-dot" hidden></span></button>
-          <button class="pa-tab" data-tab="socios" type="button">Socios</button>
+          <button class="pa-tab" data-tab="pedidos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1.2 13a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1L6 7Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>Reservas<span id="pa-ped-dot" class="pa-ped-dot" hidden></span></button>
+          <button class="pa-tab" data-tab="geneticas" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.8 2.4 4.8 5.4 4.8 8.8A4.8 4.8 0 0 1 7.2 11.8C7.2 8.4 9.2 5.4 12 3Z"/><path d="M12 16.6V21"/></svg>Genéticas</button>
+          <button class="pa-tab" data-tab="productos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v7L12 20l-8.5-4.5v-7Z"/><path d="M12 12v8M3.5 8.5 12 12l8.5-3.5"/></svg>Productos<span id="pa-prod-dot" class="pa-ped-dot is-warn" hidden></span></button>
+          <button class="pa-tab" data-tab="socios" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M16 14.6c2.4.1 4 1.6 4.5 4.1"/></svg>Socios</button>
         </div>
 
         <!-- ── Pestaña Genéticas ── -->
@@ -72,6 +85,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="pa-pedidos-list" class="pa-socios-list"></div>
         </div>
 
+        <!-- ── Pestaña Productos ── -->
+        <div id="tab-productos" class="pa-tab-panel" hidden>
+          <p class="pa-help">
+            Precios y fotos de los productos que ven los socios (aceites, cremas, cartuchos y baterías).
+            Los cambios se aplican al tocar <strong>Guardar productos</strong>.
+          </p>
+          <div id="pa-prods-wrap"></div>
+          <div class="pa-savebar">
+            <span id="pa-prod-status" class="pa-save-status"></span>
+            <button id="pa-prod-save" type="button" class="pa-btn pa-btn-primary">Guardar productos</button>
+          </div>
+        </div>
+
         <!-- ── Pestaña Socios ── -->
         <div id="tab-socios" class="pa-tab-panel" hidden>
           <p class="pa-help">
@@ -83,8 +109,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <input id="pa-socio-nota" type="text" class="pa-input" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
             <button type="submit" class="pa-btn pa-btn-primary">Agregar socio</button>
           </form>
+          <div class="pa-toolbar">
+            <input id="pa-socio-buscar" class="pa-input pa-search" type="search" placeholder="Buscar socio…" autocomplete="off" hidden />
+          </div>
           <p id="pa-socio-status" class="pa-save-status"></p>
           <div id="pa-socios-list" class="pa-socios-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmación de marca (reemplaza el confirm() nativo) -->
+    <div id="pa-confirm" class="pa-confirm" hidden>
+      <div class="pa-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="pa-confirm-txt">
+        <h2 id="pa-confirm-txt" class="pa-confirm-txt"></h2>
+        <div class="pa-confirm-actions">
+          <button id="pa-confirm-no" class="pa-btn pa-btn-ghost" type="button">Volver</button>
+          <button id="pa-confirm-si" class="pa-btn pa-btn-danger" type="button">Confirmar</button>
         </div>
       </div>
     </div>
@@ -109,47 +149,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     window.addEventListener('error', (e) => showFatal((e.message || 'error') + (e.filename ? ` @ ${e.filename.split('/').pop()}:${e.lineno}` : '')))
     window.addEventListener('unhandledrejection', (e) => showFatal('promesa rechazada: ' + (e.reason?.message || e.reason)))
 
-    // ── Sonda de diagnóstico TEMPORAL (pantalla negra) ──
-    // A los 4s y 15s de abrir, radiografía la pantalla y la manda a /api/socios/debug:
-    // qué hay arriba de todo en el centro, qué capas fijas cubren el viewport,
-    // si el título es visible y en qué estado quedó la sesión. Sacar al cazar el bug.
-    function diagSnapshot(tag) {
-      try {
-        const w = innerWidth, h = innerHeight
-        const pick = (el) => {
-          const cs = getComputedStyle(el)
-          return { t: el.tagName, id: el.id || '', cls: String(el.className).slice(0, 90), pos: cs.position, z: cs.zIndex, bg: cs.backgroundColor, op: cs.opacity, mix: cs.mixBlendMode, disp: cs.display }
-        }
-        const centerStack = (document.elementsFromPoint(w / 2, h / 2) || []).slice(0, 7).map(pick)
-        const fixedCovers = [...document.querySelectorAll('body *')].filter((el) => {
-          const cs = getComputedStyle(el)
-          if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden') return false
-          const r = el.getBoundingClientRect()
-          return r.width >= w * 0.9 && r.height >= h * 0.9
-        }).slice(0, 8).map(pick)
-        const vis = (id) => { const el = document.getElementById(id); if (!el) return null; const r = el.getBoundingClientRect(); return { hidden: el.hidden, h: Math.round(r.height) } }
-        const title = document.querySelector('.pa-title')
-        const tcs = title ? getComputedStyle(title) : null
-        const ba = getComputedStyle(document.body, '::after')
-        const diag = {
-          tag, ts: new Date().toISOString(), ua: navigator.userAgent.slice(0, 120), vw: w, vh: h,
-          login: vis('pa-login'), content: vis('pa-content'), forbidden: vis('pa-forbidden'),
-          title: title ? { h: Math.round(title.getBoundingClientRect().height), top: Math.round(title.getBoundingClientRect().top), color: tcs.color, disp: tcs.display, vis: tcs.visibility, op: tcs.opacity } : null,
-          centerStack, fixedCovers,
-          bodyAfter: { disp: ba.display, mix: ba.mixBlendMode, z: ba.zIndex, pos: ba.position },
-          catalogLen: typeof CATALOG !== 'undefined' ? CATALOG.length : -1,
-          fatal: document.getElementById('pa-fatal')?.textContent || null,
-          htmlCls: document.documentElement.className, bodyCls: document.body.className,
-        }
-        navigator.sendBeacon('/api/socios/debug', new Blob([JSON.stringify(diag)], { type: 'text/plain' }))
-      } catch (e) {
-        try { navigator.sendBeacon('/api/socios/debug', new Blob([JSON.stringify({ tag, error: String(e) })], { type: 'text/plain' })) } catch {}
-      }
-    }
-    setTimeout(() => diagSnapshot('t4'), 4000)
-    setTimeout(() => diagSnapshot('t15'), 15000)
-
     let CATALOG = []
+
+    // ── Confirmación de marca (promesa): reemplaza el confirm() nativo ──
+    let confirmResolve = null
+    function paConfirm(texto) {
+      return new Promise((resolve) => {
+        confirmResolve = resolve
+        document.getElementById('pa-confirm-txt').textContent = texto
+        document.getElementById('pa-confirm').hidden = false
+        document.getElementById('pa-confirm-no').focus()
+      })
+    }
+    document.getElementById('pa-confirm').addEventListener('click', (e) => {
+      if (e.target.id === 'pa-confirm-si') { document.getElementById('pa-confirm').hidden = true; confirmResolve?.(true) }
+      else if (e.target.id === 'pa-confirm-no' || e.target.id === 'pa-confirm') { document.getElementById('pa-confirm').hidden = true; confirmResolve?.(false) }
+    })
+
+    // ── Cambios sin guardar (genéticas + productos) ──
+    let genDirty = 0
+    let prodDirty = 0
+    function marcarDirty(cual) {
+      if (cual === 'gen') genDirty++
+      else prodDirty++
+      pintarPendientes()
+    }
+    function pintarPendientes() {
+      const g = document.getElementById('pa-save-status')
+      if (g && genDirty && !g.textContent) g.textContent = `${genDirty} cambio(s) sin guardar`
+      const p = document.getElementById('pa-prod-status')
+      if (p && prodDirty && !p.textContent) p.textContent = `${prodDirty} cambio(s) sin guardar`
+    }
+    window.addEventListener('beforeunload', (e) => {
+      if (genDirty || prodDirty) { e.preventDefault(); e.returnValue = '' }
+    })
 
     function esc(s) {
       return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
@@ -290,13 +323,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         }
         CATALOG[i][key] = arr
         updateDd(i, dd)
+        marcarDirty('gen')
       } else if (field === 'activo') {
         CATALOG[i].activo = t.checked
         autoSaveActivo(i)
         updateCount()
+        pintarStats()
         if (availFilter) render()
       } else if (field) {
         CATALOG[i][field] = t.value
+        marcarDirty('gen')
       }
     })
 
@@ -317,15 +353,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     document.addEventListener('click', (e) => {
       const del = e.target.closest('.pa-del')
-      if (del) {
+      if (del && del.hasAttribute('data-idx')) {
         CATALOG.splice(Number(del.getAttribute('data-idx')), 1)
         render()
+        marcarDirty('gen')
         return
       }
       const clr = e.target.closest('.pa-foto-clear')
       if (clr) {
         CATALOG[Number(clr.getAttribute('data-fotoclear-idx'))].foto = null
         render()
+        marcarDirty('gen')
       }
     })
 
@@ -352,6 +390,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     })
 
     document.getElementById('pa-add').addEventListener('click', () => {
+      marcarDirty('gen')
       CATALOG.push({
         id: `nueva-${Date.now()}`,
         nombre: '',
@@ -385,26 +424,236 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           body: JSON.stringify({ geneticas: CATALOG }),
         })
         const data = await res.json()
+        if (res.ok && data.ok) { genDirty = 0; status.classList.remove('is-err'); status.classList.add('is-ok') }
+        else status.classList.add('is-err')
         status.textContent = res.ok && data.ok ? 'Guardado ✓' : `Error: ${data.error || res.status}`
       } catch {
+        status.classList.add('is-err')
         status.textContent = 'Error de red al guardar.'
       }
-      setTimeout(() => (status.textContent = ''), 4000)
+      setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err'); pintarPendientes() }, 4000)
     })
 
-    /* ── Pestañas ── */
-    document.querySelectorAll('.pa-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const name = tab.dataset.tab
-        document.querySelectorAll('.pa-tab').forEach((t) => t.classList.toggle('is-active', t === tab))
-        ;['geneticas', 'pedidos', 'socios'].forEach((n) => {
-          const panel = document.getElementById('tab-' + n)
-          if (panel) panel.hidden = n !== name
-        })
-        if (name === 'socios') loadSocios()
-        if (name === 'pedidos') loadPedidos()
-      })
+    /* ── Productos: precios y fotos (KV precios) ── */
+    let PRECIOS = { aceites: [], cremas: [], extracciones: [] }
+    let PRECIOS_ORIG = {} // para detectar saltos de precio >50% al guardar
+    const CAT_LABEL = { aceites: 'Aceites', cremas: 'Cremas', extracciones: 'Extracciones · cartuchos y baterías' }
+    const CAT_ICON = {
+      aceites: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5M10 3v3.2L7.2 10a5.5 5.5 0 1 0 9.6 0L14 6.2V3"/><path d="M8.4 14.5h7.2"/></svg>',
+      cremas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="8.5" width="13" height="12" rx="3"/><path d="M8 8.5V6.8A1.8 1.8 0 0 1 9.8 5h4.4A1.8 1.8 0 0 1 16 6.8v1.7"/></svg>',
+      extracciones: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.2 21.4 9.1 7Q9 5.9 9.9 5.5L14.1 5.5Q15 5.9 14.9 7L13.8 21.4Q13.7 22.3 12 22.3Q10.3 22.3 10.2 21.4Z"/><path d="M10.5 18.5h3"/></svg>',
+    }
+    const fmtARS = (n) => Number(n || 0).toLocaleString('es-AR')
+
+    function prodCard(cat, it, idx) {
+      return `
+        <div class="pa-prod" data-cat="${cat}" data-pidx="${idx}">
+          <div class="pa-prod-foto">
+            ${it.foto ? `<img src="${esc(it.foto)}" alt="" onerror="this.remove()" />` : `<span class="pa-prod-fotoph">${CAT_ICON[cat]}</span>`}
+            <input type="file" accept="image/jpeg,image/png,image/webp" id="pa-pfoto-${cat}-${idx}" class="pa-prod-fotoinput" data-cat="${cat}" data-pidx="${idx}" hidden />
+            <label for="pa-pfoto-${cat}-${idx}" class="pa-prod-fotobtn" title="Subir foto">📷</label>
+          </div>
+          <div class="pa-prod-main">
+            <input class="pa-input pa-prod-label" data-pfield="label" data-cat="${cat}" data-pidx="${idx}" value="${esc(it.label)}" placeholder="Nombre" />
+            <input class="pa-input pa-prod-detalle" data-pfield="detalle" data-cat="${cat}" data-pidx="${idx}" value="${esc(it.detalle)}" placeholder="Detalle (ej. THC · 0,5 ml)" />
+            <div class="pa-precio">
+              <span class="pa-precio-sym">$</span>
+              <input class="pa-input pa-precio-input" inputmode="numeric" data-pfield="precio" data-cat="${cat}" data-pidx="${idx}" value="${it.precio || ''}" placeholder="0" />
+              <span class="pa-precio-fmt">$ ${fmtARS(it.precio)}</span>
+            </div>
+          </div>
+          <button type="button" class="pa-del pa-prod-del" data-cat="${cat}" data-pidx="${idx}" aria-label="Eliminar producto">×</button>
+        </div>`
+    }
+
+    function renderProductos() {
+      const wrap = document.getElementById('pa-prods-wrap')
+      wrap.innerHTML = Object.keys(CAT_LABEL).map((cat) => {
+        const items = PRECIOS[cat] || []
+        const cards = items.map((it, i) => prodCard(cat, it, i)).join('')
+        return `
+          <section class="pa-cat">
+            <div class="pa-cat-head">
+              <h2 class="pa-cat-title">${CAT_LABEL[cat]}</h2>
+              <span class="pa-count">${items.length} producto(s)</span>
+              <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-prod-add" data-cat="${cat}">+ Agregar</button>
+            </div>
+            ${cards
+              ? `<div class="pa-prods">${cards}</div>`
+              : `<p class="pa-empty">Sin productos en esta categoría todavía.</p>`}
+          </section>`
+      }).join('')
+      pintarProdDot()
+    }
+
+    function pintarProdDot() {
+      const sinPrecio = Object.values(PRECIOS).flat().filter((it) => !Number(it.precio)).length
+      const dot = document.getElementById('pa-prod-dot')
+      dot.hidden = sinPrecio === 0
+      dot.textContent = sinPrecio || ''
+      dot.title = sinPrecio ? `${sinPrecio} producto(s) sin precio` : ''
+    }
+
+    // Edición de campos de producto (delegado)
+    document.addEventListener('input', (e) => {
+      const t = e.target
+      const pf = t.getAttribute && t.getAttribute('data-pfield')
+      if (!pf) return
+      const it = (PRECIOS[t.getAttribute('data-cat')] || [])[Number(t.getAttribute('data-pidx'))]
+      if (!it) return
+      if (pf === 'precio') {
+        const digits = t.value.replace(/[^\d]/g, '')
+        if (t.value !== digits) t.value = digits
+        it.precio = Number(digits || 0)
+        const fmt = t.closest('.pa-precio').querySelector('.pa-precio-fmt')
+        fmt.textContent = `$ ${fmtARS(it.precio)}`
+      } else {
+        it[pf] = t.value
+      }
+      marcarDirty('prod')
+      if (pf === 'precio') pintarProdDot()
     })
+
+    document.addEventListener('click', async (e) => {
+      const add = e.target.closest('.pa-prod-add')
+      if (add) {
+        const cat = add.getAttribute('data-cat')
+        PRECIOS[cat] = PRECIOS[cat] || []
+        PRECIOS[cat].push({ id: `nuevo-${Date.now().toString(36)}`, label: '', detalle: '', precio: 0 })
+        renderProductos()
+        marcarDirty('prod')
+        return
+      }
+      const del = e.target.closest('.pa-prod-del')
+      if (del) {
+        const cat = del.getAttribute('data-cat')
+        const it = PRECIOS[cat][Number(del.getAttribute('data-pidx'))]
+        if (!(await paConfirm(`¿Eliminar "${it.label || 'este producto'}" de ${CAT_LABEL[cat]}? Deja de verse en la tienda al guardar.`))) return
+        PRECIOS[cat].splice(Number(del.getAttribute('data-pidx')), 1)
+        renderProductos()
+        marcarDirty('prod')
+      }
+    })
+
+    // Subida de foto de producto → KV FOTOS → URL /foto/<key>
+    document.addEventListener('change', async (e) => {
+      const inp = e.target
+      if (!inp.classList || !inp.classList.contains('pa-prod-fotoinput')) return
+      const cat = inp.getAttribute('data-cat')
+      const idx = Number(inp.getAttribute('data-pidx'))
+      const it = (PRECIOS[cat] || [])[idx]
+      const file = inp.files && inp.files[0]
+      if (!it || !file) return
+      const status = document.getElementById('pa-prod-status')
+      status.textContent = 'Subiendo foto…'
+      const fd = new FormData()
+      fd.append('id', `producto-${it.id || slugify(it.label) || 'item'}`)
+      fd.append('file', file)
+      try {
+        const res = await fetch('/api/socios/admin/foto', { method: 'POST', credentials: 'include', body: fd })
+        const data = await res.json()
+        if (res.ok && data.ok) { it.foto = data.url; renderProductos(); marcarDirty('prod'); status.textContent = 'Foto subida ✓' }
+        else status.textContent = 'Error al subir: ' + (data.error || res.status)
+      } catch { status.textContent = 'Error de red al subir la foto' }
+      setTimeout(() => (status.textContent = ''), 3000)
+    })
+
+    async function loadPrecios() {
+      try {
+        const res = await fetch('/api/socios/admin/precios', { credentials: 'include' })
+        const data = await res.json()
+        if (!res.ok || !data.ok) return
+        PRECIOS = data.precios
+        PRECIOS_ORIG = {}
+        for (const it of Object.values(PRECIOS).flat()) PRECIOS_ORIG[it.id] = it.precio
+        renderProductos()
+        pintarStats()
+      } catch { /* la pestaña mostrará vacío; el guardado avisa si falla */ }
+    }
+
+    document.getElementById('pa-prod-save').addEventListener('click', async () => {
+      const status = document.getElementById('pa-prod-status')
+      // Saltos de precio >50%: el error más caro del panel es un cero de más o de menos
+      const saltos = Object.values(PRECIOS).flat().filter((it) => {
+        const antes = PRECIOS_ORIG[it.id]
+        return antes > 0 && it.precio > 0 && Math.abs(it.precio - antes) / antes > 0.5
+      })
+      if (saltos.length) {
+        const detalle = saltos.map((it) => `${it.label}: $ ${fmtARS(PRECIOS_ORIG[it.id])} → $ ${fmtARS(it.precio)}`).join(' · ')
+        if (!(await paConfirm(`Cambio grande de precio — ${detalle}. ¿Está bien?`))) return
+      }
+      // Completar ids de productos nuevos a partir del nombre
+      for (const items of Object.values(PRECIOS)) {
+        for (const it of items) if (!it.id || it.id.startsWith('nuevo-')) it.id = slugify(it.label) || `producto-${Date.now().toString(36)}`
+      }
+      status.classList.remove('is-ok', 'is-err')
+      status.textContent = 'Guardando…'
+      try {
+        const res = await fetch('/api/socios/admin/precios', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ precios: PRECIOS }),
+        })
+        const data = await res.json()
+        if (res.ok && data.ok) {
+          PRECIOS = data.precios
+          prodDirty = 0
+          PRECIOS_ORIG = {}
+          for (const it of Object.values(PRECIOS).flat()) PRECIOS_ORIG[it.id] = it.precio
+          renderProductos()
+          status.classList.add('is-ok')
+          status.textContent = 'Productos guardados ✓'
+        } else {
+          status.classList.add('is-err')
+          status.textContent = `Error: ${data.error || res.status}`
+        }
+      } catch {
+        status.classList.add('is-err')
+        status.textContent = 'Error de red al guardar.'
+      }
+      setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err'); pintarPendientes() }, 4000)
+    })
+
+    /* ── Franja resumen: chips que navegan ── */
+    function pintarStats() {
+      const el = document.getElementById('pa-stats')
+      const activas = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
+      const disp = CATALOG.filter((g) => g.activo).length
+      const prods = Object.values(PRECIOS).flat().length
+      const chips = [
+        ['pedidos', `<strong class="is-green">${activas}</strong> reserva(s) activa(s)`],
+        ['geneticas', `<strong class="is-violet">${disp}</strong> en carta`],
+        ['productos', `<strong>${prods}</strong> producto(s)`],
+      ]
+      if (SOCIOS_COUNT !== null) chips.push(['socios', `<strong>${SOCIOS_COUNT}</strong> socio(s)`])
+      el.innerHTML = chips.map(([tab, html]) => `<button type="button" class="pa-stat" data-goto="${tab}">${html}</button>`).join('')
+    }
+    document.getElementById('pa-stats').addEventListener('click', (e) => {
+      const chip = e.target.closest('.pa-stat')
+      if (chip) irATab(chip.getAttribute('data-goto'))
+    })
+    let SOCIOS_COUNT = null
+
+    /* ── Pestañas ── */
+    let tabActual = 'pedidos'
+    function irATab(name) {
+      tabActual = name
+      document.querySelectorAll('.pa-tab').forEach((t) => t.classList.toggle('is-active', t.dataset.tab === name))
+      ;['geneticas', 'pedidos', 'productos', 'socios'].forEach((n) => {
+        const panel = document.getElementById('tab-' + n)
+        if (panel) panel.hidden = n !== name
+      })
+      if (name === 'socios') { loadSocios(); setTimeout(() => document.getElementById('pa-socio-email')?.focus(), 100) }
+      if (name === 'pedidos') loadPedidos()
+      if (name === 'productos') renderProductos()
+    }
+    document.querySelectorAll('.pa-tab').forEach((tab) => tab.addEventListener('click', () => irATab(tab.dataset.tab)))
+
+    // Reservas frescas sin tocar nada: refresh cada 60s con la pestaña visible
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && tabActual === 'pedidos' && !document.getElementById('pa-content').hidden) loadPedidos()
+    }, 60000)
 
     /* ── Pedidos ── */
     let PEDIDOS = []
@@ -420,14 +669,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         .map((i) => `<li>${esc(`${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}`)}${i.formato === 'preroll' ? ' <span class="pa-ped-fmt">preroll</span>' : ''}</li>`)
         .join('')
     }
+    // Una sola acción primaria grande (triage con el pulgar); Cancelar vive
+    // escondida en el menú ⋯ para que nadie cancele sin querer.
     function pedidoAcciones(p) {
+      const menu = `
+        <div class="pa-ped-menu">
+          <button type="button" class="pa-ped-menubtn" data-menu="${esc(p.id)}" aria-label="Más acciones">⋯</button>
+          <div class="pa-ped-menupanel" data-menupanel="${esc(p.id)}" hidden>
+            <button type="button" class="pa-btn pa-btn-danger pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar reserva</button>
+          </div>
+        </div>`
       if (p.estado === 'pendiente') {
-        return `<button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>
-                <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+        return `<button type="button" class="pa-btn pa-btn-primary pa-ped-action pa-ped-primary" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>${menu}`
       }
       if (p.estado === 'listo') {
-        return `<button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>
-                <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+        return `<button type="button" class="pa-btn pa-btn-primary pa-ped-action pa-ped-primary" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>${menu}`
       }
       return ''
     }
@@ -450,17 +706,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     function renderPedidos() {
       const list = document.getElementById('pa-pedidos-list')
+      // Triage: pendientes primero, después listas, después el histórico
+      const peso = { pendiente: 0, listo: 1, entregado: 2, cancelado: 2 }
+      const ordenadas = [...PEDIDOS].sort((a, b) => (peso[a.estado] ?? 3) - (peso[b.estado] ?? 3) || String(b.creado).localeCompare(String(a.creado)))
       const filtered = pedFilter === 'activos'
-        ? PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo')
-        : PEDIDOS
+        ? ordenadas.filter((p) => p.estado === 'pendiente' || p.estado === 'listo')
+        : ordenadas
       const activos = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
+      pintarStats()
       document.getElementById('pa-ped-count').textContent = `${activos} activa(s) · ${PEDIDOS.length} en total`
       const dot = document.getElementById('pa-ped-dot')
       dot.hidden = activos === 0
       dot.textContent = activos || ''
       list.innerHTML = filtered.length
         ? filtered.map(pedidoRow).join('')
-        : `<p class="pa-save-status">${pedFilter === 'activos' ? 'No hay reservas activas.' : 'Todavía no entró ninguna reserva.'}</p>`
+        : `<p class="pa-empty">${pedFilter === 'activos' ? 'No hay reservas activas ahora mismo.' : 'Todavía no entró ninguna reserva.'}</p>`
     }
     async function loadPedidos() {
       const list = document.getElementById('pa-pedidos-list')
@@ -483,10 +743,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }))
     document.getElementById('pa-ped-refresh').addEventListener('click', loadPedidos)
     document.addEventListener('click', async (e) => {
+      // Menú ⋯ de cada reserva
+      const mbtn = e.target.closest && e.target.closest('.pa-ped-menubtn')
+      if (mbtn) {
+        const panel = document.querySelector(`[data-menupanel="${CSS.escape(mbtn.getAttribute('data-menu'))}"]`)
+        const willOpen = panel.hidden
+        document.querySelectorAll('.pa-ped-menupanel').forEach((p) => { p.hidden = true })
+        panel.hidden = !willOpen
+        return
+      }
+      if (!e.target.closest('.pa-ped-menupanel')) document.querySelectorAll('.pa-ped-menupanel').forEach((p) => { p.hidden = true })
+
       const btn = e.target.closest && e.target.closest('.pa-ped-action')
       if (!btn) return
       const estado = btn.dataset.estado
-      if (estado === 'cancelado' && !confirm('¿Cancelar esta reserva?')) return
+      if (estado === 'cancelado' && !(await paConfirm('¿Cancelar esta reserva? El socio la va a ver como cancelada.'))) return
       btn.disabled = true
       try {
         const res = await fetch('/api/socios/admin/pedidos', {
@@ -521,16 +792,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const estado = s.lastLogin
         ? '<span class="pa-socio-badge is-on">Ingresó</span>'
         : '<span class="pa-socio-badge">Sin ingresar</span>'
+      // Sin ingresar → invitación lista para mandar por WhatsApp
+      const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">Invitar por WhatsApp</a>`
       const meta = s.lastLogin
         ? `Último ingreso: ${fmtFecha(s.lastLogin)} · ${s.logins} ingreso(s)`
         : 'Todavía no ingresó con esta cuenta'
       return `
-        <article class="pa-socio">
+        <article class="pa-socio" data-buscable="${esc(`${s.name || ''} ${s.email} ${s.nota || ''}`.toLowerCase())}">
           ${ava}
           <div class="pa-socio-main">
             <div class="pa-socio-top">
               <strong class="pa-socio-name">${esc(s.name || '(sin nombre aún)')}</strong>
               ${estado}
+              ${invitar}
             </div>
             <div class="pa-socio-email">${esc(s.email)}</div>
             <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
@@ -541,18 +815,28 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     async function loadSocios() {
       const list = document.getElementById('pa-socios-list')
-      list.innerHTML = '<p class="pa-save-status">Cargando…</p>'
+      list.innerHTML = '<p class="pa-loading">Cargando…</p>'
       try {
         const res = await fetch('/api/socios/admin/socios', { credentials: 'include' })
         const data = await res.json()
         if (!res.ok || !data.ok) { list.innerHTML = `<p class="pa-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        SOCIOS_COUNT = data.socios.length
+        pintarStats()
+        // Buscador recién cuando la lista lo amerita
+        document.getElementById('pa-socio-buscar').hidden = data.socios.length <= 10
         list.innerHTML = data.socios.length
           ? data.socios.map(socioRow).join('')
-          : '<p class="pa-save-status">Todavía no hay socios cargados.</p>'
+          : '<p class="pa-empty">Todavía no hay socios cargados.</p>'
       } catch {
         list.innerHTML = '<p class="pa-msg">Error de red al cargar socios.</p>'
       }
     }
+    document.getElementById('pa-socio-buscar').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase()
+      document.querySelectorAll('#pa-socios-list .pa-socio').forEach((card) => {
+        card.hidden = q && !card.getAttribute('data-buscable').includes(q)
+      })
+    })
     async function saveSocio(email, nota) {
       try {
         const res = await fetch('/api/socios/admin/socios', {
@@ -592,7 +876,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const del = e.target.closest && e.target.closest('.pa-socio-del')
       if (!del) return
       const email = del.getAttribute('data-email')
-      if (!confirm('¿Dar de baja a ' + email + '? No podrá entrar a la carta.')) return
+      if (!(await paConfirm(`¿Dar de baja a ${email}? Deja de poder entrar a la carta.`))) return
       await fetch('/api/socios/admin/socios', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -629,10 +913,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
       document.getElementById('pa-login').hidden = true
       document.getElementById('pa-content').hidden = false
+
+      // Identidad del admin logueado + logout
+      if (data.email) {
+        document.getElementById('pa-quien').hidden = false
+        document.getElementById('pa-quien-ini').textContent = initials(data.email)
+        document.getElementById('pa-quien-mail').textContent = data.email
+      }
+
       render()
-      loadPedidos() // completa el contador de pedidos activos en la pestaña
+      loadPrecios()
+      // Aterrizar donde está el trabajo del día: Reservas si hay activas
+      await loadPedidos()
+      const activas = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
+      irATab(activas > 0 ? 'pedidos' : 'geneticas')
       return true
     }
+
+    document.getElementById('pa-logout').addEventListener('click', async () => {
+      if (genDirty || prodDirty) {
+        if (!(await paConfirm('Tenés cambios sin guardar. ¿Salir igual?'))) return
+        genDirty = prodDirty = 0
+      }
+      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+      location.reload()
+    })
 
     window.handleGoogleCredential = async (response) => {
       try {
@@ -716,9 +1021,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pa-title {
     font-family: var(--font-display); font-weight: 400;
-    font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; letter-spacing: 0.005em;
-    color: var(--pa-cream); margin: 0 0 1.8rem;
+    font-size: clamp(1.7rem, 3.5vw, 2.4rem); line-height: 1; letter-spacing: 0.005em;
+    color: var(--pa-cream); margin: 0 0 1.2rem;
   }
+  /* Header: título + identidad del admin */
+  .pa-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .pa-quien {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    background: var(--pa-card); border: 1px solid var(--pa-line); border-radius: 999px;
+    padding: 0.35rem 0.9rem 0.35rem 0.4rem; margin-top: 0.3rem;
+  }
+  .pa-quien[hidden] { display: none; }
+  .pa-quien-ini {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: var(--pa-violet); color: #130d1c;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800;
+  }
+  .pa-quien-mail { font-size: 0.82rem; font-weight: 600; color: var(--pa-cream); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pa-logout {
+    background: none; border: none; cursor: pointer; font-family: var(--font-ui);
+    font-size: 0.78rem; font-weight: 600; color: var(--pa-muted); padding: 0.2rem 0.2rem;
+  }
+  .pa-logout:hover { color: var(--pa-danger); }
 
   .pa-login[hidden], .pa-content[hidden] { display: none; }
   .pa-login {
@@ -1000,4 +1325,148 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-ped-actions .is-danger:hover { border-color: var(--pa-danger); }
   .pa-socio-badge.is-done { background: rgba(183, 157, 230, 0.16); color: var(--pa-violet); }
   .pa-socio-badge.is-off { background: rgba(242, 129, 138, 0.12); color: var(--pa-danger); }
+
+  /* ── Pestañas: sticky con íconos ── */
+  .pa-tabs { position: sticky; top: 0; z-index: 30; background: rgba(19, 13, 28, 0.97); }
+  .pa-tab { display: inline-flex; align-items: center; gap: 0.45rem; touch-action: manipulation; }
+  .pa-tab svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .pa-ped-dot.is-warn { background: var(--pa-danger); color: #fff; }
+
+  /* ── Franja resumen (chips navegables) ── */
+  .pa-stats { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.3rem; }
+  .pa-stat {
+    background: var(--pa-card); border: 1px solid var(--pa-line); border-radius: 999px;
+    padding: 0.4rem 0.95rem; font-family: var(--font-ui); font-size: 0.78rem;
+    color: var(--pa-muted); cursor: pointer; touch-action: manipulation;
+    transition: border-color 0.15s ease;
+  }
+  .pa-stat:hover { border-color: var(--pa-violet); color: var(--pa-cream); }
+  .pa-stat strong { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--pa-cream); margin-right: 0.15rem; }
+  .pa-stat strong.is-green { color: var(--pa-green); }
+  .pa-stat strong.is-violet { color: var(--pa-violet); }
+
+  /* ── Productos ── */
+  .pa-cat { margin: 0 0 2rem; }
+  .pa-cat-head { display: flex; align-items: baseline; gap: 0.8rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .pa-cat-title { font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--pa-cream); margin: 0; }
+  .pa-cat-head .pa-count { margin-left: 0; }
+  .pa-cat-head .pa-prod-add { margin-left: auto; margin-top: 0; }
+  .pa-prods { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.9rem; }
+  .pa-prod {
+    background: var(--pa-card); border: 1px solid var(--pa-line); border-radius: 16px;
+    padding: 0.9rem; display: grid; grid-template-columns: 76px 1fr 28px; gap: 0.8rem;
+    align-items: start;
+  }
+  .pa-prod-foto {
+    position: relative; width: 76px; height: 76px; border-radius: 12px; overflow: hidden;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line);
+  }
+  .pa-prod-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pa-prod-fotoph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--pa-muted); }
+  .pa-prod-fotoph svg { width: 30px; height: 30px; }
+  .pa-prod-fotobtn {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; cursor: pointer; opacity: 0; background: rgba(19, 13, 28, 0.55);
+    transition: opacity 0.15s ease;
+  }
+  .pa-prod-foto:hover .pa-prod-fotobtn, .pa-prod-fotobtn:focus-visible { opacity: 1; }
+  .pa-prod-main { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+  .pa-prod-label { font-weight: 700; }
+  .pa-prod-detalle { font-size: 0.8rem; color: var(--pa-muted); }
+  .pa-precio { display: flex; align-items: center; gap: 0.4rem; }
+  .pa-precio-sym { color: var(--pa-green); font-weight: 800; }
+  .pa-precio-input {
+    width: 110px; text-align: right; font-weight: 800;
+    font-variant-numeric: tabular-nums; color: var(--pa-green);
+  }
+  .pa-precio-fmt { font-size: 0.72rem; color: var(--pa-muted); white-space: nowrap; }
+  .pa-prod-del { justify-self: end; }
+
+  /* ── Reservas: acción primaria grande + menú ⋯ ── */
+  .pa-ped-primary { padding: 0.75rem 1.4rem; touch-action: manipulation; }
+  .pa-ped-menu { position: relative; align-self: center; }
+  .pa-ped-menubtn {
+    width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--pa-line);
+    background: none; color: var(--pa-muted); font-size: 1.1rem; line-height: 1;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .pa-ped-menubtn:hover { color: var(--pa-cream); border-color: var(--pa-violet); }
+  .pa-ped-menupanel {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 12px;
+    padding: 0.4rem; box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.8); white-space: nowrap;
+  }
+  .pa-ped-menupanel[hidden] { display: none; }
+
+  /* ── Botón danger formal ── */
+  .pa-btn-danger { background: none; border: 1px solid rgba(242, 129, 138, 0.35); color: var(--pa-danger); }
+  .pa-btn-danger:hover { border-color: var(--pa-danger); background: rgba(242, 129, 138, 0.08); }
+
+  /* ── Socios: invitación ── */
+  .pa-socio-invitar {
+    font-size: 0.72rem; font-weight: 700; color: var(--pa-green);
+    text-decoration: none; border: 1px solid rgba(60, 180, 146, 0.35);
+    border-radius: 999px; padding: 0.18rem 0.6rem;
+  }
+  .pa-socio-invitar:hover { border-color: var(--pa-green); background: rgba(60, 180, 146, 0.08); }
+
+  /* ── Microestados ── */
+  .pa-save-status.is-ok { color: var(--pa-green); }
+  .pa-save-status.is-err { color: var(--pa-danger); }
+  .pa-loading { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--pa-muted); font-size: 0.85rem; }
+  .pa-loading::before {
+    content: ''; width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--pa-line); border-top-color: var(--pa-violet);
+    animation: pa-spin 0.7s linear infinite;
+  }
+  @keyframes pa-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .pa-loading::before { animation: none; } }
+  .pa-empty {
+    text-align: center; padding: 2.2rem 1rem; border: 1.5px dashed var(--pa-line);
+    border-radius: 14px; color: var(--pa-muted); min-width: auto;
+  }
+
+  /* ── Confirmación de marca ── */
+  .pa-confirm {
+    position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+    padding: 1rem; background: rgba(10, 6, 16, 0.7);
+  }
+  .pa-confirm[hidden] { display: none; }
+  .pa-confirm-card {
+    width: 100%; max-width: 420px; background: var(--pa-card);
+    border: 1px solid var(--pa-line); border-radius: 18px;
+    padding: clamp(20px, 3vw, 28px); box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+  .pa-confirm-txt { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; line-height: 1.35; color: var(--pa-cream); margin: 0 0 1.2rem; }
+  .pa-confirm-actions { display: flex; justify-content: flex-end; gap: 0.7rem; }
+
+  /* ── Foco de marca + táctil en todo el panel ── */
+  .pa-tab:focus-visible, .pa-stat:focus-visible, .pa-avail:focus-visible,
+  .pa-foto-btn:focus-visible, .pa-del:focus-visible, .pa-socio-del:focus-visible,
+  .pa-btn:focus-visible, .pa-ped-menubtn:focus-visible, .pa-prod-fotobtn:focus-visible {
+    outline: 2px solid var(--pa-violet); outline-offset: 2px;
+  }
+  .pa-btn, .pa-avail, .pa-del, .pa-socio-del { touch-action: manipulation; }
+
+  /* ── Mobile: genéticas de tabla a tarjetas + panel operable con el pulgar ── */
+  @media (max-width: 900px) {
+    .pa-rows-head { display: none; }
+    .pa-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-width: 0;
+      background: var(--pa-card); border: 1px solid var(--pa-line);
+      border-radius: 14px; padding: 0.85rem; margin-bottom: 0.7rem; gap: 0.55rem;
+      border-bottom: 1px solid var(--pa-line);
+    }
+    .pa-rows-head, .pa-row { min-width: 0; }
+    .pa-row [data-field="nombre"] { grid-column: 1 / -1; font-weight: 700; }
+    .pa-row .pa-avail-toggle, .pa-row .pa-del { justify-self: start; }
+    .pa-row .pa-del { justify-self: end; }
+  }
+  @media (max-width: 640px) {
+    .pa-tabs { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+    .pa-tabs::-webkit-scrollbar { display: none; }
+    .pa-btn-slim, .pa-input { min-height: 38px; }
+    .pa-prods { grid-template-columns: 1fr; }
+  }
 </style>

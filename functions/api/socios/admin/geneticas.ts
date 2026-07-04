@@ -20,6 +20,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     ok: true,
     geneticas: raw ? JSON.parse(raw) : [],
     isSuperAdmin: isSuperAdmin(check.email, env),
+    email: check.email, // identidad del admin para el chip del header
   });
 };
 

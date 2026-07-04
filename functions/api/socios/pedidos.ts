@@ -54,6 +54,101 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   return Response.json({ ok: true, activo, pedidos: pedidos.slice(0, 10) });
 };
 
+// Valida y normaliza ítems crudos (genéticas flor/preroll + productos del portal).
+// Devuelve { items } o { error }.
+async function validarItems(env: Env, rawItems: any[]): Promise<{ items?: any[]; error?: string }> {
+  const rawCat = await env.GENETICAS.get('catalogo');
+  const catalogo: any[] = rawCat ? JSON.parse(rawCat) : [];
+  const porId = new Map(catalogo.map((g) => [g.id, g]));
+
+  const rawPrecios = await env.GENETICAS.get('precios');
+  const precios: any = rawPrecios ? JSON.parse(rawPrecios) : {};
+  const productos = new Map<string, any>(
+    ['aceites', 'cremas', 'extracciones']
+      .flatMap((c) => (Array.isArray(precios[c]) ? precios[c] : []))
+      .map((it: any) => [String(it.id), it])
+  );
+
+  const fusionados = new Map<string, { id: string; formato: string; cantidad: number }>();
+  for (const it of rawItems) {
+    const k = `${String(it?.id || '')}|${String(it?.formato || '')}`;
+    const prev = fusionados.get(k);
+    if (prev) prev.cantidad += Number(it?.cantidad);
+    else fusionados.set(k, { id: String(it?.id || ''), formato: String(it?.formato || ''), cantidad: Number(it?.cantidad) });
+  }
+
+  const items: any[] = [];
+  for (const it of fusionados.values()) {
+    const formato = String(it?.formato || '');
+    const cantidad = Math.floor(Number(it?.cantidad));
+
+    if (formato === 'producto') {
+      const prod = productos.get(String(it?.id || ''));
+      if (!prod) return { error: `producto no disponible: ${it?.id}` };
+      if (!Number.isFinite(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD.producto) {
+        return { error: `cantidad inválida para ${prod.label}` };
+      }
+      const nombre = prod.detalle ? `${prod.label} (${prod.detalle})` : prod.label;
+      items.push({ id: prod.id, nombre, formato, cantidad, precio: prod.precio });
+      continue;
+    }
+
+    const g = porId.get(String(it?.id || ''));
+    if (!g || !g.activo) return { error: `genética no disponible: ${it?.id}` };
+    if (!['flor', 'preroll'].includes(formato) || !formatosDe(g).includes(formato)) {
+      return { error: `formato inválido para ${g.nombre}` };
+    }
+    if (!Number.isFinite(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD[formato]) {
+      return { error: `cantidad inválida para ${g.nombre}` };
+    }
+    items.push({ id: g.id, nombre: g.nombre, formato, cantidad });
+  }
+  return { items };
+}
+
+// Editar la reserva pendiente: reemplaza sus ítems (cantidades, quitar, sumar).
+// items vacío ⇒ se cancela la reserva.
+export const onRequestPut: PagesFunction<Env> = async (context) => {
+  const { request, env } = context;
+  const socio = await requireSocio(request, env);
+  if (!socio) return Response.json({ ok: false, error: 'no autenticado' }, { status: 401 });
+
+  let body: any;
+  try { body = await request.json(); } catch {
+    return Response.json({ ok: false, error: 'body inválido' }, { status: 400 });
+  }
+
+  const id = String(body?.id || '');
+  const raw = id ? await env.PEDIDOS.get(`pedido:${id}`) : null;
+  if (!raw) return Response.json({ ok: false, error: 'reserva inexistente' }, { status: 404 });
+  const pedido = JSON.parse(raw);
+  if (pedido.email !== socio.email) return Response.json({ ok: false, error: 'reserva ajena' }, { status: 403 });
+  if (pedido.estado !== 'pendiente') {
+    return Response.json({ ok: false, error: 'esa reserva ya no se puede editar' }, { status: 409 });
+  }
+
+  const rawItems = Array.isArray(body?.items) ? body.items : [];
+  if (rawItems.length > MAX_ITEMS) {
+    return Response.json({ ok: false, error: 'demasiados ítems' }, { status: 400 });
+  }
+
+  if (!rawItems.length) {
+    await env.PEDIDOS.delete(`pedido:${id}`);
+    context.waitUntil(notificar(env, { ...pedido, items: [], _cancelada: true }));
+    return Response.json({ ok: true, pedido: null, cancelada: true });
+  }
+
+  const v = await validarItems(env, rawItems);
+  if (v.error) return Response.json({ ok: false, error: v.error }, { status: 400 });
+
+  pedido.items = v.items;
+  if (body?.nota != null) pedido.nota = String(body.nota).slice(0, 400);
+  pedido.actualizado = new Date().toISOString();
+  await env.PEDIDOS.put(`pedido:${id}`, JSON.stringify(pedido), { expirationTtl: TTL_SECONDS });
+  context.waitUntil(notificar(env, { ...pedido, _actualizada: true }));
+  return Response.json({ ok: true, pedido });
+};
+
 // Crear pedido: valida ítems contra el catálogo y avisa por WhatsApp.
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -75,55 +170,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return Response.json({ ok: false, error: 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra', activo: yaActivo }, { status: 409 });
   }
 
-  const rawCat = await env.GENETICAS.get('catalogo');
-  const catalogo: any[] = rawCat ? JSON.parse(rawCat) : [];
-  const porId = new Map(catalogo.map((g) => [g.id, g]));
-
-  // Productos del portal (aceites / cremas / extracciones), por id de la lista de precios
-  const rawPrecios = await env.GENETICAS.get('precios');
-  const precios: any = rawPrecios ? JSON.parse(rawPrecios) : {};
-  const productos = new Map<string, any>(
-    ['aceites', 'cremas', 'extracciones']
-      .flatMap((c) => (Array.isArray(precios[c]) ? precios[c] : []))
-      .map((it: any) => [String(it.id), it])
-  );
-
-  // Ítems duplicados (misma genética+formato) se fusionan ANTES de validar,
-  // así el tope por formato no se puede evadir repitiendo el ítem.
-  const fusionados = new Map<string, { id: string; formato: string; cantidad: number }>();
-  for (const it of rawItems) {
-    const k = `${String(it?.id || '')}|${String(it?.formato || '')}`;
-    const prev = fusionados.get(k);
-    if (prev) prev.cantidad += Number(it?.cantidad);
-    else fusionados.set(k, { id: String(it?.id || ''), formato: String(it?.formato || ''), cantidad: Number(it?.cantidad) });
-  }
-
-  const items: any[] = [];
-  for (const it of fusionados.values()) {
-    const formato = String(it?.formato || '');
-    const cantidad = Math.floor(Number(it?.cantidad));
-
-    if (formato === 'producto') {
-      const prod = productos.get(String(it?.id || ''));
-      if (!prod) return Response.json({ ok: false, error: `producto no disponible: ${it?.id}` }, { status: 400 });
-      if (!Number.isFinite(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD.producto) {
-        return Response.json({ ok: false, error: `cantidad inválida para ${prod.label}` }, { status: 400 });
-      }
-      const nombre = prod.detalle ? `${prod.label} (${prod.detalle})` : prod.label;
-      items.push({ id: prod.id, nombre, formato, cantidad, precio: prod.precio });
-      continue;
-    }
-
-    const g = porId.get(String(it?.id || ''));
-    if (!g || !g.activo) return Response.json({ ok: false, error: `genética no disponible: ${it?.id}` }, { status: 400 });
-    if (!['flor', 'preroll'].includes(formato) || !formatosDe(g).includes(formato)) {
-      return Response.json({ ok: false, error: `formato inválido para ${g.nombre}` }, { status: 400 });
-    }
-    if (!Number.isFinite(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD[formato]) {
-      return Response.json({ ok: false, error: `cantidad inválida para ${g.nombre}` }, { status: 400 });
-    }
-    items.push({ id: g.id, nombre: g.nombre, formato, cantidad });
-  }
+  const v = await validarItems(env, rawItems);
+  if (v.error) return Response.json({ ok: false, error: v.error }, { status: 400 });
+  const items = v.items!;
 
   const now = new Date().toISOString();
 
@@ -198,7 +247,7 @@ async function notificar(env: Env, pedido: any) {
       .map((i: any) => `· ${i.cantidad}${i.formato === 'flor' ? ' g' : ' u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`)
       .join('\n');
     const text =
-      (pedido._actualizada ? `🌿 RESERVA ACTUALIZADA — Portal Flora\n` : `🌿 RESERVA NUEVA — Portal Flora\n`) +
+      (pedido._cancelada ? `🌿 RESERVA CANCELADA — Portal Flora\n` : pedido._actualizada ? `🌿 RESERVA ACTUALIZADA — Portal Flora\n` : `🌿 RESERVA NUEVA — Portal Flora\n`) +
       `👤 ${pedido.name || pedido.email} (${pedido.email})\n` +
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +
