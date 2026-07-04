@@ -825,9 +825,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         : '<span class="pa-socio-badge">Sin ingresar</span>'
       const verif = s.emailVerified ? '<span class="pa-socio-verif" title="Cuenta de Google verificada">✓</span>' : ''
       const res = reservasDe(s.email)
-      const chipRes = res.activa
+      const chipActiva = res.activa
         ? `<span class="pa-socio-badge is-res" title="Tiene una reserva ${res.activa.estado === 'listo' ? 'lista para retirar' : 'pendiente'}">Reserva ${res.activa.estado === 'listo' ? 'lista' : 'pendiente'}</span>`
-        : (res.total ? `<span class="pa-socio-badge" title="Reservas históricas">${res.total} reserva(s)</span>` : '')
+        : ''
+      const chipRes = res.total
+        ? `${chipActiva}<button type="button" class="pa-socio-badge pa-socio-hist-btn" data-email="${esc(s.email)}" title="Ver historial de reservas">${res.total} reserva(s) <span class="pa-hist-chev">▸</span></button>`
+        : chipActiva
       // Sin ingresar → invitación lista para mandar por WhatsApp
       const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">Invitar por WhatsApp</a>`
       // Ficha Google: nombre y apellido reales + idioma de la cuenta
@@ -856,10 +859,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <div class="pa-socio-email">${esc(s.email)}</div>
             <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
             <div class="pa-socio-meta">${metaPartes.join(' · ')}</div>
+            <div class="pa-socio-hist" data-hist="${esc(s.email)}" hidden></div>
           </div>
           <button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
         </article>`
     }
+
+    // Historial de reservas del socio (se arma al abrir; vive lo que el KV: ~90 días)
+    function histReservasHtml(email) {
+      const rs = PEDIDOS.filter((p) => p.email === email)
+        .sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
+      if (!rs.length) return '<p class="pa-socio-meta">Sin reservas registradas en los últimos 90 días.</p>'
+      return rs.map((p) => {
+        const [label, cls] = PED_BADGE[p.estado] || [p.estado, '']
+        const items = p.items.map((i) => `${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} ${esc(i.nombre)}`).join(' · ')
+        return `
+          <div class="pa-hist-row">
+            <span class="pa-hist-fecha">${esc(fmtFecha(p.creado))}</span>
+            <span class="pa-socio-badge ${cls}">${esc(label)}</span>
+            <span class="pa-hist-items">${items}</span>
+            ${p.nota ? `<span class="pa-hist-nota">“${esc(p.nota)}”</span>` : ''}
+          </div>`
+      }).join('') + '<p class="pa-hist-pie">El historial cubre los últimos 90 días.</p>'
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('.pa-socio-hist-btn')
+      if (!btn) return
+      const email = btn.getAttribute('data-email')
+      const hist = document.querySelector(`.pa-socio-hist[data-hist="${CSS.escape(email)}"]`)
+      if (!hist) return
+      if (hist.hidden && !hist.innerHTML) hist.innerHTML = histReservasHtml(email)
+      hist.hidden = !hist.hidden
+      btn.querySelector('.pa-hist-chev').textContent = hist.hidden ? '▸' : '▾'
+    })
     let SOCIOS_LIST = []
     let socioSort = { key: 'lastLogin', dir: -1 } // arranca por actividad reciente
     let socioQ = ''
@@ -1522,6 +1555,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-socio-verif { color: var(--pa-green); font-weight: 800; margin: 0 0.35rem 0 0.15rem; }
   .pa-socio-badge.is-res { background: rgba(60, 180, 146, 0.16); color: var(--pa-green); }
   .pa-socio-meta strong { color: var(--pa-cream); font-weight: 700; }
+
+  /* ── Historial de reservas del socio ── */
+  button.pa-socio-hist-btn { border: 1px solid var(--pa-line); cursor: pointer; font-family: var(--font-ui); touch-action: manipulation; }
+  button.pa-socio-hist-btn:hover { border-color: var(--pa-violet); color: var(--pa-cream); }
+  .pa-hist-chev { display: inline-block; margin-left: 0.15rem; }
+  .pa-socio-hist {
+    margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed var(--pa-line);
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .pa-socio-hist[hidden] { display: none; }
+  .pa-hist-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; font-size: 0.8rem; }
+  .pa-hist-fecha { color: var(--pa-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pa-hist-items { color: var(--pa-cream); font-weight: 600; }
+  .pa-hist-nota { color: var(--pa-muted); font-style: italic; }
+  .pa-hist-pie { font-size: 0.68rem; color: var(--pa-muted); opacity: 0.7; margin: 0.2rem 0 0; }
 
   /* ── Socios: invitación ── */
   .pa-socio-invitar {
