@@ -141,3 +141,15 @@ html, body { background-color: #130d1c; }
 .td-done h3 { color: var(--td-green); font-size: 1.05rem; margin: 0 0 8px; }
 .td-done p { color: var(--td-muted); font-size: 0.9rem; margin: 0 0 4px; }
 .td-done .td-done-items { color: var(--td-cream); font-size: 0.92rem; margin: 8px 0; }
+
+/* ── Compra dentro de cards claras (fichas técnicas) ── */
+.td-content-wide { max-width: 1240px; }
+.td-spec-grid { margin-top: 6px; }
+.td-buy {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin: 16px 0 4px; padding-top: 14px; border-top: 1px solid rgba(56, 31, 86, 0.14);
+}
+.td-buy .td-precio { font-size: 1.35rem; font-weight: 800; color: var(--fl-green, #0A503C); font-variant-numeric: tabular-nums; }
+.td-onlight .td-step-btn { color: var(--fl-ink, #1C1626); border-color: rgba(56, 31, 86, 0.25); }
+.td-onlight .td-step-btn:hover { border-color: var(--fl-violet, #381F56); background: rgba(56, 31, 86, 0.06); }
+.td-onlight .td-step-num { color: var(--fl-ink, #1C1626); }

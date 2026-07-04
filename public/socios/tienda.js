@@ -12,6 +12,24 @@
   const carrito = new Map() // id → cantidad
 
   function render() {
+    // Modo estático: el markup viene server-rendered (ej. fichas técnicas de
+    // aceites); acá solo se rellenan precio y stepper en los slots por data-id.
+    if (CFG.static) {
+      for (const it of ITEMS) {
+        const qty = carrito.get(it.id) || 0
+        const precioEl = document.querySelector(`.td-precio[data-id="${it.id}"]`)
+        if (precioEl) precioEl.textContent = fmt(it.precio)
+        const slot = document.querySelector(`.td-slot[data-id="${it.id}"]`)
+        if (slot) slot.innerHTML = `
+          <div class="td-stepper" data-id="${esc(it.id)}">
+            <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
+            <span class="td-step-num">${qty}</span>
+            <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= 10 ? 'disabled' : ''}>+</button>
+          </div>`
+      }
+      barra()
+      return
+    }
     const cont = document.getElementById('td-items')
     const esMenu = CFG.layout === 'menu'
     cont.innerHTML = ITEMS.map((it) => {

@@ -3,11 +3,63 @@ import Layout from '../../layouts/Layout.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+
+// Ficha técnica idéntica a la landing (cromatografía HPLC-UV, IACA, 02/06/2026)
+const aceites = [
+  {
+    id: 'aceite-q1',
+    codigo: 'Q1',
+    sub: 'Quimiotipo I · THC predominante',
+    desc: 'Perfil de THC alto con presencia de CBG. Pensado para uso nocturno y dolor intenso, siempre con el equipo orientando la dosis.',
+    perfil: [
+      { k: 'CBD', v: '21,8' },
+      { k: 'THC', v: '51,0' },
+      { k: 'CBG', v: '6,9' },
+    ],
+    para: ['Dolor agudo o intenso', 'Insomnio severo', 'Náuseas y falta de apetito'],
+    pdf: '/analisis/Q1.pdf',
+    img: '/img/prod-aceite-q1.jpg',
+    color: '#C9396B',
+    ratio: 'THC:CBD ≈ 2,3:1',
+  },
+  {
+    id: 'aceite-q2',
+    codigo: 'Q2',
+    sub: 'Quimiotipo II · CBD:THC balanceado',
+    desc: 'Relación equilibrada entre CBD y THC. Acompaña el día y la noche. El elegido por quienes ya tienen su tratamiento calibrado.',
+    perfil: [
+      { k: 'CBD', v: '23,9' },
+      { k: 'THC', v: '17,0' },
+      { k: 'CBG', v: '1,3' },
+    ],
+    para: ['Dolor crónico y artritis', 'Migrañas', 'Dolores menstruales'],
+    pdf: '/analisis/Q2.pdf',
+    img: '/img/prod-aceite-q2.jpg',
+    color: '#6E54C8',
+    ratio: 'CBD:THC ≈ 1,4:1',
+  },
+  {
+    id: 'aceite-q3',
+    codigo: 'Q3',
+    sub: 'Quimiotipo III · CBD predominante',
+    desc: 'CBD alto y THC casi nulo, de efecto suave. Ideal para el día, la ansiedad y para empezar con un perfil liviano.',
+    perfil: [
+      { k: 'CBD', v: '32,6' },
+      { k: 'THC', v: '1,2' },
+      { k: 'CBG', v: '0,3' },
+    ],
+    para: ['Ansiedad y estrés', 'Dificultad para dormir', 'Dolor neuropático'],
+    pdf: '/analisis/Q3.pdf',
+    img: '/img/prod-aceite-q3.jpg',
+    color: '#1F9389',
+    ratio: 'CBD:THC ≈ 27:1',
+  },
+]
 ---
 
 <Layout
   title="Aceites — reservas para socios | Flora ONG"
-  description="Reservá aceites de Flora. Exclusivo para socios verificados."
+  description="Reservá los aceites de Flora con su cromatografía. Exclusivo para socios verificados."
   noindex={true}
 >
   <link rel="stylesheet" href="/socios/tienda.css" />
@@ -28,17 +80,90 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     </div>
 
     <!-- ── Tienda ── -->
-    <div id="td-content" class="td-content" hidden>
+    <div id="td-content" class="td-content td-content-wide" hidden>
       <div class="td-head">
         <a href="/socios/" class="td-back">← Portal</a>
         <div class="td-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="td-brand-name">Flora <em>club</em></span></div>
         <button id="td-logout" class="td-logout" type="button">Salir</button>
       </div>
-      <h1 class="td-title td-head-title">Nuestros <em>aceites</em></h1>
-      <p class="td-head-sub">Tres extractos sublinguales con cromatografía del último lote —Q1, Q2 y Q3, uno para cada perfil. Reservás acá y lo retirás en el club.</p>
+      <h1 class="td-title td-head-title">Tres perfiles. <em>Uno es para vos.</em></h1>
+      <p class="td-head-sub">
+        Cada aceite nace del mismo cultivo y se mide planta por planta. Elegí por objetivo
+        —descanso, equilibrio o calma diurna— y mirá la proporción exacta de CBD y THC.
+        Cada perfil sale de la <strong>cromatografía del último lote</strong>, con su
+        informe descargable. Reservás acá y lo retirás en el club.
+      </p>
 
       <div id="td-activo" class="td-activo"></div>
-      <div id="td-items" class="td-grid"></div>
+
+      <div class="fl-spec-grid td-spec-grid">
+        {aceites.map((a) => (
+          <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color}`}>
+            <div class="fl-oil-photo">
+              <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="600" height="750" />
+              <span class="fl-oil-badge">{a.codigo}</span>
+            </div>
+
+            <div class="fl-oil-body">
+              <h3 class="fl-oil-title">{a.sub}</h3>
+              <p class="fl-oil-desc">{a.desc}</p>
+
+              {(() => {
+                const cols = { CBD: 'var(--fl-green)', THC: 'var(--fl-violet)' }
+                const vals = a.perfil
+                  .filter((p) => p.k === 'CBD' || p.k === 'THC')
+                  .map((p) => ({ k: p.k, v: p.v, n: Number(p.v.replace(',', '.')) }))
+                const total = vals.reduce((s, x) => s + x.n, 0)
+                let acc = 0
+                const stops = vals.map((x) => {
+                  const from = (acc / total) * 100
+                  acc += x.n
+                  const to = (acc / total) * 100
+                  return `${cols[x.k]} ${from.toFixed(1)}% ${to.toFixed(1)}%`
+                }).join(', ')
+                return (
+                  <div class="fl-oil-chart" aria-label={`Proporción CBD:THC de ${a.codigo}, ${a.ratio}`}>
+                    <div class="fl-oil-donut" style={`--ring:conic-gradient(${stops})`}>
+                      <div class="fl-oil-donut-hole">
+                        <strong>{a.ratio.split('≈')[1].trim()}</strong>
+                        <i>{a.ratio.split('≈')[0].trim()}</i>
+                      </div>
+                    </div>
+                    <ul class="fl-oil-legend">
+                      {vals.map((x) => (
+                        <li>
+                          <span class="fl-oil-dot" style={`background:${cols[x.k]}`}></span>
+                          <span class="fl-oil-legend-k">{x.k}</span>
+                          <strong>{x.v}<i>mg/mL</i></strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })()}
+
+              <div class="fl-oil-para">
+                <span class="fl-oil-para-label">Puede acompañar en</span>
+                <ul class="fl-oil-para-list">
+                  {a.para.map((c) => <li>{c}</li>)}
+                </ul>
+              </div>
+
+              <div class="td-buy td-onlight">
+                <span class="td-precio" data-id={a.id}></span>
+                <div class="td-slot" data-id={a.id}></div>
+              </div>
+
+              <div class="fl-oil-actions">
+                <a class="fl-oil-download" href={a.pdf} download>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 21V5a2 2 0 0 1 2-2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M12 11v5"/><path d="m9.5 14 2.5 2.5 2.5-2.5"/></svg>
+                  Descargar análisis de cromatografía
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
 
       <div id="td-done" class="td-done">
         <h3>Reserva enviada ✓</h3>
@@ -56,7 +181,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
   <script define:vars={{ googleClientId }}>
-    window.TIENDA = Object.assign({ categoria: 'aceites', layout: 'cards', fotos: { 'aceite-q1': '/img/prod-aceite-q1.jpg', 'aceite-q2': '/img/prod-aceite-q2.jpg', 'aceite-q3': '/img/prod-aceite-q3.jpg' } }, { googleClientId })
+    window.TIENDA = { categoria: 'aceites', static: true, googleClientId }
   </script>
   <script src="/socios/tienda.js" is:inline></script>
 </Layout>
