@@ -3,6 +3,14 @@ import Layout from '../../layouts/Layout.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+
+// Íconos del gateway — idénticos a los de la landing pública
+const productIconsSvg = [
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="4" y="5.5" width="16" height="4.5" rx="1"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 6h8l-1.2 3.4H9.2z"/><rect x="7.5" y="9.4" width="9" height="12.1" rx="2.5"/></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11M12 11c3.5-.4 6-3 6-7-3.5.4-6 3-6 7zM12 13C8.5 12.6 6 10 6 6c3.5.4 6 3 6 7z"/></svg>`,
+]
 ---
 
 <Layout
@@ -38,49 +46,53 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <span class="pt-brand-name">Flora <em>club</em></span>
         </div>
         <h1 class="pt-title">Portal de <em>socios</em></h1>
-        <p class="pt-sub pt-sub-head">Precios vigentes para personas asociadas. El aporte se coordina por WhatsApp.</p>
+        <p class="pt-sub pt-sub-head">Elegí una categoría para ver precios y reservar. Retirás en el club.</p>
         <button id="pt-logout" class="pt-logout" type="button">Salir</button>
       </header>
 
-      <div class="pt-gateway">
-        <a class="pt-panel pt-panel-nav" href="/socios/aceites/" aria-label="Aceites — ver y reservar">
-          <img class="pt-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" />
-          <div class="pt-panel-body">
-            <h2 class="pt-panel-title">Aceites</h2>
-            <ul id="pt-aceites" class="pt-list"></ul>
-            <span class="pt-panel-cta pt-panel-cta-sm">Reservar aceites <span aria-hidden="true">→</span></span>
-          </div>
+      <div class="fl-gateway fl-prod-gateway pt-gw" role="list">
+        <a class="fl-panel fl-panel-1" href="/socios/aceites/" role="listitem" aria-label="Aceites">
+          <img class="fl-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" width="1448" height="1010" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Aceites</span>
+            <span class="fl-panel-desc">Q1, Q2 y Q3 con su cromatografía. Elegí el tuyo y reservalo.</span>
+            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
+          </span>
         </a>
 
-        <a class="pt-panel pt-panel-nav" href="/socios/cremas/" aria-label="Cremas — ver y reservar">
-          <img class="pt-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" />
-          <div class="pt-panel-body">
-            <h2 class="pt-panel-title">Cremas</h2>
-            <ul id="pt-cremas" class="pt-list"></ul>
-            <span class="pt-panel-cta pt-panel-cta-sm">Reservar cremas <span aria-hidden="true">→</span></span>
-          </div>
+        <a class="fl-panel fl-panel-2" href="/socios/cremas/" role="listitem" aria-label="Cremas">
+          <img class="fl-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" width="1400" height="1750" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Cremas</span>
+            <span class="fl-panel-desc">Tópicas, para alivio localizado. Reservá la tuya.</span>
+            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
+          </span>
         </a>
 
-        <a class="pt-panel pt-panel-nav" href="/socios/extracciones/" aria-label="Extracciones — ver y reservar">
-          <img class="pt-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" />
-          <div class="pt-panel-body">
-            <h2 class="pt-panel-title">Extracciones</h2>
-            <ul id="pt-extracciones" class="pt-list"></ul>
-            <span class="pt-panel-cta pt-panel-cta-sm">Reservar extracciones <span aria-hidden="true">→</span></span>
-          </div>
+        <a class="fl-panel fl-panel-3" href="/socios/extracciones/" role="listitem" aria-label="Extracciones">
+          <img class="fl-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" width="1003" height="1254" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Extracciones</span>
+            <span class="fl-panel-desc">Cartuchos y baterías 510, discretos y dosificados.</span>
+            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
+          </span>
         </a>
 
-        <a class="pt-panel pt-panel-flores" href="/socios/carta/" aria-label="Flores — abrir la carta">
-          <img class="pt-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" />
-          <div class="pt-panel-body">
-            <h2 class="pt-panel-title">Flores</h2>
-            <ul id="pt-membresias" class="pt-list"></ul>
-            <span class="pt-panel-cta">Abrir la carta del mes <span aria-hidden="true">→</span></span>
-          </div>
+        <a class="fl-panel fl-panel-4" href="/socios/carta/" role="listitem" aria-label="Flores">
+          <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
+          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[3]} />
+          <span class="fl-panel-body">
+            <span class="fl-panel-title">Flores</span>
+            <span class="fl-panel-desc">La carta del mes, con reserva por gramos y prerolls.</span>
+            <span class="fl-panel-cta">Abrir la carta <span aria-hidden="true">→</span></span>
+          </span>
         </a>
       </div>
 
-      <p class="pt-foot">Precios exclusivos del portal de socios · se actualizan sin previo aviso.</p>
+      <p class="pt-foot">Portal exclusivo para personas asociadas · las reservas se abonan al retirar en el club.</p>
     </div>
   </main>
 
@@ -91,19 +103,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     const fmt = (n) => '$ ' + Number(n).toLocaleString('es-AR')
 
-    function fila(item) {
-      return `
-        <li class="pt-row">
-          <span class="pt-row-label">${esc(item.label)}${item.detalle ? `<i>${esc(item.detalle)}</i>` : ''}</span>
-          <span class="pt-row-precio">${fmt(item.precio)}</span>
-        </li>`
-    }
-
-    function showContent(p) {
-      document.getElementById('pt-membresias').innerHTML = (p.membresias || []).map(fila).join('')
-      document.getElementById('pt-aceites').innerHTML = (p.aceites || []).map(fila).join('')
-      document.getElementById('pt-cremas').innerHTML = (p.cremas || []).map(fila).join('')
-      document.getElementById('pt-extracciones').innerHTML = (p.extracciones || []).map(fila).join('')
+    function showContent() {
       document.getElementById('pt-login').hidden = true
       document.getElementById('pt-content').hidden = false
     }
@@ -118,7 +118,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const res = await fetch('/api/socios/precios', { credentials: 'include' })
       if (!res.ok) return false
       const data = await res.json()
-      showContent(data.precios || {})
+      showContent()
       return true
     }
 
@@ -236,63 +236,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pt-logout:hover { color: var(--pt-cream); border-color: var(--pt-violet); }
 
-  /* ── Gateway: espejo del de la landing, en modo nocturno ── */
-  .pt-gateway { display: grid; grid-template-columns: 1fr; gap: 16px; }
-  @media (min-width: 860px) {
-    .pt-gateway { grid-template-columns: 1fr 1fr; }
-  }
-
-  .pt-panel {
-    position: relative; overflow: hidden; border-radius: 20px;
-    border: 1px solid var(--pt-line);
-    min-height: clamp(320px, 40vw, 420px);
-    display: flex; align-items: flex-end;
-    color: var(--pt-cream); text-decoration: none;
-    transition: transform 0.25s ease, border-color 0.25s ease;
-  }
-  .pt-panel-img {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.1, 1);
-  }
-  .pt-panel::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(19,13,28,0.2) 0%, rgba(19,13,28,0.5) 40%, rgba(19,13,28,0.94) 100%);
-  }
-  .pt-panel-body { position: relative; z-index: 1; width: 100%; padding: clamp(18px, 2.4vw, 26px); }
-  .pt-panel-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 2.8vw, 2rem); margin-bottom: 4px; }
-
-  .pt-panel-nav:hover, .pt-panel-nav:focus-visible { transform: translateY(-4px); border-color: var(--pt-violet); }
-  .pt-panel-nav:hover .pt-panel-img { transform: scale(1.05); }
-  .pt-panel-nav:focus-visible { outline: 2px solid var(--pt-violet); outline-offset: 3px; }
-  .pt-panel-cta-sm { padding: 10px 18px; font-size: 0.85rem; }
-
-  .pt-panel-flores { border-color: rgba(60, 180, 146, 0.45); }
-  .pt-panel-flores:hover, .pt-panel-flores:focus-visible { transform: translateY(-4px); border-color: var(--pt-green); }
-  .pt-panel-flores:hover .pt-panel-img { transform: scale(1.05); }
-  .pt-panel-flores:focus-visible { outline: 2px solid var(--pt-green); outline-offset: 3px; }
-  .pt-panel-cta {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin-top: 16px; background: var(--pt-violet); color: #170c2b;
-    font-weight: 700; font-size: 0.95rem; padding: 13px 24px; border-radius: 999px;
-  }
-
-  .pt-list { list-style: none; margin: 0; padding: 0; }
-  .pt-row {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    padding: 10px 2px; border-top: 1px solid rgba(244, 241, 247, 0.16);
-  }
-  .pt-row:first-child { border-top: none; }
-  .pt-row-label { font-size: 0.92rem; font-weight: 600; color: var(--pt-cream); }
-  .pt-row-label i { font-style: normal; font-weight: 400; color: var(--pt-muted); margin-left: 8px; font-size: 0.82rem; }
-  .pt-row-precio { font-size: 1.02rem; font-weight: 700; color: var(--pt-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-  /* Membresías compactas dentro de Flores */
-  @media (min-width: 640px) {
-    .pt-panel-flores .pt-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .pt-panel-flores .pt-row { flex-direction: column; align-items: flex-start; gap: 2px; border-top: none; border-left: 1px solid rgba(244,241,247,0.18); padding: 2px 0 2px 12px; }
-    .pt-panel-flores .pt-row:first-child { border-left: none; padding-left: 2px; }
-    .pt-panel-flores .pt-row-label i { display: block; margin: 1px 0 0; }
-  }
+  /* Gateway de la landing sobre fondo nocturno: solo margen propio */
+  .pt-gw { margin-top: clamp(20px, 2.6vw, 32px); }
 
   .pt-foot { margin-top: clamp(20px, 3vw, 32px); font-size: 0.8rem; color: var(--pt-muted); text-align: center; }
 </style>
