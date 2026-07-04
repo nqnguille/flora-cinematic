@@ -12,7 +12,7 @@ interface Env {
 const TTL_SECONDS = 90 * 24 * 60 * 60;
 const ESTADOS_ACTIVOS = ['pendiente', 'listo'];
 const MAX_ITEMS = 12;
-const MAX_CANTIDAD = { flor: 50, preroll: 20 } as Record<string, number>;
+const MAX_CANTIDAD = { flor: 50, preroll: 20, producto: 10 } as Record<string, number>;
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
 
 function formatosDe(g: any): string[] {
@@ -71,13 +71,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   const yaActivo = (await pedidosDe(env, socio.email)).find((p) => ESTADOS_ACTIVOS.includes(p.estado));
-  if (yaActivo) {
-    return Response.json({ ok: false, error: 'ya tenés una reserva en curso', activo: yaActivo }, { status: 409 });
+  if (yaActivo && yaActivo.estado !== 'pendiente') {
+    return Response.json({ ok: false, error: 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra', activo: yaActivo }, { status: 409 });
   }
 
   const rawCat = await env.GENETICAS.get('catalogo');
   const catalogo: any[] = rawCat ? JSON.parse(rawCat) : [];
   const porId = new Map(catalogo.map((g) => [g.id, g]));
+
+  // Productos del portal (aceites / cremas / extracciones), por id de la lista de precios
+  const rawPrecios = await env.GENETICAS.get('precios');
+  const precios: any = rawPrecios ? JSON.parse(rawPrecios) : {};
+  const productos = new Map<string, any>(
+    ['aceites', 'cremas', 'extracciones']
+      .flatMap((c) => (Array.isArray(precios[c]) ? precios[c] : []))
+      .map((it: any) => [String(it.id), it])
+  );
 
   // Ítems duplicados (misma genética+formato) se fusionan ANTES de validar,
   // así el tope por formato no se puede evadir repitiendo el ítem.
@@ -91,9 +100,21 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const items: any[] = [];
   for (const it of fusionados.values()) {
-    const g = porId.get(String(it?.id || ''));
     const formato = String(it?.formato || '');
     const cantidad = Math.floor(Number(it?.cantidad));
+
+    if (formato === 'producto') {
+      const prod = productos.get(String(it?.id || ''));
+      if (!prod) return Response.json({ ok: false, error: `producto no disponible: ${it?.id}` }, { status: 400 });
+      if (!Number.isFinite(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD.producto) {
+        return Response.json({ ok: false, error: `cantidad inválida para ${prod.label}` }, { status: 400 });
+      }
+      const nombre = prod.detalle ? `${prod.label} (${prod.detalle})` : prod.label;
+      items.push({ id: prod.id, nombre, formato, cantidad, precio: prod.precio });
+      continue;
+    }
+
+    const g = porId.get(String(it?.id || ''));
     if (!g || !g.activo) return Response.json({ ok: false, error: `genética no disponible: ${it?.id}` }, { status: 400 });
     if (!['flor', 'preroll'].includes(formato) || !formatosDe(g).includes(formato)) {
       return Response.json({ ok: false, error: `formato inválido para ${g.nombre}` }, { status: 400 });
@@ -105,6 +126,28 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   const now = new Date().toISOString();
+
+  // Con una reserva pendiente, los ítems nuevos se suman a ella (carrito único)
+  if (yaActivo) {
+    for (const nuevo of items) {
+      const prev = yaActivo.items.find((x: any) => x.id === nuevo.id && x.formato === nuevo.formato);
+      if (prev) {
+        const tope = MAX_CANTIDAD[nuevo.formato] ?? 10;
+        prev.cantidad = Math.min(tope, prev.cantidad + nuevo.cantidad);
+        if (nuevo.precio != null) prev.precio = nuevo.precio;
+      } else if (yaActivo.items.length < MAX_ITEMS) {
+        yaActivo.items.push(nuevo);
+      } else {
+        return Response.json({ ok: false, error: 'la reserva ya tiene el máximo de ítems' }, { status: 400 });
+      }
+    }
+    if (body?.nota) yaActivo.nota = String(body.nota).slice(0, 400);
+    yaActivo.actualizado = now;
+    await env.PEDIDOS.put(`pedido:${yaActivo.id}`, JSON.stringify(yaActivo), { expirationTtl: TTL_SECONDS });
+    context.waitUntil(notificar(env, { ...yaActivo, _actualizada: true }));
+    return Response.json({ ok: true, pedido: yaActivo, fusionado: true });
+  }
+
   const id = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
   const pedido = {
     id,
@@ -155,7 +198,7 @@ async function notificar(env: Env, pedido: any) {
       .map((i: any) => `· ${i.cantidad}${i.formato === 'flor' ? ' g' : ' u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`)
       .join('\n');
     const text =
-      `🌿 RESERVA NUEVA — Carta Flora\n` +
+      (pedido._actualizada ? `🌿 RESERVA ACTUALIZADA — Portal Flora\n` : `🌿 RESERVA NUEVA — Portal Flora\n`) +
       `👤 ${pedido.name || pedido.email} (${pedido.email})\n` +
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +

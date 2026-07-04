@@ -43,29 +43,32 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </header>
 
       <div class="pt-gateway">
-        <article class="pt-panel" aria-label="Aceites">
+        <a class="pt-panel pt-panel-nav" href="/socios/aceites/" aria-label="Aceites — ver y reservar">
           <img class="pt-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" />
           <div class="pt-panel-body">
             <h2 class="pt-panel-title">Aceites</h2>
             <ul id="pt-aceites" class="pt-list"></ul>
+            <span class="pt-panel-cta pt-panel-cta-sm">Reservar aceites <span aria-hidden="true">→</span></span>
           </div>
-        </article>
+        </a>
 
-        <article class="pt-panel" aria-label="Cremas">
+        <a class="pt-panel pt-panel-nav" href="/socios/cremas/" aria-label="Cremas — ver y reservar">
           <img class="pt-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" />
           <div class="pt-panel-body">
             <h2 class="pt-panel-title">Cremas</h2>
             <ul id="pt-cremas" class="pt-list"></ul>
+            <span class="pt-panel-cta pt-panel-cta-sm">Reservar cremas <span aria-hidden="true">→</span></span>
           </div>
-        </article>
+        </a>
 
-        <article class="pt-panel" aria-label="Extracciones">
+        <a class="pt-panel pt-panel-nav" href="/socios/extracciones/" aria-label="Extracciones — ver y reservar">
           <img class="pt-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" />
           <div class="pt-panel-body">
             <h2 class="pt-panel-title">Extracciones</h2>
             <ul id="pt-extracciones" class="pt-list"></ul>
+            <span class="pt-panel-cta pt-panel-cta-sm">Reservar extracciones <span aria-hidden="true">→</span></span>
           </div>
-        </article>
+        </a>
 
         <a class="pt-panel pt-panel-flores" href="/socios/carta/" aria-label="Flores — abrir la carta">
           <img class="pt-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" />
@@ -257,6 +260,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pt-panel-body { position: relative; z-index: 1; width: 100%; padding: clamp(18px, 2.4vw, 26px); }
   .pt-panel-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 2.8vw, 2rem); margin-bottom: 4px; }
+
+  .pt-panel-nav:hover, .pt-panel-nav:focus-visible { transform: translateY(-4px); border-color: var(--pt-violet); }
+  .pt-panel-nav:hover .pt-panel-img { transform: scale(1.05); }
+  .pt-panel-nav:focus-visible { outline: 2px solid var(--pt-violet); outline-offset: 3px; }
+  .pt-panel-cta-sm { padding: 10px 18px; font-size: 0.85rem; }
 
   .pt-panel-flores { border-color: rgba(60, 180, 146, 0.45); }
   .pt-panel-flores:hover, .pt-panel-flores:focus-visible { transform: translateY(-4px); border-color: var(--pt-green); }

@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import '../../styles/global.css'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Cremas — reservas para socios | Flora ONG"
+  description="Reservá cremas de Flora. Exclusivo para socios verificados."
+  noindex={true}
+>
+  <link rel="stylesheet" href="/socios/tienda.css" />
+  <main class="td-main">
+    <!-- ── Login ── -->
+    <div id="td-login" class="td-login">
+      <div class="td-login-card">
+        <div class="td-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="td-brand-name">Flora <em>club</em></span></div>
+        <h1 class="td-title">Nuestras <em>cremas</em></h1>
+        <p class="td-sub">
+          Sección exclusiva para socios verificados. Ingresá con la cuenta de Google
+          que registraste como socio para ver precios y reservar.
+        </p>
+        <div id="g_id_button"></div>
+        <p id="td-login-msg" class="td-msg" hidden></p>
+        <a href="/socios/" class="td-back">← Volver al portal</a>
+      </div>
+    </div>
+
+    <!-- ── Tienda ── -->
+    <div id="td-content" class="td-content" hidden>
+      <div class="td-head">
+        <a href="/socios/" class="td-back">← Portal</a>
+        <div class="td-brand"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="td-brand-name">Flora <em>club</em></span></div>
+        <button id="td-logout" class="td-logout" type="button">Salir</button>
+      </div>
+      <h1 class="td-title td-head-title">Nuestras <em>cremas</em></h1>
+      <p class="td-head-sub">Crema tópica de cannabis medicinal para alivio localizado. Reservás acá y la retirás en el club.</p>
+
+      <div id="td-activo" class="td-activo"></div>
+      <div id="td-items" class="td-grid"></div>
+
+      <div id="td-done" class="td-done">
+        <h3>Reserva enviada ✓</h3>
+        <p class="td-done-items"></p>
+        <p>Es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás. Por el sitio no se cobra nada.</p>
+      </div>
+    </div>
+
+    <!-- ── Barra flotante ── -->
+    <div id="td-bar" class="td-bar" role="region" aria-label="Resumen de reserva">
+      <span id="td-bar-info" class="td-bar-info"></span>
+      <button id="td-bar-btn" class="td-bar-btn" type="button">Reservar</button>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    window.TIENDA = Object.assign({ categoria: 'cremas', layout: 'cards', fotos: { 'crema-30': '/img/prod-cremas.jpg' } }, { googleClientId })
+  </script>
+  <script src="/socios/tienda.js" is:inline></script>
+</Layout>
