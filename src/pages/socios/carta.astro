@@ -127,13 +127,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     /* ── Piezas de la tarjeta ── */
 
-    // Predominancia genética sin números: "Sativa predominante | Silver River"
+    // Predominancia genética sin números: "Predominancia sativa | Silver River"
     // Entre 40 y 60% sativa se considera equilibrada.
     function predGenetica(g) {
       const p = parsePredominancia(g.predominancia)
       if (p) {
-        if (p.sativa > 60) return 'Sativa predominante'
-        if (p.sativa < 40) return 'Índica predominante'
+        if (p.sativa > 60) return 'Predominancia sativa'
+        if (p.sativa < 40) return 'Predominancia índica'
         return 'Híbrida equilibrada'
       }
       return TIPO_LABEL[g.tipo] || g.tipo || ''
@@ -428,38 +428,42 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     /* ── Desplegables tildables (multi-selección con checkboxes) ── */
-    const DIM_LABEL = { tipo: 'Tipo', efecto: 'Efectos', sabor: 'Sabores' }
+    const DIM_LABEL = { tipo: 'Predominancia', efecto: 'Efectos', sabor: 'Sabores' }
     const STATIC_OPTS = {
       tipo: [['sativa', 'Sativa'], ['indica', 'Indica'], ['hibrida', 'Híbrida'], ['cbd', 'Full CBD']],
     }
 
-    // Selector de formato: LA decisión principal (flores vs prerolls) va en un
-    // segmentado grande siempre visible, no escondida en un desplegable.
-    // Un formato sin genéticas activas se atenúa y no responde (evita el dead-end).
+    // Selector de formato: LA decisión principal va en un segmentado grande
+    // siempre visible. "Ver:" es etiqueta; Flores y Prerolls se prenden y
+    // apagan de forma independiente (también las dos juntas). Sin nada
+    // prendido se ve todo. Un formato sin genéticas activas se atenúa.
     let paintSeg = () => {}
     function renderSegFormato() {
       const el = document.getElementById('gn-seg')
       const counts = { flor: 0, preroll: 0 }
       for (const g of allGeneticas) for (const f of formatosDe(g)) if (f in counts) counts[f]++
       const opts = [
-        ['', 'Todas', ''],
         ['flor', 'Flores', ICON_FLOR],
         ['preroll', 'Prerolls', ICON_PREROLL],
       ]
-      el.innerHTML = opts
+      el.innerHTML = '<span class="gn-seg-label">Ver:</span>' + opts
         .map(([val, lab, icon]) =>
-          `<button class="gn-seg-btn${val ? ` is-${val}` : ''}${val && !counts[val] ? ' is-empty' : ''}" type="button" data-formato="${val}">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
+          `<button class="gn-seg-btn is-${val}${!counts[val] ? ' is-empty' : ''}" type="button" data-formato="${val}" aria-pressed="false">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
         )
         .join('')
       paintSeg = () => {
-        const sel = filters.formato.size === 1 ? [...filters.formato][0] : ''
-        el.querySelectorAll('.gn-seg-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.formato === sel))
+        el.querySelectorAll('.gn-seg-btn').forEach((b) => {
+          const on = filters.formato.has(b.dataset.formato)
+          b.classList.toggle('is-active', on)
+          b.setAttribute('aria-pressed', on)
+        })
       }
       el.addEventListener('click', (e) => {
         const b = e.target.closest('.gn-seg-btn')
         if (!b || b.classList.contains('is-empty')) return
-        filters.formato.clear()
-        if (b.dataset.formato) filters.formato.add(b.dataset.formato)
+        const val = b.dataset.formato
+        if (filters.formato.has(val)) filters.formato.delete(val)
+        else filters.formato.add(val)
         paintSeg()
         applyFilters()
       })
@@ -1107,6 +1111,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Formato sin genéticas activas: atenuado y sin acción (evita el dead-end) */
   .gn-seg-btn.is-empty { opacity: 0.38; cursor: default; }
   .gn-seg-btn:hover { color: var(--gn-cream); }
+  .gn-seg-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gn-muted);
+    padding: 0 0.2rem 0 0.75rem;
+    flex-shrink: 0;
+  }
   /* El ícono es el protagonista: mismo sello circular que llevan las fotos
      (flores = círculo verde, preroll = círculo violeta) */
   .gn-seg-ic {
