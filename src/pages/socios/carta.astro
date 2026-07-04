@@ -845,6 +845,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       location.reload()
     })
 
+    // Legal colapsado en mobile: tocarlo lo expande/colapsa
+    document.querySelector('.gn-disclaimer')?.addEventListener('click', (e) => e.currentTarget.classList.toggle('is-open'))
+
     if (googleClientId) {
       window.onload = () => {
         google.accounts.id.initialize({
@@ -1876,25 +1879,57 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (max-width: 760px) {
-    /* Topbar en 2 renglones: logo + controles arriba, filtros abajo (no se pisan) */
-    .gn-topbar { flex-wrap: wrap; row-gap: 0.7rem; }
+    /* En el celular la página SCROLLEA (el lienzo fijo 100svh es para la TV):
+       la tarjeta tiene altura fija generosa y el resto fluye debajo. */
+    .gn-content {
+      height: auto;
+      min-height: 100svh;
+      overflow: visible;
+      gap: 10px;
+    }
+    /* Topbar en 2 renglones: logo + controles arriba, filtros abajo */
+    .gn-topbar { flex-wrap: wrap; row-gap: 0.6rem; margin-bottom: 2px; }
     .gn-logo { order: 1; }
     .gn-topbar-right { order: 2; }
+    /* Filtros: UNA sola fila deslizable a lo ancho */
     .gn-filters {
       order: 3;
       flex: 1 1 100%;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: flex-start;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
     }
-    .gn-item { width: 82vw; }
-    .gn-circle { width: 46px; height: 46px; }
-    .gn-circle svg { width: 26px; height: 26px; }
-    /* En pantallas chicas el hero cede altura para que la ficha completa
-       (incluidos los steppers de pedido) entre sin recortarse; si aun así
-       falta alto, el body scrollea en vez de recortar. */
-    .gn-item-hero { height: clamp(240px, 42vh, 480px); }
+    .gn-filters::-webkit-scrollbar { display: none; }
+    .gn-seg-label { padding-left: 0.5rem; }
+    .gn-seg-btn { padding: 0.35rem 0.85rem; font-size: 0.88rem; }
+    .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }
+
+    /* Carrusel: altura FIJA independiente del chrome — la ficha entra entera */
+    .gn-track { flex: 0 0 auto; height: min(74svh, 640px); }
+    .gn-item { width: 84vw; }
+    /* Hero como porcentaje de la TARJETA (no del viewport) */
+    .gn-item-hero { height: 44%; }
     .gn-item-body { overflow-y: auto; }
+    .gn-circle { width: 42px; height: 42px; }
+    .gn-circle svg { width: 24px; height: 24px; }
     /* Botones del spinner más grandes para el pulgar */
     .gn-qty-btn { width: 38px; height: 26px; font-size: 1.1rem; }
+    /* Con dos formatos las pastillas bajan de línea en vez de achicarse */
+    .gn-order { flex-wrap: wrap; }
+    .gn-order-pills { justify-content: center; }
+
+    /* Legal colapsado a 2 líneas; tocarlo lo expande */
+    .gn-pagefoot { padding-top: 6px; margin-top: 2px; }
+    .gn-disclaimer {
+      font-size: 0.62rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .gn-disclaimer.is-open { -webkit-line-clamp: unset; }
   }
 </style>
