@@ -875,6 +875,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   /* Fondo de la página al mismo violeta oscuro (evita el borde blanco) */
   html, body { background-color: #130d1c; }
+  /* El grano global (body::after fixed + mix-blend-mode + feTurbulence) dispara
+     un bug del compositor de Chrome en desktop que pinta la pantalla de negro
+     al repintar — ya ennegreció el admin. La carta vive en la TV: fuera. */
+  body::after { display: none !important; }
 
   .gn-main {
     --gn-bg:      #130d1c;  /* violeta casi negro (deriva del #381F56) */
@@ -897,7 +901,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Atmósfera de marca, muy sutil */
   .gn-main::before {
     content: '';
-    position: fixed;
+    position: absolute;
     inset: 0;
     pointer-events: none;
     background:

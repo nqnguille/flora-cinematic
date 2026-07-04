@@ -94,6 +94,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <script src="/socios/icons.js" is:inline></script>
   <script src="/socios/bancos.js" is:inline></script>
   <script define:vars={{ googleClientId }}>
+    // Cazador de errores: cualquier excepción no capturada se muestra en un
+    // cartel visible en vez de dejar la página muda/negra. Diagnóstico > silencio.
+    function showFatal(msg) {
+      let el = document.getElementById('ad-fatal')
+      if (!el) {
+        el = document.createElement('div')
+        el.id = 'ad-fatal'
+        el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7a1f2b;color:#fff;font:600 13px/1.5 system-ui;padding:10px 16px;white-space:pre-wrap;word-break:break-word'
+        document.body.appendChild(el)
+      }
+      el.textContent = '⚠ Error del panel (sacale captura y pasásela a Claude): ' + msg
+    }
+    window.addEventListener('error', (e) => showFatal((e.message || 'error') + (e.filename ? ` @ ${e.filename.split('/').pop()}:${e.lineno}` : '')))
+    window.addEventListener('unhandledrejection', (e) => showFatal('promesa rechazada: ' + (e.reason?.message || e.reason)))
+
     let CATALOG = []
 
     function esc(s) {
@@ -206,9 +221,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       } catch { flashStatus('Error de red') }
     }
 
-    // Filtros del panel (disponibilidad + buscador)
-    document.querySelectorAll('.ad-avail').forEach((b) => b.addEventListener('click', () => {
-      document.querySelectorAll('.ad-avail').forEach((x) => x.classList.remove('is-active'))
+    // Filtros del panel (disponibilidad + buscador) — scopeados a SU pestaña:
+    // los botones de Reservas también llevan .ad-avail y se pisaban con estos.
+    document.querySelectorAll('#tab-geneticas .ad-avail').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('#tab-geneticas .ad-avail').forEach((x) => x.classList.remove('is-active'))
       b.classList.add('is-active'); availFilter = b.dataset.avail; render()
     }))
     document.getElementById('ad-search').addEventListener('input', (e) => { searchQ = e.target.value.trim(); render() })
@@ -449,6 +465,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (!iso) return '—'
       try {
         const d = new Date(iso)
+        if (isNaN(d.getTime())) return '—'
         return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
           ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
       } catch { return iso }
@@ -497,13 +514,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     }
     async function saveSocio(email, nota) {
-      const res = await fetch('/api/socios/admin/socios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, nota }),
-      })
-      return res.ok
+      try {
+        const res = await fetch('/api/socios/admin/socios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, nota }),
+        })
+        return res.ok
+      } catch {
+        return false // sin red: que el caller muestre el error, nunca silencio
+      }
     }
     document.getElementById('ad-socio-form').addEventListener('submit', async (e) => {
       e.preventDefault()
@@ -518,9 +539,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (ok) { emailEl.value = ''; notaEl.value = ''; loadSocios() }
       setTimeout(() => (status.textContent = ''), 3000)
     })
-    document.addEventListener('change', (e) => {
+    document.addEventListener('change', async (e) => {
       const nota = e.target.closest && e.target.closest('.ad-socio-nota')
-      if (nota) saveSocio(nota.getAttribute('data-email'), nota.value)
+      if (!nota) return
+      const status = document.getElementById('ad-socio-status')
+      status.textContent = 'Guardando nota…'
+      const ok = await saveSocio(nota.getAttribute('data-email'), nota.value)
+      status.textContent = ok ? 'Nota guardada ✓' : 'Error al guardar la nota — probá de nuevo'
+      setTimeout(() => (status.textContent = ''), 3000)
     })
     document.addEventListener('click', async (e) => {
       const del = e.target.closest && e.target.closest('.ad-socio-del')
@@ -548,6 +574,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (res.status === 403) {
         document.getElementById('ad-login').hidden = true
         document.getElementById('ad-forbidden').hidden = false
+        return true
+      }
+      if (!res.ok) {
+        showLoginError(`El servidor respondió ${res.status}. Esperá un momento y recargá.`)
         return true
       }
       const data = await res.json()
@@ -592,7 +622,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       showLoginError('Falta configurar el Google Client ID del sitio.')
     }
 
-    loadCatalog()
+    loadCatalog().catch(() => showLoginError('No se pudo conectar con el servidor. Recargá la página.'))
   </script>
 </Layout>
 
@@ -621,12 +651,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .ad-main::before {
     content: '';
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
     background:
       radial-gradient(55% 40% at 88% -5%, rgba(56, 31, 86, 0.5), transparent 70%),
       radial-gradient(50% 35% at 0% 100%, rgba(10, 80, 60, 0.14), transparent 70%);
   }
   html, body { background-color: #130d1c; }
+  /* El grano cinematográfico global (body::after: capa fixed full-viewport con
+     mix-blend-mode + feTurbulence) dispara un bug del compositor de Chrome en
+     desktop que pinta TODA la pantalla de negro al repintar (pestaña Socios).
+     En un panel de datos no aporta: fuera. */
+  body::after { display: none !important; }
 
   .ad-wrap { position: relative; z-index: 1; max-width: 1460px; margin: 0 auto; }
 
@@ -750,7 +785,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .ad-savebar {
     position: sticky; bottom: clamp(12px, 2vh, 20px); margin-top: 1.6rem; padding: 0.9rem 1.1rem;
-    background: rgba(28, 20, 48, 0.85); backdrop-filter: blur(10px);
+    background: rgba(28, 20, 48, 0.97); /* sólido: backdrop-filter sumaba otra capa compuesta al bug del compositor */
     border: 1px solid var(--ad-line); border-radius: 16px;
     display: flex; align-items: center; justify-content: flex-end; gap: 1rem;
     box-shadow: 0 12px 34px -12px rgba(0, 0, 0, 0.6);
