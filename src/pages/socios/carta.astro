@@ -304,7 +304,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const w = first.getBoundingClientRect().width || first.clientWidth
       if (!w) { requestAnimationFrame(() => fitNames(track)); return } // aún sin layout: reintentar
       const usable = w - 22       // menos el padding lateral del nombre
-      const SHRINK = 0.8          // -20% respecto del "lleno de ancho"
+      // En mobile el nombre cede protagonismo a la foto (hero más chico)
+      const SHRINK = window.innerWidth <= 760 ? 0.6 : 0.8
       const ctx = (fitNames._c || (fitNames._c = document.createElement('canvas'))).getContext('2d')
       ctx.font = '100px "Bebas Neue", sans-serif'
       // TODAS al mismo tamaño: el de "TROPICANA" (una palabra de ancho medio).
@@ -1906,11 +1907,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-seg-btn { padding: 0.35rem 0.85rem; font-size: 0.88rem; }
     .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }
 
-    /* Carrusel: altura FIJA independiente del chrome — la ficha entra entera */
-    .gn-track { flex: 0 0 auto; height: min(74svh, 640px); }
-    .gn-item { width: 84vw; }
-    /* Hero como porcentaje de la TARJETA (no del viewport) */
-    .gn-item-hero { height: 44%; }
+    /* Carrusel: altura FIJA independiente del chrome — la ficha entra entera.
+       Tarjeta más angosta (se asoma la siguiente) y hero más apaisado:
+       las fotos 16:9 se ven con menos recorte/zoom. */
+    .gn-track { flex: 0 0 auto; height: min(70svh, 600px); }
+    .gn-item { width: 76vw; }
+    .gn-item-hero { height: 42%; }
     .gn-item-body { overflow-y: auto; }
     .gn-circle { width: 42px; height: 42px; }
     .gn-circle svg { width: 24px; height: 24px; }
