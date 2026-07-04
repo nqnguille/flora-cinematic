@@ -2,9 +2,9 @@
    TIENDA DE RESERVAS — portal de socios Flora
    Mismo nocturno de la carta/portal (tokens td-*)
 ═══════════════════════════════════════════════ */
-html, body { background-color: #130d1c; }
+/* el fondo oscuro lo pone cada página (portal usa su propio style) */
 
-.td-main {
+:root {
   --td-bg:     #130d1c;
   --td-card:   #1b1326;
   --td-line:   rgba(183, 157, 230, 0.16);
@@ -12,7 +12,9 @@ html, body { background-color: #130d1c; }
   --td-muted:  rgba(244, 241, 247, 0.55);
   --td-violet: #b79de6;
   --td-green:  #3cb492;
+}
 
+.td-main {
   min-height: 100svh;
   background: var(--td-bg);
   font-family: var(--font-ui);

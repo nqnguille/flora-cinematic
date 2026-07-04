@@ -1780,3 +1780,28 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-panel-desc { margin: 10px 0 0; }
   .fl-panel-cta { margin-top: 14px; }
 }
+
+
+/* ═══ Modo socio en la landing: la página se transforma con la sesión ═══ */
+/* Público por defecto; con body.is-socio se jerarquiza la carta */
+.nav-cta--carta, .fl-acceso-ctas--socio, .fl-acceso-reserva { display: none; }
+body.is-socio .nav-cta--publico { display: none !important; }
+body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: inline-flex; align-items: center; }
+@media (max-width: 940px) {
+  body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: none; }
+  body.is-socio .nav-cta--carta.nav-cta--mobile { display: inline-flex; align-items: center; margin-left: auto; height: 40px; padding: 0 20px; }
+}
+body.is-socio .fl-acceso-ctas--publico { display: none; }
+body.is-socio .fl-acceso-ctas--socio { display: flex; }
+.fl-acceso-cta--carta { font-size: 16px; padding: 17px 32px; }
+body.is-socio .fl-acceso-reserva.is-on {
+  display: flex; max-width: 46ch; margin-top: 14px;
+  background: rgba(60, 180, 146, 0.14); border-color: rgba(60, 180, 146, 0.45);
+  color: #fff; text-shadow: none;
+}
+body.is-socio .fl-acceso-reserva.is-on strong { color: #4FC79E; }
+@media (min-width: 881px) {
+  .fl-acceso-ctas--socio { justify-content: flex-end; }
+  body.is-socio .fl-acceso-reserva.is-on { margin-left: auto; }
+}
+.td-done-landing { margin: 26px clamp(24px, 6vw, 80px); }

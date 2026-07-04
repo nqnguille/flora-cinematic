@@ -104,6 +104,7 @@
       if (!res.ok) return
       const data = await res.json()
       const chip = document.getElementById('td-activo')
+      if (!chip) return
       if (data.activo && data.activo.estado === 'pendiente') {
         const n = data.activo.items.reduce((a, i) => a + i.cantidad, 0)
         chip.innerHTML = `Tenés una <strong>reserva en curso</strong> (${n} ítem${n > 1 ? 's' : ''}) — lo que sumes acá se agrega a la misma reserva.`
@@ -155,6 +156,7 @@
   document.getElementById('td-bar-btn').addEventListener('click', reservar)
 
   function showContent(precios) {
+    document.body.classList.add('is-socio')
     ITEMS = Array.isArray(precios[CFG.categoria]) ? precios[CFG.categoria] : []
     const login = document.getElementById('td-login')
     if (login) login.hidden = true
@@ -168,6 +170,7 @@
 
   function showLoginError(message) {
     const msg = document.getElementById('td-login-msg')
+    if (!msg) return
     msg.textContent = message
     msg.hidden = false
   }
@@ -211,14 +214,13 @@
     location.href = '/socios/'
   })
 
-  if (CFG.googleClientId) {
+  const gBtn = document.getElementById('g_id_button')
+  if (CFG.googleClientId && gBtn) {
     window.addEventListener('load', () => {
       google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: window.handleGoogleCredential })
-      google.accounts.id.renderButton(document.getElementById('g_id_button'), {
-        theme: 'filled_black', size: 'large', text: 'signin_with',
-      })
+      google.accounts.id.renderButton(gBtn, { theme: 'filled_black', size: 'large', text: 'signin_with' })
     })
-  } else {
+  } else if (gBtn) {
     showLoginError('Falta configurar el Google Client ID del sitio.')
   }
 
