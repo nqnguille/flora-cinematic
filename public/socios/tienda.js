@@ -103,6 +103,11 @@
       const res = await fetch('/api/socios/pedidos', { credentials: 'include' })
       if (!res.ok) return
       const data = await res.json()
+      const nAct = data.activo ? data.activo.items.reduce((a, i) => a + i.cantidad, 0) : 0
+      document.querySelectorAll('[data-carrito-n]').forEach((el) => {
+        el.textContent = nAct
+        el.hidden = nAct === 0
+      })
       const chip = document.getElementById('td-activo')
       if (!chip) return
       if (data.activo && data.activo.estado === 'pendiente') {

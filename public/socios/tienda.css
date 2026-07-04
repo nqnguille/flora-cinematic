@@ -236,3 +236,19 @@
   .td-ext-item { flex-wrap: wrap; }
   .td-ext-right { align-items: flex-start; flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
 }
+
+/* Socio logueado en fichas: fuera Acceso socios/Asociarme, entra Carrito */
+body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
+.td-pub-carrito {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--fl-violet, #381F56); color: #fff; text-decoration: none;
+  font-family: var(--font-ui); font-weight: 700; font-size: 13px;
+  padding: 10px 20px; border-radius: 999px;
+}
+.td-pub-carrito[hidden] { display: none; }
+.td-pub-carrito .nav-carrito-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: #4FC79E; color: #14231b; font-size: 11px; font-weight: 800;
+}
+.td-pub-carrito .nav-carrito-n[hidden] { display: none; }

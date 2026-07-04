@@ -1819,3 +1819,16 @@ body.is-socio .fl-acceso-reserva.is-on strong { color: #4FC79E; }
   body.is-socio .nav-hola--mobile:not([hidden]) { display: inline; margin-left: auto; margin-right: 12px; font-size: 12.5px; }
   body.is-socio .nav-cta--carta.nav-cta--mobile { margin-left: 0; }
 }
+
+/* Socio logueado: fuera 'Acceso socios' (el club ya lo reconoció) */
+body.is-socio .nav-socios,
+body.is-socio .nav-socios--mobile,
+body.is-socio .drawer-cta--socios { display: none !important; }
+/* Contador del carrito de reservas */
+.nav-cta--carta { gap: 7px; display: none; }
+.nav-carrito-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: #4FC79E; color: #14231b; font-size: 11px; font-weight: 800;
+}
+.nav-carrito-n[hidden] { display: none; }
