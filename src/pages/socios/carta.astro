@@ -1045,12 +1045,33 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     transition: background 0.15s ease, color 0.15s ease;
   }
   .gn-seg-btn:hover { color: var(--gn-cream); }
-  .gn-seg-ic { width: 19px; height: 19px; display: inline-flex; flex-shrink: 0; }
-  .gn-seg-ic svg { width: 100%; height: 100%; }
-  /* Activos color-coded como los sellos de las fotos: flores verde, prerolls violeta */
+  /* El ícono es el protagonista: mismo sello circular que llevan las fotos
+     (flores = círculo verde, preroll = círculo violeta) */
+  .gn-seg-ic {
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1.4px rgba(255, 255, 255, 0.28);
+  }
+  .gn-seg-ic svg { width: 17px; height: 17px; }
+  .gn-seg-btn.is-flor .gn-seg-ic { background: var(--gn-green); color: #08160f; }
+  .gn-seg-btn.is-preroll .gn-seg-ic { background: var(--gn-violet); color: #170c2b; }
+  /* Activo: el botón se tiñe del color de su sello */
   .gn-seg-btn.is-active { background: rgba(244, 241, 247, 0.16); color: var(--gn-cream); }
-  .gn-seg-btn.is-flor.is-active { background: var(--gn-green); color: #08160f; }
-  .gn-seg-btn.is-preroll.is-active { background: var(--gn-violet); color: #170c2b; }
+  .gn-seg-btn.is-flor.is-active {
+    background: rgba(60, 180, 146, 0.18);
+    color: var(--gn-cream);
+    box-shadow: inset 0 0 0 1.5px var(--gn-green);
+  }
+  .gn-seg-btn.is-preroll.is-active {
+    background: rgba(183, 157, 230, 0.18);
+    color: var(--gn-cream);
+    box-shadow: inset 0 0 0 1.5px var(--gn-violet);
+  }
   .gn-seg-btn:focus-visible { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
 
   /* Desplegables tildables (multi-selección) */
@@ -1504,31 +1525,43 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: var(--gn-muted);
     text-align: center;
   }
+  /* Pastillas compactas y CENTRADAS (no se estiran: con un solo formato queda
+     una pastilla prolija en el medio) */
   .gn-order-pills {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    justify-content: center;
+    gap: 0.5rem;
     min-width: 0;
   }
   .gn-qty {
     display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.35rem;
-    flex: 1 1 0;
+    gap: 0.28rem;
+    flex: 0 1 auto;
     min-width: 0;
     border: 1px solid var(--gn-line);
     border-radius: 999px;
-    padding: 0.24rem 0.32rem;
+    padding: 0.2rem 0.28rem;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   /* Con cantidad: cada formato se enciende con su color de sello */
   .gn-qty.is-flor.has-qty { border-color: var(--gn-green); background: rgba(60, 180, 146, 0.12); }
   .gn-qty.is-preroll.has-qty { border-color: var(--gn-violet); background: rgba(183, 157, 230, 0.12); }
-  .gn-qty-ic { width: 19px; height: 19px; display: inline-flex; color: var(--gn-muted); flex-shrink: 0; margin-left: 0.2rem; }
-  .gn-qty-ic svg { width: 100%; height: 100%; }
-  .gn-qty.is-flor.has-qty .gn-qty-ic { color: var(--gn-green); }
-  .gn-qty.is-preroll.has-qty .gn-qty-ic { color: var(--gn-violet); }
+  /* Mini-sello circular, igual al de la foto y al selector del top */
+  .gn-qty-ic {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1.2px rgba(255, 255, 255, 0.28);
+  }
+  .gn-qty-ic svg { width: 15px; height: 15px; }
+  .gn-qty.is-flor .gn-qty-ic { background: var(--gn-green); color: #08160f; }
+  .gn-qty.is-preroll .gn-qty-ic { background: var(--gn-violet); color: #170c2b; }
   .gn-qty-btn {
     width: 32px;
     height: 32px;

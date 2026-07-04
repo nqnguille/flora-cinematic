@@ -1,0 +1,286 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import '../../styles/global.css'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Portal de socios | Flora ONG"
+  description="Portal privado para socios verificados de Flora: precios y catálogo."
+  noindex={true}
+>
+  <main class="pt-main">
+    <!-- ── Login ── -->
+    <div id="pt-login" class="pt-login">
+      <div class="pt-login-card">
+        <div class="pt-brand">
+          <svg class="pt-brand-leaf" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="pt-brand-name">Flora <em>club</em></span>
+        </div>
+        <h1 class="pt-title">Portal de <em>socios</em></h1>
+        <p class="pt-sub">
+          Espacio exclusivo para socios verificados: acá vas a encontrar los precios
+          de todos los productos y la carta de flores del mes. Ingresá con la cuenta
+          de Google que registraste como socio.
+        </p>
+        <div id="g_id_button"></div>
+        <p id="pt-login-msg" class="pt-msg" hidden></p>
+        <a href="/" class="pt-back">← Volver al sitio</a>
+      </div>
+    </div>
+
+    <!-- ── Portal ── -->
+    <div id="pt-content" class="pt-content" hidden>
+      <header class="pt-head">
+        <div class="pt-brand">
+          <svg class="pt-brand-leaf" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="pt-brand-name">Flora <em>club</em></span>
+        </div>
+        <h1 class="pt-title">Portal de <em>socios</em></h1>
+        <p class="pt-sub pt-sub-head">Precios vigentes para personas asociadas. El aporte se coordina por WhatsApp.</p>
+        <button id="pt-logout" class="pt-logout" type="button">Salir</button>
+      </header>
+
+      <div class="pt-grid">
+        <!-- Flores / membresías — protagonista -->
+        <section class="pt-card pt-card-flores" aria-label="Flores — membresías">
+          <div class="pt-card-head">
+            <h2>Flores</h2>
+            <span class="pt-card-tag">Cultivo solidario</span>
+          </div>
+          <ul id="pt-membresias" class="pt-list"></ul>
+          <a class="pt-cta" href="/socios/carta/">
+            Ver la carta de flores del mes <span aria-hidden="true">→</span>
+          </a>
+        </section>
+
+        <section class="pt-card" aria-label="Aceites">
+          <div class="pt-card-head">
+            <h2>Aceites</h2>
+            <span class="pt-card-tag">Con cromatografía</span>
+          </div>
+          <ul id="pt-aceites" class="pt-list"></ul>
+        </section>
+
+        <section class="pt-card" aria-label="Cremas">
+          <div class="pt-card-head">
+            <h2>Cremas</h2>
+            <span class="pt-card-tag">Uso tópico</span>
+          </div>
+          <ul id="pt-cremas" class="pt-list"></ul>
+        </section>
+
+        <section class="pt-card" aria-label="Extracciones">
+          <div class="pt-card-head">
+            <h2>Extracciones</h2>
+            <span class="pt-card-tag">Cartuchos 510</span>
+          </div>
+          <ul id="pt-extracciones" class="pt-list"></ul>
+        </section>
+      </div>
+
+      <p class="pt-foot">Precios exclusivos del portal de socios · se actualizan sin previo aviso.</p>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    }
+    const fmt = (n) => '$ ' + Number(n).toLocaleString('es-AR')
+
+    function fila(item) {
+      return `
+        <li class="pt-row">
+          <span class="pt-row-label">${esc(item.label)}${item.detalle ? `<i>${esc(item.detalle)}</i>` : ''}</span>
+          <span class="pt-row-precio">${fmt(item.precio)}</span>
+        </li>`
+    }
+
+    function showContent(p) {
+      document.getElementById('pt-membresias').innerHTML = (p.membresias || []).map(fila).join('')
+      document.getElementById('pt-aceites').innerHTML = (p.aceites || []).map(fila).join('')
+      document.getElementById('pt-cremas').innerHTML = (p.cremas || []).map(fila).join('')
+      document.getElementById('pt-extracciones').innerHTML = (p.extracciones || []).map(fila).join('')
+      document.getElementById('pt-login').hidden = true
+      document.getElementById('pt-content').hidden = false
+    }
+
+    function showLoginError(message) {
+      const msg = document.getElementById('pt-login-msg')
+      msg.textContent = message
+      msg.hidden = false
+    }
+
+    async function loadPrecios() {
+      const res = await fetch('/api/socios/precios', { credentials: 'include' })
+      if (!res.ok) return false
+      const data = await res.json()
+      showContent(data.precios || {})
+      return true
+    }
+
+    window.handleGoogleCredential = async (response) => {
+      try {
+        const res = await fetch('/api/socios/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ credential: response.credential }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.ok) {
+          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+          return
+        }
+        await loadPrecios()
+      } catch (err) {
+        showLoginError('Error de red al verificar con Google.')
+      }
+    }
+
+    document.getElementById('pt-logout').addEventListener('click', async () => {
+      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+      location.reload()
+    })
+
+    if (googleClientId) {
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: window.handleGoogleCredential,
+        })
+        google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          theme: 'filled_black',
+          size: 'large',
+          text: 'signin_with',
+        })
+      }
+    } else {
+      showLoginError('Falta configurar el Google Client ID del sitio.')
+    }
+
+    loadPrecios()
+  </script>
+</Layout>
+
+<style is:global>
+  /* ═══════════════════════════════════════════════
+     PORTAL DE SOCIOS — Flora de noche
+     Mismo sistema que la carta: violeta profundo,
+     violeta claro al mando, verde bosque para datos
+  ═══════════════════════════════════════════════ */
+  html, body { background-color: #130d1c; }
+
+  .pt-main {
+    --pt-bg:     #130d1c;
+    --pt-card:   #1b1326;
+    --pt-line:   rgba(183, 157, 230, 0.16);
+    --pt-cream:  #f4f1f7;
+    --pt-muted:  rgba(244, 241, 247, 0.55);
+    --pt-violet: #b79de6;
+    --pt-green:  #3cb492;
+
+    min-height: 100svh;
+    background: var(--pt-bg);
+    font-family: var(--font-ui);
+    color: var(--pt-cream);
+    position: relative;
+  }
+  .pt-main::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(55% 40% at 85% 0%, rgba(56, 31, 86, 0.45), transparent 70%),
+      radial-gradient(50% 35% at 5% 100%, rgba(10, 80, 60, 0.14), transparent 70%);
+    z-index: 0;
+  }
+  .pt-main > * { position: relative; z-index: 1; }
+
+  .pt-brand { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--pt-violet); }
+  .pt-brand-leaf { width: 30px; height: 30px; }
+  .pt-brand-name { font-family: var(--font-display); font-size: 1.15rem; }
+  .pt-brand-name em { font-style: italic; }
+
+  .pt-title { font-family: var(--font-display); font-weight: 500; color: var(--pt-cream); font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.05; }
+  .pt-title em { font-style: italic; color: var(--pt-violet); }
+  .pt-sub { line-height: 1.6; color: var(--pt-muted); font-size: 0.95rem; margin: 0; }
+  .pt-msg { color: var(--pt-violet); font-size: 0.9rem; }
+  .pt-back { color: var(--pt-muted); text-decoration: none; font-size: 0.9rem; }
+  .pt-back:hover { color: var(--pt-cream); }
+
+  /* Login */
+  .pt-login { min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: var(--space-m) var(--space-s); }
+  .pt-login[hidden] { display: none; }
+  .pt-login-card {
+    width: 100%; max-width: 500px; background: var(--pt-card);
+    border: 1px solid var(--pt-line); border-radius: 22px;
+    padding: clamp(30px, 4vw, 48px);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1rem;
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Portal */
+  .pt-content { max-width: 1080px; margin: 0 auto; padding: clamp(28px, 4vw, 56px) clamp(18px, 3vw, 32px) clamp(40px, 5vw, 64px); }
+  .pt-content[hidden] { display: none; }
+  .pt-head { position: relative; margin-bottom: clamp(24px, 3.5vw, 40px); }
+  .pt-head .pt-title { margin: 12px 0 8px; }
+  .pt-sub-head { max-width: 52ch; }
+  .pt-logout {
+    position: absolute; top: 0; right: 0;
+    background: none; border: 1px solid var(--pt-line); border-radius: 999px;
+    color: var(--pt-muted); font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+    padding: 8px 18px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .pt-logout:hover { color: var(--pt-cream); border-color: var(--pt-violet); }
+
+  .pt-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 860px) {
+    .pt-grid { grid-template-columns: 1fr 1fr; }
+    .pt-card-flores { grid-column: 1 / -1; }
+  }
+
+  .pt-card {
+    background: var(--pt-card); border: 1px solid var(--pt-line);
+    border-radius: 20px; padding: clamp(20px, 2.6vw, 30px);
+    display: flex; flex-direction: column;
+  }
+  .pt-card-flores { border-color: rgba(60, 180, 146, 0.35); }
+  .pt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .pt-card-head h2 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 1.9rem); color: var(--pt-cream); }
+  .pt-card-tag {
+    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--pt-green); white-space: nowrap;
+  }
+
+  .pt-list { list-style: none; margin: 0; padding: 0; }
+  .pt-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 13px 2px; border-top: 1px solid var(--pt-line);
+  }
+  .pt-row:first-child { border-top: none; }
+  .pt-row-label { font-size: 0.95rem; font-weight: 600; color: var(--pt-cream); }
+  .pt-row-label i { font-style: normal; font-weight: 400; color: var(--pt-muted); margin-left: 8px; font-size: 0.85rem; }
+  .pt-row-precio { font-size: 1.05rem; font-weight: 700; color: var(--pt-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Membresías en fila (desktop) dentro de la card de flores */
+  @media (min-width: 860px) {
+    .pt-card-flores .pt-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .pt-card-flores .pt-row { flex-direction: column; align-items: flex-start; gap: 4px; border-top: none; border-left: 1px solid var(--pt-line); padding: 4px 0 4px 16px; }
+    .pt-card-flores .pt-row:first-child { border-left: none; padding-left: 2px; }
+    .pt-card-flores .pt-row-label i { display: block; margin: 2px 0 0; }
+    .pt-card-flores .pt-row-precio { font-size: 1.35rem; }
+  }
+
+  .pt-cta {
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    margin-top: 18px; background: var(--pt-violet); color: #170c2b;
+    font-weight: 700; font-size: 0.95rem; padding: 13px 24px; border-radius: 999px;
+    text-decoration: none; transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  .pt-cta:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+  .pt-foot { margin-top: clamp(20px, 3vw, 32px); font-size: 0.8rem; color: var(--pt-muted); text-align: center; }
+</style>
