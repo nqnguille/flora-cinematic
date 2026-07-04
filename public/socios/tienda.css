@@ -214,27 +214,7 @@
 /* Cremas: una sola card centrada */
 .td-grid-1 { grid-template-columns: minmax(0, 520px) !important; justify-content: center; }
 
-/* Extracciones públicas: lista clara */
-.td-ext-lista { display: flex; flex-direction: column; gap: 14px; margin-top: clamp(28px, 3.4vw, 48px); max-width: 860px; }
-.td-ext-item {
-  display: flex; align-items: center; gap: 18px;
-  background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14));
-  border-radius: var(--fl-r-card, 20px); padding: 18px 22px;
-}
-.td-ext-icon { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%; background: rgba(56,31,86,0.07); color: var(--fl-violet, #381F56); display: flex; align-items: center; justify-content: center; }
-.td-ext-icon svg { width: 26px; height: 26px; }
-.td-ext-body { flex: 1; min-width: 0; }
-.td-ext-nombre { font-family: var(--font-ui); font-size: 16px; font-weight: 700; color: var(--fl-ink, #1C1626); margin: 0 0 4px; }
-.td-ext-nombre i { font-style: normal; font-weight: 600; color: var(--fl-green, #0A503C); margin-left: 6px; }
-.td-ext-desc { font-family: var(--font-ui); font-size: 13px; line-height: 1.5; color: rgba(28,22,38,0.62); margin: 0; }
-.td-ext-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-.td-ext-right .td-buy { border-top: none; margin: 0; padding: 0; }
-.td-buy-col { flex-direction: column; align-items: flex-end; gap: 6px; }
-.td-ext-consulta { font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: var(--fl-violet, #381F56); text-decoration: none; }
-.td-ext-consulta:hover { text-decoration: underline; }
-@media (max-width: 640px) {
-  .td-ext-item { flex-wrap: wrap; }
-  .td-ext-right { align-items: flex-start; flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+
 }
 
 /* Socio logueado en fichas: fuera Acceso socios/Asociarme, entra Carrito */
@@ -350,3 +330,14 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
   color: var(--td-muted, rgba(244,241,247,0.55));
 }
 .td-cart-logout:hover { color: #ff9d9d; }
+
+/* Extracciones: fichas 2x2 estilo aceites; batería con panel de marca */
+.td-ext-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; max-width: 940px; }
+@media (max-width: 760px) { .td-ext-grid { grid-template-columns: 1fr !important; } }
+.td-ext-visual {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(60% 50% at 70% 20%, rgba(56, 31, 86, 0.1), transparent 70%),
+    linear-gradient(160deg, #F6F1E9 0%, #EFE6F2 100%);
+}
+.td-ext-visual svg { width: 88px; height: 88px; opacity: 0.9; }
