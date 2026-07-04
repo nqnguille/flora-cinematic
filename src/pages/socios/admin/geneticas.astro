@@ -10,81 +10,81 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   description="Panel interno para gestionar el catálogo de genéticas."
   noindex={true}
 >
-  <main class="ad-main">
-    <div class="ad-wrap">
-      <span class="ad-eyebrow">Panel interno</span>
-      <h1 class="ad-title">Catálogo de genéticas</h1>
+  <main class="pa-main">
+    <div class="pa-wrap">
+      <span class="pa-eyebrow">Panel interno</span>
+      <h1 class="pa-title">Catálogo de genéticas</h1>
 
-      <div id="ad-login" class="ad-login">
+      <div id="pa-login" class="pa-login">
         <div id="g_id_button"></div>
-        <p id="ad-login-msg" class="ad-msg" hidden></p>
+        <p id="pa-login-msg" class="pa-msg" hidden></p>
       </div>
 
-      <div id="ad-forbidden" class="ad-msg" hidden>
+      <div id="pa-forbidden" class="pa-msg" hidden>
         Tu cuenta de Google inició sesión pero no tiene permisos de administrador.
       </div>
 
-      <div id="ad-content" class="ad-content" hidden>
-        <div class="ad-tabs" role="tablist">
-          <button class="ad-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
-          <button class="ad-tab" data-tab="pedidos" type="button">Reservas<span id="ad-ped-dot" class="ad-ped-dot" hidden></span></button>
-          <button class="ad-tab" data-tab="socios" type="button">Socios</button>
+      <div id="pa-content" class="pa-content" hidden>
+        <div class="pa-tabs" role="tablist">
+          <button class="pa-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
+          <button class="pa-tab" data-tab="pedidos" type="button">Reservas<span id="pa-ped-dot" class="pa-ped-dot" hidden></span></button>
+          <button class="pa-tab" data-tab="socios" type="button">Socios</button>
         </div>
 
         <!-- ── Pestaña Genéticas ── -->
-        <div id="tab-geneticas" class="ad-tab-panel">
-          <div class="ad-toolbar">
-            <div class="ad-availfilter" role="group" aria-label="Filtrar por disponibilidad">
-              <button class="ad-avail is-active" data-avail="" type="button">Todas</button>
-              <button class="ad-avail" data-avail="on" type="button">Disponibles</button>
-              <button class="ad-avail" data-avail="off" type="button">No disponibles</button>
+        <div id="tab-geneticas" class="pa-tab-panel">
+          <div class="pa-toolbar">
+            <div class="pa-availfilter" role="group" aria-label="Filtrar por disponibilidad">
+              <button class="pa-avail is-active" data-avail="" type="button">Todas</button>
+              <button class="pa-avail" data-avail="on" type="button">Disponibles</button>
+              <button class="pa-avail" data-avail="off" type="button">No disponibles</button>
             </div>
-            <input id="ad-search" class="ad-input ad-search" type="search" placeholder="Buscar por nombre…" autocomplete="off" />
-            <span id="ad-count" class="ad-count"></span>
+            <input id="pa-search" class="pa-input pa-search" type="search" placeholder="Buscar por nombre…" autocomplete="off" />
+            <span id="pa-count" class="pa-count"></span>
           </div>
 
-          <div class="ad-genscroll">
-            <div class="ad-rows-head">
+          <div class="pa-genscroll">
+            <div class="pa-rows-head">
               <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
               <span>Predominancia</span><span>THC</span><span>CBD</span>
               <span>Formato</span><span>Sabores</span><span>Efectos</span><span>Foto</span><span></span>
             </div>
-            <div id="ad-list" class="ad-rows"></div>
+            <div id="pa-list" class="pa-rows"></div>
           </div>
-          <button id="ad-add" type="button" class="ad-btn ad-btn-ghost">+ Agregar genética</button>
+          <button id="pa-add" type="button" class="pa-btn pa-btn-ghost">+ Agregar genética</button>
 
-          <div class="ad-savebar">
-            <span id="ad-save-status" class="ad-save-status"></span>
-            <button id="ad-save" type="button" class="ad-btn ad-btn-primary">Guardar cambios</button>
+          <div class="pa-savebar">
+            <span id="pa-save-status" class="pa-save-status"></span>
+            <button id="pa-save" type="button" class="pa-btn pa-btn-primary">Guardar cambios</button>
           </div>
         </div>
 
         <!-- ── Pestaña Reservas ── -->
-        <div id="tab-pedidos" class="ad-tab-panel" hidden>
-          <div class="ad-toolbar">
-            <div class="ad-availfilter" role="group" aria-label="Filtrar reservas">
-              <button class="ad-pedfilter ad-avail is-active" data-pedfilter="activos" type="button">Activas</button>
-              <button class="ad-pedfilter ad-avail" data-pedfilter="" type="button">Todas</button>
+        <div id="tab-pedidos" class="pa-tab-panel" hidden>
+          <div class="pa-toolbar">
+            <div class="pa-availfilter" role="group" aria-label="Filtrar reservas">
+              <button class="pa-pedfilter pa-avail is-active" data-pedfilter="activos" type="button">Activas</button>
+              <button class="pa-pedfilter pa-avail" data-pedfilter="" type="button">Todas</button>
             </div>
-            <button id="ad-ped-refresh" type="button" class="ad-btn ad-btn-ghost ad-btn-slim">↻ Actualizar</button>
-            <span id="ad-ped-count" class="ad-count"></span>
+            <button id="pa-ped-refresh" type="button" class="pa-btn pa-btn-ghost pa-btn-slim">↻ Actualizar</button>
+            <span id="pa-ped-count" class="pa-count"></span>
           </div>
-          <div id="ad-pedidos-list" class="ad-socios-list"></div>
+          <div id="pa-pedidos-list" class="pa-socios-list"></div>
         </div>
 
         <!-- ── Pestaña Socios ── -->
-        <div id="tab-socios" class="ad-tab-panel" hidden>
-          <p class="ad-help">
+        <div id="tab-socios" class="pa-tab-panel" hidden>
+          <p class="pa-help">
             Cargá el <strong>email de la cuenta de Google</strong> con la que el socio va a entrar, y opcionalmente
             una nota para reconocerlo. Apenas ingrese, su ficha se completa sola con el nombre y la foto de Google.
           </p>
-          <form id="ad-socio-form" class="ad-socio-form">
-            <input id="ad-socio-email" type="email" class="ad-input" placeholder="email@gmail.com" autocomplete="off" required />
-            <input id="ad-socio-nota" type="text" class="ad-input" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
-            <button type="submit" class="ad-btn ad-btn-primary">Agregar socio</button>
+          <form id="pa-socio-form" class="pa-socio-form">
+            <input id="pa-socio-email" type="email" class="pa-input" placeholder="email@gmail.com" autocomplete="off" required />
+            <input id="pa-socio-nota" type="text" class="pa-input" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
+            <button type="submit" class="pa-btn pa-btn-primary">Agregar socio</button>
           </form>
-          <p id="ad-socio-status" class="ad-save-status"></p>
-          <div id="ad-socios-list" class="ad-socios-list"></div>
+          <p id="pa-socio-status" class="pa-save-status"></p>
+          <div id="pa-socios-list" class="pa-socios-list"></div>
         </div>
       </div>
     </div>
@@ -97,10 +97,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Cazador de errores: cualquier excepción no capturada se muestra en un
     // cartel visible en vez de dejar la página muda/negra. Diagnóstico > silencio.
     function showFatal(msg) {
-      let el = document.getElementById('ad-fatal')
+      let el = document.getElementById('pa-fatal')
       if (!el) {
         el = document.createElement('div')
-        el.id = 'ad-fatal'
+        el.id = 'pa-fatal'
         el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7a1f2b;color:#fff;font:600 13px/1.5 system-ui;padding:10px 16px;white-space:pre-wrap;word-break:break-word'
         document.body.appendChild(el)
       }
@@ -128,17 +128,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           return r.width >= w * 0.9 && r.height >= h * 0.9
         }).slice(0, 8).map(pick)
         const vis = (id) => { const el = document.getElementById(id); if (!el) return null; const r = el.getBoundingClientRect(); return { hidden: el.hidden, h: Math.round(r.height) } }
-        const title = document.querySelector('.ad-title')
+        const title = document.querySelector('.pa-title')
         const tcs = title ? getComputedStyle(title) : null
         const ba = getComputedStyle(document.body, '::after')
         const diag = {
           tag, ts: new Date().toISOString(), ua: navigator.userAgent.slice(0, 120), vw: w, vh: h,
-          login: vis('ad-login'), content: vis('ad-content'), forbidden: vis('ad-forbidden'),
+          login: vis('pa-login'), content: vis('pa-content'), forbidden: vis('pa-forbidden'),
           title: title ? { h: Math.round(title.getBoundingClientRect().height), top: Math.round(title.getBoundingClientRect().top), color: tcs.color, disp: tcs.display, vis: tcs.visibility, op: tcs.opacity } : null,
           centerStack, fixedCovers,
           bodyAfter: { disp: ba.display, mix: ba.mixBlendMode, z: ba.zIndex, pos: ba.position },
           catalogLen: typeof CATALOG !== 'undefined' ? CATALOG.length : -1,
-          fatal: document.getElementById('ad-fatal')?.textContent || null,
+          fatal: document.getElementById('pa-fatal')?.textContent || null,
           htmlCls: document.documentElement.className, bodyCls: document.body.className,
         }
         navigator.sendBeacon('/api/socios/debug', new Blob([JSON.stringify(diag)], { type: 'text/plain' }))
@@ -175,12 +175,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const sel = selected || []
       const opts = ddOptions(dim).map(([val, lab, icon]) => {
         const on = sel.includes(val)
-        return `<label class="ad-ddopt ${on ? 'is-on' : ''}"><input type="checkbox" data-dd="${dim}" data-idx="${idx}" value="${esc(val)}" ${on ? 'checked' : ''} />${icon ? `<span class="ad-ddicon">${icon}</span>` : ''}<span>${esc(lab)}</span></label>`
+        return `<label class="pa-ddopt ${on ? 'is-on' : ''}"><input type="checkbox" data-dd="${dim}" data-idx="${idx}" value="${esc(val)}" ${on ? 'checked' : ''} />${icon ? `<span class="pa-ddicon">${icon}</span>` : ''}<span>${esc(lab)}</span></label>`
       }).join('')
       const n = sel.length
-      return `<div class="ad-dd" data-ddwrap="${dim}-${idx}">
-        <button type="button" class="ad-dd-toggle ${n ? 'has' : ''}"><span class="ad-dd-txt">${DD_LABEL[dim]}${n ? ` · ${n}` : ''}</span><svg class="ad-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-        <div class="ad-dd-panel" hidden>${opts}</div>
+      return `<div class="pa-dd" data-ddwrap="${dim}-${idx}">
+        <button type="button" class="pa-dd-toggle ${n ? 'has' : ''}"><span class="pa-dd-txt">${DD_LABEL[dim]}${n ? ` · ${n}` : ''}</span><svg class="pa-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="pa-dd-panel" hidden>${opts}</div>
       </div>`
     }
     function updateDd(i, dim) {
@@ -188,34 +188,34 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (!wrap) return
       const key = dim === 'formato' ? 'formatos' : dim === 'sabor' ? 'sabores' : 'efectos'
       const sel = CATALOG[i][key] || []
-      wrap.querySelector('.ad-dd-txt').textContent = DD_LABEL[dim] + (sel.length ? ` · ${sel.length}` : '')
-      wrap.querySelector('.ad-dd-toggle').classList.toggle('has', sel.length > 0)
-      wrap.querySelectorAll('.ad-ddopt').forEach((opt) => opt.classList.toggle('is-on', opt.querySelector('input').checked))
+      wrap.querySelector('.pa-dd-txt').textContent = DD_LABEL[dim] + (sel.length ? ` · ${sel.length}` : '')
+      wrap.querySelector('.pa-dd-toggle').classList.toggle('has', sel.length > 0)
+      wrap.querySelectorAll('.pa-ddopt').forEach((opt) => opt.classList.toggle('is-on', opt.querySelector('input').checked))
     }
 
     function rowHtml(g, idx) {
       const fotoSrc = g.foto || (g.id ? `/socios/geneticas/${g.id}.webp` : '')
       return `
-      <div class="ad-row" data-idx="${idx}">
-        <label class="ad-avail-toggle" title="Disponible en la carta">
+      <div class="pa-row" data-idx="${idx}">
+        <label class="pa-avail-toggle" title="Disponible en la carta">
           <input type="checkbox" data-field="activo" data-idx="${idx}" ${g.activo ? 'checked' : ''} />
         </label>
-        <input class="ad-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" />
-        <select class="ad-input" data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
-        <select class="ad-input" data-field="tipo" data-idx="${idx}">${['sativa', 'indica', 'hibrida', 'cbd'].map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${tipoLabel(t)}</option>`).join('')}</select>
-        <input class="ad-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% S | 30% I" />
-        <input class="ad-input ad-cell-num" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="THC" />
-        <input class="ad-input ad-cell-num" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="CBD" />
+        <input class="pa-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" />
+        <select class="pa-input" data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
+        <select class="pa-input" data-field="tipo" data-idx="${idx}">${['sativa', 'indica', 'hibrida', 'cbd'].map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${tipoLabel(t)}</option>`).join('')}</select>
+        <input class="pa-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% S | 30% I" />
+        <input class="pa-input pa-cell-num" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="THC" />
+        <input class="pa-input pa-cell-num" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="CBD" />
         ${ddHtml('formato', idx, g.formatos && g.formatos.length ? g.formatos : ['flor'])}
         ${ddHtml('sabor', idx, g.sabores || [])}
         ${ddHtml('efecto', idx, g.efectos || [])}
-        <div class="ad-foto">
-          <div class="ad-foto-thumb">${fotoSrc ? `<img src="${esc(fotoSrc)}" alt="" onerror="this.remove()" />` : ''}</div>
-          <input type="file" accept="image/jpeg,image/png,image/webp" id="ad-foto-${idx}" class="ad-foto-input" data-foto-idx="${idx}" hidden />
-          <label for="ad-foto-${idx}" class="ad-foto-btn" title="Subir imagen">📷</label>
-          <span class="ad-foto-status" data-fotostatus-idx="${idx}"></span>
+        <div class="pa-foto">
+          <div class="pa-foto-thumb">${fotoSrc ? `<img src="${esc(fotoSrc)}" alt="" onerror="this.remove()" />` : ''}</div>
+          <input type="file" accept="image/jpeg,image/png,image/webp" id="pa-foto-${idx}" class="pa-foto-input" data-foto-idx="${idx}" hidden />
+          <label for="pa-foto-${idx}" class="pa-foto-btn" title="Subir imagen">📷</label>
+          <span class="pa-foto-status" data-fotostatus-idx="${idx}"></span>
         </div>
-        <button type="button" class="ad-del" data-idx="${idx}" aria-label="Eliminar">×</button>
+        <button type="button" class="pa-del" data-idx="${idx}" aria-label="Eliminar">×</button>
       </div>`
     }
 
@@ -223,7 +223,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     let searchQ = ''
     function updateCount() {
       const disp = CATALOG.filter((g) => g.activo).length
-      const el = document.getElementById('ad-count')
+      const el = document.getElementById('pa-count')
       if (el) el.textContent = `${disp} disponible(s) · ${CATALOG.length} en total`
     }
     function render() {
@@ -234,7 +234,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (q && !String(g.nombre || '').toLowerCase().includes(q)) return ''
         return rowHtml(g, i)
       }).join('')
-      document.getElementById('ad-list').innerHTML = html || '<p class="ad-empty">Ninguna genética coincide con el filtro.</p>'
+      document.getElementById('pa-list').innerHTML = html || '<p class="pa-empty">Ninguna genética coincide con el filtro.</p>'
       updateCount()
     }
 
@@ -244,7 +244,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     let statusTimer = null
     function flashStatus(msg) {
-      const el = document.getElementById('ad-save-status')
+      const el = document.getElementById('pa-save-status')
       el.textContent = msg
       clearTimeout(statusTimer)
       statusTimer = setTimeout(() => (el.textContent = ''), 3000)
@@ -262,12 +262,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     // Filtros del panel (disponibilidad + buscador) — scopeados a SU pestaña:
-    // los botones de Reservas también llevan .ad-avail y se pisaban con estos.
-    document.querySelectorAll('#tab-geneticas .ad-avail').forEach((b) => b.addEventListener('click', () => {
-      document.querySelectorAll('#tab-geneticas .ad-avail').forEach((x) => x.classList.remove('is-active'))
+    // los botones de Reservas también llevan .pa-avail y se pisaban con estos.
+    document.querySelectorAll('#tab-geneticas .pa-avail').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('#tab-geneticas .pa-avail').forEach((x) => x.classList.remove('is-active'))
       b.classList.add('is-active'); availFilter = b.dataset.avail; render()
     }))
-    document.getElementById('ad-search').addEventListener('input', (e) => { searchQ = e.target.value.trim(); render() })
+    document.getElementById('pa-search').addEventListener('input', (e) => { searchQ = e.target.value.trim(); render() })
 
     // Edición de campos + dropdowns + toggle disponible (autoguardado)
     document.addEventListener('input', (e) => {
@@ -302,8 +302,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // Abrir/cerrar los desplegables tildables
     document.addEventListener('click', (e) => {
-      const tgl = e.target.closest('.ad-dd-toggle')
-      const panels = document.querySelectorAll('.ad-dd-panel')
+      const tgl = e.target.closest('.pa-dd-toggle')
+      const panels = document.querySelectorAll('.pa-dd-panel')
       if (tgl) {
         const panel = tgl.nextElementSibling
         const willOpen = panel.hidden
@@ -312,17 +312,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         tgl.classList.toggle('open', willOpen)
         return
       }
-      if (!e.target.closest('.ad-dd-panel')) panels.forEach((p) => { p.hidden = true; p.previousElementSibling.classList.remove('open') })
+      if (!e.target.closest('.pa-dd-panel')) panels.forEach((p) => { p.hidden = true; p.previousElementSibling.classList.remove('open') })
     })
 
     document.addEventListener('click', (e) => {
-      const del = e.target.closest('.ad-del')
+      const del = e.target.closest('.pa-del')
       if (del) {
         CATALOG.splice(Number(del.getAttribute('data-idx')), 1)
         render()
         return
       }
-      const clr = e.target.closest('.ad-foto-clear')
+      const clr = e.target.closest('.pa-foto-clear')
       if (clr) {
         CATALOG[Number(clr.getAttribute('data-fotoclear-idx'))].foto = null
         render()
@@ -332,7 +332,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Subida de foto: sube el archivo a KV y guarda la URL en la genética.
     document.addEventListener('change', async (e) => {
       const inp = e.target
-      if (!inp.classList || !inp.classList.contains('ad-foto-input')) return
+      if (!inp.classList || !inp.classList.contains('pa-foto-input')) return
       const i = Number(inp.getAttribute('data-foto-idx'))
       const file = inp.files && inp.files[0]
       if (!file) return
@@ -351,7 +351,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     })
 
-    document.getElementById('ad-add').addEventListener('click', () => {
+    document.getElementById('pa-add').addEventListener('click', () => {
       CATALOG.push({
         id: `nueva-${Date.now()}`,
         nombre: '',
@@ -370,8 +370,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       render()
     })
 
-    document.getElementById('ad-save').addEventListener('click', async () => {
-      const status = document.getElementById('ad-save-status')
+    document.getElementById('pa-save').addEventListener('click', async () => {
+      const status = document.getElementById('pa-save-status')
       status.textContent = 'Guardando…'
       CATALOG.forEach((g) => {
         if (!g.id) g.id = slugify(g.nombre) || `genetica-${Date.now()}`
@@ -393,10 +393,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     })
 
     /* ── Pestañas ── */
-    document.querySelectorAll('.ad-tab').forEach((tab) => {
+    document.querySelectorAll('.pa-tab').forEach((tab) => {
       tab.addEventListener('click', () => {
         const name = tab.dataset.tab
-        document.querySelectorAll('.ad-tab').forEach((t) => t.classList.toggle('is-active', t === tab))
+        document.querySelectorAll('.pa-tab').forEach((t) => t.classList.toggle('is-active', t === tab))
         ;['geneticas', 'pedidos', 'socios'].forEach((n) => {
           const panel = document.getElementById('tab-' + n)
           if (panel) panel.hidden = n !== name
@@ -417,73 +417,73 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     function pedidoItems(p) {
       return p.items
-        .map((i) => `<li>${esc(`${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}`)}${i.formato === 'preroll' ? ' <span class="ad-ped-fmt">preroll</span>' : ''}</li>`)
+        .map((i) => `<li>${esc(`${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}`)}${i.formato === 'preroll' ? ' <span class="pa-ped-fmt">preroll</span>' : ''}</li>`)
         .join('')
     }
     function pedidoAcciones(p) {
       if (p.estado === 'pendiente') {
-        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>
-                <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+        return `<button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>
+                <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
       }
       if (p.estado === 'listo') {
-        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>
-                <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
+        return `<button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>
+                <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
       }
       return ''
     }
     function pedidoRow(p) {
       const [label, cls] = PED_BADGE[p.estado] || [p.estado, '']
       return `
-        <article class="ad-socio ad-pedido">
-          <div class="ad-socio-main">
-            <div class="ad-socio-top">
-              <strong class="ad-socio-name">${esc(p.name || p.email)}</strong>
-              <span class="ad-socio-badge ${cls}">${esc(label)}</span>
-              <span class="ad-socio-meta">${esc(fmtFecha(p.creado))}</span>
+        <article class="pa-socio pa-pedido">
+          <div class="pa-socio-main">
+            <div class="pa-socio-top">
+              <strong class="pa-socio-name">${esc(p.name || p.email)}</strong>
+              <span class="pa-socio-badge ${cls}">${esc(label)}</span>
+              <span class="pa-socio-meta">${esc(fmtFecha(p.creado))}</span>
             </div>
-            <div class="ad-socio-email">${esc(p.email)}</div>
-            <ul class="ad-ped-items">${pedidoItems(p)}</ul>
-            ${p.nota ? `<div class="ad-socio-meta">Nota: ${esc(p.nota)}</div>` : ''}
+            <div class="pa-socio-email">${esc(p.email)}</div>
+            <ul class="pa-ped-items">${pedidoItems(p)}</ul>
+            ${p.nota ? `<div class="pa-socio-meta">Nota: ${esc(p.nota)}</div>` : ''}
           </div>
-          <div class="ad-ped-actions">${pedidoAcciones(p)}</div>
+          <div class="pa-ped-actions">${pedidoAcciones(p)}</div>
         </article>`
     }
     function renderPedidos() {
-      const list = document.getElementById('ad-pedidos-list')
+      const list = document.getElementById('pa-pedidos-list')
       const filtered = pedFilter === 'activos'
         ? PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo')
         : PEDIDOS
       const activos = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
-      document.getElementById('ad-ped-count').textContent = `${activos} activa(s) · ${PEDIDOS.length} en total`
-      const dot = document.getElementById('ad-ped-dot')
+      document.getElementById('pa-ped-count').textContent = `${activos} activa(s) · ${PEDIDOS.length} en total`
+      const dot = document.getElementById('pa-ped-dot')
       dot.hidden = activos === 0
       dot.textContent = activos || ''
       list.innerHTML = filtered.length
         ? filtered.map(pedidoRow).join('')
-        : `<p class="ad-save-status">${pedFilter === 'activos' ? 'No hay reservas activas.' : 'Todavía no entró ninguna reserva.'}</p>`
+        : `<p class="pa-save-status">${pedFilter === 'activos' ? 'No hay reservas activas.' : 'Todavía no entró ninguna reserva.'}</p>`
     }
     async function loadPedidos() {
-      const list = document.getElementById('ad-pedidos-list')
-      if (!PEDIDOS.length) list.innerHTML = '<p class="ad-save-status">Cargando…</p>'
+      const list = document.getElementById('pa-pedidos-list')
+      if (!PEDIDOS.length) list.innerHTML = '<p class="pa-save-status">Cargando…</p>'
       try {
         const res = await fetch('/api/socios/admin/pedidos', { credentials: 'include' })
         const data = await res.json()
-        if (!res.ok || !data.ok) { list.innerHTML = `<p class="ad-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        if (!res.ok || !data.ok) { list.innerHTML = `<p class="pa-msg">Error: ${esc(data.error || res.status)}</p>`; return }
         PEDIDOS = data.pedidos || []
         renderPedidos()
       } catch {
-        list.innerHTML = '<p class="ad-msg">Error de red al cargar pedidos.</p>'
+        list.innerHTML = '<p class="pa-msg">Error de red al cargar pedidos.</p>'
       }
     }
-    document.querySelectorAll('.ad-pedfilter').forEach((b) => b.addEventListener('click', () => {
-      document.querySelectorAll('.ad-pedfilter').forEach((x) => x.classList.remove('is-active'))
+    document.querySelectorAll('.pa-pedfilter').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.pa-pedfilter').forEach((x) => x.classList.remove('is-active'))
       b.classList.add('is-active')
       pedFilter = b.dataset.pedfilter
       renderPedidos()
     }))
-    document.getElementById('ad-ped-refresh').addEventListener('click', loadPedidos)
+    document.getElementById('pa-ped-refresh').addEventListener('click', loadPedidos)
     document.addEventListener('click', async (e) => {
-      const btn = e.target.closest && e.target.closest('.ad-ped-action')
+      const btn = e.target.closest && e.target.closest('.pa-ped-action')
       if (!btn) return
       const estado = btn.dataset.estado
       if (estado === 'cancelado' && !confirm('¿Cancelar esta reserva?')) return
@@ -517,40 +517,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'
     }
     function socioRow(s) {
-      const ava = `<span class="ad-socio-ava"><span class="ad-socio-ini">${esc(initials(s.name || s.email))}</span>${s.picture ? `<img src="${esc(s.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
+      const ava = `<span class="pa-socio-ava"><span class="pa-socio-ini">${esc(initials(s.name || s.email))}</span>${s.picture ? `<img src="${esc(s.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
       const estado = s.lastLogin
-        ? '<span class="ad-socio-badge is-on">Ingresó</span>'
-        : '<span class="ad-socio-badge">Sin ingresar</span>'
+        ? '<span class="pa-socio-badge is-on">Ingresó</span>'
+        : '<span class="pa-socio-badge">Sin ingresar</span>'
       const meta = s.lastLogin
         ? `Último ingreso: ${fmtFecha(s.lastLogin)} · ${s.logins} ingreso(s)`
         : 'Todavía no ingresó con esta cuenta'
       return `
-        <article class="ad-socio">
+        <article class="pa-socio">
           ${ava}
-          <div class="ad-socio-main">
-            <div class="ad-socio-top">
-              <strong class="ad-socio-name">${esc(s.name || '(sin nombre aún)')}</strong>
+          <div class="pa-socio-main">
+            <div class="pa-socio-top">
+              <strong class="pa-socio-name">${esc(s.name || '(sin nombre aún)')}</strong>
               ${estado}
             </div>
-            <div class="ad-socio-email">${esc(s.email)}</div>
-            <input class="ad-input ad-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
-            <div class="ad-socio-meta">${meta}</div>
+            <div class="pa-socio-email">${esc(s.email)}</div>
+            <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
+            <div class="pa-socio-meta">${meta}</div>
           </div>
-          <button type="button" class="ad-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
+          <button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
         </article>`
     }
     async function loadSocios() {
-      const list = document.getElementById('ad-socios-list')
-      list.innerHTML = '<p class="ad-save-status">Cargando…</p>'
+      const list = document.getElementById('pa-socios-list')
+      list.innerHTML = '<p class="pa-save-status">Cargando…</p>'
       try {
         const res = await fetch('/api/socios/admin/socios', { credentials: 'include' })
         const data = await res.json()
-        if (!res.ok || !data.ok) { list.innerHTML = `<p class="ad-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        if (!res.ok || !data.ok) { list.innerHTML = `<p class="pa-msg">Error: ${esc(data.error || res.status)}</p>`; return }
         list.innerHTML = data.socios.length
           ? data.socios.map(socioRow).join('')
-          : '<p class="ad-save-status">Todavía no hay socios cargados.</p>'
+          : '<p class="pa-save-status">Todavía no hay socios cargados.</p>'
       } catch {
-        list.innerHTML = '<p class="ad-msg">Error de red al cargar socios.</p>'
+        list.innerHTML = '<p class="pa-msg">Error de red al cargar socios.</p>'
       }
     }
     async function saveSocio(email, nota) {
@@ -566,11 +566,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         return false // sin red: que el caller muestre el error, nunca silencio
       }
     }
-    document.getElementById('ad-socio-form').addEventListener('submit', async (e) => {
+    document.getElementById('pa-socio-form').addEventListener('submit', async (e) => {
       e.preventDefault()
-      const emailEl = document.getElementById('ad-socio-email')
-      const notaEl = document.getElementById('ad-socio-nota')
-      const status = document.getElementById('ad-socio-status')
+      const emailEl = document.getElementById('pa-socio-email')
+      const notaEl = document.getElementById('pa-socio-nota')
+      const status = document.getElementById('pa-socio-status')
       const email = emailEl.value.trim().toLowerCase()
       if (!email) return
       status.textContent = 'Guardando…'
@@ -580,16 +580,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       setTimeout(() => (status.textContent = ''), 3000)
     })
     document.addEventListener('change', async (e) => {
-      const nota = e.target.closest && e.target.closest('.ad-socio-nota')
+      const nota = e.target.closest && e.target.closest('.pa-socio-nota')
       if (!nota) return
-      const status = document.getElementById('ad-socio-status')
+      const status = document.getElementById('pa-socio-status')
       status.textContent = 'Guardando nota…'
       const ok = await saveSocio(nota.getAttribute('data-email'), nota.value)
       status.textContent = ok ? 'Nota guardada ✓' : 'Error al guardar la nota — probá de nuevo'
       setTimeout(() => (status.textContent = ''), 3000)
     })
     document.addEventListener('click', async (e) => {
-      const del = e.target.closest && e.target.closest('.ad-socio-del')
+      const del = e.target.closest && e.target.closest('.pa-socio-del')
       if (!del) return
       const email = del.getAttribute('data-email')
       if (!confirm('¿Dar de baja a ' + email + '? No podrá entrar a la carta.')) return
@@ -603,7 +603,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     })
 
     function showLoginError(message) {
-      const msg = document.getElementById('ad-login-msg')
+      const msg = document.getElementById('pa-login-msg')
       msg.textContent = message
       msg.hidden = false
     }
@@ -612,8 +612,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const res = await fetch('/api/socios/admin/geneticas', { credentials: 'include' })
       if (res.status === 401) return false
       if (res.status === 403) {
-        document.getElementById('ad-login').hidden = true
-        document.getElementById('ad-forbidden').hidden = false
+        document.getElementById('pa-login').hidden = true
+        document.getElementById('pa-forbidden').hidden = false
         return true
       }
       if (!res.ok) {
@@ -624,11 +624,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       CATALOG = data.geneticas || []
       // La pestaña Socios solo la ve el super admin.
       if (!data.isSuperAdmin) {
-        const tabSocios = document.querySelector('.ad-tab[data-tab="socios"]')
+        const tabSocios = document.querySelector('.pa-tab[data-tab="socios"]')
         if (tabSocios) tabSocios.hidden = true
       }
-      document.getElementById('ad-login').hidden = true
-      document.getElementById('ad-content').hidden = false
+      document.getElementById('pa-login').hidden = true
+      document.getElementById('pa-content').hidden = false
       render()
       loadPedidos() // completa el contador de pedidos activos en la pestaña
       return true
@@ -671,25 +671,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      PANEL ADMIN — modo nocturno de marca (igual carta)
      Violeta profundo · crema · acentos violeta/verde
   ══════════════════════════════════════════════ */
-  .ad-main {
-    --ad-bg:     #130d1c;
-    --ad-card:   #1c1430;
-    --ad-card-2: #251a3d;
-    --ad-line:   rgba(244, 241, 247, 0.1);
-    --ad-cream:  #f4f1f7;
-    --ad-muted:  rgba(244, 241, 247, 0.55);
-    --ad-violet: #b79de6;
-    --ad-green:  #3cb492;
-    --ad-danger: #f2818a;
+  .pa-main {
+    --pa-bg:     #130d1c;
+    --pa-card:   #1c1430;
+    --pa-card-2: #251a3d;
+    --pa-line:   rgba(244, 241, 247, 0.1);
+    --pa-cream:  #f4f1f7;
+    --pa-muted:  rgba(244, 241, 247, 0.55);
+    --pa-violet: #b79de6;
+    --pa-green:  #3cb492;
+    --pa-danger: #f2818a;
 
     min-height: 100svh;
     padding: clamp(24px, 4vw, 56px) clamp(16px, 4vw, 40px);
-    background: var(--ad-bg);
-    color: var(--ad-cream);
+    background: var(--pa-bg);
+    color: var(--pa-cream);
     font-family: var(--font-ui);
     position: relative;
   }
-  .ad-main::before {
+  .pa-main::before {
     content: '';
     position: absolute; inset: 0; pointer-events: none; z-index: 0;
     background:
@@ -703,301 +703,301 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      En un panel de datos no aporta: fuera. */
   body::after { display: none !important; }
 
-  .ad-wrap { position: relative; z-index: 1; max-width: 1460px; margin: 0 auto; }
+  .pa-wrap { position: relative; z-index: 1; max-width: 1460px; margin: 0 auto; }
 
-  .ad-eyebrow {
+  .pa-eyebrow {
     display: inline-flex; align-items: center; gap: 0.5rem;
     font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--ad-muted); font-weight: 700; margin-bottom: 0.6rem;
+    color: var(--pa-muted); font-weight: 700; margin-bottom: 0.6rem;
   }
-  .ad-eyebrow::before {
+  .pa-eyebrow::before {
     content: ''; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--ad-violet);
+    background: var(--pa-violet);
   }
-  .ad-title {
+  .pa-title {
     font-family: var(--font-display); font-weight: 400;
     font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; letter-spacing: 0.005em;
-    color: var(--ad-cream); margin: 0 0 1.8rem;
+    color: var(--pa-cream); margin: 0 0 1.8rem;
   }
 
-  .ad-login[hidden], .ad-content[hidden] { display: none; }
-  .ad-login {
+  .pa-login[hidden], .pa-content[hidden] { display: none; }
+  .pa-login {
     display: flex; flex-direction: column; align-items: flex-start; gap: 1rem;
-    background: var(--ad-card); border: 1px solid var(--ad-line);
+    background: var(--pa-card); border: 1px solid var(--pa-line);
     border-radius: 20px; padding: clamp(24px, 4vw, 40px); max-width: 460px;
     box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
   }
-  .ad-msg {
-    color: var(--ad-danger); font-size: 0.9rem;
+  .pa-msg {
+    color: var(--pa-danger); font-size: 0.9rem;
     background: rgba(242, 129, 138, 0.08); border: 1px solid rgba(242, 129, 138, 0.2);
     padding: 0.9rem 1.1rem; border-radius: 12px;
   }
-  .ad-help {
-    background: rgba(244, 241, 247, 0.04); border: 1px solid var(--ad-line); border-radius: 14px;
-    padding: 0.95rem 1.15rem; font-size: 0.88rem; line-height: 1.55; color: var(--ad-muted);
+  .pa-help {
+    background: rgba(244, 241, 247, 0.04); border: 1px solid var(--pa-line); border-radius: 14px;
+    padding: 0.95rem 1.15rem; font-size: 0.88rem; line-height: 1.55; color: var(--pa-muted);
     margin-bottom: 1.4rem;
   }
-  .ad-help strong { color: var(--ad-cream); font-weight: 700; }
+  .pa-help strong { color: var(--pa-cream); font-weight: 700; }
 
   /* ── Inputs ── */
-  input[type="checkbox"] { accent-color: var(--ad-violet); }
-  .ad-input, select.ad-input, .ad-field select, .ad-field input {
+  input[type="checkbox"] { accent-color: var(--pa-violet); }
+  .pa-input, select.pa-input, .pa-field select, .pa-field input {
     width: 100%; font-family: var(--font-ui); font-size: 0.88rem;
-    border: 1px solid var(--ad-line); border-radius: 10px; padding: 0.5rem 0.7rem;
-    color: var(--ad-cream); background: var(--ad-card-2);
+    border: 1px solid var(--pa-line); border-radius: 10px; padding: 0.5rem 0.7rem;
+    color: var(--pa-cream); background: var(--pa-card-2);
   }
-  .ad-input::placeholder { color: rgba(244, 241, 247, 0.3); }
-  .ad-input:focus, .ad-field select:focus, .ad-field input:focus { outline: none; border-color: var(--ad-violet); }
-  .ad-field select option { background: var(--ad-card-2); color: var(--ad-cream); }
+  .pa-input::placeholder { color: rgba(244, 241, 247, 0.3); }
+  .pa-input:focus, .pa-field select:focus, .pa-field input:focus { outline: none; border-color: var(--pa-violet); }
+  .pa-field select option { background: var(--pa-card-2); color: var(--pa-cream); }
 
   /* ── Genéticas: cards ── */
-  .ad-list { display: flex; flex-direction: column; gap: 1rem; }
-  .ad-card {
-    background: var(--ad-card); border: 1px solid var(--ad-line);
+  .pa-list { display: flex; flex-direction: column; gap: 1rem; }
+  .pa-card {
+    background: var(--pa-card); border: 1px solid var(--pa-line);
     border-radius: 18px; padding: 1.2rem 1.3rem;
   }
-  .ad-card-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
-  .ad-input-nombre {
+  .pa-card-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+  .pa-input-nombre {
     flex: 1; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem;
-    background: none; border: none; border-bottom: 1px solid var(--ad-line); border-radius: 0;
-    padding: 0.3rem 0.1rem; color: var(--ad-cream);
+    background: none; border: none; border-bottom: 1px solid var(--pa-line); border-radius: 0;
+    padding: 0.3rem 0.1rem; color: var(--pa-cream);
   }
-  .ad-input-nombre:focus { border-bottom-color: var(--ad-violet); }
-  .ad-activo {
+  .pa-input-nombre:focus { border-bottom-color: var(--pa-violet); }
+  .pa-activo {
     display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; white-space: nowrap;
-    color: var(--ad-muted);
+    color: var(--pa-muted);
   }
-  .ad-del {
-    background: none; border: 1px solid var(--ad-line); border-radius: 9px;
+  .pa-del {
+    background: none; border: 1px solid var(--pa-line); border-radius: 9px;
     width: 32px; height: 32px; font-size: 1.15rem; line-height: 1; cursor: pointer;
-    color: var(--ad-danger); flex-shrink: 0; transition: border-color 0.15s ease;
+    color: var(--pa-danger); flex-shrink: 0; transition: border-color 0.15s ease;
   }
-  .ad-del:hover { border-color: var(--ad-danger); }
+  .pa-del:hover { border-color: var(--pa-danger); }
 
-  .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
-  .ad-field { display: flex; flex-direction: column; gap: 0.3rem; }
-  .ad-field > span {
+  .pa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
+  .pa-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .pa-field > span {
     font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--ad-violet);
+    color: var(--pa-violet);
   }
-  .ad-field-wide { grid-column: 1 / -1; }
+  .pa-field-wide { grid-column: 1 / -1; }
 
   /* ── Formato ── */
-  .ad-formatos { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
-  .ad-formatos-label {
-    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ad-muted);
+  .pa-formatos { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+  .pa-formatos-label {
+    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pa-muted);
   }
-  .ad-fmt {
+  .pa-fmt {
     display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600;
-    border: 1px solid var(--ad-line); border-radius: 999px;
-    padding: 0.35rem 0.85rem; cursor: pointer; color: var(--ad-muted);
+    border: 1px solid var(--pa-line); border-radius: 999px;
+    padding: 0.35rem 0.85rem; cursor: pointer; color: var(--pa-muted);
   }
-  .ad-fmt.is-on { color: var(--ad-cream); background: rgba(60, 180, 146, 0.14); border-color: var(--ad-green); }
-  .ad-fmt input { margin: 0; }
+  .pa-fmt.is-on { color: var(--pa-cream); background: rgba(60, 180, 146, 0.14); border-color: var(--pa-green); }
+  .pa-fmt input { margin: 0; }
 
   /* ── Sabor / efecto ── */
-  .ad-tags-block { margin-top: 0.8rem; }
-  .ad-tags-label {
+  .pa-tags-block { margin-top: 0.8rem; }
+  .pa-tags-label {
     display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--ad-muted); margin-bottom: 0.5rem;
+    color: var(--pa-muted); margin-bottom: 0.5rem;
   }
-  .ad-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-  .ad-tag {
+  .pa-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .pa-tag {
     display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem;
-    border: 1px solid var(--ad-line); border-radius: 999px; padding: 0.35rem 0.8rem 0.35rem 0.6rem;
-    cursor: pointer; color: var(--ad-muted);
+    border: 1px solid var(--pa-line); border-radius: 999px; padding: 0.35rem 0.8rem 0.35rem 0.6rem;
+    cursor: pointer; color: var(--pa-muted);
   }
-  .ad-tag.is-checked { color: var(--ad-cream); background: rgba(183, 157, 230, 0.16); border-color: var(--ad-violet); font-weight: 600; }
-  .ad-tag input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .ad-tag-icon { width: 16px; height: 16px; display: inline-flex; color: var(--ad-violet); }
-  .ad-tag-icon svg { width: 100%; height: 100%; }
+  .pa-tag.is-checked { color: var(--pa-cream); background: rgba(183, 157, 230, 0.16); border-color: var(--pa-violet); font-weight: 600; }
+  .pa-tag input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .pa-tag-icon { width: 16px; height: 16px; display: inline-flex; color: var(--pa-violet); }
+  .pa-tag-icon svg { width: 100%; height: 100%; }
 
   /* ── Botones ── */
-  .ad-btn {
+  .pa-btn {
     font-family: var(--font-ui); font-weight: 700; font-size: 0.88rem; border-radius: 999px;
     padding: 0.6rem 1.35rem; cursor: pointer; border: none; transition: transform 0.08s ease, background 0.15s ease;
   }
-  .ad-btn:active { transform: scale(0.97); }
-  .ad-btn-ghost { background: none; border: 1.5px dashed var(--ad-line); color: var(--ad-violet); margin-top: 1.2rem; }
-  .ad-btn-ghost:hover { border-color: var(--ad-violet); }
-  .ad-btn-primary { background: var(--ad-violet); color: #130d1c; }
-  .ad-btn-primary:hover { background: #c8b2ec; }
+  .pa-btn:active { transform: scale(0.97); }
+  .pa-btn-ghost { background: none; border: 1.5px dashed var(--pa-line); color: var(--pa-violet); margin-top: 1.2rem; }
+  .pa-btn-ghost:hover { border-color: var(--pa-violet); }
+  .pa-btn-primary { background: var(--pa-violet); color: #130d1c; }
+  .pa-btn-primary:hover { background: #c8b2ec; }
 
-  .ad-savebar {
+  .pa-savebar {
     position: sticky; bottom: clamp(12px, 2vh, 20px); margin-top: 1.6rem; padding: 0.9rem 1.1rem;
     background: rgba(28, 20, 48, 0.97); /* sólido: backdrop-filter sumaba otra capa compuesta al bug del compositor */
-    border: 1px solid var(--ad-line); border-radius: 16px;
+    border: 1px solid var(--pa-line); border-radius: 16px;
     display: flex; align-items: center; justify-content: flex-end; gap: 1rem;
     box-shadow: 0 12px 34px -12px rgba(0, 0, 0, 0.6);
   }
-  .ad-save-status { font-size: 0.85rem; color: var(--ad-muted); }
+  .pa-save-status { font-size: 0.85rem; color: var(--pa-muted); }
 
   /* ── Pestañas ── */
-  .ad-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.4rem; border-bottom: 1px solid var(--ad-line); }
-  .ad-tab {
+  .pa-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.4rem; border-bottom: 1px solid var(--pa-line); }
+  .pa-tab {
     background: none; border: none; cursor: pointer;
     font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600;
-    padding: 0.7rem 1rem; color: var(--ad-muted);
+    padding: 0.7rem 1rem; color: var(--pa-muted);
     border-bottom: 2px solid transparent; margin-bottom: -1px;
   }
-  .ad-tab:hover { color: var(--ad-cream); }
-  .ad-tab.is-active { color: var(--ad-cream); border-bottom-color: var(--ad-violet); }
-  .ad-tab[hidden] { display: none; }
-  .ad-tab-panel[hidden] { display: none; }
+  .pa-tab:hover { color: var(--pa-cream); }
+  .pa-tab.is-active { color: var(--pa-cream); border-bottom-color: var(--pa-violet); }
+  .pa-tab[hidden] { display: none; }
+  .pa-tab-panel[hidden] { display: none; }
 
   /* ── Genéticas: toolbar (filtros + buscador) ── */
-  .ad-toolbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
-  .ad-availfilter { display: flex; gap: 0.3rem; }
-  .ad-avail {
-    background: none; border: 1px solid var(--ad-line); border-radius: 999px;
+  .pa-toolbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .pa-availfilter { display: flex; gap: 0.3rem; }
+  .pa-avail {
+    background: none; border: 1px solid var(--pa-line); border-radius: 999px;
     padding: 0.42rem 0.95rem; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
-    color: var(--ad-muted); cursor: pointer;
+    color: var(--pa-muted); cursor: pointer;
   }
-  .ad-avail:hover { color: var(--ad-cream); }
-  .ad-avail.is-active { background: var(--ad-violet); border-color: var(--ad-violet); color: #130d1c; }
-  .ad-search { width: auto; flex: 1 1 220px; max-width: 320px; }
-  .ad-count { font-size: 0.8rem; color: var(--ad-muted); margin-left: auto; white-space: nowrap; }
+  .pa-avail:hover { color: var(--pa-cream); }
+  .pa-avail.is-active { background: var(--pa-violet); border-color: var(--pa-violet); color: #130d1c; }
+  .pa-search { width: auto; flex: 1 1 220px; max-width: 320px; }
+  .pa-count { font-size: 0.8rem; color: var(--pa-muted); margin-left: auto; white-space: nowrap; }
 
   /* ── Filas de una línea ── */
-  .ad-genscroll { overflow: visible; }
-  .ad-rows-head, .ad-row {
+  .pa-genscroll { overflow: visible; }
+  .pa-rows-head, .pa-row {
     display: grid;
     grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px minmax(120px, 1.2fr) 60px 60px 104px 104px 104px 76px 32px;
     gap: 0.4rem;
     align-items: center;
     min-width: 1080px;
   }
-  .ad-rows-head {
+  .pa-rows-head {
     padding: 0 0.2rem 0.5rem;
     font-size: 0.62rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-    color: var(--ad-muted); border-bottom: 1px solid var(--ad-line);
+    color: var(--pa-muted); border-bottom: 1px solid var(--pa-line);
   }
-  .ad-rows { display: flex; flex-direction: column; }
-  .ad-row { padding: 0.45rem 0.2rem; border-bottom: 1px solid var(--ad-line); }
-  .ad-row:hover { background: rgba(244, 241, 247, 0.02); }
-  .ad-row .ad-input { padding: 0.42rem 0.55rem; font-size: 0.82rem; border-radius: 8px; min-width: 0; }
-  .ad-cell-num { text-align: center; }
-  .ad-avail-toggle { display: flex; align-items: center; justify-content: center; }
-  .ad-avail-toggle input { width: 20px; height: 20px; cursor: pointer; }
-  .ad-empty { color: var(--ad-muted); padding: 1.4rem 0.3rem; min-width: auto; }
+  .pa-rows { display: flex; flex-direction: column; }
+  .pa-row { padding: 0.45rem 0.2rem; border-bottom: 1px solid var(--pa-line); }
+  .pa-row:hover { background: rgba(244, 241, 247, 0.02); }
+  .pa-row .pa-input { padding: 0.42rem 0.55rem; font-size: 0.82rem; border-radius: 8px; min-width: 0; }
+  .pa-cell-num { text-align: center; }
+  .pa-avail-toggle { display: flex; align-items: center; justify-content: center; }
+  .pa-avail-toggle input { width: 20px; height: 20px; cursor: pointer; }
+  .pa-empty { color: var(--pa-muted); padding: 1.4rem 0.3rem; min-width: auto; }
 
   /* Foto compacta en la fila */
-  .ad-row .ad-foto { flex-wrap: nowrap; gap: 0.3rem; align-items: center; }
-  .ad-row .ad-foto-thumb { width: 42px; height: 30px; border-radius: 6px; }
-  .ad-row .ad-foto-btn { padding: 0.3rem 0.45rem; font-size: 1rem; line-height: 1; border-radius: 8px; }
+  .pa-row .pa-foto { flex-wrap: nowrap; gap: 0.3rem; align-items: center; }
+  .pa-row .pa-foto-thumb { width: 42px; height: 30px; border-radius: 6px; }
+  .pa-row .pa-foto-btn { padding: 0.3rem 0.45rem; font-size: 1rem; line-height: 1; border-radius: 8px; }
 
   /* ── Desplegable tildable (formato/sabor/efecto) ── */
-  .ad-dd { position: relative; min-width: 0; }
-  .ad-dd-toggle {
+  .pa-dd { position: relative; min-width: 0; }
+  .pa-dd-toggle {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;
-    background: var(--ad-card-2); border: 1px solid var(--ad-line); border-radius: 8px;
-    padding: 0.42rem 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--ad-cream); cursor: pointer;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 8px;
+    padding: 0.42rem 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--pa-cream); cursor: pointer;
   }
-  .ad-dd-toggle.has { border-color: var(--ad-violet); }
-  .ad-dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ad-dd-chev { width: 12px; height: 12px; color: var(--ad-violet); flex-shrink: 0; transition: transform 0.15s ease; }
-  .ad-dd-toggle.open .ad-dd-chev { transform: rotate(180deg); }
-  .ad-dd-panel {
+  .pa-dd-toggle.has { border-color: var(--pa-violet); }
+  .pa-dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pa-dd-chev { width: 12px; height: 12px; color: var(--pa-violet); flex-shrink: 0; transition: transform 0.15s ease; }
+  .pa-dd-toggle.open .pa-dd-chev { transform: rotate(180deg); }
+  .pa-dd-panel {
     position: absolute; top: calc(100% + 4px); left: 0; z-index: 40;
     min-width: 210px; max-height: 320px; overflow-y: auto;
-    background: var(--ad-card-2); border: 1px solid var(--ad-line); border-radius: 12px; padding: 0.35rem;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 12px; padding: 0.35rem;
     box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.8);
   }
-  .ad-dd-panel[hidden] { display: none; }
-  .ad-ddopt {
+  .pa-dd-panel[hidden] { display: none; }
+  .pa-ddopt {
     display: flex; align-items: center; gap: 0.5rem; padding: 0.42rem 0.5rem; border-radius: 8px;
-    font-size: 0.82rem; color: var(--ad-muted); cursor: pointer;
+    font-size: 0.82rem; color: var(--pa-muted); cursor: pointer;
   }
-  .ad-ddopt:hover { background: rgba(244, 241, 247, 0.05); }
-  .ad-ddopt.is-on { color: var(--ad-cream); }
-  .ad-ddopt input { accent-color: var(--ad-violet); flex-shrink: 0; }
-  .ad-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--ad-violet); flex-shrink: 0; }
-  .ad-ddicon svg { width: 100%; height: 100%; }
+  .pa-ddopt:hover { background: rgba(244, 241, 247, 0.05); }
+  .pa-ddopt.is-on { color: var(--pa-cream); }
+  .pa-ddopt input { accent-color: var(--pa-violet); flex-shrink: 0; }
+  .pa-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--pa-violet); flex-shrink: 0; }
+  .pa-ddicon svg { width: 100%; height: 100%; }
 
   /* ── Subida de foto ── */
-  .ad-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
-  .ad-foto-thumb {
+  .pa-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
+  .pa-foto-thumb {
     width: 72px; height: 54px; border-radius: 10px; overflow: hidden;
-    background: var(--ad-card-2); border: 1px solid var(--ad-line); flex-shrink: 0;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line); flex-shrink: 0;
   }
-  .ad-foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .ad-foto-btn {
+  .pa-foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pa-foto-btn {
     font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; cursor: pointer;
-    border: 1px solid var(--ad-line); border-radius: 999px;
-    padding: 0.45rem 0.95rem; color: var(--ad-cream); background: var(--ad-card-2);
+    border: 1px solid var(--pa-line); border-radius: 999px;
+    padding: 0.45rem 0.95rem; color: var(--pa-cream); background: var(--pa-card-2);
   }
-  .ad-foto-btn:hover { border-color: var(--ad-violet); }
-  .ad-foto-clear {
+  .pa-foto-btn:hover { border-color: var(--pa-violet); }
+  .pa-foto-clear {
     font-family: var(--font-ui); font-size: 0.78rem; cursor: pointer;
-    background: none; border: none; color: var(--ad-danger); text-decoration: underline;
+    background: none; border: none; color: var(--pa-danger); text-decoration: underline;
   }
-  .ad-foto-status { font-size: 0.78rem; color: var(--ad-muted); }
+  .pa-foto-status { font-size: 0.78rem; color: var(--pa-muted); }
 
   /* ── Socios ── */
-  .ad-socio-form { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem; }
-  .ad-socio-form .ad-input { flex: 1 1 200px; width: auto; }
-  .ad-socio-form .ad-btn { flex-shrink: 0; }
-  .ad-socios-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.2rem; }
-  .ad-socio {
+  .pa-socio-form { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .pa-socio-form .pa-input { flex: 1 1 200px; width: auto; }
+  .pa-socio-form .pa-btn { flex-shrink: 0; }
+  .pa-socios-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.2rem; }
+  .pa-socio {
     display: flex; align-items: flex-start; gap: 0.9rem;
-    background: var(--ad-card); border: 1px solid var(--ad-line);
+    background: var(--pa-card); border: 1px solid var(--pa-line);
     border-radius: 16px; padding: 1rem 1.1rem;
   }
-  .ad-socio-ava {
+  .pa-socio-ava {
     position: relative; flex-shrink: 0;
     width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
-    background: var(--ad-violet); color: #130d1c;
+    background: var(--pa-violet); color: #130d1c;
     display: inline-flex; align-items: center; justify-content: center;
   }
-  .ad-socio-ini { font-size: 0.95rem; font-weight: 800; }
-  .ad-socio-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .ad-socio-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.32rem; }
-  .ad-socio-top { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-  .ad-socio-name { font-size: 1rem; color: var(--ad-cream); }
-  .ad-socio-badge {
+  .pa-socio-ini { font-size: 0.95rem; font-weight: 800; }
+  .pa-socio-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .pa-socio-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.32rem; }
+  .pa-socio-top { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .pa-socio-name { font-size: 1rem; color: var(--pa-cream); }
+  .pa-socio-badge {
     font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
     padding: 0.18rem 0.55rem; border-radius: 999px;
-    background: rgba(244, 241, 247, 0.06); color: var(--ad-muted);
+    background: rgba(244, 241, 247, 0.06); color: var(--pa-muted);
   }
-  .ad-socio-badge.is-on { background: rgba(60, 180, 146, 0.16); color: var(--ad-green); }
-  .ad-socio-email { font-size: 0.82rem; color: var(--ad-muted); }
-  .ad-socio-nota { max-width: 360px; margin-top: 0.2rem; }
-  .ad-socio-meta { font-size: 0.72rem; color: var(--ad-muted); opacity: 0.8; }
-  .ad-socio-del {
-    background: none; border: 1px solid var(--ad-line); border-radius: 9px;
+  .pa-socio-badge.is-on { background: rgba(60, 180, 146, 0.16); color: var(--pa-green); }
+  .pa-socio-email { font-size: 0.82rem; color: var(--pa-muted); }
+  .pa-socio-nota { max-width: 360px; margin-top: 0.2rem; }
+  .pa-socio-meta { font-size: 0.72rem; color: var(--pa-muted); opacity: 0.8; }
+  .pa-socio-del {
+    background: none; border: 1px solid var(--pa-line); border-radius: 9px;
     width: 32px; height: 32px; font-size: 1.15rem; line-height: 1; cursor: pointer;
-    color: var(--ad-danger); flex-shrink: 0;
+    color: var(--pa-danger); flex-shrink: 0;
   }
-  .ad-socio-del:hover { border-color: var(--ad-danger); }
+  .pa-socio-del:hover { border-color: var(--pa-danger); }
 
   /* ── Pedidos ── */
-  .ad-ped-dot {
+  .pa-ped-dot {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 1.15rem; height: 1.15rem; padding: 0 0.32rem; margin-left: 0.45rem;
     font-size: 0.66rem; font-weight: 800; border-radius: 999px;
-    background: var(--ad-green); color: #08160f;
+    background: var(--pa-green); color: #08160f;
   }
-  .ad-ped-dot[hidden] { display: none; }
-  .ad-btn-slim { padding: 0.42rem 0.95rem; font-size: 0.82rem; margin-top: 0; }
-  .ad-pedido { align-items: stretch; }
-  .ad-ped-items { list-style: none; margin: 0.25rem 0 0.2rem; padding: 0; }
-  .ad-ped-items li {
-    font-size: 0.92rem; font-weight: 600; color: var(--ad-cream);
-    padding: 0.28rem 0; border-bottom: 1px dashed var(--ad-line);
+  .pa-ped-dot[hidden] { display: none; }
+  .pa-btn-slim { padding: 0.42rem 0.95rem; font-size: 0.82rem; margin-top: 0; }
+  .pa-pedido { align-items: stretch; }
+  .pa-ped-items { list-style: none; margin: 0.25rem 0 0.2rem; padding: 0; }
+  .pa-ped-items li {
+    font-size: 0.92rem; font-weight: 600; color: var(--pa-cream);
+    padding: 0.28rem 0; border-bottom: 1px dashed var(--pa-line);
   }
-  .ad-ped-items li:last-child { border-bottom: none; }
-  .ad-ped-fmt {
+  .pa-ped-items li:last-child { border-bottom: none; }
+  .pa-ped-fmt {
     font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
     padding: 0.12rem 0.45rem; border-radius: 999px; margin-left: 0.3rem;
-    background: rgba(183, 157, 230, 0.16); color: var(--ad-violet);
+    background: rgba(183, 157, 230, 0.16); color: var(--pa-violet);
   }
-  .ad-ped-actions {
+  .pa-ped-actions {
     display: flex; flex-direction: column; align-items: stretch; justify-content: center;
     gap: 0.45rem; flex-shrink: 0;
   }
-  .ad-ped-actions .ad-btn-ghost { border-style: solid; }
-  .ad-ped-actions .is-danger { color: var(--ad-danger); }
-  .ad-ped-actions .is-danger:hover { border-color: var(--ad-danger); }
-  .ad-socio-badge.is-done { background: rgba(183, 157, 230, 0.16); color: var(--ad-violet); }
-  .ad-socio-badge.is-off { background: rgba(242, 129, 138, 0.12); color: var(--ad-danger); }
+  .pa-ped-actions .pa-btn-ghost { border-style: solid; }
+  .pa-ped-actions .is-danger { color: var(--pa-danger); }
+  .pa-ped-actions .is-danger:hover { border-color: var(--pa-danger); }
+  .pa-socio-badge.is-done { background: rgba(183, 157, 230, 0.16); color: var(--pa-violet); }
+  .pa-socio-badge.is-off { background: rgba(242, 129, 138, 0.12); color: var(--pa-danger); }
 </style>
