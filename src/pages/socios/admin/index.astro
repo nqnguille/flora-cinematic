@@ -109,8 +109,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <input id="pa-socio-nota" type="text" class="pa-input" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
             <button type="submit" class="pa-btn pa-btn-primary">Agregar socio</button>
           </form>
+          <div id="pa-socio-stats" class="pa-stats pa-stats-sub"></div>
           <div class="pa-toolbar">
-            <input id="pa-socio-buscar" class="pa-input pa-search" type="search" placeholder="Buscar socio…" autocomplete="off" hidden />
+            <div id="pa-socio-sort" class="pa-availfilter" role="group" aria-label="Ordenar socios">
+              <button class="pa-avail is-active" data-sort="lastLogin" type="button">Último ingreso</button>
+              <button class="pa-avail" data-sort="name" type="button">Nombre</button>
+              <button class="pa-avail" data-sort="logins" type="button">Ingresos</button>
+              <button class="pa-avail" data-sort="alta" type="button">Alta</button>
+              <button class="pa-avail" data-sort="sin" type="button">Sin ingresar</button>
+            </div>
+            <input id="pa-socio-buscar" class="pa-input pa-search" type="search" placeholder="Buscar socio…" autocomplete="off" />
           </div>
           <p id="pa-socio-status" class="pa-save-status"></p>
           <div id="pa-socios-list" class="pa-socios-list"></div>
@@ -787,55 +795,139 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const p = t.split(/\s+/)
       return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'
     }
+    // "hace 3 días" — el dato operativo es la distancia, no la fecha exacta
+    function fmtRel(iso) {
+      if (!iso) return null
+      const d = new Date(iso)
+      if (isNaN(d.getTime())) return null
+      const min = Math.floor((Date.now() - d.getTime()) / 60000)
+      if (min < 1) return 'recién'
+      if (min < 60) return `hace ${min} min`
+      const h = Math.floor(min / 60)
+      if (h < 24) return `hace ${h} h`
+      const dias = Math.floor(h / 24)
+      if (dias < 31) return `hace ${dias} día${dias > 1 ? 's' : ''}`
+      const meses = Math.floor(dias / 30)
+      return `hace ${meses} mes${meses > 1 ? 'es' : ''}`
+    }
+
+    // Cruce con reservas (PEDIDOS ya está cargado en el panel)
+    function reservasDe(email) {
+      const rs = PEDIDOS.filter((p) => p.email === email)
+      const activa = rs.find((p) => p.estado === 'pendiente' || p.estado === 'listo')
+      return { total: rs.length, activa }
+    }
+
     function socioRow(s) {
       const ava = `<span class="pa-socio-ava"><span class="pa-socio-ini">${esc(initials(s.name || s.email))}</span>${s.picture ? `<img src="${esc(s.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
       const estado = s.lastLogin
-        ? '<span class="pa-socio-badge is-on">Ingresó</span>'
+        ? `<span class="pa-socio-badge is-on" title="Último ingreso: ${esc(fmtFecha(s.lastLogin))}">Activo ${esc(fmtRel(s.lastLogin))}</span>`
         : '<span class="pa-socio-badge">Sin ingresar</span>'
+      const verif = s.emailVerified ? '<span class="pa-socio-verif" title="Cuenta de Google verificada">✓</span>' : ''
+      const res = reservasDe(s.email)
+      const chipRes = res.activa
+        ? `<span class="pa-socio-badge is-res" title="Tiene una reserva ${res.activa.estado === 'listo' ? 'lista para retirar' : 'pendiente'}">Reserva ${res.activa.estado === 'listo' ? 'lista' : 'pendiente'}</span>`
+        : (res.total ? `<span class="pa-socio-badge" title="Reservas históricas">${res.total} reserva(s)</span>` : '')
       // Sin ingresar → invitación lista para mandar por WhatsApp
       const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">Invitar por WhatsApp</a>`
-      const meta = s.lastLogin
-        ? `Último ingreso: ${fmtFecha(s.lastLogin)} · ${s.logins} ingreso(s)`
-        : 'Todavía no ingresó con esta cuenta'
+      // Ficha Google: nombre y apellido reales + idioma de la cuenta
+      const nombreCompleto = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
+      const fichaGoogle = [
+        s.givenName && s.familyName ? `${s.givenName} ${s.familyName}` : '',
+        s.locale ? `idioma ${s.locale}` : '',
+      ].filter(Boolean).join(' · ')
+      const metaPartes = [
+        s.alta ? `Alta ${fmtFecha(s.alta).split(' ')[0]}` : '',
+        s.firstLogin ? `Primer ingreso ${fmtFecha(s.firstLogin).split(' ')[0]}` : '',
+        s.lastLogin ? `Último ${fmtFecha(s.lastLogin)}` : 'Todavía no ingresó con esta cuenta',
+        s.logins ? `<strong>${s.logins}</strong> ingreso(s)` : '',
+        fichaGoogle,
+      ].filter(Boolean)
       return `
-        <article class="pa-socio" data-buscable="${esc(`${s.name || ''} ${s.email} ${s.nota || ''}`.toLowerCase())}">
+        <article class="pa-socio" data-buscable="${esc(`${nombreCompleto} ${s.email} ${s.nota || ''}`.toLowerCase())}">
           ${ava}
           <div class="pa-socio-main">
             <div class="pa-socio-top">
-              <strong class="pa-socio-name">${esc(s.name || '(sin nombre aún)')}</strong>
+              <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
               ${estado}
+              ${chipRes}
               ${invitar}
             </div>
             <div class="pa-socio-email">${esc(s.email)}</div>
             <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
-            <div class="pa-socio-meta">${meta}</div>
+            <div class="pa-socio-meta">${metaPartes.join(' · ')}</div>
           </div>
           <button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
         </article>`
     }
+    let SOCIOS_LIST = []
+    let socioSort = { key: 'lastLogin', dir: -1 } // arranca por actividad reciente
+    let socioQ = ''
+
+    const SOCIO_SORTERS = {
+      // null/ausente siempre al final, gane quien gane la dirección
+      lastLogin: (a, b) => (Date.parse(b.lastLogin || 0) || 0) - (Date.parse(a.lastLogin || 0) || 0),
+      name: (a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email), 'es'),
+      logins: (a, b) => (b.logins || 0) - (a.logins || 0),
+      alta: (a, b) => (Date.parse(b.alta || b.firstLogin || 0) || 0) - (Date.parse(a.alta || a.firstLogin || 0) || 0),
+      sin: (a, b) => Number(!!a.lastLogin) - Number(!!b.lastLogin), // sin ingresar primero
+    }
+
+    function renderSocios() {
+      const list = document.getElementById('pa-socios-list')
+      let socios = [...SOCIOS_LIST].sort(SOCIO_SORTERS[socioSort.key])
+      if (socioSort.dir === 1) socios.reverse()
+      if (socioQ) {
+        socios = socios.filter((s) =>
+          `${s.name || ''} ${s.givenName || ''} ${s.familyName || ''} ${s.email} ${s.nota || ''}`.toLowerCase().includes(socioQ)
+        )
+      }
+      // Sub-estadísticas del padrón
+      const conIngreso = SOCIOS_LIST.filter((s) => s.lastLogin).length
+      const activos30 = SOCIOS_LIST.filter((s) => s.lastLogin && Date.now() - Date.parse(s.lastLogin) < 30 * 86400000).length
+      document.getElementById('pa-socio-stats').innerHTML = [
+        `<span class="pa-stat"><strong>${SOCIOS_LIST.length}</strong> socio(s)</span>`,
+        `<span class="pa-stat"><strong class="is-green">${activos30}</strong> activo(s) últimos 30 días</span>`,
+        `<span class="pa-stat"><strong class="is-violet">${conIngreso}</strong> ingresaron alguna vez</span>`,
+        `<span class="pa-stat"><strong>${SOCIOS_LIST.length - conIngreso}</strong> sin ingresar</span>`,
+      ].join('')
+      // Flecha de dirección en el criterio activo
+      document.querySelectorAll('#pa-socio-sort .pa-avail').forEach((b) => {
+        const on = b.dataset.sort === socioSort.key
+        b.classList.toggle('is-active', on)
+        b.textContent = b.textContent.replace(/ [↓↑]$/, '') + (on ? (socioSort.dir === -1 ? ' ↓' : ' ↑') : '')
+      })
+      list.innerHTML = socios.length
+        ? socios.map(socioRow).join('')
+        : `<p class="pa-empty">${socioQ ? 'Ningún socio coincide con la búsqueda.' : 'Todavía no hay socios cargados.'}</p>`
+    }
+
     async function loadSocios() {
       const list = document.getElementById('pa-socios-list')
-      list.innerHTML = '<p class="pa-loading">Cargando…</p>'
+      if (!SOCIOS_LIST.length) list.innerHTML = '<p class="pa-loading">Cargando…</p>'
       try {
         const res = await fetch('/api/socios/admin/socios', { credentials: 'include' })
         const data = await res.json()
         if (!res.ok || !data.ok) { list.innerHTML = `<p class="pa-msg">Error: ${esc(data.error || res.status)}</p>`; return }
+        SOCIOS_LIST = data.socios
         SOCIOS_COUNT = data.socios.length
         pintarStats()
-        // Buscador recién cuando la lista lo amerita
-        document.getElementById('pa-socio-buscar').hidden = data.socios.length <= 10
-        list.innerHTML = data.socios.length
-          ? data.socios.map(socioRow).join('')
-          : '<p class="pa-empty">Todavía no hay socios cargados.</p>'
+        renderSocios()
       } catch {
         list.innerHTML = '<p class="pa-msg">Error de red al cargar socios.</p>'
       }
     }
     document.getElementById('pa-socio-buscar').addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase()
-      document.querySelectorAll('#pa-socios-list .pa-socio').forEach((card) => {
-        card.hidden = q && !card.getAttribute('data-buscable').includes(q)
-      })
+      socioQ = e.target.value.trim().toLowerCase()
+      renderSocios()
+    })
+    document.getElementById('pa-socio-sort').addEventListener('click', (e) => {
+      const b = e.target.closest('.pa-avail')
+      if (!b) return
+      const key = b.dataset.sort
+      if (socioSort.key === key) socioSort.dir *= -1 // segundo click invierte
+      else socioSort = { key, dir: -1 }
+      renderSocios()
     })
     async function saveSocio(email, nota) {
       try {
@@ -1401,6 +1493,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* ── Botón danger formal ── */
   .pa-btn-danger { background: none; border: 1px solid rgba(242, 129, 138, 0.35); color: var(--pa-danger); }
   .pa-btn-danger:hover { border-color: var(--pa-danger); background: rgba(242, 129, 138, 0.08); }
+
+  /* ── Socios: sub-stats, verificada, reserva ── */
+  .pa-stats-sub { margin: 0 0 0.9rem; }
+  .pa-stats-sub .pa-stat { cursor: default; }
+  .pa-stats-sub .pa-stat:hover { border-color: var(--pa-line); color: var(--pa-muted); }
+  .pa-socio-verif { color: var(--pa-green); font-weight: 800; margin: 0 0.35rem 0 0.15rem; }
+  .pa-socio-badge.is-res { background: rgba(60, 180, 146, 0.16); color: var(--pa-green); }
+  .pa-socio-meta strong { color: var(--pa-cream); font-weight: 700; }
 
   /* ── Socios: invitación ── */
   .pa-socio-invitar {

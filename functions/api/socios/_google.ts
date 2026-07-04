@@ -27,7 +27,11 @@ export interface GooglePayload {
   email: string;
   email_verified: boolean;
   name?: string;
+  given_name?: string;
+  family_name?: string;
   picture?: string;
+  locale?: string;
+  sub?: string; // ID estable de la cuenta de Google
   aud: string;
   iss: string;
   exp: number;

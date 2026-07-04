@@ -42,7 +42,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (typeof rec !== 'object' || rec === null) rec = {};
     const now = new Date().toISOString();
     rec.name = payload.name || rec.name || '';
+    rec.givenName = payload.given_name || rec.givenName || '';
+    rec.familyName = payload.family_name || rec.familyName || '';
     rec.picture = payload.picture || rec.picture || '';
+    rec.locale = payload.locale || rec.locale || '';
+    rec.googleId = payload.sub || rec.googleId || '';
     rec.emailVerified = payload.email_verified;
     if (!rec.firstLogin) rec.firstLogin = now;
     rec.lastLogin = now;

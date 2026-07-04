@@ -43,8 +43,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         email: k.name,
         nota: rec.nota || '',
         name: rec.name || '',
+        givenName: rec.givenName || '',
+        familyName: rec.familyName || '',
         picture: rec.picture || '',
+        locale: rec.locale || '',
         emailVerified: rec.emailVerified ?? null,
+        alta: rec.alta || null,
         firstLogin: rec.firstLogin || null,
         lastLogin: rec.lastLogin || null,
         logins: rec.logins || 0,
@@ -72,8 +76,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ ok: false, error: 'email inválido' }, { status: 400 });
   }
 
-  const rec = parseRec(await env.SOCIOS.get(email));
+  const existente = await env.SOCIOS.get(email);
+  const rec = parseRec(existente);
   rec.nota = String(body?.nota ?? rec.nota ?? '');
+  if (existente === null) rec.alta = new Date().toISOString(); // fecha real de alta en el club
   await env.SOCIOS.put(email, JSON.stringify(rec));
   return Response.json({ ok: true, email });
 };
