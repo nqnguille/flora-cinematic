@@ -45,11 +45,16 @@ function initNav() {
   const nav = document.querySelector<HTMLElement>('.site-nav')
   if (!nav) return
 
-  ScrollTrigger.create({
-    start: 'top -60px',
-    onEnter: () => nav.classList.add('scrolled'),
-    onLeaveBack: () => nav.classList.remove('scrolled'),
-  })
+  // La barra clara recién entra al terminar el relato oscuro del welcome.
+  // Se mide la posición real de #perfiles en cada scroll (inmune al pin
+  // del welcome, que corre la sección ~4500px después del cálculo inicial).
+  const firstLight = document.getElementById('perfiles')
+  const gate = () => {
+    if (!firstLight) return
+    nav.classList.toggle('scrolled', firstLight.getBoundingClientRect().top <= 64)
+  }
+  window.addEventListener('scroll', gate, { passive: true })
+  gate()
 }
 
 // ── Imagen hero con fade-in cuando carga ──

@@ -297,8 +297,8 @@ const igFallback = [
     <!-- Desktop links -->
     <ul class="nav-links" role="list">
       <li><a href="#perfiles">Cómo ayudamos</a></li>
-      <li><a href="#productos">Productos</a></li>
       <li><a href="#entrevista">REPROCANN</a></li>
+      <li><a href="#productos">Productos</a></li>
       <li><a href="#acceso">Ser socio</a></li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
@@ -342,8 +342,8 @@ const igFallback = [
       </button>
       <ul role="list">
         <li><a href="#perfiles">Cómo ayudamos</a></li>
-        <li><a href="#productos">Productos</a></li>
         <li><a href="#entrevista">REPROCANN</a></li>
+        <li><a href="#productos">Productos</a></li>
         <li><a href="#acceso">Ser socio</a></li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
@@ -444,7 +444,7 @@ const igFallback = [
               <div class="fl-perfil-card-body">
                 <button type="button" class="fl-perfil-card-toggle" aria-expanded="false">
                   <span class="fl-perfil-card-tag">{p.tag}</span>
-                  <svg class="fl-perfil-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                  <svg class="fl-perfil-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <div class="fl-perfil-card-more">
                   <div class="fl-perfil-card-more-inner">
@@ -480,7 +480,7 @@ const igFallback = [
         </div>
         <div class="fl-rp-visual">
           <img
-            src="/img/reprocann-credencial-v5.webp"
+            src="/img/reprocann-credencial-v6.webp"
             alt="Credencial REPROCANN en mano: autoriza 9 plantas florecidas y el transporte de hasta 40 g de flores o 6 frascos de aceite"
             width="1318" height="846" loading="lazy" decoding="async"
           />
@@ -633,7 +633,7 @@ const igFallback = [
                       <div class="fl-oil-donut" style={`--ring:conic-gradient(${stops})`}>
                         <div class="fl-oil-donut-hole">
                           <strong>{a.ratio.split('≈')[1].trim()}</strong>
-                          <i>CBD:THC</i>
+                          <i>{a.ratio.split('≈')[0].trim()}</i>
                         </div>
                       </div>
                       <ul class="fl-oil-legend">
@@ -729,7 +729,7 @@ const igFallback = [
       <div class="fl-credencial fl-credencial-sm">
         <div class="fl-credencial-body">
           <span class="fl-credencial-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             Cultivo amparado por REPROCANN
           </span>
           <span class="fl-credencial-prog">ONG de cultivo solidario para personas asociadas</span>
@@ -834,7 +834,7 @@ const igFallback = [
 
       <div class="ig-slider" data-feed={igFeedUrl} data-profile={igProfile}>
         <button class="ig-nav ig-prev" type="button" aria-label="Posteos anteriores">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
 
         <ul class="ig-track" role="list" aria-live="polite">
@@ -858,7 +858,7 @@ const igFallback = [
         </ul>
 
         <button class="ig-nav ig-next" type="button" aria-label="Posteos siguientes">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
     </div>
@@ -923,9 +923,9 @@ const igFallback = [
           <h4>Navegación</h4>
           <ul>
             <li><a href="#perfiles">Cómo ayudamos</a></li>
+            <li><a href="#entrevista">REPROCANN</a></li>
             <li><a href="#productos">Productos</a></li>
             <li><a href="#acceso">Ser socio</a></li>
-            <li><a href="#entrevista">REPROCANN</a></li>
             <li><a href="#legalidad">Legalidad</a></li>
             <li><a href="#faq">Preguntas frecuentes</a></li>
           </ul>
