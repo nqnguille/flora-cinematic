@@ -10,6 +10,8 @@
 
   let ITEMS = []           // productos de la categoría (de /api/socios/precios)
   let ACTIVO = null         // reserva activa del socio (pendiente/listo)
+  let EDIT = null           // copia editable de los ítems del activo (id|formato → cantidad)
+  const TOPE = { flor: 50, preroll: 20, producto: 10 }
   const carrito = new Map() // id → cantidad (selección local de esta página)
 
   // ── Panel de carrito (drawer): se crea una sola vez, en todas las páginas ──
@@ -34,7 +36,10 @@
           <section class="td-cart-sec" id="td-cart-activo-sec" hidden>
             <h3>Reserva en curso <span id="td-cart-estado" class="td-cart-badge"></span></h3>
             <div id="td-cart-activo"></div>
-            <button type="button" class="td-cart-cancel" id="td-cart-cancel" hidden>Cancelar reserva</button>
+            <div class="td-cart-act-actions">
+              <button type="button" class="td-bar-btn td-cart-guardar" id="td-cart-guardar" hidden>Guardar cambios</button>
+              <button type="button" class="td-cart-cancel" id="td-cart-cancel" hidden>Cancelar reserva</button>
+            </div>
           </section>
           <p class="td-cart-vacio" id="td-cart-vacio">Tu carrito está vacío. Sumá productos con los botones <b>+</b> de cada ficha, o abrí la carta de flores.</p>
           <p class="td-cart-msg" id="td-cart-msg" hidden></p>
@@ -46,6 +51,7 @@
     wrap.addEventListener('click', (e) => { if (e.target.closest('[data-cart-close]')) cerrarCart() })
     document.getElementById('td-cart-send').addEventListener('click', reservar)
     document.getElementById('td-cart-cancel').addEventListener('click', cancelarActivo)
+    document.getElementById('td-cart-guardar').addEventListener('click', guardarActivo)
   }
   function abrirCart() { montarCart(); renderCart(); document.getElementById('td-cart').classList.add('is-open'); document.body.style.overflow = 'hidden' }
   function cerrarCart() { document.getElementById('td-cart')?.classList.remove('is-open'); document.body.style.overflow = '' }
@@ -79,20 +85,78 @@
     } else {
       selSec.hidden = true
     }
-    // reserva activa
+    // reserva activa — editable ítem por ítem mientras esté pendiente
     if (ACTIVO) {
       actSec.hidden = false
       const est = document.getElementById('td-cart-estado')
       est.textContent = ACTIVO.estado === 'listo' ? 'Lista para retirar' : 'En preparación'
       est.className = 'td-cart-badge is-' + ACTIVO.estado
-      document.getElementById('td-cart-activo').innerHTML = ACTIVO.items.map((i) =>
-        `<div class="td-cart-row td-cart-row-activo"><span class="td-cart-row-nombre">${esc(i.nombre)}</span><span class="td-cart-row-cant">× ${i.cantidad}${i.formato === 'flor' ? ' g' : ''}</span></div>`
-      ).join('')
-      document.getElementById('td-cart-cancel').hidden = ACTIVO.estado !== 'pendiente'
+      const editable = ACTIVO.estado === 'pendiente'
+      if (editable && !EDIT) {
+        EDIT = new Map(ACTIVO.items.map((i) => [`${i.id}|${i.formato}`, i.cantidad]))
+      }
+      document.getElementById('td-cart-activo').innerHTML = ACTIVO.items.map((i) => {
+        const k = `${i.id}|${i.formato}`
+        const qty = editable ? (EDIT.get(k) ?? 0) : i.cantidad
+        const unidad = i.formato === 'flor' ? ' g' : ''
+        if (!editable) {
+          return `<div class="td-cart-row td-cart-row-activo"><span class="td-cart-row-nombre">${esc(i.nombre)}</span><span class="td-cart-row-cant">× ${i.cantidad}${unidad}</span></div>`
+        }
+        const tope = TOPE[i.formato] ?? 10
+        return `
+          <div class="td-cart-row td-cart-row-activo${qty === 0 ? ' is-quitado' : ''}">
+            <span class="td-cart-row-nombre">${esc(i.nombre)}${qty === 0 ? ' <i>(se quita)</i>' : ''}</span>
+            <div class="td-stepper td-stepper-act" data-act="${esc(k)}">
+              <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
+              <span class="td-step-num">${qty}${unidad}</span>
+              <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= tope ? 'disabled' : ''}>+</button>
+            </div>
+          </div>`
+      }).join('')
+      // ¿hay cambios respecto de la reserva original?
+      let dirty = false
+      if (editable && EDIT) {
+        for (const i of ACTIVO.items) {
+          if ((EDIT.get(`${i.id}|${i.formato}`) ?? 0) !== i.cantidad) { dirty = true; break }
+        }
+      }
+      document.getElementById('td-cart-guardar').hidden = !dirty
+      document.getElementById('td-cart-cancel').hidden = !editable
     } else {
       actSec.hidden = true
+      EDIT = null
     }
     vacio.hidden = !!(sel.length || ACTIVO)
+  }
+
+  async function guardarActivo() {
+    if (!ACTIVO || !EDIT) return
+    const btn = document.getElementById('td-cart-guardar')
+    btn.disabled = true
+    btn.textContent = 'Guardando…'
+    const items = [...EDIT.entries()]
+      .filter(([, q]) => q > 0)
+      .map(([k, cantidad]) => {
+        const [id, formato] = k.split('|')
+        return { id, formato, cantidad }
+      })
+    try {
+      const res = await fetch('/api/socios/pedidos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: ACTIVO.id, items }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) { mensajeCart(data.error || 'No se pudo actualizar.'); return }
+      ACTIVO = data.pedido || null
+      EDIT = null
+      mensajeCart(data.cancelada ? 'Reserva cancelada (quedó vacía).' : 'Reserva actualizada ✓')
+      renderCart(); actualizarBadge()
+    } catch { mensajeCart('Error de red al actualizar.') } finally {
+      btn.disabled = false
+      btn.textContent = 'Guardar cambios'
+    }
   }
 
   async function cancelarActivo() {
@@ -109,6 +173,7 @@
       const data = await res.json()
       if (!res.ok || !data.ok) { mensajeCart(data.error || 'No se pudo cancelar.'); return }
       ACTIVO = null
+      EDIT = null
       mensajeCart('Reserva cancelada.')
       renderCart(); actualizarBadge()
     } catch { mensajeCart('Error de red al cancelar.') } finally { btn.disabled = false }
@@ -198,8 +263,22 @@
     const btn = e.target.closest('.td-step-btn')
     if (!btn) return
     const stepper = btn.closest('.td-stepper')
-    const id = stepper.getAttribute('data-id')
     const d = Number(btn.getAttribute('data-d'))
+
+    // Stepper de la reserva activa (edición)
+    const actKey = stepper.getAttribute('data-act')
+    if (actKey) {
+      if (!EDIT) return
+      const formato = actKey.split('|')[1]
+      const tope = TOPE[formato] ?? 10
+      const next = Math.max(0, Math.min(tope, (EDIT.get(actKey) ?? 0) + d))
+      EDIT.set(actKey, next)
+      renderCart()
+      return
+    }
+
+    // Stepper de selección (fichas o panel)
+    const id = stepper.getAttribute('data-id')
     const next = Math.max(0, Math.min(10, (carrito.get(id) || 0) + d))
     if (next === 0) carrito.delete(id)
     else carrito.set(id, next)
@@ -221,6 +300,7 @@
       if (!res.ok) return
       const data = await res.json()
       ACTIVO = data.activo || null
+      EDIT = null
       actualizarBadge()
       const chip = document.getElementById('td-activo')
       if (!chip) return

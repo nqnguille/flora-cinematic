@@ -329,3 +329,10 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 @media (max-width: 560px) {
   #td-cart .td-cart-panel { width: 100vw; }
 }
+
+/* Edición de la reserva activa */
+.td-cart-act-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.td-cart-guardar { flex: 1; padding: 12px; }
+.td-cart-row-activo.is-quitado .td-cart-row-nombre { opacity: 0.45; text-decoration: line-through; }
+.td-cart-row-activo.is-quitado .td-cart-row-nombre i { font-style: normal; text-decoration: none; color: #ff9d9d; font-size: 0.75rem; }
+.td-stepper-act .td-step-num { min-width: 40px; font-size: 0.95rem; }
