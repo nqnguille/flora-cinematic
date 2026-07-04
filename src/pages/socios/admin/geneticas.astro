@@ -109,6 +109,46 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     window.addEventListener('error', (e) => showFatal((e.message || 'error') + (e.filename ? ` @ ${e.filename.split('/').pop()}:${e.lineno}` : '')))
     window.addEventListener('unhandledrejection', (e) => showFatal('promesa rechazada: ' + (e.reason?.message || e.reason)))
 
+    // ── Sonda de diagnóstico TEMPORAL (pantalla negra) ──
+    // A los 4s y 15s de abrir, radiografía la pantalla y la manda a /api/socios/debug:
+    // qué hay arriba de todo en el centro, qué capas fijas cubren el viewport,
+    // si el título es visible y en qué estado quedó la sesión. Sacar al cazar el bug.
+    function diagSnapshot(tag) {
+      try {
+        const w = innerWidth, h = innerHeight
+        const pick = (el) => {
+          const cs = getComputedStyle(el)
+          return { t: el.tagName, id: el.id || '', cls: String(el.className).slice(0, 90), pos: cs.position, z: cs.zIndex, bg: cs.backgroundColor, op: cs.opacity, mix: cs.mixBlendMode, disp: cs.display }
+        }
+        const centerStack = (document.elementsFromPoint(w / 2, h / 2) || []).slice(0, 7).map(pick)
+        const fixedCovers = [...document.querySelectorAll('body *')].filter((el) => {
+          const cs = getComputedStyle(el)
+          if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden') return false
+          const r = el.getBoundingClientRect()
+          return r.width >= w * 0.9 && r.height >= h * 0.9
+        }).slice(0, 8).map(pick)
+        const vis = (id) => { const el = document.getElementById(id); if (!el) return null; const r = el.getBoundingClientRect(); return { hidden: el.hidden, h: Math.round(r.height) } }
+        const title = document.querySelector('.ad-title')
+        const tcs = title ? getComputedStyle(title) : null
+        const ba = getComputedStyle(document.body, '::after')
+        const diag = {
+          tag, ts: new Date().toISOString(), ua: navigator.userAgent.slice(0, 120), vw: w, vh: h,
+          login: vis('ad-login'), content: vis('ad-content'), forbidden: vis('ad-forbidden'),
+          title: title ? { h: Math.round(title.getBoundingClientRect().height), top: Math.round(title.getBoundingClientRect().top), color: tcs.color, disp: tcs.display, vis: tcs.visibility, op: tcs.opacity } : null,
+          centerStack, fixedCovers,
+          bodyAfter: { disp: ba.display, mix: ba.mixBlendMode, z: ba.zIndex, pos: ba.position },
+          catalogLen: typeof CATALOG !== 'undefined' ? CATALOG.length : -1,
+          fatal: document.getElementById('ad-fatal')?.textContent || null,
+          htmlCls: document.documentElement.className, bodyCls: document.body.className,
+        }
+        navigator.sendBeacon('/api/socios/debug', new Blob([JSON.stringify(diag)], { type: 'text/plain' }))
+      } catch (e) {
+        try { navigator.sendBeacon('/api/socios/debug', new Blob([JSON.stringify({ tag, error: String(e) })], { type: 'text/plain' })) } catch {}
+      }
+    }
+    setTimeout(() => diagSnapshot('t4'), 4000)
+    setTimeout(() => diagSnapshot('t15'), 15000)
+
     let CATALOG = []
 
     function esc(s) {
