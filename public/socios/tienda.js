@@ -9,7 +9,118 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
   let ITEMS = []           // productos de la categoría (de /api/socios/precios)
-  const carrito = new Map() // id → cantidad
+  let ACTIVO = null         // reserva activa del socio (pendiente/listo)
+  const carrito = new Map() // id → cantidad (selección local de esta página)
+
+  // ── Panel de carrito (drawer): se crea una sola vez, en todas las páginas ──
+  function montarCart() {
+    if (document.getElementById('td-cart')) return
+    const wrap = document.createElement('div')
+    wrap.id = 'td-cart'
+    wrap.innerHTML = `
+      <div class="td-cart-overlay" data-cart-close></div>
+      <aside class="td-cart-panel" role="dialog" aria-modal="true" aria-label="Carrito de reservas">
+        <div class="td-cart-head">
+          <h2>Tu carrito <em>de reservas</em></h2>
+          <button type="button" class="td-cart-close" data-cart-close aria-label="Cerrar">✕</button>
+        </div>
+        <div class="td-cart-body">
+          <section class="td-cart-sec" id="td-cart-sel-sec" hidden>
+            <h3>Para reservar ahora</h3>
+            <div id="td-cart-sel"></div>
+            <div class="td-cart-total"><span>Total estimado</span><strong id="td-cart-total"></strong></div>
+            <button type="button" class="td-bar-btn td-cart-send" id="td-cart-send">Confirmar reserva</button>
+          </section>
+          <section class="td-cart-sec" id="td-cart-activo-sec" hidden>
+            <h3>Reserva en curso <span id="td-cart-estado" class="td-cart-badge"></span></h3>
+            <div id="td-cart-activo"></div>
+            <button type="button" class="td-cart-cancel" id="td-cart-cancel" hidden>Cancelar reserva</button>
+          </section>
+          <p class="td-cart-vacio" id="td-cart-vacio">Tu carrito está vacío. Sumá productos con los botones <b>+</b> de cada ficha, o abrí la carta de flores.</p>
+          <p class="td-cart-msg" id="td-cart-msg" hidden></p>
+          <a class="td-cart-carta" href="/socios/carta/">🌿 Abrir la carta de flores →</a>
+          <p class="td-cart-hint">Es una <strong>reserva</strong>: la retirás y abonás en el club. Por el sitio no se cobra nada.</p>
+        </div>
+      </aside>`
+    document.body.appendChild(wrap)
+    wrap.addEventListener('click', (e) => { if (e.target.closest('[data-cart-close]')) cerrarCart() })
+    document.getElementById('td-cart-send').addEventListener('click', reservar)
+    document.getElementById('td-cart-cancel').addEventListener('click', cancelarActivo)
+  }
+  function abrirCart() { montarCart(); renderCart(); document.getElementById('td-cart').classList.add('is-open'); document.body.style.overflow = 'hidden' }
+  function cerrarCart() { document.getElementById('td-cart')?.classList.remove('is-open'); document.body.style.overflow = '' }
+
+  function renderCart() {
+    montarCart()
+    const selSec = document.getElementById('td-cart-sel-sec')
+    const actSec = document.getElementById('td-cart-activo-sec')
+    const vacio = document.getElementById('td-cart-vacio')
+    // selección local
+    const sel = [...carrito.entries()].filter(([, q]) => q > 0)
+    let total = 0
+    if (sel.length) {
+      selSec.hidden = false
+      document.getElementById('td-cart-sel').innerHTML = sel.map(([id, qty]) => {
+        const it = ITEMS.find((x) => x.id === id)
+        if (!it) return ''
+        total += qty * it.precio
+        return `
+          <div class="td-cart-row">
+            <span class="td-cart-row-nombre">${esc(it.label)}${it.detalle ? ` <i>${esc(it.detalle)}</i>` : ''}</span>
+            <div class="td-stepper" data-id="${esc(id)}">
+              <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno">−</button>
+              <span class="td-step-num">${qty}</span>
+              <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= 10 ? 'disabled' : ''}>+</button>
+            </div>
+            <span class="td-cart-row-precio">${fmt(qty * it.precio)}</span>
+          </div>`
+      }).join('')
+      document.getElementById('td-cart-total').textContent = fmt(total)
+    } else {
+      selSec.hidden = true
+    }
+    // reserva activa
+    if (ACTIVO) {
+      actSec.hidden = false
+      const est = document.getElementById('td-cart-estado')
+      est.textContent = ACTIVO.estado === 'listo' ? 'Lista para retirar' : 'En preparación'
+      est.className = 'td-cart-badge is-' + ACTIVO.estado
+      document.getElementById('td-cart-activo').innerHTML = ACTIVO.items.map((i) =>
+        `<div class="td-cart-row td-cart-row-activo"><span class="td-cart-row-nombre">${esc(i.nombre)}</span><span class="td-cart-row-cant">× ${i.cantidad}${i.formato === 'flor' ? ' g' : ''}</span></div>`
+      ).join('')
+      document.getElementById('td-cart-cancel').hidden = ACTIVO.estado !== 'pendiente'
+    } else {
+      actSec.hidden = true
+    }
+    vacio.hidden = !!(sel.length || ACTIVO)
+  }
+
+  async function cancelarActivo() {
+    if (!ACTIVO) return
+    const btn = document.getElementById('td-cart-cancel')
+    btn.disabled = true
+    try {
+      const res = await fetch('/api/socios/pedidos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: ACTIVO.id }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) { mensajeCart(data.error || 'No se pudo cancelar.'); return }
+      ACTIVO = null
+      mensajeCart('Reserva cancelada.')
+      renderCart(); actualizarBadge()
+    } catch { mensajeCart('Error de red al cancelar.') } finally { btn.disabled = false }
+  }
+
+  function mensajeCart(texto) {
+    const m = document.getElementById('td-cart-msg')
+    if (!m) return
+    m.textContent = texto
+    m.hidden = false
+    setTimeout(() => { m.hidden = true }, 5000)
+  }
 
   function render() {
     // Modo estático: el markup viene server-rendered (ej. fichas técnicas de
@@ -72,19 +183,16 @@
     barra()
   }
 
-  function barra() {
-    const bar = document.getElementById('td-bar')
-    let unidades = 0, total = 0
-    for (const [id, qty] of carrito) {
-      const it = ITEMS.find((x) => x.id === id)
-      if (it && qty > 0) { unidades += qty; total += qty * it.precio }
-    }
-    bar.classList.toggle('is-on', unidades > 0)
-    if (unidades > 0) {
-      document.getElementById('td-bar-info').innerHTML =
-        `${unidades} ítem${unidades > 1 ? 's' : ''} · <strong>${fmt(total)}</strong>`
-    }
+  function actualizarBadge() {
+    let n = 0
+    for (const [, qty] of carrito) n += qty
+    if (ACTIVO) n += ACTIVO.items.reduce((a, i) => a + i.cantidad, 0)
+    document.querySelectorAll('[data-carrito-n]').forEach((el) => {
+      el.textContent = n
+      el.hidden = n === 0
+    })
   }
+  const barra = actualizarBadge
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.td-step-btn')
@@ -96,6 +204,15 @@
     if (next === 0) carrito.delete(id)
     else carrito.set(id, next)
     render()
+    if (document.getElementById('td-cart')?.classList.contains('is-open')) renderCart()
+  })
+
+  // El botón Carrito de la topbar abre el panel (href queda de fallback sin JS)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.nav-cta--carta, .td-pub-carrito')
+    if (!btn) return
+    e.preventDefault()
+    abrirCart()
   })
 
   async function cargarActivo() {
@@ -103,11 +220,8 @@
       const res = await fetch('/api/socios/pedidos', { credentials: 'include' })
       if (!res.ok) return
       const data = await res.json()
-      const nAct = data.activo ? data.activo.items.reduce((a, i) => a + i.cantidad, 0) : 0
-      document.querySelectorAll('[data-carrito-n]').forEach((el) => {
-        el.textContent = nAct
-        el.hidden = nAct === 0
-      })
+      ACTIVO = data.activo || null
+      actualizarBadge()
       const chip = document.getElementById('td-activo')
       if (!chip) return
       if (data.activo && data.activo.estado === 'pendiente') {
@@ -122,7 +236,7 @@
   }
 
   async function reservar() {
-    const btn = document.getElementById('td-bar-btn')
+    const btn = document.getElementById('td-cart-send')
     btn.disabled = true
     btn.textContent = 'Enviando…'
     const items = [...carrito.entries()]
@@ -137,28 +251,21 @@
       })
       const data = await res.json()
       if (!res.ok || !data.ok) {
-        alert(data.error || 'No se pudo enviar la reserva.')
+        mensajeCart(data.error || 'No se pudo enviar la reserva.')
         return
       }
       carrito.clear()
+      ACTIVO = data.pedido
       render()
-      const done = document.getElementById('td-done')
-      const lineas = data.pedido.items
-        .map((i) => `· ${i.cantidad} × ${i.nombre}${i.formato === 'flor' ? ' (g de flores)' : i.formato === 'preroll' ? ' (preroll)' : ''}`)
-        .join('<br>')
-      done.querySelector('.td-done-items').innerHTML = lineas
-      done.querySelector('h3').textContent = data.fusionado ? 'Reserva actualizada ✓' : 'Reserva enviada ✓'
-      done.classList.add('is-on')
-      done.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      cargarActivo()
+      renderCart()
+      mensajeCart(data.fusionado ? 'Reserva actualizada ✓ Te esperamos en el club.' : 'Reserva enviada ✓ Te esperamos en el club.')
     } catch {
-      alert('Error de red al enviar la reserva.')
+      mensajeCart('Error de red al enviar la reserva.')
     } finally {
       btn.disabled = false
-      btn.textContent = 'Reservar'
+      btn.textContent = 'Confirmar reserva'
     }
   }
-  document.getElementById('td-bar-btn').addEventListener('click', reservar)
 
   async function saludar() {
     try {

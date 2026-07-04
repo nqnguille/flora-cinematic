@@ -54,18 +54,6 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
     <div id="td-activo" class="td-activo td-activo-pub"></div>
 
     <slot />
-
-    <div id="td-done" class="td-done td-done-pub">
-      <h3>Reserva enviada ✓</h3>
-      <p class="td-done-items"></p>
-      <p>Es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás. Por el sitio no se cobra nada.</p>
-    </div>
-
-    <!-- ── Barra flotante de reserva (solo socios con sesión) ── -->
-    <div id="td-bar" class="td-bar" role="region" aria-label="Resumen de reserva">
-      <span id="td-bar-info" class="td-bar-info"></span>
-      <button id="td-bar-btn" class="td-bar-btn" type="button">Reservar</button>
-    </div>
   </main>
 
   <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
