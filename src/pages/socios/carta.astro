@@ -90,8 +90,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Formatos: FLORES = "bud con hojitas" (elegido por Guille, ronda 3 del selector):
     // nug festoneado de cálices + tricomas + sugar leaves en la base + tallito.
     const ICON_FLOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5A2.4 2.4 0 0 1 16 7A2.4 2.4 0 0 1 17.5 11A2.4 2.4 0 0 1 16.3 15.2A2.5 2.5 0 0 1 13.2 17.8A2.2 2.2 0 0 1 9.6 17.4A2.3 2.3 0 0 1 6.8 14.6A2.4 2.4 0 0 1 6.4 10.4A2.5 2.5 0 0 1 8.6 6.6A2.2 2.2 0 0 1 12 5Z"/><path d="M8.4 17.6Q6.4 19 4.2 18.3Q5.2 16.2 7.4 15.9"/><path d="M15.6 17.6Q17.6 19 19.8 18.3Q18.8 16.2 16.6 15.9"/><path d="M12 18.6V21.2"/><circle cx="10.4" cy="9" r="0.95" fill="currentColor" stroke="none"/><circle cx="13.8" cy="8.6" r="0.95" fill="currentColor" stroke="none"/><circle cx="11.6" cy="12.2" r="0.95" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13" r="0.95" fill="currentColor" stroke="none"/></svg>'
-    // stroke 1.25: compensa el scale(1.3) óptico para que el trazo final ≈1.6 armonice con la hoja
-    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 20.9 9.5 8.7Q9.4 7.7 10.2 7.3L13.8 7.3Q14.6 7.7 14.5 8.7L13.2 20.9Q13.1 21.6 12 21.6Q10.9 21.6 10.8 20.9Z"/><path d="M10.6 17.6Q12 16.9 13.4 17.6"/><path d="M10.2 7.3Q12 5.3 13.8 7.3" fill="currentColor"/></svg>'
+    // Mismo diseño de cono, redibujado a caja plena y MÁS LARGO (pedido de Guille):
+    // ocupa todo el alto del viewBox, sin necesitar compensación de escala en CSS.
+    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.4 21.4 9.1 7Q9 5.9 9.9 5.5L14.1 5.5Q15 5.9 14.9 7L13.6 21.4Q13.5 22.3 12 22.3Q10.5 22.3 10.4 21.4Z"/><path d="M10.6 18.5Q12 17.8 13.4 18.5"/><path d="M9.9 5.5Q12 3.2 14.1 5.5" fill="currentColor"/></svg>'
     const FORMATO = {
       flor: { label: 'Flores', svg: ICON_FLOR },
       preroll: { label: 'Preroll', svg: ICON_PREROLL },
@@ -1213,12 +1214,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-seal svg { width: 35px; height: 35px; }
   .gn-seal-flor { left: 0.8rem; background: var(--gn-green); color: #08160f; }
   .gn-seal-preroll { right: 0.8rem; background: var(--gn-violet); color: #170c2b; }
-  /* El cono del preroll dibuja más chico que la hoja dentro de su caja:
-     se escala parejo en TODOS los usos (sello, selector del top y stepper)
-     para que quede del mismo tamaño óptico que flores. */
-  .gn-seal-preroll svg,
-  .gn-seg-btn.is-preroll .gn-seg-ic svg,
-  .gn-qty.is-preroll .gn-qty-ic svg { transform: scale(1.3); }
 
   /* ── Carrusel horizontal (marquesina) ── */
   .gn-track {
