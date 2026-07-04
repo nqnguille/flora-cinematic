@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import { aceites } from '../lib/productos'
 import '../styles/global.css'
 
 const WA = 'https://wa.me/5492996375723'
@@ -89,79 +90,7 @@ const perfiles = [
   },
 ]
 
-// Nuestros productos — 3 formatos (Flores / Aceites / Crema)
-// Perfiles de cannabinoides según la última cromatografía (HPLC-UV, IACA
-// Laboratorios, extracción 02/06/2026). Valores en mg/mL.
-const aceites = [
-  {
-    codigo: 'Q1',
-    sub: 'Quimiotipo I · THC predominante',
-    desc: 'Perfil de THC alto con presencia de CBG. Pensado para uso nocturno y dolor intenso, siempre con el equipo orientando la dosis.',
-    perfil: [
-      { k: 'CBD', v: '21,8' },
-      { k: 'THC', v: '51,0' },
-      { k: 'CBG', v: '6,9' },
-    ],
-    usos: ['Uso nocturno', 'Dolor intenso', 'Descanso'],
-    para: ['Dolor agudo o intenso', 'Insomnio severo', 'Náuseas y falta de apetito'],
-    href: wa('Hola Flora, me interesa el aceite Q1 🌿'),
-    pdf: '/analisis/Q1.pdf',
-    img: '/img/prod-aceite-q1.jpg',
-    color: '#C9396B',
-    ratio: 'THC:CBD ≈ 2,3:1',
-    ratioStd: '1:3',
-  },
-  {
-    codigo: 'Q2',
-    sub: 'Quimiotipo II · CBD:THC balanceado',
-    desc: 'Relación equilibrada entre CBD y THC. Acompaña el día y la noche. El elegido por quienes ya tienen su tratamiento calibrado.',
-    perfil: [
-      { k: 'CBD', v: '23,9' },
-      { k: 'THC', v: '17,0' },
-      { k: 'CBG', v: '1,3' },
-    ],
-    usos: ['Día y noche', 'Dolor moderado', 'Uso continuo'],
-    para: ['Dolor crónico y artritis', 'Migrañas', 'Dolores menstruales'],
-    href: wa('Hola Flora, me interesa el aceite Q2 🌿'),
-    pdf: '/analisis/Q2.pdf',
-    img: '/img/prod-aceite-q2.jpg',
-    color: '#6E54C8',
-    ratio: 'CBD:THC ≈ 1,4:1',
-    ratioStd: '1:1',
-  },
-  {
-    codigo: 'Q3',
-    sub: 'Quimiotipo III · CBD predominante',
-    desc: 'CBD alto y THC casi nulo, de efecto suave. Ideal para el día, la ansiedad y para empezar con un perfil liviano.',
-    perfil: [
-      { k: 'CBD', v: '32,6' },
-      { k: 'THC', v: '1,2' },
-      { k: 'CBG', v: '0,3' },
-    ],
-    usos: ['Uso diurno', 'Ansiedad', 'Inicio suave'],
-    para: ['Ansiedad y estrés', 'Dificultad para dormir', 'Dolor neuropático'],
-    href: wa('Hola Flora, me interesa el aceite Q3 🌿'),
-    pdf: '/analisis/Q3.pdf',
-    img: '/img/prod-aceite-q3.jpg',
-    color: '#1F9389',
-    ratio: 'CBD:THC ≈ 27:1',
-    ratioStd: '20:1',
-  },
-]
-const cremas = [
-  {
-    presentacion: '50 cc',
-    sub: 'Presentación personal',
-    desc: 'Para uso localizado y tratamientos puntuales. Fácil de llevar, ideal para incorporar la fórmula.',
-    href: wa('Hola Flora, me interesa la crema 50cc 🌿'),
-  },
-  {
-    presentacion: '100 cc',
-    sub: 'Presentación completa',
-    desc: 'Para uso continuo y zonas de mayor extensión. La opción de quienes ya sumaron la crema a su rutina.',
-    href: wa('Hola Flora, me interesa la crema 100cc 🌿'),
-  },
-]
+// Aceites: ficha técnica compartida en src/lib/productos.ts
 
 // Iconos de línea para los paneles gateway de Perfiles (dolor / sueño / ansiedad)
 const perfilIconsSvg = [
@@ -542,7 +471,7 @@ const igFallback = [
       </header>
 
       <div class="fl-gateway fl-prod-gateway" role="list">
-        <a class="fl-panel fl-panel-1" href="#analisis" role="listitem" aria-label="Aceites">
+        <a class="fl-panel fl-panel-1" href="/aceites/" role="listitem" aria-label="Aceites">
           <img class="fl-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" width="1448" height="1010" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
           <span class="fl-panel-body">
@@ -552,23 +481,23 @@ const igFallback = [
           </span>
         </a>
 
-        <a class="fl-panel fl-panel-2" href={wa('Hola Flora, quiero consultar por las cremas — ¿qué opciones tienen? 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Cremas">
+        <a class="fl-panel fl-panel-2" href="/cremas/" role="listitem" aria-label="Cremas">
           <img class="fl-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" width="1400" height="1750" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Cremas</span>
             <span class="fl-panel-desc">Cremas tópicas formuladas para distintos tipos de alivio localizado. Te contamos las opciones y elegís la tuya.</span>
-            <span class="fl-panel-cta"><svg class="fl-panel-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2z"/></svg> Consultar por las cremas <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-cta">Ver las cremas <span aria-hidden="true">→</span></span>
           </span>
         </a>
 
-        <a class="fl-panel fl-panel-3" href={wa('Hola Flora, quiero consultar por cartuchos y baterías 510 🌿')} target="_blank" rel="noopener noreferrer" role="listitem" aria-label="Extracciones">
+        <a class="fl-panel fl-panel-3" href="/extracciones/" role="listitem" aria-label="Extracciones">
           <img class="fl-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" width="1003" height="1254" />
           <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
           <span class="fl-panel-body">
             <span class="fl-panel-title">Extracciones</span>
             <span class="fl-panel-desc">Cartuchos y baterías 510 para uso discreto y dosificado. Te asesoramos sobre la combinación indicada.</span>
-            <span class="fl-panel-cta"><svg class="fl-panel-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2z"/></svg> Consultar por extracciones <span aria-hidden="true">→</span></span>
+            <span class="fl-panel-cta">Ver extracciones <span aria-hidden="true">→</span></span>
           </span>
         </a>
 

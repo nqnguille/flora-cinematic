@@ -1,0 +1,48 @@
+---
+import CatalogoShell from '../components/CatalogoShell.astro'
+import { extracciones } from '../lib/productos'
+
+const iconoCartucho = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5h4v3h-4z"/><path d="M9.5 6.5h5a1 1 0 0 1 1 1V19a1.5 1.5 0 0 1-1.5 1.5h-4A1.5 1.5 0 0 1 8.5 19V7.5a1 1 0 0 1 1-1Z"/><path d="M8.5 11h7"/></svg>`
+const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="5" width="8" height="16" rx="2"/><path d="M10.5 3h3"/><path d="m12.8 9-2 4h2.4l-2 4"/></svg>`
+---
+
+<CatalogoShell
+  title="Extracciones — cartuchos y baterías 510 | Flora ONG"
+  description="Cartuchos 510 de THC y CBD y baterías recargables. Uso discreto y dosificado, con extracto de nuestro cultivo."
+  categoria="extracciones"
+>
+  <section class="fl-section" aria-label="Extracciones">
+    <div class="fl-wrap">
+      <div class="fl-spec">
+        <div class="fl-spec-head">
+          <span class="fl-eyebrow">Nuestras extracciones</span>
+          <h1 class="fl-spec-title">Discreto, dosificado, <em>al toque.</em></h1>
+          <p class="fl-spec-sub">
+            Cartuchos rosca 510 con extracto de nuestro cultivo, en perfiles de THC y CBD,
+            y la batería universal para usarlos. La forma más práctica de llevar tu
+            tratamiento encima.
+          </p>
+        </div>
+
+        <div class="td-ext-lista">
+          {extracciones.map((x) => (
+            <article class="td-ext-item">
+              <span class="td-ext-icon" aria-hidden="true" set:html={x.id === 'bateria-510' ? iconoBateria : iconoCartucho} />
+              <div class="td-ext-body">
+                <h2 class="td-ext-nombre">{x.nombre} <i>{x.detalle}</i></h2>
+                <p class="td-ext-desc">{x.desc}</p>
+              </div>
+              <div class="td-ext-right">
+                <div class="td-buy td-onlight td-buy-col" data-buy={x.id} hidden>
+                  <span class="td-precio" data-id={x.id}></span>
+                  <div class="td-slot" data-id={x.id}></div>
+                </div>
+                <a class="td-ext-consulta" href={x.href} target="_blank" rel="noopener noreferrer">Consultar →</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+</CatalogoShell>

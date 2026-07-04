@@ -1,0 +1,68 @@
+---
+// Shell de las páginas públicas de catálogo (aceites / cremas / extracciones).
+// Todo el mundo ve la ficha completa; los PRECIOS y la RESERVA se desbloquean
+// solo con sesión de socio (tienda.js en modo public).
+import Layout from '../layouts/Layout.astro'
+import '../styles/global.css'
+
+interface Props {
+  title: string
+  description: string
+  categoria: string
+}
+const { title, description, categoria } = Astro.props
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero asociarme 🌿')
+---
+
+<Layout title={title} description={description}>
+  <link rel="stylesheet" href="/socios/tienda.css" />
+  <main class="td-public">
+    <!-- ── Nav simple del catálogo ── -->
+    <nav class="td-pub-nav" aria-label="Navegación del catálogo">
+      <a class="td-pub-logo" href="/" aria-label="Volver al inicio de Flora">
+        <img src="/img/flora-logo.png" alt="Flora" width="1472" height="298" />
+      </a>
+      <div class="td-pub-nav-right">
+        <a href={waAsociarse} class="td-pub-cta" target="_blank" rel="noopener noreferrer">Asociarme</a>
+        <a href="/socios/" class="td-pub-socios">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          Acceso socios
+        </a>
+      </div>
+    </nav>
+
+    <!-- ── Franja de socio: visible solo sin sesión ── -->
+    <div id="td-gate" class="td-gate" hidden>
+      <p>Los <strong>precios y reservas</strong> son exclusivos para personas asociadas.</p>
+      <div class="td-gate-actions">
+        <div id="g_id_button"></div>
+        <span class="td-gate-o">o</span>
+        <a href={waAsociarse} class="td-gate-asociarme" target="_blank" rel="noopener noreferrer">Asociate →</a>
+      </div>
+      <p id="td-login-msg" class="td-msg" hidden></p>
+    </div>
+
+    <div id="td-activo" class="td-activo td-activo-pub"></div>
+
+    <slot />
+
+    <div id="td-done" class="td-done td-done-pub">
+      <h3>Reserva enviada ✓</h3>
+      <p class="td-done-items"></p>
+      <p>Es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás. Por el sitio no se cobra nada.</p>
+    </div>
+
+    <!-- ── Barra flotante de reserva (solo socios con sesión) ── -->
+    <div id="td-bar" class="td-bar" role="region" aria-label="Resumen de reserva">
+      <span id="td-bar-info" class="td-bar-info"></span>
+      <button id="td-bar-btn" class="td-bar-btn" type="button">Reservar</button>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script define:vars={{ googleClientId, categoria }}>
+    window.TIENDA = { categoria, static: true, public: true, googleClientId }
+  </script>
+  <script src="/socios/tienda.js" is:inline></script>
+</Layout>

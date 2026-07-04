@@ -1,0 +1,100 @@
+---
+import CatalogoShell from '../components/CatalogoShell.astro'
+import { aceites } from '../lib/productos'
+---
+
+<CatalogoShell
+  title="Aceites de cannabis medicinal con cromatografía | Flora ONG"
+  description="Tres perfiles de aceite —Q1, Q2 y Q3— medidos por cromatografía HPLC. Elegí por objetivo y mirá la proporción exacta de CBD y THC."
+  categoria="aceites"
+>
+  <section class="fl-section fl-analisis" aria-label="Análisis de laboratorio">
+    <div class="fl-wrap">
+      <div class="fl-spec">
+        <div class="fl-spec-head">
+          <span class="fl-eyebrow">Nuestros aceites</span>
+          <h1 class="fl-spec-title">Tres perfiles. <em>Uno es para vos.</em></h1>
+          <p class="fl-spec-sub">
+            Cada aceite nace del mismo cultivo y se mide planta por planta. Elegí por
+            objetivo —descanso, equilibrio o calma diurna— y mirá la proporción exacta de
+            CBD y THC. Cada perfil sale de la <strong>cromatografía del último lote</strong>
+            (junio 2026), con su informe de laboratorio descargable.
+          </p>
+        </div>
+
+        <div class="fl-spec-grid">
+          {aceites.map((a) => (
+            <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color}`}>
+              <div class="fl-oil-photo">
+                <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="600" height="750" />
+                <span class="fl-oil-badge">{a.codigo}</span>
+              </div>
+
+              <div class="fl-oil-body">
+                <h2 class="fl-oil-title">{a.sub}</h2>
+                <p class="fl-oil-desc">{a.desc}</p>
+
+                {(() => {
+                  const cols = { CBD: 'var(--fl-green)', THC: 'var(--fl-violet)' }
+                  const vals = a.perfil
+                    .filter((p) => p.k === 'CBD' || p.k === 'THC')
+                    .map((p) => ({ k: p.k, v: p.v, n: Number(p.v.replace(',', '.')) }))
+                  const total = vals.reduce((s, x) => s + x.n, 0)
+                  let acc = 0
+                  const stops = vals.map((x) => {
+                    const from = (acc / total) * 100
+                    acc += x.n
+                    const to = (acc / total) * 100
+                    return `${cols[x.k]} ${from.toFixed(1)}% ${to.toFixed(1)}%`
+                  }).join(', ')
+                  return (
+                    <div class="fl-oil-chart" aria-label={`Proporción CBD:THC de ${a.codigo}, ${a.ratio}`}>
+                      <div class="fl-oil-donut" style={`--ring:conic-gradient(${stops})`}>
+                        <div class="fl-oil-donut-hole">
+                          <strong>{a.ratio.split('≈')[1].trim()}</strong>
+                          <i>{a.ratio.split('≈')[0].trim()}</i>
+                        </div>
+                      </div>
+                      <ul class="fl-oil-legend">
+                        {vals.map((x) => (
+                          <li>
+                            <span class="fl-oil-dot" style={`background:${cols[x.k]}`}></span>
+                            <span class="fl-oil-legend-k">{x.k}</span>
+                            <strong>{x.v}<i>mg/mL</i></strong>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })()}
+
+                <div class="fl-oil-para">
+                  <span class="fl-oil-para-label">Puede acompañar en</span>
+                  <ul class="fl-oil-para-list">
+                    {a.para.map((c) => <li>{c}</li>)}
+                  </ul>
+                </div>
+
+                <div class="td-buy td-onlight" data-buy={a.id} hidden>
+                  <span class="td-precio" data-id={a.id}></span>
+                  <div class="td-slot" data-id={a.id}></div>
+                </div>
+
+                <div class="fl-oil-actions">
+                  <a class="fl-oil-btn" href={a.href} target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2zm4.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
+                    Consultar por este aceite
+                  </a>
+                  <a class="fl-oil-download" href={a.pdf} download>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 21V5a2 2 0 0 1 2-2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M12 11v5"/><path d="m9.5 14 2.5 2.5 2.5-2.5"/></svg>
+                    Descargar análisis de cromatografía
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+</CatalogoShell>

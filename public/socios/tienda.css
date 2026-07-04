@@ -157,3 +157,72 @@ html, body { background-color: #130d1c; }
 /* Sección de la landing embebida en la tienda (fondo blanco, full-bleed suave) */
 .td-landing-section { border-radius: 26px; margin-top: 10px; }
 .td-content-wide { max-width: 1300px; }
+
+/* ═══ Páginas públicas de catálogo (fondo claro de la landing) ═══ */
+.td-public { background: var(--fl-paper, #fff); min-height: 100svh; padding-bottom: 120px; }
+.td-pub-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px clamp(24px, 6vw, 80px); border-bottom: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+  background: #fff;
+}
+.td-pub-logo img { height: 26px; width: auto; display: block; }
+.td-pub-nav-right { display: flex; align-items: center; gap: 12px; }
+.td-pub-cta {
+  background: var(--fl-violet, #381F56); color: #fff; text-decoration: none;
+  font-family: var(--font-ui); font-weight: 700; font-size: 13px;
+  padding: 10px 20px; border-radius: 999px;
+}
+.td-pub-socios {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1.5px solid rgba(56,31,86,0.35); color: var(--fl-violet, #381F56);
+  text-decoration: none; font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+  padding: 9px 16px; border-radius: 999px;
+}
+.td-pub-socios svg { width: 13px; height: 13px; }
+.td-pub-socios:hover { border-color: var(--fl-violet, #381F56); }
+
+/* Franja "¿sos socio?" */
+.td-gate {
+  display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
+  background: #F3EEFA; border-bottom: 1px solid rgba(56,31,86,0.14);
+  padding: 14px clamp(24px, 6vw, 80px);
+  font-family: var(--font-ui); font-size: 14px; color: var(--fl-ink, #1C1626);
+}
+.td-gate[hidden] { display: none; }
+.td-gate p { margin: 0; }
+.td-gate-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.td-gate-o { color: rgba(28,22,38,0.5); font-size: 13px; }
+.td-gate-asociarme { color: var(--fl-violet, #381F56); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+.td-activo-pub { margin: 18px clamp(24px, 6vw, 80px) 0; background: rgba(10,80,60,0.07); border-color: rgba(10,80,60,0.3); color: var(--fl-ink, #1C1626); }
+.td-activo-pub strong { color: var(--fl-green, #0A503C); }
+.td-done-pub { margin: 0 clamp(24px, 6vw, 80px) 26px; background: #fff; border-color: rgba(10,80,60,0.35); }
+.td-done-pub h3 { color: var(--fl-green, #0A503C); }
+.td-done-pub p { color: rgba(28,22,38,0.6); }
+.td-done-pub .td-done-items { color: var(--fl-ink, #1C1626); }
+
+/* Cremas: una sola card centrada */
+.td-grid-1 { grid-template-columns: minmax(0, 520px) !important; justify-content: center; }
+
+/* Extracciones públicas: lista clara */
+.td-ext-lista { display: flex; flex-direction: column; gap: 14px; margin-top: clamp(28px, 3.4vw, 48px); max-width: 860px; }
+.td-ext-item {
+  display: flex; align-items: center; gap: 18px;
+  background: #fff; border: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+  border-radius: var(--fl-r-card, 20px); padding: 18px 22px;
+}
+.td-ext-icon { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%; background: rgba(56,31,86,0.07); color: var(--fl-violet, #381F56); display: flex; align-items: center; justify-content: center; }
+.td-ext-icon svg { width: 26px; height: 26px; }
+.td-ext-body { flex: 1; min-width: 0; }
+.td-ext-nombre { font-family: var(--font-ui); font-size: 16px; font-weight: 700; color: var(--fl-ink, #1C1626); margin: 0 0 4px; }
+.td-ext-nombre i { font-style: normal; font-weight: 600; color: var(--fl-green, #0A503C); margin-left: 6px; }
+.td-ext-desc { font-family: var(--font-ui); font-size: 13px; line-height: 1.5; color: rgba(28,22,38,0.62); margin: 0; }
+.td-ext-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.td-ext-right .td-buy { border-top: none; margin: 0; padding: 0; }
+.td-buy-col { flex-direction: column; align-items: flex-end; gap: 6px; }
+.td-ext-consulta { font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: var(--fl-violet, #381F56); text-decoration: none; }
+.td-ext-consulta:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  .td-ext-item { flex-wrap: wrap; }
+  .td-ext-right { align-items: flex-start; flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+}

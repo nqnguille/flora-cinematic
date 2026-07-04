@@ -17,6 +17,8 @@
     if (CFG.static) {
       for (const it of ITEMS) {
         const qty = carrito.get(it.id) || 0
+        const buyRow = document.querySelector(`[data-buy="${it.id}"]`)
+        if (buyRow) buyRow.hidden = false
         const precioEl = document.querySelector(`.td-precio[data-id="${it.id}"]`)
         if (precioEl) precioEl.textContent = fmt(it.precio)
         const slot = document.querySelector(`.td-slot[data-id="${it.id}"]`)
@@ -154,8 +156,12 @@
 
   function showContent(precios) {
     ITEMS = Array.isArray(precios[CFG.categoria]) ? precios[CFG.categoria] : []
-    document.getElementById('td-login').hidden = true
-    document.getElementById('td-content').hidden = false
+    const login = document.getElementById('td-login')
+    if (login) login.hidden = true
+    const content = document.getElementById('td-content')
+    if (content) content.hidden = false
+    const gate = document.getElementById('td-gate')
+    if (gate) gate.hidden = true
     render()
     cargarActivo()
   }
@@ -168,7 +174,13 @@
 
   async function loadPrecios() {
     const res = await fetch('/api/socios/precios', { credentials: 'include' })
-    if (!res.ok) return false
+    if (!res.ok) {
+      if (CFG.public) {
+        const gate = document.getElementById('td-gate')
+        if (gate) gate.hidden = false
+      }
+      return false
+    }
     const data = await res.json()
     showContent(data.precios || {})
     return true
@@ -193,7 +205,8 @@
     }
   }
 
-  document.getElementById('td-logout').addEventListener('click', async () => {
+  const logoutBtn = document.getElementById('td-logout')
+  if (logoutBtn) logoutBtn.addEventListener('click', async () => {
     await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
     location.href = '/socios/'
   })
