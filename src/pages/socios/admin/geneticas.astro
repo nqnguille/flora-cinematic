@@ -27,7 +27,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div id="ad-content" class="ad-content" hidden>
         <div class="ad-tabs" role="tablist">
           <button class="ad-tab is-active" data-tab="geneticas" type="button">Genéticas</button>
-          <button class="ad-tab" data-tab="pedidos" type="button">Pedidos<span id="ad-ped-dot" class="ad-ped-dot" hidden></span></button>
+          <button class="ad-tab" data-tab="pedidos" type="button">Reservas<span id="ad-ped-dot" class="ad-ped-dot" hidden></span></button>
           <button class="ad-tab" data-tab="socios" type="button">Socios</button>
         </div>
 
@@ -59,12 +59,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           </div>
         </div>
 
-        <!-- ── Pestaña Pedidos ── -->
+        <!-- ── Pestaña Reservas ── -->
         <div id="tab-pedidos" class="ad-tab-panel" hidden>
           <div class="ad-toolbar">
-            <div class="ad-availfilter" role="group" aria-label="Filtrar pedidos">
-              <button class="ad-pedfilter ad-avail is-active" data-pedfilter="activos" type="button">Activos</button>
-              <button class="ad-pedfilter ad-avail" data-pedfilter="" type="button">Todos</button>
+            <div class="ad-availfilter" role="group" aria-label="Filtrar reservas">
+              <button class="ad-pedfilter ad-avail is-active" data-pedfilter="activos" type="button">Activas</button>
+              <button class="ad-pedfilter ad-avail" data-pedfilter="" type="button">Todas</button>
             </div>
             <button id="ad-ped-refresh" type="button" class="ad-btn ad-btn-ghost ad-btn-slim">↻ Actualizar</button>
             <span id="ad-ped-count" class="ad-count"></span>
@@ -355,9 +355,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     let pedFilter = 'activos'
     const PED_BADGE = {
       pendiente: ['Pendiente', ''],
-      listo: ['Listo para retirar', 'is-on'],
-      entregado: ['Entregado', 'is-done'],
-      cancelado: ['Cancelado', 'is-off'],
+      listo: ['Lista para retirar', 'is-on'],
+      entregado: ['Entregada', 'is-done'],
+      cancelado: ['Cancelada', 'is-off'],
     }
     function pedidoItems(p) {
       return p.items
@@ -366,11 +366,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     function pedidoAcciones(p) {
       if (p.estado === 'pendiente') {
-        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar listo</button>
+        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>
                 <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
       }
       if (p.estado === 'listo') {
-        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregado</button>
+        return `<button type="button" class="ad-btn ad-btn-primary ad-btn-slim ad-ped-action" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>
                 <button type="button" class="ad-btn ad-btn-ghost ad-btn-slim ad-ped-action is-danger" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar</button>`
       }
       return ''
@@ -398,13 +398,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         ? PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo')
         : PEDIDOS
       const activos = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
-      document.getElementById('ad-ped-count').textContent = `${activos} activo(s) · ${PEDIDOS.length} en total`
+      document.getElementById('ad-ped-count').textContent = `${activos} activa(s) · ${PEDIDOS.length} en total`
       const dot = document.getElementById('ad-ped-dot')
       dot.hidden = activos === 0
       dot.textContent = activos || ''
       list.innerHTML = filtered.length
         ? filtered.map(pedidoRow).join('')
-        : `<p class="ad-save-status">${pedFilter === 'activos' ? 'No hay pedidos activos.' : 'Todavía no entró ningún pedido.'}</p>`
+        : `<p class="ad-save-status">${pedFilter === 'activos' ? 'No hay reservas activas.' : 'Todavía no entró ninguna reserva.'}</p>`
     }
     async function loadPedidos() {
       const list = document.getElementById('ad-pedidos-list')
@@ -430,7 +430,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const btn = e.target.closest && e.target.closest('.ad-ped-action')
       if (!btn) return
       const estado = btn.dataset.estado
-      if (estado === 'cancelado' && !confirm('¿Cancelar este pedido?')) return
+      if (estado === 'cancelado' && !confirm('¿Cancelar esta reserva?')) return
       btn.disabled = true
       try {
         const res = await fetch('/api/socios/admin/pedidos', {

@@ -58,16 +58,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <p class="gn-disclaimer">Acceso exclusivo para pacientes vinculados a <strong>Asociación Civil Cann de Cannabis Medicinal</strong>, comprendido en el marco de la Ley 27.350 y el programa REPROCANN.</p>
       </footer>
 
-      <!-- ── Barra de pedido (flotante) ── -->
+      <!-- ── Barra de reserva (flotante) ── -->
       <div id="gn-cartbar" class="gn-cartbar" hidden>
         <span id="gn-cartbar-txt" class="gn-cartbar-txt"></span>
-        <button id="gn-cartbar-btn" class="gn-btn-primary" type="button">Revisar pedido</button>
+        <button id="gn-cartbar-btn" class="gn-btn-primary" type="button">Revisar reserva</button>
       </div>
 
-      <!-- ── Modal de pedido ── -->
+      <!-- ── Modal de reserva ── -->
       <div id="gn-modal" class="gn-modal" hidden>
         <div class="gn-modal-card" role="dialog" aria-modal="true" aria-labelledby="gn-modal-title">
-          <h2 id="gn-modal-title" class="gn-modal-title">Tu <em>pedido</em></h2>
+          <h2 id="gn-modal-title" class="gn-modal-title">Tu <em>reserva</em></h2>
           <div id="gn-modal-body"></div>
           <p id="gn-modal-msg" class="gn-modal-msg" hidden></p>
           <div id="gn-modal-actions" class="gn-modal-actions"></div>
@@ -200,7 +200,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return `<div class="gn-circle-row">${groups.join('<span class="gn-circle-sep"></span>')}</div>`
     }
 
-    // Steppers de pedido: una pastilla por formato (flor en gramos, preroll en unidades).
+    // Steppers de reserva: una pastilla por formato (flor en gramos, preroll en
+    // unidades), en fila propia debajo de una etiqueta — así entran aun con los
+    // dos formatos en la tarjeta más angosta.
     function orderStrip(g) {
       const pills = formatosDe(g)
         .filter((f) => FORMATO[f])
@@ -216,7 +218,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             </div>`
         })
         .join('')
-      return pills ? `<div class="gn-order"><span class="gn-order-label">Pedir</span>${pills}</div>` : ''
+      return pills ? `<div class="gn-order"><span class="gn-order-label">Reservar</span><div class="gn-order-pills">${pills}</div></div>` : ''
     }
 
     function card(g, idx) {
@@ -516,8 +518,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     let activePedido = null // pedido pendiente/listo del socio, si hay
     const QTY_MAX = { flor: 50, preroll: 20 }
     const ESTADO_TXT = {
-      pendiente: 'Tu pedido está en preparación',
-      listo: '¡Tu pedido está listo para retirar!',
+      pendiente: 'Tu reserva está en preparación',
+      listo: '¡Tu reserva está lista para retirar!',
     }
 
     function syncQty(key) {
@@ -541,15 +543,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (activePedido) {
         bar.hidden = false
         bar.classList.toggle('is-listo', activePedido.estado === 'listo')
-        txt.textContent = ESTADO_TXT[activePedido.estado] || 'Tenés un pedido en curso'
-        btn.textContent = 'Ver pedido'
+        txt.textContent = ESTADO_TXT[activePedido.estado] || 'Tenés una reserva en curso'
+        btn.textContent = 'Ver reserva'
       } else if (cart.size) {
         let g = 0, u = 0
         for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : (u += c)
         bar.hidden = false
         bar.classList.remove('is-listo')
-        txt.textContent = 'Tu pedido: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
-        btn.textContent = 'Revisar pedido'
+        txt.textContent = 'Tu reserva: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
+        btn.textContent = 'Revisar reserva'
       } else {
         bar.hidden = true
       }
@@ -594,12 +596,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (activePedido) {
         const p = activePedido
         body.innerHTML = `
-          <span class="gn-pedido-badge is-${escapeHtml(p.estado)}">${p.estado === 'listo' ? 'Listo para retirar' : 'En preparación'}</span>
+          <span class="gn-pedido-badge is-${escapeHtml(p.estado)}">${p.estado === 'listo' ? 'Lista para retirar' : 'En preparación'}</span>
           <ul class="gn-modal-list">${p.items.map((i) => `<li>${escapeHtml(fmtItem(i))}</li>`).join('')}</ul>
           ${p.nota ? `<p class="gn-modal-nota">Nota: ${escapeHtml(p.nota)}</p>` : ''}
-          <p class="gn-modal-hint">${p.estado === 'listo' ? 'Pasá por el club a retirarlo.' : 'Te avisamos apenas esté listo para retirar.'}</p>`
+          <p class="gn-modal-hint">${p.estado === 'listo' ? 'Acercate al club a retirarla. Recordá abonar tu cuota ahí — por el sitio no se cobra nada.' : 'Te avisamos apenas esté lista. El retiro y el pago de tu cuota son en el club.'}</p>`
         actions.innerHTML = `
-          ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar pedido</button>' : ''}
+          ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar reserva</button>' : ''}
           <button id="gn-modal-close" class="gn-btn-primary" type="button">Cerrar</button>`
       } else {
         const items = cartItems()
@@ -608,10 +610,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <ul class="gn-modal-list">${items
             .map((i) => `<li>${escapeHtml(fmtItem(i))}<button class="gn-modal-del" data-key="${escapeHtml(`${i.id}|${i.formato}`)}" type="button" aria-label="Quitar">×</button></li>`)
             .join('')}</ul>
-          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2"></textarea>`
+          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2"></textarea>
+          <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
         actions.innerHTML = `
           <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
-          <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar pedido</button>`
+          <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar reserva</button>`
       }
       document.getElementById('gn-modal').hidden = false
       if (successText) showModalMsg(successText, false)
@@ -638,26 +641,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           keys.forEach(syncQty)
           activePedido = data.pedido
           setPedidoMode()
-          openModal('Pedido enviado ✓')
+          openModal('Reserva enviada ✓')
         } else if (res.status === 409 && data.activo) {
           activePedido = data.activo
           setPedidoMode()
           openModal()
-          showModalMsg('Ya tenías un pedido en curso.', true)
+          showModalMsg('Ya tenías una reserva en curso.', true)
         } else {
           btn.disabled = false
-          btn.textContent = 'Confirmar pedido'
-          showModalMsg(data.error || 'No se pudo enviar el pedido.', true)
+          btn.textContent = 'Confirmar reserva'
+          showModalMsg(data.error || 'No se pudo enviar la reserva.', true)
         }
       } catch {
         btn.disabled = false
-        btn.textContent = 'Confirmar pedido'
-        showModalMsg('Error de red al enviar el pedido.', true)
+        btn.textContent = 'Confirmar reserva'
+        showModalMsg('Error de red al enviar la reserva.', true)
       }
     }
 
     async function cancelPedido() {
-      if (!activePedido || !confirm('¿Cancelar tu pedido?')) return
+      if (!activePedido || !confirm('¿Cancelar tu reserva?')) return
       try {
         const res = await fetch('/api/socios/pedidos', {
           method: 'DELETE',
@@ -1139,7 +1142,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        hero de alto constante el nombre queda SIEMPRE a la misma Y en todas las
        tarjetas, sin importar cuánto mida el body. */
     flex: 0 0 auto;
-    height: clamp(320px, 54vh, 600px);
+    height: clamp(280px, 46vh, 540px);
     overflow: hidden;
     background: var(--gn-card-2);
   }
@@ -1208,11 +1211,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        con el color de la tarjeta, sin costura con el degradé del hero. */
     flex: 1 1 auto;
     min-height: 0;
-    overflow: hidden;
+    /* Si el alto no alcanza, el body scrollea (sin barra visible) en vez de
+       recortar los steppers de reserva del final. */
+    overflow-y: auto;
+    scrollbar-width: none;
     /* Reparte encabezado · THC/CBD · iconos en todo el alto: sin hueco abajo. */
     justify-content: space-between;
-    padding: clamp(1rem, 1.6vw, 1.4rem);
+    padding: clamp(0.85rem, 1.4vw, 1.2rem);
   }
+  .gn-item-body::-webkit-scrollbar { display: none; }
   .gn-head { flex: 0 0 auto; }
 
   /* Renglón 1: predominancia / tipo · Renglón 2: banco */
@@ -1248,7 +1255,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     width: 100%;
     height: 1px;
     background: var(--gn-line);
-    margin: 0.85rem 0 1rem;
+    margin: 0.6rem 0 0.7rem;
   }
 
   /* ── Medidores THC / CBD (lado a lado) ── */
@@ -1257,7 +1264,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem 1.3rem;
-    margin-bottom: 1.1rem;
+    margin-bottom: 0.8rem;
   }
   .gn-meter-label {
     display: block;
@@ -1415,24 +1422,30 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .gn-empty { color: var(--gn-muted); }
 
-  /* ── Pedido: steppers en la tarjeta ── */
+  /* ── Reserva: steppers en la tarjeta ── */
   .gn-order {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.85rem;
-    padding-top: 0.75rem;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+    padding-top: 0.55rem;
     border-top: 1px solid var(--gn-line);
   }
-  /* Con un pedido en curso se pide una sola vez: se ocultan los steppers */
+  /* Con una reserva en curso se reserva una sola vez: se ocultan los steppers */
   .gn-content.has-pedido .gn-order { display: none; }
   .gn-order-label {
-    font-size: 0.66rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--gn-violet);
-    flex-shrink: 0;
+    color: var(--gn-muted);
+    text-align: center;
+  }
+  .gn-order-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
   }
   .gn-qty {
     display: inline-flex;
@@ -1614,7 +1627,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-pedido-badge.is-listo { background: rgba(60, 180, 146, 0.16); color: var(--gn-green); }
   .gn-modal-nota { font-size: 0.85rem; color: var(--gn-muted); margin: 0 0 0.6rem; }
-  .gn-modal-hint { font-size: 0.85rem; color: var(--gn-muted); margin: 0; }
+  .gn-modal-hint { font-size: 0.85rem; line-height: 1.5; color: var(--gn-muted); margin: 0.8rem 0 0; }
+  .gn-modal-hint strong { color: var(--gn-cream); font-weight: 700; }
   .gn-modal-msg { font-size: 0.88rem; font-weight: 600; color: var(--gn-green); margin: 0.9rem 0 0; }
   .gn-modal-msg.is-error { color: #f2818a; }
   .gn-modal-actions {

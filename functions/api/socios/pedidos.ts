@@ -72,7 +72,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const yaActivo = (await pedidosDe(env, socio.email)).find((p) => ESTADOS_ACTIVOS.includes(p.estado));
   if (yaActivo) {
-    return Response.json({ ok: false, error: 'ya tenés un pedido en curso', activo: yaActivo }, { status: 409 });
+    return Response.json({ ok: false, error: 'ya tenés una reserva en curso', activo: yaActivo }, { status: 409 });
   }
 
   const rawCat = await env.GENETICAS.get('catalogo');
@@ -123,12 +123,12 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   }
   const id = String(body?.id || '');
   const raw = id ? await env.PEDIDOS.get(`pedido:${id}`) : null;
-  if (!raw) return Response.json({ ok: false, error: 'pedido inexistente' }, { status: 404 });
+  if (!raw) return Response.json({ ok: false, error: 'reserva inexistente' }, { status: 404 });
 
   const pedido = JSON.parse(raw);
-  if (pedido.email !== socio.email) return Response.json({ ok: false, error: 'pedido ajeno' }, { status: 403 });
+  if (pedido.email !== socio.email) return Response.json({ ok: false, error: 'reserva ajena' }, { status: 403 });
   if (pedido.estado !== 'pendiente') {
-    return Response.json({ ok: false, error: 'el pedido ya no se puede cancelar' }, { status: 409 });
+    return Response.json({ ok: false, error: 'la reserva ya no se puede cancelar' }, { status: 409 });
   }
   pedido.estado = 'cancelado';
   pedido.actualizado = new Date().toISOString();
@@ -145,10 +145,11 @@ async function notificar(env: Env, pedido: any) {
       .map((i: any) => `· ${i.cantidad}${i.formato === 'flor' ? ' g' : ' u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`)
       .join('\n');
     const text =
-      `🌿 PEDIDO NUEVO — Carta Flora\n` +
+      `🌿 RESERVA NUEVA — Carta Flora\n` +
       `👤 ${pedido.name || pedido.email} (${pedido.email})\n` +
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +
+      `\n💵 Abona la cuota al retirar en el club` +
       `\nPanel: https://floraong.ar/socios/admin/geneticas`;
     await fetch(NOTIFY_URL, {
       method: 'POST',
