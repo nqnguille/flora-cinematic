@@ -42,42 +42,39 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button id="pt-logout" class="pt-logout" type="button">Salir</button>
       </header>
 
-      <div class="pt-grid">
-        <!-- Flores / membresías — protagonista -->
-        <section class="pt-card pt-card-flores" aria-label="Flores — membresías">
-          <div class="pt-card-head">
-            <h2>Flores</h2>
-            <span class="pt-card-tag">Cultivo solidario</span>
+      <div class="pt-gateway">
+        <article class="pt-panel" aria-label="Aceites">
+          <img class="pt-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" />
+          <div class="pt-panel-body">
+            <h2 class="pt-panel-title">Aceites</h2>
+            <ul id="pt-aceites" class="pt-list"></ul>
           </div>
-          <ul id="pt-membresias" class="pt-list"></ul>
-          <a class="pt-cta" href="/socios/carta/">
-            Ver la carta de flores del mes <span aria-hidden="true">→</span>
-          </a>
-        </section>
+        </article>
 
-        <section class="pt-card" aria-label="Aceites">
-          <div class="pt-card-head">
-            <h2>Aceites</h2>
-            <span class="pt-card-tag">Con cromatografía</span>
+        <article class="pt-panel" aria-label="Cremas">
+          <img class="pt-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" />
+          <div class="pt-panel-body">
+            <h2 class="pt-panel-title">Cremas</h2>
+            <ul id="pt-cremas" class="pt-list"></ul>
           </div>
-          <ul id="pt-aceites" class="pt-list"></ul>
-        </section>
+        </article>
 
-        <section class="pt-card" aria-label="Cremas">
-          <div class="pt-card-head">
-            <h2>Cremas</h2>
-            <span class="pt-card-tag">Uso tópico</span>
+        <article class="pt-panel" aria-label="Extracciones">
+          <img class="pt-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" />
+          <div class="pt-panel-body">
+            <h2 class="pt-panel-title">Extracciones</h2>
+            <ul id="pt-extracciones" class="pt-list"></ul>
           </div>
-          <ul id="pt-cremas" class="pt-list"></ul>
-        </section>
+        </article>
 
-        <section class="pt-card" aria-label="Extracciones">
-          <div class="pt-card-head">
-            <h2>Extracciones</h2>
-            <span class="pt-card-tag">Cartuchos 510</span>
+        <a class="pt-panel pt-panel-flores" href="/socios/carta/" aria-label="Flores — abrir la carta">
+          <img class="pt-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" />
+          <div class="pt-panel-body">
+            <h2 class="pt-panel-title">Flores</h2>
+            <ul id="pt-membresias" class="pt-list"></ul>
+            <span class="pt-panel-cta">Abrir la carta del mes <span aria-hidden="true">→</span></span>
           </div>
-          <ul id="pt-extracciones" class="pt-list"></ul>
-        </section>
+        </a>
       </div>
 
       <p class="pt-foot">Precios exclusivos del portal de socios · se actualizan sin previo aviso.</p>
@@ -236,51 +233,58 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pt-logout:hover { color: var(--pt-cream); border-color: var(--pt-violet); }
 
-  .pt-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  /* ── Gateway: espejo del de la landing, en modo nocturno ── */
+  .pt-gateway { display: grid; grid-template-columns: 1fr; gap: 16px; }
   @media (min-width: 860px) {
-    .pt-grid { grid-template-columns: 1fr 1fr; }
-    .pt-card-flores { grid-column: 1 / -1; }
+    .pt-gateway { grid-template-columns: 1fr 1fr; }
   }
 
-  .pt-card {
-    background: var(--pt-card); border: 1px solid var(--pt-line);
-    border-radius: 20px; padding: clamp(20px, 2.6vw, 30px);
-    display: flex; flex-direction: column;
+  .pt-panel {
+    position: relative; overflow: hidden; border-radius: 20px;
+    border: 1px solid var(--pt-line);
+    min-height: clamp(320px, 40vw, 420px);
+    display: flex; align-items: flex-end;
+    color: var(--pt-cream); text-decoration: none;
+    transition: transform 0.25s ease, border-color 0.25s ease;
   }
-  .pt-card-flores { border-color: rgba(60, 180, 146, 0.35); }
-  .pt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-  .pt-card-head h2 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 1.9rem); color: var(--pt-cream); }
-  .pt-card-tag {
-    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--pt-green); white-space: nowrap;
+  .pt-panel-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.1, 1);
+  }
+  .pt-panel::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(19,13,28,0.2) 0%, rgba(19,13,28,0.5) 40%, rgba(19,13,28,0.94) 100%);
+  }
+  .pt-panel-body { position: relative; z-index: 1; width: 100%; padding: clamp(18px, 2.4vw, 26px); }
+  .pt-panel-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 2.8vw, 2rem); margin-bottom: 4px; }
+
+  .pt-panel-flores { border-color: rgba(60, 180, 146, 0.45); }
+  .pt-panel-flores:hover, .pt-panel-flores:focus-visible { transform: translateY(-4px); border-color: var(--pt-green); }
+  .pt-panel-flores:hover .pt-panel-img { transform: scale(1.05); }
+  .pt-panel-flores:focus-visible { outline: 2px solid var(--pt-green); outline-offset: 3px; }
+  .pt-panel-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px; background: var(--pt-violet); color: #170c2b;
+    font-weight: 700; font-size: 0.95rem; padding: 13px 24px; border-radius: 999px;
   }
 
   .pt-list { list-style: none; margin: 0; padding: 0; }
   .pt-row {
     display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    padding: 13px 2px; border-top: 1px solid var(--pt-line);
+    padding: 10px 2px; border-top: 1px solid rgba(244, 241, 247, 0.16);
   }
   .pt-row:first-child { border-top: none; }
-  .pt-row-label { font-size: 0.95rem; font-weight: 600; color: var(--pt-cream); }
-  .pt-row-label i { font-style: normal; font-weight: 400; color: var(--pt-muted); margin-left: 8px; font-size: 0.85rem; }
-  .pt-row-precio { font-size: 1.05rem; font-weight: 700; color: var(--pt-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pt-row-label { font-size: 0.92rem; font-weight: 600; color: var(--pt-cream); }
+  .pt-row-label i { font-style: normal; font-weight: 400; color: var(--pt-muted); margin-left: 8px; font-size: 0.82rem; }
+  .pt-row-precio { font-size: 1.02rem; font-weight: 700; color: var(--pt-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* Membresías en fila (desktop) dentro de la card de flores */
-  @media (min-width: 860px) {
-    .pt-card-flores .pt-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .pt-card-flores .pt-row { flex-direction: column; align-items: flex-start; gap: 4px; border-top: none; border-left: 1px solid var(--pt-line); padding: 4px 0 4px 16px; }
-    .pt-card-flores .pt-row:first-child { border-left: none; padding-left: 2px; }
-    .pt-card-flores .pt-row-label i { display: block; margin: 2px 0 0; }
-    .pt-card-flores .pt-row-precio { font-size: 1.35rem; }
+  /* Membresías compactas dentro de Flores */
+  @media (min-width: 640px) {
+    .pt-panel-flores .pt-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .pt-panel-flores .pt-row { flex-direction: column; align-items: flex-start; gap: 2px; border-top: none; border-left: 1px solid rgba(244,241,247,0.18); padding: 2px 0 2px 12px; }
+    .pt-panel-flores .pt-row:first-child { border-left: none; padding-left: 2px; }
+    .pt-panel-flores .pt-row-label i { display: block; margin: 1px 0 0; }
   }
-
-  .pt-cta {
-    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
-    margin-top: 18px; background: var(--pt-violet); color: #170c2b;
-    font-weight: 700; font-size: 0.95rem; padding: 13px 24px; border-radius: 999px;
-    text-decoration: none; transition: transform 0.2s ease, filter 0.2s ease;
-  }
-  .pt-cta:hover { transform: translateY(-2px); filter: brightness(1.08); }
 
   .pt-foot { margin-top: clamp(20px, 3vw, 32px); font-size: 0.8rem; color: var(--pt-muted); text-align: center; }
 </style>
