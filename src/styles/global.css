@@ -1842,21 +1842,25 @@ body.is-socio .drawer-cta--socios { display: none !important; }
 .nav-hola:hover b { text-decoration: underline; text-underline-offset: 3px; }
 .nav-hola-foto { border-radius: 50%; display: block; }
 .nav-hola-foto[hidden] { display: none; }
-.nav-logout {
-  display: none; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 50%;
-  background: none; border: 1.5px solid rgba(244, 241, 230, 0.4);
-  color: var(--bone); cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease;
-}
-body.is-socio .nav-logout:not([hidden]) { display: inline-flex; }
-.nav-logout svg { width: 15px; height: 15px; }
-.nav-logout:hover { border-color: #ff9d9d; color: #ff9d9d; }
-.site-nav.scrolled .nav-logout { border-color: rgba(56, 31, 86, 0.3); color: var(--fl-violet); }
-.site-nav.scrolled .nav-logout:hover { border-color: #c0392b; color: #c0392b; }
-/* Drawer: entradas solo-socio */
+.site-nav.scrolled .site-nav.scrolled /* Drawer: entradas solo-socio */
 .drawer-socio-only { display: none; }
 body.is-socio .drawer-socio-only { display: block; }
 .drawer-logout {
   background: none; border: none; padding: 0; cursor: pointer;
   font-family: var(--font-ui); font-size: inherit; color: #b3453f;
+}
+
+/* ═══ Alineación de la topbar: gap uniforme, sin márgenes ad-hoc ═══ */
+.site-nav { gap: 14px; }
+/* Desktop: el último li agrupa CTAs (hola + carrito / asociarme) en fila */
+.nav-links li:last-child { display: flex; align-items: center; gap: 12px; }
+/* alturas uniformes SIN tocar display (la visibilidad la manejan las reglas de estado) */
+.nav-links .nav-cta, .nav-socios, .nav-hola { height: 36px; }
+.nav-cta--publico, .nav-socios { display: inline-flex; align-items: center; }
+/* Mobile: el primer elemento visible del grupo derecho empuja con auto;
+   el resto se separa por el gap del nav */
+@media (max-width: 940px) {
+  .nav-cta--mobile, .nav-socios--mobile, .nav-hola--mobile, .nav-cta--carta.nav-cta--mobile { height: 38px; margin: 0; }
+  .nav-cta--publico.nav-cta--mobile { margin-left: auto; }
+  body.is-socio .nav-hola.nav-hola--mobile:not([hidden]) { margin-left: auto; margin-right: 0; }
 }

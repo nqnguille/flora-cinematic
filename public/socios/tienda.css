@@ -336,3 +336,17 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-cart-row-activo.is-quitado .td-cart-row-nombre { opacity: 0.45; text-decoration: line-through; }
 .td-cart-row-activo.is-quitado .td-cart-row-nombre i { font-style: normal; text-decoration: none; color: #ff9d9d; font-size: 0.75rem; }
 .td-stepper-act .td-step-num { min-width: 40px; font-size: 0.95rem; }
+
+/* Pie del carrito: cuenta + logout, discretos */
+.td-cart-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--td-line, rgba(183,157,230,0.16));
+}
+.td-cart-cuenta { color: var(--td-muted, rgba(244,241,247,0.55)); font-size: 0.85rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.td-cart-cuenta:hover { color: #fff; }
+.td-cart-logout {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+  color: var(--td-muted, rgba(244,241,247,0.55));
+}
+.td-cart-logout:hover { color: #ff9d9d; }

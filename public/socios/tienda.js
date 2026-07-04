@@ -45,6 +45,10 @@
           <p class="td-cart-msg" id="td-cart-msg" hidden></p>
           <a class="td-cart-carta" href="/socios/carta/">🌿 Abrir la carta de flores →</a>
           <p class="td-cart-hint">Es una <strong>reserva</strong>: la retirás y abonás en el club. Por el sitio no se cobra nada.</p>
+          <div class="td-cart-foot">
+            <a class="td-cart-cuenta" href="/socios/cuenta/">Mi cuenta</a>
+            <button type="button" class="td-cart-logout nav-logout-action">Cerrar sesión</button>
+          </div>
         </div>
       </aside>`
     document.body.appendChild(wrap)
