@@ -36,8 +36,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div class="gn-topbar">
         <img class="gn-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
         <div class="gn-filters">
+          <div id="gn-seg" class="gn-seg" role="group" aria-label="Formato"></div>
           <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
-          <div id="gn-dd-formato" class="gn-dd" data-dim="formato"></div>
           <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
           <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
         </div>
@@ -208,12 +208,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         .filter((f) => FORMATO[f])
         .map((f) => {
           const key = `${g.id}|${f}`
-          const unit = f === 'flor' ? 'g' : 'u'
           return `
-            <div class="gn-qty" data-order="${escapeHtml(key)}" data-unit="${unit}">
+            <div class="gn-qty is-${f}" data-order="${escapeHtml(key)}">
               <span class="gn-qty-ic" title="${FORMATO[f].label}">${FORMATO[f].svg}</span>
               <button class="gn-qty-btn" type="button" data-q="-1" aria-label="Quitar ${FORMATO[f].label}">−</button>
-              <span class="gn-qty-val">0 ${unit}</span>
+              <span class="gn-qty-val">0</span>
               <button class="gn-qty-btn" type="button" data-q="1" aria-label="Agregar ${FORMATO[f].label}">+</button>
             </div>`
         })
@@ -421,10 +420,38 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     /* ── Desplegables tildables (multi-selección con checkboxes) ── */
-    const DIM_LABEL = { tipo: 'Tipo', formato: 'Formato', efecto: 'Efectos', sabor: 'Sabores' }
+    const DIM_LABEL = { tipo: 'Tipo', efecto: 'Efectos', sabor: 'Sabores' }
     const STATIC_OPTS = {
       tipo: [['sativa', 'Sativa'], ['indica', 'Indica'], ['hibrida', 'Híbrida'], ['cbd', 'Full CBD']],
-      formato: [['flor', 'Flores'], ['preroll', 'Prerolls']],
+    }
+
+    // Selector de formato: LA decisión principal (flores vs prerolls) va en un
+    // segmentado grande siempre visible, no escondida en un desplegable.
+    function renderSegFormato() {
+      const el = document.getElementById('gn-seg')
+      const opts = [
+        ['', 'Todas', ''],
+        ['flor', 'Flores', ICON_FLOR],
+        ['preroll', 'Prerolls', ICON_PREROLL],
+      ]
+      el.innerHTML = opts
+        .map(([val, lab, icon]) =>
+          `<button class="gn-seg-btn${val ? ` is-${val}` : ''}" type="button" data-formato="${val}">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
+        )
+        .join('')
+      const paint = () => {
+        const sel = filters.formato.size === 1 ? [...filters.formato][0] : ''
+        el.querySelectorAll('.gn-seg-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.formato === sel))
+      }
+      el.addEventListener('click', (e) => {
+        const b = e.target.closest('.gn-seg-btn')
+        if (!b) return
+        filters.formato.clear()
+        if (b.dataset.formato) filters.formato.add(b.dataset.formato)
+        paint()
+        applyFilters()
+      })
+      paint()
     }
 
     function closeAllPanels(except) {
@@ -500,8 +527,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     function buildFilters() {
+      renderSegFormato()
       renderDropdown('tipo', STATIC_OPTS.tipo)
-      renderDropdown('formato', STATIC_OPTS.formato)
       const present = { efecto: new Set(), sabor: new Set() }
       for (const g of allGeneticas) {
         for (const e of g.efectos || []) present.efecto.add(e)
@@ -525,7 +552,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function syncQty(key) {
       const n = cart.get(key) || 0
       document.querySelectorAll(`[data-order="${CSS.escape(key)}"]`).forEach((w) => {
-        w.querySelector('.gn-qty-val').textContent = `${n} ${w.getAttribute('data-unit')}`
+        w.querySelector('.gn-qty-val').textContent = n
         w.classList.toggle('has-qty', n > 0)
       })
       updateCartBar()
@@ -990,6 +1017,42 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-search::placeholder { color: rgba(244, 241, 247, 0.35); }
   .gn-search:focus { outline: none; border-color: var(--gn-violet); }
 
+  /* ── Segmentado de formato: la decisión principal, grande y siempre visible ── */
+  .gn-seg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: var(--gn-card);
+    border: 1px solid rgba(244, 241, 247, 0.2);
+    border-radius: 999px;
+    flex: 0 0 auto;
+  }
+  .gn-seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    background: none;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gn-muted);
+    padding: 0.55rem 1.2rem;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .gn-seg-btn:hover { color: var(--gn-cream); }
+  .gn-seg-ic { width: 19px; height: 19px; display: inline-flex; flex-shrink: 0; }
+  .gn-seg-ic svg { width: 100%; height: 100%; }
+  /* Activos color-coded como los sellos de las fotos: flores verde, prerolls violeta */
+  .gn-seg-btn.is-active { background: rgba(244, 241, 247, 0.16); color: var(--gn-cream); }
+  .gn-seg-btn.is-flor.is-active { background: var(--gn-green); color: #08160f; }
+  .gn-seg-btn.is-preroll.is-active { background: var(--gn-violet); color: #170c2b; }
+  .gn-seg-btn:focus-visible { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
+
   /* Desplegables tildables (multi-selección) */
   .gn-dd { position: relative; flex: 0 0 auto; }
   .gn-dd[hidden] { display: none; }
@@ -1451,26 +1514,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.3rem;
+    gap: 0.35rem;
     flex: 1 1 0;
     min-width: 0;
     border: 1px solid var(--gn-line);
     border-radius: 999px;
-    padding: 0.22rem 0.3rem;
+    padding: 0.24rem 0.32rem;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .gn-qty.has-qty { border-color: var(--gn-green); background: rgba(60, 180, 146, 0.1); }
-  .gn-qty-ic { width: 17px; height: 17px; display: inline-flex; color: var(--gn-muted); flex-shrink: 0; margin-left: 0.15rem; }
+  /* Con cantidad: cada formato se enciende con su color de sello */
+  .gn-qty.is-flor.has-qty { border-color: var(--gn-green); background: rgba(60, 180, 146, 0.12); }
+  .gn-qty.is-preroll.has-qty { border-color: var(--gn-violet); background: rgba(183, 157, 230, 0.12); }
+  .gn-qty-ic { width: 19px; height: 19px; display: inline-flex; color: var(--gn-muted); flex-shrink: 0; margin-left: 0.2rem; }
   .gn-qty-ic svg { width: 100%; height: 100%; }
-  .gn-qty.has-qty .gn-qty-ic { color: var(--gn-green); }
+  .gn-qty.is-flor.has-qty .gn-qty-ic { color: var(--gn-green); }
+  .gn-qty.is-preroll.has-qty .gn-qty-ic { color: var(--gn-violet); }
   .gn-qty-btn {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: none;
-    background: rgba(244, 241, 247, 0.08);
+    background: rgba(244, 241, 247, 0.1);
     color: var(--gn-cream);
-    font-size: 1.05rem;
+    font-size: 1.2rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -1479,14 +1545,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-qty-btn:hover { background: var(--gn-violet); color: #130d1c; }
   .gn-qty-val {
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 800;
     color: var(--gn-muted);
     white-space: nowrap;
     text-align: center;
-    min-width: 3ch;
+    min-width: 2ch;
   }
-  .gn-qty.has-qty .gn-qty-val { color: var(--gn-green); }
+  .gn-qty.is-flor.has-qty .gn-qty-val { color: var(--gn-green); }
+  .gn-qty.is-preroll.has-qty .gn-qty-val { color: var(--gn-violet); }
 
   /* ── Barra de pedido flotante ── */
   .gn-cartbar {
