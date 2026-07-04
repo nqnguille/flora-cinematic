@@ -153,3 +153,7 @@ html, body { background-color: #130d1c; }
 .td-onlight .td-step-btn { color: var(--fl-ink, #1C1626); border-color: rgba(56, 31, 86, 0.25); }
 .td-onlight .td-step-btn:hover { border-color: var(--fl-violet, #381F56); background: rgba(56, 31, 86, 0.06); }
 .td-onlight .td-step-num { color: var(--fl-ink, #1C1626); }
+
+/* Sección de la landing embebida en la tienda (fondo blanco, full-bleed suave) */
+.td-landing-section { border-radius: 26px; margin-top: 10px; }
+.td-content-wide { max-width: 1300px; }
