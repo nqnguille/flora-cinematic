@@ -211,9 +211,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           return `
             <div class="gn-qty is-${f}" data-order="${escapeHtml(key)}">
               <span class="gn-qty-ic" title="${FORMATO[f].label}">${FORMATO[f].svg}</span>
-              <button class="gn-qty-btn" type="button" data-q="-1" aria-label="Quitar ${FORMATO[f].label}">−</button>
               <span class="gn-qty-val">0</span>
-              <button class="gn-qty-btn" type="button" data-q="1" aria-label="Agregar ${FORMATO[f].label}">+</button>
+              <span class="gn-qty-steps">
+                <button class="gn-qty-btn" type="button" data-q="1" aria-label="Agregar ${FORMATO[f].label}">+</button>
+                <button class="gn-qty-btn" type="button" data-q="-1" aria-label="Quitar ${FORMATO[f].label}">−</button>
+              </span>
             </div>`
         })
         .join('')
@@ -1152,6 +1154,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-seal svg { width: 35px; height: 35px; }
   .gn-seal-flor { left: 0.8rem; background: var(--gn-green); color: #08160f; }
   .gn-seal-preroll { right: 0.8rem; background: var(--gn-violet); color: #170c2b; }
+  /* El cono del preroll dibuja más chico que la hoja dentro de su caja:
+     se escala parejo en TODOS los usos (sello, selector del top y stepper)
+     para que quede del mismo tamaño óptico que flores. */
+  .gn-seal-preroll svg,
+  .gn-seg-btn.is-preroll .gn-seg-ic svg,
+  .gn-qty.is-preroll .gn-qty-ic svg { transform: scale(1.3); }
 
   /* ── Carrusel horizontal (marquesina) ── */
   .gn-track {
@@ -1562,14 +1570,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-qty-ic svg { width: 15px; height: 15px; }
   .gn-qty.is-flor .gn-qty-ic { background: var(--gn-green); color: #08160f; }
   .gn-qty.is-preroll .gn-qty-ic { background: var(--gn-violet); color: #170c2b; }
+  /* +/− apilados en columna (spinner estilo Mercado Libre) */
+  .gn-qty-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
   .gn-qty-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 30px;
+    height: 21px;
+    border-radius: 7px;
     border: none;
     background: rgba(244, 241, 247, 0.1);
     color: var(--gn-cream);
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
