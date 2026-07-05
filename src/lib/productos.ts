@@ -83,8 +83,7 @@ export const extracciones = [
     badge: '1 ml',
     color: '#6E54C8',
     img: '/img/prod-extracciones.jpg',
-    desc: 'Extracto de THC en cartucho rosca 510 de 1 ml. La presentación más rendidora, para quienes ya lo incorporaron a su rutina.',
-    para: ['Vapor limpio y discreto', 'Dosificación precisa pitada a pitada', 'Rosca 510 universal'],
+    desc: 'Extracto de THC en formato 1 ml, el más rendidor.',
     href: wa('Hola Flora, quiero consultar por el cartucho 1 ml THC 🌿'),
   },
   {
@@ -94,8 +93,7 @@ export const extracciones = [
     badge: '0,5 ml',
     color: '#C9396B',
     img: '/img/prod-extracciones.jpg',
-    desc: 'La misma extracción de THC en formato 0,5 ml: ideal para empezar, probar o llevar encima sin compromiso.',
-    para: ['El formato de entrada', 'Fácil de llevar', 'Rosca 510 universal'],
+    desc: 'El mismo extracto de THC en 0,5 ml, ideal para empezar.',
     href: wa('Hola Flora, quiero consultar por el cartucho 0,5 ml THC 🌿'),
   },
   {
@@ -105,8 +103,7 @@ export const extracciones = [
     badge: '0,5 ml',
     color: '#1F9389',
     img: '/img/prod-cartucho-cbd.webp',
-    desc: 'Extracto de CBD en cartucho 510 de 0,5 ml. Calma para el día, sin efecto psicoactivo.',
-    para: ['Cabeza despejada, para el día', 'Rosca 510 universal'],
+    desc: 'Extracto de CBD para el día, con la cabeza despejada.',
     href: wa('Hola Flora, quiero consultar por el cartucho 0,5 ml CBD 🌿'),
   },
   {
@@ -116,8 +113,7 @@ export const extracciones = [
     badge: '510',
     color: '#B8A878',
     img: '/img/prod-bateria-510.webp',
-    desc: 'Batería universal rosca 510, recargable por USB. Una sola batería alcanza para todos nuestros cartuchos.',
-    para: ['Recargable por USB', 'Compatible con todos los cartuchos', 'Encendido y listo'],
+    desc: 'Recargable por USB, compatible con todos nuestros cartuchos.',
     href: wa('Hola Flora, quiero consultar por la batería 510 🌿'),
   },
 ]

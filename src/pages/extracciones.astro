@@ -38,13 +38,6 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 <h2 class="fl-oil-title">{x.nombre} · {x.detalle}</h2>
                 <p class="fl-oil-desc">{x.desc}</p>
 
-                <div class="fl-oil-para">
-                  <span class="fl-oil-para-label">En detalle</span>
-                  <ul class="fl-oil-para-list">
-                    {x.para.map((c) => <li>{c}</li>)}
-                  </ul>
-                </div>
-
                 <div class="td-buy td-onlight" data-buy={x.id} hidden>
                   <span class="td-precio" data-id={x.id}></span>
                   <div class="td-slot" data-id={x.id}></div>
