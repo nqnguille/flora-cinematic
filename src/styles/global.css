@@ -1766,6 +1766,43 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-legal-grid { grid-template-columns: 1.05fr 0.95fr; gap: clamp(40px, 5vw, 72px); }
 }
 
+/* ── Extracciones: mini-landing fumar vs vaporizar + nota médico-legal ── */
+.fl-vap { background: var(--fl-paper-2, #F6F4F2); }
+.fl-vap-compare {
+  display: grid; grid-template-columns: 1fr; gap: 14px;
+  margin-top: clamp(20px, 2.6vw, 28px); max-width: 48ch;
+}
+@media (min-width: 560px) { .fl-vap-compare { grid-template-columns: 1fr 1fr; max-width: none; } }
+.fl-vap-col {
+  background: #fff; border: 1px solid var(--fl-line); border-radius: var(--fl-r-card, 20px);
+  padding: clamp(18px, 2.2vw, 22px);
+}
+.fl-vap-col-label {
+  display: block; font-family: var(--font-ui); font-weight: 800; font-size: 15px;
+  color: rgba(28, 22, 38, 0.55); margin-bottom: 12px;
+}
+.fl-vap-col--vapor { border-color: color-mix(in srgb, var(--fl-green) 35%, var(--fl-line)); background: color-mix(in srgb, var(--fl-green) 5%, #fff); }
+.fl-vap-col--vapor .fl-vap-col-label { color: var(--fl-green); }
+.fl-vap-col--vapor .fl-oil-para-list li::before { background: var(--fl-green); }
+.fl-vap-col .fl-oil-para-list { gap: 9px; }
+.fl-vap-col .fl-oil-para-list li { font-weight: 500; }
+.fl-vap-col:not(.fl-vap-col--vapor) .fl-oil-para-list li::before { background: rgba(28, 22, 38, 0.3); }
+
+.fl-vap-note {
+  background: var(--fl-violet); color: #fff; border-radius: var(--fl-r-card, 20px);
+  padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px;
+}
+.fl-vap-note-badge {
+  align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #4FC79E;
+  background: rgba(255, 255, 255, 0.1); border-radius: 999px; padding: 6px 14px;
+}
+.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0; }
+.fl-vap-note p strong { color: #fff; }
+
+/* Grilla de extracciones: fondo blanco propio, separado de la mini-landing gris */
+.fl-analisis-ext { padding-top: clamp(32px, 4vw, 48px); }
+
 /* ── Auditoría final: gateway en touch (tablets/celu), esquinas de fotos, link gate ── */
 .fl-panel-img { border-radius: inherit; }
 .fl-acceso-link { color: #fff; font-weight: 700; text-decoration: underline; }

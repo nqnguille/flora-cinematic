@@ -15,15 +15,74 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
     <div class="fl-wrap">
       <div class="fl-spec">
         <div class="fl-spec-head">
-          <span class="fl-eyebrow">Nuestras extracciones</span>
+          <span class="fl-eyebrow">Disponibles en Flora</span>
           <h1 class="fl-spec-title">Vapor limpio, <em>sin combustión.</em></h1>
           <p class="fl-spec-sub">
-            Vaporizar evita quemar la planta: menos toxinas, dosis más precisa y sabor
-            más puro que fumar. Cartuchos rosca 510 con extracto de nuestro cultivo, en
-            perfiles de THC y CBD, listos para usar con la batería universal recargable.
+            Cartuchos rosca 510 en perfiles de THC y CBD, listos para usar con la
+            batería universal recargable.
           </p>
         </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- ══════════════════════════════════════════ -->
+  <!-- MINI-LANDING: fumar vs. vaporizar, marco médico-legal -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-vap" aria-label="Vaporizar cannabis: vía de administración">
+    <div class="fl-wrap fl-legal-grid">
+      <div class="fl-legal-text">
+        <span class="fl-eyebrow">Vía de administración</span>
+        <h2 class="fl-title">Fumar o vaporizar: <em>dos formas de inhalar.</em></h2>
+        <p class="fl-lead">
+          El cannabis medicinal inhalado llega a los pulmones por dos vías: quemando la
+          planta al fumar, o calentando el extracto sin quemarlo al vaporizar. La
+          diferencia está en la combustión — al evitarla, el vapor reduce la exposición
+          a los subproductos que genera quemar cualquier material vegetal.
+        </p>
+
+        <div class="fl-vap-compare">
+          <div class="fl-vap-col">
+            <span class="fl-vap-col-label">Fumar</span>
+            <ul class="fl-oil-para-list">
+              <li>Quema la planta a alta temperatura</li>
+              <li>El humo arrastra también los residuos de la combustión</li>
+              <li>La dosis es más difícil de calibrar calada por calada</li>
+            </ul>
+          </div>
+          <div class="fl-vap-col fl-vap-col--vapor">
+            <span class="fl-vap-col-label">Vaporizar</span>
+            <ul class="fl-oil-para-list">
+              <li>Calienta el extracto sin quemarlo</li>
+              <li>Menor exposición a los productos de la combustión</li>
+              <li>Dosis más controlada, pitada por pitada</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <aside class="fl-vap-note">
+        <span class="fl-vap-note-badge">Marco médico-legal</span>
+        <p>
+          Bajo la Ley 27.350 y el REPROCANN, la vía de administración la define tu
+          equipo médico según tu tratamiento. Muchos profesionales consideran vaporizar
+          una alternativa más cuidadosa que fumar para quienes inhalan cannabis de
+          forma sostenida, precisamente por evitar la combustión.
+        </p>
+        <p>
+          Los cartuchos de extracto de cannabis medicinal son un producto distinto al
+          cigarrillo electrónico de nicotina: este último está prohibido en Argentina
+          desde 2011, y tanto la OMS como el Ministerio de Salud advierten sobre sus
+          riesgos propios. El extracto de cannabis responde a otro marco — el del
+          cultivo solidario para pacientes registrados en REPROCANN.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="fl-section fl-analisis-ext" aria-label="Catálogo de extracciones">
+    <div class="fl-wrap">
+      <div class="fl-spec">
         <div class="fl-spec-grid td-ext-grid">
           {extracciones.map((x) => (
             <article class="fl-spec-card fl-oil-card" style={`--oil:${x.color}`}>
