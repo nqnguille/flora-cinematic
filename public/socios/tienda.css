@@ -331,9 +331,21 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 }
 .td-cart-logout:hover { color: #ff9d9d; }
 
-/* Extracciones: fichas 2x2 estilo aceites; batería con panel de marca */
-.td-ext-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; max-width: 940px; }
-@media (max-width: 760px) { .td-ext-grid { grid-template-columns: 1fr !important; } }
+/* Extracciones: 4 fichas compactas en fila (desktop) / 2 (tablet) / 1 (mobile) */
+.td-ext-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 14px; }
+@media (max-width: 1000px) { .td-ext-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 600px) { .td-ext-grid { grid-template-columns: 1fr !important; } }
+/* compactar la anatomía de la card en esta grilla */
+.td-ext-grid .fl-oil-photo img, .td-ext-grid .td-ext-visual { aspect-ratio: 1 / 1; }
+.td-ext-grid .fl-oil-body { padding: 14px 16px 16px; }
+.td-ext-grid .fl-oil-title { font-size: 14px; margin-bottom: 6px; }
+.td-ext-grid .fl-oil-desc { font-size: 12.5px; line-height: 1.5; margin-bottom: 12px; }
+.td-ext-grid .fl-oil-badge { font-size: 11px; padding: 5px 10px; }
+.td-ext-grid .fl-oil-btn { font-size: 12.5px; padding: 10px 14px; }
+.td-ext-grid .fl-oil-btn svg { width: 14px; height: 14px; }
+.td-ext-grid .td-buy { margin: 10px 0 2px; padding-top: 10px; }
+.td-ext-grid .td-buy .td-precio { font-size: 1.1rem; }
+.td-ext-grid .td-onlight .td-step-btn { width: 30px; height: 30px; font-size: 1rem; }
 .td-ext-visual {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background:
