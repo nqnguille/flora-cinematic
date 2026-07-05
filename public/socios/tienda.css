@@ -154,6 +154,9 @@
   margin: 16px 0 4px; padding: 12px 14px; border-radius: 12px;
   background: rgba(10, 80, 60, 0.06);
 }
+/* El [hidden] nativo perdía contra "display: flex" (misma especificidad,
+   la regla de autor gana al estilo por defecto del browser) */
+.td-buy[hidden] { display: none; }
 .td-buy-label {
   font-family: var(--font-ui); font-size: 0.64rem; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
