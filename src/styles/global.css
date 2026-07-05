@@ -1842,7 +1842,11 @@ body.is-socio .drawer-cta--socios { display: none !important; }
 .nav-hola:hover b { text-decoration: underline; text-underline-offset: 3px; }
 .nav-hola-foto { border-radius: 50%; display: block; }
 .nav-hola-foto[hidden] { display: none; }
-.site-nav.scrolled .site-nav.scrolled /* Drawer: entradas solo-socio */
+/* El [hidden] nativo perdía contra "display: inline-flex" de .nav-hola
+   (misma especificidad, pero la regla de autor gana al estilo por defecto del browser) */
+.nav-hola[hidden] { display: none; }
+
+/* Drawer: entradas solo-socio */
 .drawer-socio-only { display: none; }
 body.is-socio .drawer-socio-only { display: block; }
 .drawer-logout {
@@ -1856,7 +1860,7 @@ body.is-socio .drawer-socio-only { display: block; }
 .nav-links li:last-child { display: flex; align-items: center; gap: 12px; }
 /* alturas uniformes SIN tocar display (la visibilidad la manejan las reglas de estado) */
 .nav-links .nav-cta, .nav-socios, .nav-hola { height: 36px; }
-.nav-cta--publico, .nav-socios { display: inline-flex; align-items: center; }
+.nav-cta--publico:not(.nav-cta--mobile), .nav-socios { display: inline-flex; align-items: center; }
 /* Mobile: el primer elemento visible del grupo derecho empuja con auto;
    el resto se separa por el gap del nav */
 @media (max-width: 940px) {
