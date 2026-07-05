@@ -83,7 +83,7 @@ export const extracciones = [
     badge: '1 ml',
     color: '#6E54C8',
     img: '/img/prod-cartucho-1ml.webp',
-    desc: 'Extracto de THC en formato 1 ml, el más rendidor.',
+    desc: 'Extracto de THC en 1 ml: vaporizás en vez de fumar, con dosis más precisa.',
     href: wa('Hola Flora, quiero consultar por el cartucho 1 ml THC 🌿'),
   },
   {
@@ -93,7 +93,7 @@ export const extracciones = [
     badge: '0,5 ml',
     color: '#C9396B',
     img: '/img/prod-extracciones.jpg',
-    desc: 'El mismo extracto de THC en 0,5 ml, ideal para empezar.',
+    desc: 'El mismo extracto de THC en 0,5 ml, ideal para empezar a vaporizar.',
     href: wa('Hola Flora, quiero consultar por el cartucho 0,5 ml THC 🌿'),
   },
   {
@@ -103,7 +103,7 @@ export const extracciones = [
     badge: '0,5 ml',
     color: '#1F9389',
     img: '/img/prod-cartucho-cbd.webp',
-    desc: 'Extracto de CBD para el día, con la cabeza despejada.',
+    desc: 'Extracto de CBD para el día: calma en vapor, sin quemar nada.',
     href: wa('Hola Flora, quiero consultar por el cartucho 0,5 ml CBD 🌿'),
   },
   {
@@ -113,7 +113,7 @@ export const extracciones = [
     badge: '510',
     color: '#B8A878',
     img: '/img/prod-bateria-510.webp',
-    desc: 'Recargable por USB, compatible con todos nuestros cartuchos.',
+    desc: 'Recargable por USB y compatible con todos nuestros cartuchos: tu entrada al vapor.',
     href: wa('Hola Flora, quiero consultar por la batería 510 🌿'),
   },
 ]
