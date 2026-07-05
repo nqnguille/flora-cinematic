@@ -77,11 +77,7 @@
         return `
           <div class="td-cart-row">
             <span class="td-cart-row-nombre">${esc(it.label)}${it.detalle ? ` <i>${esc(it.detalle)}</i>` : ''}</span>
-            <div class="td-stepper" data-id="${esc(id)}">
-              <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno">−</button>
-              <span class="td-step-num">${qty}</span>
-              <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= 10 ? 'disabled' : ''}>+</button>
-            </div>
+            ${stepperHtml('id', id, qty, 10)}
             <span class="td-cart-row-precio">${fmt(qty * it.precio)}</span>
           </div>`
       }).join('')
@@ -110,11 +106,7 @@
         return `
           <div class="td-cart-row td-cart-row-activo${qty === 0 ? ' is-quitado' : ''}">
             <span class="td-cart-row-nombre">${esc(i.nombre)}${qty === 0 ? ' <i>(se quita)</i>' : ''}</span>
-            <div class="td-stepper td-stepper-act" data-act="${esc(k)}">
-              <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
-              <span class="td-step-num">${qty}${unidad}</span>
-              <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= tope ? 'disabled' : ''}>+</button>
-            </div>
+            ${stepperHtml('act', k, qty, tope, unidad, 'td-stepper-act')}
           </div>`
       }).join('')
       // ¿hay cambios respecto de la reserva original?
@@ -191,6 +183,21 @@
     setTimeout(() => { m.hidden = true }, 5000)
   }
 
+  // Stepper con el mismo criterio que la carta de flores: valor y, al lado,
+  // una columna con + arriba y − abajo (en vez de fila −/valor/+).
+  function stepperHtml(dataAttr, key, qty, tope, unidad, extraClass) {
+    unidad = unidad || ''
+    const cls = extraClass ? `td-stepper ${extraClass}` : 'td-stepper'
+    return `
+      <div class="${cls}" data-${dataAttr}="${esc(key)}">
+        <span class="td-step-num">${qty}${unidad}</span>
+        <span class="td-step-col">
+          <button type="button" class="td-step-btn td-step-plus" data-d="1" aria-label="Sumar uno" ${qty >= tope ? 'disabled' : ''}>+</button>
+          <button type="button" class="td-step-btn td-step-minus" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
+        </span>
+      </div>`
+  }
+
   function render() {
     // Modo estático: el markup viene server-rendered (ej. fichas técnicas de
     // aceites); acá solo se rellenan precio y stepper en los slots por data-id.
@@ -202,12 +209,7 @@
         const precioEl = document.querySelector(`.td-precio[data-id="${it.id}"]`)
         if (precioEl) precioEl.textContent = fmt(it.precio)
         const slot = document.querySelector(`.td-slot[data-id="${it.id}"]`)
-        if (slot) slot.innerHTML = `
-          <div class="td-stepper" data-id="${esc(it.id)}">
-            <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
-            <span class="td-step-num">${qty}</span>
-            <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= 10 ? 'disabled' : ''}>+</button>
-          </div>`
+        if (slot) slot.innerHTML = stepperHtml('id', it.id, qty, 10)
       }
       barra()
       return
@@ -218,12 +220,7 @@
       const qty = carrito.get(it.id) || 0
       const foto = (CFG.fotos || {})[it.id]
       const icono = (CFG.iconos || {})[it.id] || ''
-      const stepper = `
-        <div class="td-stepper" data-id="${esc(it.id)}">
-          <button type="button" class="td-step-btn" data-d="-1" aria-label="Quitar uno" ${qty ? '' : 'disabled'}>−</button>
-          <span class="td-step-num">${qty}</span>
-          <button type="button" class="td-step-btn" data-d="1" aria-label="Sumar uno" ${qty >= 10 ? 'disabled' : ''}>+</button>
-        </div>`
+      const stepper = stepperHtml('id', it.id, qty, 10)
       if (esMenu) {
         return `
           <article class="td-item">

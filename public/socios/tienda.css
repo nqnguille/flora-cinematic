@@ -100,17 +100,19 @@
 .td-menu .td-item-precio { margin: 0 6px 0 0; }
 
 /* Stepper */
+/* Stepper con el criterio de la carta de flores: valor + columna +/- */
 .td-stepper { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .td-menu .td-stepper { margin: 0; }
+.td-step-num { min-width: 26px; text-align: center; font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.td-step-col { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
 .td-step-btn {
-  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--td-line);
-  background: none; color: var(--td-cream); font-size: 1.2rem; font-weight: 700;
+  width: 30px; height: 20px; border-radius: 7px; border: 1px solid var(--td-line);
+  background: none; color: var(--td-cream); font-size: 0.95rem; font-weight: 700; line-height: 1;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  padding: 0; transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
-.td-step-btn:hover { border-color: var(--td-violet); background: rgba(183,157,230,0.12); }
+.td-step-btn:hover { border-color: var(--td-violet); background: rgba(183,157,230,0.16); }
 .td-step-btn:disabled { opacity: 0.3; cursor: default; }
-.td-step-num { min-width: 26px; text-align: center; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 
 /* ── Barra de reserva flotante ── */
 .td-bar {
@@ -149,11 +151,15 @@
 .td-spec-grid { margin-top: 6px; }
 .td-buy {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  margin: 16px 0 4px; padding-top: 14px; border-top: 1px solid rgba(56, 31, 86, 0.14);
+  margin: 16px 0 4px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(10, 80, 60, 0.06);
 }
-.td-buy .td-precio { font-size: 1.35rem; font-weight: 800; color: var(--fl-green, #0A503C); font-variant-numeric: tabular-nums; }
+.td-buy .td-precio {
+  font-size: 1.5rem; font-weight: 800; color: var(--fl-green, #0A503C);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
 .td-onlight .td-step-btn { color: var(--fl-ink, #1C1626); border-color: rgba(56, 31, 86, 0.25); }
-.td-onlight .td-step-btn:hover { border-color: var(--fl-violet, #381F56); background: rgba(56, 31, 86, 0.06); }
+.td-onlight .td-step-btn:hover { border-color: var(--fl-violet, #381F56); background: rgba(56, 31, 86, 0.08); }
 .td-onlight .td-step-num { color: var(--fl-ink, #1C1626); }
 
 /* Sección de la landing embebida en la tienda (fondo blanco, full-bleed suave) */
@@ -279,8 +285,8 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-cart-row-nombre i { font-style: normal; font-weight: 400; color: var(--td-muted, rgba(244,241,247,0.55)); font-size: 0.8rem; }
 .td-cart-row-precio { font-size: 0.9rem; font-weight: 700; color: var(--td-green, #3cb492); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .td-cart-row-cant { font-weight: 700; color: var(--td-green, #3cb492); white-space: nowrap; }
-.td-cart-row .td-stepper { margin: 0; gap: 6px; }
-.td-cart-row .td-step-btn { width: 28px; height: 28px; font-size: 1rem; }
+.td-cart-row .td-stepper { margin: 0; gap: 8px; }
+.td-cart-row .td-step-btn { width: 26px; height: 18px; font-size: 0.85rem; }
 .td-cart-total {
   display: flex; justify-content: space-between; align-items: baseline;
   padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--td-line, rgba(183,157,230,0.16));
@@ -316,6 +322,7 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-cart-row-activo.is-quitado .td-cart-row-nombre { opacity: 0.45; text-decoration: line-through; }
 .td-cart-row-activo.is-quitado .td-cart-row-nombre i { font-style: normal; text-decoration: none; color: #ff9d9d; font-size: 0.75rem; }
 .td-stepper-act .td-step-num { min-width: 40px; font-size: 0.95rem; }
+.td-cart-row-activo .td-stepper { margin-top: 0; }
 
 /* Pie del carrito: cuenta + logout, discretos */
 .td-cart-foot {
@@ -343,9 +350,10 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-ext-grid .fl-oil-badge { font-size: 11px; padding: 5px 10px; }
 .td-ext-grid .fl-oil-btn { font-size: 12.5px; padding: 10px 14px; }
 .td-ext-grid .fl-oil-btn svg { width: 14px; height: 14px; }
-.td-ext-grid .td-buy { margin: 10px 0 2px; padding-top: 10px; }
-.td-ext-grid .td-buy .td-precio { font-size: 1.1rem; }
-.td-ext-grid .td-onlight .td-step-btn { width: 30px; height: 30px; font-size: 1rem; }
+.td-ext-grid .td-buy { margin: 10px 0 2px; padding: 8px 10px; }
+.td-ext-grid .td-buy .td-precio { font-size: 1.2rem; font-weight: 800; }
+.td-ext-grid .td-onlight .td-step-btn { width: 24px; height: 17px; }
+.td-ext-grid .td-step-num { font-size: 0.95rem; min-width: 18px; }
 .td-ext-visual {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background:
