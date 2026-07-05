@@ -82,7 +82,7 @@ export const extracciones = [
     detalle: 'THC',
     badge: '1 ml',
     color: '#6E54C8',
-    img: '/img/prod-extracciones.jpg',
+    img: '/img/prod-cartucho-1ml.webp',
     desc: 'Extracto de THC en formato 1 ml, el más rendidor.',
     href: wa('Hola Flora, quiero consultar por el cartucho 1 ml THC 🌿'),
   },
