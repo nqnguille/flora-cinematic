@@ -5,12 +5,26 @@ interface Env {
   SOCIOS: KVNamespace;
   GOOGLE_CLIENT_ID: string;
   SESSION_SECRET: string;
+  ADMIN_EMAILS?: string;
+  SUPER_ADMIN_EMAILS?: string;
+}
+
+// Bump esta fecha cuando el texto legal en carta.astro (#gn-tos-modal) cambie
+// de forma sustancial: los socios que ya aceptaron una versión anterior
+// vuelven a ver el modal de aceptación en su próximo login.
+const TOS_VERSION = '2026-07-05';
+
+function emailList(v?: string): string[] {
+  return (v || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let credential: string | undefined;
+  let tosAccept = false;
   try {
-    ({ credential } = await request.json());
+    const body = await request.json();
+    credential = body?.credential;
+    tosAccept = body?.tosAccept === true;
   } catch {
     return Response.json({ ok: false, error: 'body inválido' }, { status: 400 });
   }
@@ -35,11 +49,31 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     );
   }
 
+  let rec: any = {};
+  try { rec = JSON.parse(isSocio); } catch { rec = {}; } // valor legado "ok" → {}
+  if (typeof rec !== 'object' || rec === null) rec = {};
+
+  // El staff del club (ADMIN/SUPER_ADMIN) usa este mismo login para entrar al
+  // panel: el consentimiento de "paciente reservando" no le aplica.
+  const isAdminStaff =
+    emailList(env.ADMIN_EMAILS).includes(email) || emailList(env.SUPER_ADMIN_EMAILS).includes(email);
+
+  // Sin sesión hasta que el socio acepte la versión vigente de los términos.
+  if (!isAdminStaff && rec.tosAcceptedVersion !== TOS_VERSION) {
+    if (!tosAccept) {
+      return Response.json({
+        ok: false,
+        needsTos: true,
+        name: payload.name || rec.name || '',
+        picture: payload.picture || rec.picture || '',
+      });
+    }
+    rec.tosAcceptedVersion = TOS_VERSION;
+    rec.tosAcceptedAt = new Date().toISOString();
+  }
+
   // Enriquecemos la ficha del socio con el perfil de Google + registro de ingreso.
   try {
-    let rec: any = {};
-    try { rec = JSON.parse(isSocio); } catch { rec = {}; } // valor legado "ok" → {}
-    if (typeof rec !== 'object' || rec === null) rec = {};
     const now = new Date().toISOString();
     rec.name = payload.name || rec.name || '';
     rec.givenName = payload.given_name || rec.givenName || '';

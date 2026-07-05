@@ -22,10 +22,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
         <h1 class="gn-title">Carta de <em>genéticas</em></h1>
         <p class="gn-sub">
-          Sección exclusiva para socios verificados de Flora. Ingresá con la cuenta de
-          Google que registraste como socio.
+          Acá vas a encontrar el stock de flores y prerolls del club, en vivo. Elegís,
+          reservamos tu lugar, y coordinás el retiro y tu aporte en la sede — por acá
+          no se cobra nada.
         </p>
         <div id="g_id_button"></div>
+        <p class="gn-privacy-note">
+          Vamos a pedirte tu nombre, foto y email de Google para identificarte como socio.
+          <button type="button" class="gn-tos-linkbtn gn-tos-open">Leer los términos completos</button>
+        </p>
         <p id="gn-login-msg" class="gn-msg" hidden></p>
         <a href="/" class="gn-back">← Volver al sitio</a>
       </div>
@@ -55,7 +60,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
 
       <footer class="gn-pagefoot">
-        <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · I.G.J. 1994128 · Ley 27.350 / REPROCANN. Carta exclusiva para socios: acá solo reservás, y el retiro y tu aporte se coordinan en el club. Información orientativa que no reemplaza a tu médico; cada cosecha es única y los cannabinoides varían según el lote; fotos ilustrativas, gentileza de los bancos de las genéticas que cultivamos. Cultivamos conciencia.</p>
+        <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · I.G.J. 1994128 · Ley 27.350/REPROCANN. Reservás acá; abonás y retirás en el club. <button type="button" class="gn-tos-linkbtn gn-tos-open">Ver términos completos</button></p>
       </footer>
 
       <!-- ── Barra de reserva (flotante) ── -->
@@ -71,6 +76,51 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="gn-modal-body"></div>
           <p id="gn-modal-msg" class="gn-modal-msg" hidden></p>
           <div id="gn-modal-actions" class="gn-modal-actions"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Términos de uso (login y footer lo abren en modo "view";
+         el login lo abre en modo "accept" cuando el socio todavía no aceptó
+         la versión vigente) ── -->
+    <div id="gn-tos-modal" class="gn-modal" hidden>
+      <div class="gn-modal-card gn-tos-card" role="dialog" aria-modal="true" aria-labelledby="gn-tos-title">
+        <h2 id="gn-tos-title" class="gn-modal-title">Términos de <em>uso</em></h2>
+        <div class="gn-tos-body">
+          <p class="gn-tos-meta">Última actualización: 5 de julio de 2026</p>
+
+          <h3>1. Quién puede usar esta carta</h3>
+          <p>Esta carta es exclusiva para socios y socias <strong>mayores de 18 años</strong> de la Asociación Civil Cann de Cannabis Medicinal, con vínculo asociativo vigente y en el marco del programa REPROCANN (Ley 27.350). Al aceptar estos términos, declarás ser mayor de edad.</p>
+
+          <h3>2. Qué es (y qué no es) este servicio</h3>
+          <p>Acá reservás flores y prerolls disponibles en el club. <strong>No es una tienda online:</strong> no procesamos pagos ni hacemos envíos por este sitio. Tu aporte y el retiro de lo reservado siempre se coordinan en persona, en la sede del club.</p>
+
+          <h3>3. Tus datos personales</h3>
+          <p>Para identificarte usamos el inicio de sesión con tu cuenta de Google, de donde tomamos tu nombre, foto y email. Guardamos también el historial de tus reservas para poder atenderte. Cuando reservás, le avisamos al equipo del club por WhatsApp usando un servicio de mensajería de terceros — solo se comparte el contenido de la reserva, nunca tu email ni tus datos personales. No vendemos ni compartimos tus datos con nadie más.</p>
+
+          <h3>4. Tus derechos sobre tus datos</h3>
+          <p>Conforme la Ley 25.326 de Protección de Datos Personales, en cualquier momento podés pedirnos acceder, corregir o eliminar tus datos, o dar de baja tu cuenta de la carta, escribiéndonos por WhatsApp.</p>
+
+          <h3>5. La información del catálogo es orientativa</h3>
+          <p>THC, CBD y demás datos publicados son de referencia y pueden variar de lote a lote. Las fotos son ilustrativas —gentileza de los bancos de semillas de las genéticas que cultivamos— y no reflejan necesariamente la cosecha exacta que vas a retirar. Nada de lo publicado acá reemplaza la indicación de tu médica o médico tratante.</p>
+
+          <h3>6. Disponibilidad y baja del servicio</h3>
+          <p>La disponibilidad de cada genética puede cambiar entre tu reserva y el retiro; te avisamos si hay cambios. El club puede, a su criterio, dar de baja el acceso de un socio a la carta ante un uso indebido del servicio.</p>
+
+          <h3>7. Cambios a estos términos</h3>
+          <p>Podemos actualizar este texto. Si el cambio es importante, te vamos a pedir que lo aceptes de nuevo la próxima vez que entres.</p>
+
+          <h3>8. Ley aplicable</h3>
+          <p>Estos términos se rigen por las leyes de la República Argentina. Ante cualquier consulta, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a>.</p>
+        </div>
+        <label id="gn-tos-acceptrow" class="gn-tos-check" hidden>
+          <input type="checkbox" id="gn-tos-checkbox" />
+          <span>Leí y acepto estos términos</span>
+        </label>
+        <p id="gn-tos-msg" class="gn-modal-msg" hidden></p>
+        <div class="gn-modal-actions">
+          <button id="gn-tos-close" class="gn-btn-ghost" type="button">Cerrar</button>
+          <button id="gn-tos-accept" class="gn-btn-primary" type="button" hidden disabled>Aceptar y continuar</button>
         </div>
       </div>
     </div>
@@ -808,9 +858,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       loadPedidos()
     }
 
+    // El mensaje de "no sos socio" lleva un link de WhatsApp para resolverlo al toque
     function showLoginError(message) {
       const msg = document.getElementById('gn-login-msg')
-      msg.textContent = message
+      if (message === '__NOSOCIO__') {
+        msg.innerHTML = 'Esa cuenta de Google todavía no figura como socia del club. Si ya sos socio, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a> para habilitarte el acceso.'
+      } else {
+        msg.textContent = message
+      }
       msg.hidden = false
     }
 
@@ -822,32 +877,108 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return true
     }
 
-    window.handleGoogleCredential = async (response) => {
+    /* ── Términos de uso: modal compartido por login (modo "accept") y por
+       los links de "ver términos" del login/footer (modo "view") ── */
+    let pendingCredential = null // credential de Google en espera mientras se muestra el modo "accept"
+    let tosMode = 'view'
+
+    function openTos(mode) {
+      tosMode = mode
+      const isAccept = mode === 'accept'
+      document.getElementById('gn-tos-acceptrow').hidden = !isAccept
+      document.getElementById('gn-tos-accept').hidden = !isAccept
+      document.getElementById('gn-tos-checkbox').checked = false
+      document.getElementById('gn-tos-accept').disabled = true
+      document.getElementById('gn-tos-close').textContent = isAccept ? 'Ahora no' : 'Cerrar'
+      document.getElementById('gn-tos-msg').hidden = true
+      document.getElementById('gn-tos-modal').hidden = false
+      document.querySelector('.gn-tos-body').scrollTop = 0
+    }
+    function closeTos() {
+      document.getElementById('gn-tos-modal').hidden = true
+      if (tosMode === 'accept') pendingCredential = null // cerrar sin aceptar cancela el login
+    }
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.gn-tos-open')) openTos('view')
+    })
+    document.getElementById('gn-tos-close').addEventListener('click', closeTos)
+    document.getElementById('gn-tos-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'gn-tos-modal') closeTos() // clic afuera cierra
+    })
+    document.getElementById('gn-tos-checkbox').addEventListener('change', (e) => {
+      document.getElementById('gn-tos-accept').disabled = !e.target.checked
+    })
+    document.getElementById('gn-tos-accept').addEventListener('click', async () => {
+      if (!pendingCredential) return
+      const btn = document.getElementById('gn-tos-accept')
+      btn.disabled = true
+      btn.textContent = 'Confirmando…'
+      await submitLogin(pendingCredential, true)
+      btn.disabled = false
+      btn.textContent = 'Aceptar y continuar'
+    })
+
+    async function submitLogin(credential, tosAccept) {
       try {
         const res = await fetch('/api/socios/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ credential: response.credential }),
+          body: JSON.stringify({ credential, tosAccept: !!tosAccept }),
         })
         const data = await res.json()
-        if (!res.ok || !data.ok) {
-          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+        if (res.ok && data.ok) {
+          pendingCredential = null
+          document.getElementById('gn-tos-modal').hidden = true
+          await loadGeneticas(data.email)
           return
         }
-        await loadGeneticas(data.email)
-      } catch (err) {
-        showLoginError('Error de red al verificar con Google.')
+        if (data.needsTos) {
+          pendingCredential = credential
+          openTos('accept')
+          return
+        }
+        if (res.status === 403) {
+          showLoginError('__NOSOCIO__')
+          return
+        }
+        // Error genuino (token inválido, etc.): si se disparó confirmando la
+        // aceptación, el modal de términos sigue abierto y el mensaje va ahí;
+        // si no, en la pantalla de login.
+        if (tosAccept) {
+          const msgEl = document.getElementById('gn-tos-msg')
+          msgEl.textContent = data.error || 'No se pudo confirmar. Probá de nuevo.'
+          msgEl.hidden = false
+        } else {
+          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+        }
+      } catch {
+        if (tosAccept) {
+          const msgEl = document.getElementById('gn-tos-msg')
+          msgEl.textContent = 'Error de red. Probá de nuevo.'
+          msgEl.hidden = false
+        } else {
+          showLoginError('Error de red al verificar con Google.')
+        }
       }
     }
+
+    window.handleGoogleCredential = (response) => submitLogin(response.credential, false)
 
     document.getElementById('gn-logout').addEventListener('click', async () => {
       await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
       location.reload()
     })
 
-    // Legal colapsado en mobile: tocarlo lo expande/colapsa
-    document.querySelector('.gn-disclaimer')?.addEventListener('click', (e) => e.currentTarget.classList.toggle('is-open'))
+    // Legal colapsado en mobile: tocarlo lo expande/colapsa (el link de términos
+    // hace lo suyo aparte, no debe disparar el toggle de la línea).
+    document.querySelector('.gn-disclaimer')?.addEventListener('click', (e) => {
+      if (e.target.closest('.gn-tos-open')) return
+      e.currentTarget.classList.toggle('is-open')
+    })
+
+    // Link directo a los términos (ej. compartido por WhatsApp): ?tos=1
+    if (new URLSearchParams(location.search).get('tos') === '1') openTos('view')
 
     if (googleClientId) {
       window.onload = () => {
@@ -998,6 +1129,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: 0.95rem;
     margin: 0 0 0.4rem;
   }
+
+  /* Nota de transparencia de datos, debajo del botón de Google */
+  .gn-privacy-note {
+    font-size: 0.76rem;
+    line-height: 1.55;
+    color: var(--gn-muted);
+    margin: 0.2rem 0 0;
+  }
+  .gn-tos-linkbtn {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    color: var(--gn-violet);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .gn-tos-linkbtn:hover { color: var(--gn-cream); }
 
   .gn-msg {
     color: var(--gn-violet);
@@ -1840,6 +1991,46 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     margin-top: 1.3rem;
     flex-wrap: wrap;
   }
+
+  /* ── Modal de términos: más ancho, cuerpo largo con scroll propio ── */
+  .gn-tos-card { max-width: 640px; }
+  .gn-tos-body {
+    max-height: 48svh;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .gn-tos-meta { font-size: 0.75rem; color: var(--gn-muted); font-style: italic; margin: 0 0 1rem; }
+  .gn-tos-body h3 {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gn-violet);
+    margin: 1.1rem 0 0.4rem;
+  }
+  .gn-tos-body h3:first-of-type { margin-top: 0; }
+  .gn-tos-body p {
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--gn-muted);
+    margin: 0;
+  }
+  .gn-tos-body strong { color: var(--gn-cream); font-weight: 700; }
+  .gn-tos-body a { color: var(--gn-green); }
+  .gn-tos-check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--gn-cream);
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--gn-line);
+  }
+  .gn-tos-check[hidden] { display: none; }
+  .gn-tos-check input { width: 18px; height: 18px; accent-color: var(--gn-violet); flex-shrink: 0; cursor: pointer; }
 
   /* ── Footer de página ── */
   .gn-pagefoot {
