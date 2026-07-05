@@ -21,10 +21,12 @@ function emailList(v?: string): string[] {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let credential: string | undefined;
   let tosAccept = false;
+  let appContext = '';
   try {
     const body = await request.json();
     credential = body?.credential;
     tosAccept = body?.tosAccept === true;
+    appContext = String(body?.appContext || '');
   } catch {
     return Response.json({ ok: false, error: 'body inválido' }, { status: 400 });
   }
@@ -54,12 +56,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (typeof rec !== 'object' || rec === null) rec = {};
 
   // El staff del club (ADMIN/SUPER_ADMIN) usa este mismo login para entrar al
-  // panel: el consentimiento de "paciente reservando" no le aplica.
+  // panel: el consentimiento de "paciente reservando" no le aplica AHÍ. Pero
+  // si esa misma persona entra por la CARTA (appContext !== 'admin') está
+  // actuando como paciente y sí tiene que aceptar — por eso exigimos las DOS
+  // condiciones, no solo que la cuenta figure como staff. (Antes eximía a
+  // cualquier admin en cualquier contexto, así que un admin que también es
+  // socio nunca veía el checkbox ni en la carta.)
   const isAdminStaff =
     emailList(env.ADMIN_EMAILS).includes(email) || emailList(env.SUPER_ADMIN_EMAILS).includes(email);
+  const skipTos = isAdminStaff && appContext === 'admin';
 
   // Sin sesión hasta que el socio acepte la versión vigente de los términos.
-  if (!isAdminStaff && rec.tosAcceptedVersion !== TOS_VERSION) {
+  if (!skipTos && rec.tosAcceptedVersion !== TOS_VERSION) {
     if (!tosAccept) {
       return Response.json({
         ok: false,

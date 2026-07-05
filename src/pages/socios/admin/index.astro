@@ -1088,7 +1088,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ credential: response.credential }),
+          // Este login es para el panel, no para reservar como paciente:
+          // el backend solo salta el checkbox de términos cuando ve este
+          // contexto Y la cuenta figura como staff (ADMIN/SUPER_ADMIN).
+          body: JSON.stringify({ credential: response.credential, appContext: 'admin' }),
         })
         const data = await res.json()
         if (!res.ok || !data.ok) {
