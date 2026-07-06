@@ -89,6 +89,10 @@ const perfiles = [
     img: '/img/perfil-menstrual.jpg',
   },
 ]
+// 3 copias seguidas para el loop infinito del carrusel autodeslizante
+// (mismo truco que la carta de socios): el ancho de UNA copia es el punto
+// de reinicio, así nunca se ve una costura ni un final.
+const perfilesLoop = [...perfiles, ...perfiles, ...perfiles]
 
 // Aceites: ficha técnica compartida en src/lib/productos.ts
 
@@ -373,37 +377,39 @@ const igFallback = [
           encontrar el que se ajusta a tu caso.
         </p>
       </header>
+    </div>
 
-      <div class="fl-perfiles-carousel-wrap">
-        <button type="button" class="fl-carousel-arrow fl-carousel-prev" aria-label="Ver perfiles anteriores" data-carousel-prev>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
+    <!-- Fuera de .fl-wrap a propósito: el carrusel usa todo el ancho del
+         navegador, no el máximo de 1240px del resto de la sección. -->
+    <div class="fl-perfiles-carousel-wrap">
+      <button type="button" class="fl-carousel-arrow fl-carousel-prev" aria-label="Ver perfiles anteriores" data-carousel-prev>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
 
-        <div class="fl-perfiles-carousel" role="list" data-carousel-track>
-          {perfiles.map((p) => (
-            <article class="fl-perfil-card" role="listitem">
-              <img class="fl-perfil-card-img" src={p.img} alt="" loading="lazy" width="1400" height="1750" />
-              <div class="fl-perfil-card-body">
-                <button type="button" class="fl-perfil-card-toggle" aria-expanded="false">
-                  <span class="fl-perfil-card-tag">{p.tag}</span>
-                  <svg class="fl-perfil-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                <div class="fl-perfil-card-more">
-                  <div class="fl-perfil-card-more-inner">
-                    <span class="fl-perfil-card-title">{p.title}</span>
-                    <span class="fl-perfil-card-desc">{p.desc}</span>
-                    <a class="fl-perfil-card-cta" href={p.href} target="_blank" rel="noopener noreferrer">{p.cta} <span aria-hidden="true">→</span></a>
-                  </div>
+      <div class="fl-perfiles-carousel" role="list" data-carousel-track>
+        {perfilesLoop.map((p) => (
+          <article class="fl-perfil-card" role="listitem">
+            <img class="fl-perfil-card-img" src={p.img} alt="" loading="lazy" width="1400" height="1750" />
+            <div class="fl-perfil-card-body">
+              <button type="button" class="fl-perfil-card-toggle" aria-expanded="false">
+                <span class="fl-perfil-card-tag">{p.tag}</span>
+                <svg class="fl-perfil-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="fl-perfil-card-more">
+                <div class="fl-perfil-card-more-inner">
+                  <span class="fl-perfil-card-title">{p.title}</span>
+                  <span class="fl-perfil-card-desc">{p.desc}</span>
+                  <a class="fl-perfil-card-cta" href={p.href} target="_blank" rel="noopener noreferrer">{p.cta} <span aria-hidden="true">→</span></a>
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
-
-        <button type="button" class="fl-carousel-arrow fl-carousel-next" aria-label="Ver más perfiles" data-carousel-next>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
+            </div>
+          </article>
+        ))}
       </div>
+
+      <button type="button" class="fl-carousel-arrow fl-carousel-next" aria-label="Ver más perfiles" data-carousel-next>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
   </section>
 

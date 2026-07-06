@@ -832,30 +832,82 @@ function initPerfilesExpand() {
   })
 }
 
+// Autodeslizante e infinito, mismo mecanismo que el carrusel de la carta de
+// socios: el markup ya trae 3 copias seguidas del listado (perfilesLoop) y
+// acá medimos el ancho de UNA copia (loopOffset) para arrancar en la 2ª
+// copia y, en cada frame, rebobinar sin costura al llegar a los bordes.
 function initPerfilesCarousel() {
   const track = document.querySelector<HTMLElement>('[data-carousel-track]')
   const prevBtn = document.querySelector<HTMLButtonElement>('[data-carousel-prev]')
   const nextBtn = document.querySelector<HTMLButtonElement>('[data-carousel-next]')
   if (!track || !prevBtn || !nextBtn) return
 
+  const SPEED = 0.6 // px por frame — misma cadencia pausada que la carta de socios
   const cardGap = 16
-  const scrollByCard = (dir: 1 | -1) => {
-    const card = track.querySelector<HTMLElement>('.fl-perfil-card')
-    const step = (card?.offsetWidth ?? 280) + cardGap
-    track.scrollBy({ left: step * dir, behavior: 'smooth' })
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  let loopOffset = 0
+  let centered = false
+  let hoverPaused = false
+  let touchPaused = false
+  let resumeTimer: ReturnType<typeof setTimeout> | null = null
+
+  function pauseSoon(delay: number) {
+    touchPaused = true
+    clearTimeout(resumeTimer as ReturnType<typeof setTimeout>)
+    resumeTimer = setTimeout(() => { touchPaused = false }, delay)
   }
 
-  const updateArrows = () => {
-    const max = track.scrollWidth - track.clientWidth - 2
-    prevBtn.disabled = track.scrollLeft <= 2
-    nextBtn.disabled = track.scrollLeft >= max
+  function measure() {
+    const cards = track!.querySelectorAll<HTMLElement>('.fl-perfil-card')
+    const singleCount = cards.length / 3
+    const secondCopyStart = cards[singleCount]
+    loopOffset = secondCopyStart ? secondCopyStart.offsetLeft : 0
+    if (!centered && loopOffset > 0) { track!.scrollLeft = loopOffset; centered = true }
   }
 
-  prevBtn.addEventListener('click', () => scrollByCard(-1))
-  nextBtn.addEventListener('click', () => scrollByCard(1))
-  track.addEventListener('scroll', updateArrows, { passive: true })
-  window.addEventListener('resize', updateArrows)
-  updateArrows()
+  function stepAmount() {
+    const card = track!.querySelector<HTMLElement>('.fl-perfil-card')
+    return (card?.offsetWidth ?? 280) + cardGap
+  }
+
+  track.addEventListener('mouseenter', () => { hoverPaused = true })
+  track.addEventListener('mouseleave', () => { hoverPaused = false })
+  track.addEventListener('touchstart', () => { touchPaused = true; clearTimeout(resumeTimer as ReturnType<typeof setTimeout>) }, { passive: true })
+  track.addEventListener('touchend', () => pauseSoon(4000), { passive: true })
+  track.addEventListener('wheel', () => pauseSoon(4000), { passive: true })
+  track.addEventListener('focusin', () => pauseSoon(8000))
+  window.addEventListener('resize', () => requestAnimationFrame(measure))
+
+  // Arrastrar con el mouse para mover el carrusel a gusto
+  let dragging = false, lastX = 0
+  track.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return
+    dragging = true; lastX = e.clientX; track!.classList.add('is-grabbing')
+  })
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return
+    track!.scrollLeft -= (e.clientX - lastX); lastX = e.clientX
+  })
+  window.addEventListener('pointerup', () => {
+    if (!dragging) return
+    dragging = false; track!.classList.remove('is-grabbing')
+  })
+
+  prevBtn.addEventListener('click', () => { track.scrollLeft -= stepAmount(); pauseSoon(4000) })
+  nextBtn.addEventListener('click', () => { track.scrollLeft += stepAmount(); pauseSoon(4000) })
+
+  requestAnimationFrame(measure)
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure)
+
+  function frame() {
+    if (loopOffset > 0 && !hoverPaused && !touchPaused && !reduceMotion) {
+      track!.scrollLeft += SPEED
+      if (track!.scrollLeft < loopOffset) track!.scrollLeft += loopOffset
+      else if (track!.scrollLeft >= loopOffset * 2) track!.scrollLeft -= loopOffset
+    }
+    requestAnimationFrame(frame)
+  }
+  requestAnimationFrame(frame)
 }
 
 function init() {

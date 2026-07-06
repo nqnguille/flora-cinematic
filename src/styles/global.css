@@ -1306,16 +1306,26 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* ── Perfiles (Cómo puede ayudarte): carrusel horizontal, no gateway fijo —
    son 10 cards, no 3, así que se exploran deslizando en vez de mostrarse
    todas de una. La descripción queda siempre visible (no hover-gated). ── */
-.fl-perfiles-carousel-wrap { position: relative; display: flex; align-items: center; gap: 10px; margin-top: clamp(28px, 3.4vw, 48px); }
-.fl-perfiles-carousel {
-  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
-  scroll-behavior: smooth; padding: 4px 2px 12px; margin: -4px -2px -12px;
-  scrollbar-width: none;
+/* Full-bleed: se sale de .fl-wrap para usar el ancho completo del navegador,
+   no el máximo de 1240px del resto de la sección (mismo look "vivo" que el
+   carrusel de la carta de socios). El padding lateral repone el margen del
+   viewport para que la primera/última card no arranquen pegadas al borde. */
+.fl-perfiles-carousel-wrap {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  margin-top: clamp(28px, 3.4vw, 48px);
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  padding: 0 clamp(14px, 3vw, 40px);
 }
+.fl-perfiles-carousel {
+  display: flex; gap: 16px; overflow-x: auto;
+  padding: 4px 2px 12px; margin: -4px -2px -12px;
+  scrollbar-width: none; cursor: grab;
+}
+.fl-perfiles-carousel.is-grabbing { cursor: grabbing; }
 .fl-perfiles-carousel::-webkit-scrollbar { display: none; }
 .fl-perfil-card {
   position: relative; flex: 0 0 auto; width: clamp(240px, 25vw, 296px);
-  aspect-ratio: 3 / 4.1; scroll-snap-align: start; overflow: hidden;
+  aspect-ratio: 3 / 4.1; overflow: hidden;
   border-radius: 20px; text-decoration: none; color: #fff;
   box-shadow: 0 20px 40px -24px rgba(28,22,38,0.35);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
