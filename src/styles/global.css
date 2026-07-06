@@ -1842,25 +1842,41 @@ html.no-js .reveal { opacity: 1; transform: none; }
    padding-top generoso de un hero (no el recortado que tenía cuando
    era una sección intermedia) — el padding-bottom lo controla .fl-vap */
 .fl-ext-hero { padding-top: clamp(56px, 7vw, 96px); }
+/* Comparación Fumar vs Vaporizar: tabla de 3 columnas (criterio + 2 valores)
+   en vez de dos cards separadas — permite comparar criterio por criterio en
+   la misma fila, y sumar más filas sin que crezca a lo ancho */
 .fl-vap-compare {
-  display: grid; grid-template-columns: 1fr; gap: 14px;
-  margin-top: clamp(20px, 2.6vw, 28px); max-width: 48ch;
-}
-@media (min-width: 560px) { .fl-vap-compare { grid-template-columns: 1fr 1fr; max-width: none; } }
-.fl-vap-col {
+  display: grid; grid-template-columns: minmax(88px, 0.85fr) 1.15fr 1.15fr;
   background: #fff; border: 1px solid var(--fl-line); border-radius: var(--fl-r-card, 20px);
-  padding: clamp(18px, 2.2vw, 22px);
+  overflow: hidden; align-self: start;
 }
-.fl-vap-col-label {
-  display: block; font-family: var(--font-ui); font-weight: 800; font-size: 15px;
-  color: rgba(28, 22, 38, 0.55); margin-bottom: 12px;
+.fl-vap-compare-head, .fl-vap-compare-row { display: contents; }
+.fl-vap-compare-head > span, .fl-vap-compare-row > span {
+  padding: clamp(11px, 1.5vw, 15px) clamp(10px, 1.6vw, 16px);
+  font-family: var(--font-ui); font-size: 13px; line-height: 1.45;
+  border-bottom: 1px solid var(--fl-line);
 }
-.fl-vap-col--vapor { border-color: color-mix(in srgb, var(--fl-green) 35%, var(--fl-line)); background: color-mix(in srgb, var(--fl-green) 5%, #fff); }
-.fl-vap-col--vapor .fl-vap-col-label { color: var(--fl-green); }
-.fl-vap-col--vapor .fl-oil-para-list li::before { background: var(--fl-green); }
-.fl-vap-col .fl-oil-para-list { gap: 9px; }
-.fl-vap-col .fl-oil-para-list li { font-weight: 500; }
-.fl-vap-col:not(.fl-vap-col--vapor) .fl-oil-para-list li::before { background: rgba(28, 22, 38, 0.3); }
+.fl-vap-compare-row:last-child > span { border-bottom: none; }
+.fl-vap-compare-crit {
+  font-weight: 700; font-size: 11.5px; color: rgba(28, 22, 38, 0.5);
+  text-transform: uppercase; letter-spacing: 0.03em;
+  background: var(--fl-paper-2, #F6F4F2);
+}
+.fl-vap-compare-col-label {
+  font-weight: 800; font-size: 14px; color: rgba(28, 22, 38, 0.7);
+  background: var(--fl-paper-2, #F6F4F2);
+}
+.fl-vap-compare-col-label--vapor { color: var(--fl-green); }
+.fl-vap-compare-val { color: var(--fl-ink); font-weight: 500; }
+.fl-vap-compare-val--vapor {
+  color: var(--fl-green); font-weight: 600;
+  background: color-mix(in srgb, var(--fl-green) 6%, #fff);
+}
+@media (max-width: 480px) {
+  .fl-vap-compare { grid-template-columns: minmax(70px, 0.7fr) 1fr 1fr; }
+  .fl-vap-compare-head > span, .fl-vap-compare-row > span { font-size: 12px; padding: 9px 8px; }
+  .fl-vap-compare-crit { font-size: 10.5px; }
+}
 
 .fl-vap-note {
   background: var(--fl-violet); color: #fff; border-radius: var(--fl-r-card, 20px);
