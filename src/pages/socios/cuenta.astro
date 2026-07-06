@@ -14,12 +14,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-main">
     <!-- ── Login ── -->
-    <SociosLogin
-      title="Mi <em>cuenta</em>"
-      tagline="Tu perfil de socio: reserva en curso e historial de reservas."
-      authTitle="Iniciá sesión"
-      authSub="Ingresá con tu cuenta de Google de socio para ver tu perfil y tus reservas."
-    />
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+      <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
+    </SociosLogin>
 
     <!-- ── Cuenta ── -->
     <div id="cu-content" class="td-content" hidden>

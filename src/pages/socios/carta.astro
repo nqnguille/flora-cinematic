@@ -14,16 +14,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
   <main class="gn-main">
-    <SociosLogin
-      title="Carta de <em>genéticas</em>"
-      tagline="Elegís, reservamos tu lugar, y coordinás el retiro y tu aporte en la sede — no se cobra nada por acá."
-      authTitle="Iniciá sesión"
-      authSub="Ingresá con la cuenta de Google que registraste como socio para reservar tu lugar."
-    >
-      <Fragment slot="note">
-        Vamos a pedirte tu nombre, foto y email de Google para identificarte como socio.
-        <button type="button" class="gn-tos-linkbtn gn-tos-open">Leer los términos completos</button>
-      </Fragment>
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+      <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
     </SociosLogin>
 
     <!-- ── Carta (fullscreen · carrusel) ── -->
