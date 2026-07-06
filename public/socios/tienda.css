@@ -247,8 +247,26 @@
 .td-done-pub p { color: rgba(28,22,38,0.6); }
 .td-done-pub .td-done-items { color: var(--fl-ink, #1C1626); }
 
-/* Cremas: una sola card centrada */
-.td-grid-1 { grid-template-columns: minmax(0, 520px) !important; justify-content: center; }
+/* Cremas: una sola card centrada, mismo tamaño de foto/tipografía que usa
+   .td-ext-grid en Extracciones (antes 520px de ancho, se veía desproporcionada
+   frente al resto del catálogo) */
+.td-grid-1-compact { grid-template-columns: minmax(0, 300px) !important; justify-content: center; }
+.td-grid-1-compact .fl-oil-photo img, .td-grid-1-compact .td-ext-visual { aspect-ratio: 1 / 1; }
+.td-grid-1-compact .fl-oil-body { padding: 14px 16px 16px; }
+.td-grid-1-compact .fl-oil-title { font-size: 14px; margin-bottom: 6px; }
+.td-grid-1-compact .fl-oil-desc { font-size: 12.5px; line-height: 1.5; margin-bottom: 12px; }
+.td-grid-1-compact .fl-oil-badge { font-size: 11px; padding: 5px 10px; }
+.td-grid-1-compact .fl-oil-btn { font-size: 12.5px; padding: 10px 14px; }
+.td-grid-1-compact .fl-oil-btn svg { width: 14px; height: 14px; }
+.td-grid-1-compact .td-buy { margin: 10px 0 2px; padding: 8px 10px; }
+.td-grid-1-compact .td-buy .td-precio { font-size: 1.2rem; font-weight: 800; }
+.td-grid-1-compact .td-onlight .td-step-btn { width: 24px; height: 17px; }
+.td-grid-1-compact .td-step-num { font-size: 0.95rem; min-width: 18px; }
+.td-grid-1-compact .fl-oil-para { padding-top: 12px; margin-bottom: 14px; }
+.td-grid-1-compact .fl-oil-para-label { font-size: 10px; margin-bottom: 7px; }
+.td-grid-1-compact .fl-oil-para-list { gap: 5px; }
+.td-grid-1-compact .fl-oil-para-list li { font-size: 12px; padding-left: 15px; }
+.td-grid-1-compact .fl-oil-para-list li::before { width: 6px; height: 6px; top: 5px; }
 
 /* Socio logueado en fichas: fuera Acceso socios/Asociarme, entra Carrito */
 body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }

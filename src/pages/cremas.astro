@@ -4,24 +4,24 @@ import { cremas } from '../lib/productos'
 ---
 
 <CatalogoShell
-  title="Cremas de cannabis medicinal | Flora ONG"
-  description="Crema tópica de cannabis medicinal para alivio localizado, formulada con extracto de nuestro propio cultivo."
+  title="Crema de CBD premium | Flora ONG"
+  description="Crema de alta concentración —1 gramo de CBD aislado por pote— para alivio localizado, sin efecto psicoactivo ni aroma a planta."
   categoria="cremas"
 >
   <section class="fl-section" aria-label="Cremas">
     <div class="fl-wrap">
       <div class="fl-spec">
         <div class="fl-spec-head">
-          <span class="fl-eyebrow">Nuestras cremas</span>
+          <span class="fl-eyebrow">Alta concentración de CBD</span>
           <h1 class="fl-spec-title">Alivio localizado, <em>sin humo.</em></h1>
           <p class="fl-spec-sub">
-            La crema aplica el extracto directamente donde lo necesitás. Formulada con
-            el mismo cultivo medido por cromatografía que nuestros aceites, para uso
-            diario y sin efecto psicoactivo.
+            Formulada con CBD aislado de grado cosmético, en alta concentración: 1 gramo
+            de CBD puro en cada pote de 30 ml. Se aplica directamente sobre la zona para
+            un alivio localizado y preciso, sin efecto psicoactivo.
           </p>
         </div>
 
-        <div class="fl-spec-grid td-grid-1">
+        <div class="fl-spec-grid td-grid-1-compact">
           {cremas.map((c) => (
             <article class="fl-spec-card fl-oil-card" style="--oil:#0A503C">
               <div class="fl-oil-photo" data-id={c.id}>
