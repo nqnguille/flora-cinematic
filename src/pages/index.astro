@@ -120,7 +120,6 @@ const waFooter = waAsociarse
 // Acceso a material vegetal. La cantidad (10 a 40 g por mes)
 // se elige una vez adentro, por WhatsApp. Mismo acompañamiento y variedades para todos.
 const accesoWa = wa('Hola Flora, quiero acceder al material vegetal. ¿Me orientan para empezar?')
-const preciosWa = wa('Hola Flora, quiero consultar precios y disponibilidad de genéticas.')
 
 // Programa de YouTube — "Espacio libre de prejuicios"
 const ytChannel = 'https://www.youtube.com/@FloraCultivamosConciencia'
@@ -251,8 +250,9 @@ const igFallback = [
     <!-- Mobile: Acceso socios compacto, siempre visible -->
     <a href="/socios/cuenta/" class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</a>
     <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
-    <a href="/socios/" class="nav-socios nav-socios--mobile" aria-label="Acceso socios">
+    <a href="/socios/" class="nav-socios nav-socios--mobile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      Acceso socios
     </a>
 
     <!-- Hamburguesa — solo mobile -->
@@ -626,15 +626,11 @@ const igFallback = [
     <div class="fl-wrap fl-acceso-content">
       <div class="fl-acceso-head">
         <span class="fl-eyebrow">Genéticas disponibles</span>
-        <h2 class="fl-title">Acceso a <em>tu cannabis medicinal.</em></h2>
+        <h2 class="fl-title">Tu carta <em>del mes.</em></h2>
         <p class="fl-acceso-story">
-          Priorizamos las genéticas con alto CBD, aunque también tenés
-          sativas, índicas e híbridas en stock, todas en flor, preroll y
-          aceite, con análisis de laboratorio por lote. La carta se arma según
-          disponibilidad: cuando se termina una variedad, la reponemos con
-          otra de su misma familia.
+          Flor, preroll y aceite, con foco en CBD y análisis de laboratorio
+          en cada lote. La carta completa es exclusiva para socios.
         </p>
-        <p class="fl-acceso-datos">De 10 a 40&nbsp;g por mes · <a href={preciosWa} class="fl-acceso-datos-wa" target="_blank" rel="noopener noreferrer"><strong>consultá precios por WhatsApp</strong></a></p>
       </div>
 
       <div class="fl-acceso-side">

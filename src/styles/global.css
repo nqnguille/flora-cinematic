@@ -646,8 +646,8 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .nav-cta--mobile, .nav-socios--mobile { display: none; }
 @media (max-width: 940px) {
   .nav-cta--mobile { display: inline-flex; align-items: center; margin-left: auto; height: 40px; padding: 0 20px; }
-  .nav-socios--mobile { display: inline-flex; justify-content: center; margin: 0 12px 0 10px; width: 40px; height: 40px; padding: 0; }
-  .nav-socios--mobile svg { width: 16px; height: 16px; }
+  .nav-socios--mobile { display: inline-flex; align-items: center; gap: 6px; justify-content: center; margin: 0 10px; height: 38px; padding: 0 14px; font-size: 12px !important; white-space: nowrap; }
+  .nav-socios--mobile svg { width: 14px; height: 14px; }
 }
 
 /* ── Hamburguesa — solo mobile ── */
@@ -1526,13 +1526,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-head .fl-eyebrow svg { width: 14px; height: 14px; flex-shrink: 0; }
 .fl-acceso-head .fl-title { color: #fff; margin-left: auto; margin-right: auto; max-width: 18ch; text-shadow: 0 2px 28px rgba(0,0,0,0.6); }
 .fl-acceso-head .fl-title em { color: #4FC79E; }
-.fl-acceso-story, .fl-acceso-note, .fl-acceso-datos { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
-.fl-acceso-datos {
-  font-family: var(--font-ui); font-size: clamp(15px, 1.6vw, 18px); font-weight: 700;
-  color: #fff; margin: 14px auto 0; max-width: 50ch;
-}
-.fl-acceso-datos strong { color: #4FC79E; }
-.fl-acceso-datos-wa { text-decoration: underline; text-underline-offset: 3px; }
+.fl-acceso-story, .fl-acceso-note { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
@@ -1552,7 +1546,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-acceso-head { text-align: left; }
   .fl-acceso-head .fl-title { margin-left: 0; margin-right: 0; max-width: 15ch; }
   .fl-acceso-story { max-width: 44ch; margin: 18px 0 0; }
-  .fl-acceso-datos { margin: 14px 0 0; }
   .fl-acceso-side {
     display: flex; flex-direction: column; align-items: flex-end;
     flex-shrink: 0; text-align: right; margin-top: 14px;
@@ -1915,10 +1908,10 @@ body.is-socio .drawer-socio-only { display: block; }
 .nav-links li:last-child { display: flex; align-items: center; gap: 12px; }
 /* alturas uniformes SIN tocar display (la visibilidad la manejan las reglas de estado) */
 .nav-links .nav-cta, .nav-socios, .nav-hola { height: 36px; }
-.nav-socios { display: inline-flex; align-items: center; }
+.nav-socios:not(.nav-socios--mobile) { display: inline-flex; align-items: center; }
 /* Mobile: el primer elemento visible del grupo derecho empuja con auto;
    el resto se separa por el gap del nav */
 @media (max-width: 940px) {
-  .nav-cta--mobile, .nav-socios--mobile, .nav-hola--mobile, .nav-cta--carta.nav-cta--mobile { height: 38px; margin: 0; }
+  .nav-cta--mobile, .nav-hola--mobile, .nav-cta--carta.nav-cta--mobile { height: 38px; margin: 0; }
   body.is-socio .nav-hola.nav-hola--mobile:not([hidden]) { margin-left: auto; margin-right: 0; }
 }
