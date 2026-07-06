@@ -198,6 +198,32 @@
       </div>`
   }
 
+  // Foto de producto subida desde el panel (/socios/admin): pública, no
+  // depende de sesión ni de precios — así el catálogo visual se actualiza
+  // para cualquier visitante, no solo para socios logueados.
+  async function loadFotosPublicas() {
+    try {
+      const res = await fetch('/api/socios/fotos')
+      if (!res.ok) return
+      const data = await res.json()
+      const fotos = (data.fotos || {})[CFG.categoria] || {}
+      for (const [id, url] of Object.entries(fotos)) {
+        const box = document.querySelector(`.fl-oil-photo[data-id="${CSS.escape(id)}"]`)
+        if (!box || !url) continue
+        let img = box.querySelector('img')
+        if (!img) {
+          img = document.createElement('img')
+          img.loading = 'lazy'
+          img.alt = ''
+          const placeholder = box.querySelector('.td-ext-visual')
+          if (placeholder) placeholder.remove()
+          box.prepend(img)
+        }
+        img.src = url
+      }
+    } catch { /* si falla, se queda con la foto estática de productos.ts */ }
+  }
+
   function render() {
     // Modo estático: el markup viene server-rendered (ej. fichas técnicas de
     // aceites); acá solo se rellenan precio y stepper en los slots por data-id.
@@ -439,5 +465,6 @@
     showLoginError('Falta configurar el Google Client ID del sitio.')
   }
 
+  loadFotosPublicas()
   loadPrecios()
 })()

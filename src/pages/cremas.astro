@@ -24,7 +24,7 @@ import { cremas } from '../lib/productos'
         <div class="fl-spec-grid td-grid-1">
           {cremas.map((c) => (
             <article class="fl-spec-card fl-oil-card" style="--oil:#0A503C">
-              <div class="fl-oil-photo">
+              <div class="fl-oil-photo" data-id={c.id}>
                 <img src={c.img} alt={`${c.nombre} Flora, ${c.presentacion}`} loading="lazy" width="600" height="750" />
                 <span class="fl-oil-badge">{c.presentacion}</span>
               </div>

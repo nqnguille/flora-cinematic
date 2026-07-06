@@ -69,7 +69,7 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
         <div class="fl-spec-grid td-ext-grid">
           {extracciones.map((x) => (
             <article class="fl-spec-card fl-oil-card" style={`--oil:${x.color}`}>
-              <div class="fl-oil-photo">
+              <div class="fl-oil-photo" data-id={x.id}>
                 {x.img
                   ? <img src={x.img} alt={`${x.nombre} ${x.detalle} Flora`} loading="lazy" width="600" height="750" />
                   : <span class="td-ext-visual" style={`color:${x.color}`} set:html={x.id === 'bateria-510' ? iconoBateria : iconoCartucho} />}

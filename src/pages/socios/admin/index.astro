@@ -330,6 +330,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           arr = arr.filter((v) => v !== t.value)
         }
         CATALOG[i][key] = arr
+        // efectoTexto/saborTexto son texto libre heredado del import de Excel,
+        // sin ningún campo acá para editarlo — pero la carta lo usa como
+        // etiqueta en vez del tag si la cantidad de "segmentos" (separados
+        // por | o ·) coincide con la cantidad de tags tildados. Sin este
+        // clear, tildar/destildar puede hacer que ese texto viejo "reaparezca"
+        // por coincidencia de cantidad, dando la falsa sensación de que la
+        // carta no actualiza los cambios de acá.
+        if (dd === 'sabor') CATALOG[i].saborTexto = ''
+        if (dd === 'efecto') CATALOG[i].efectoTexto = ''
         updateDd(i, dd)
         marcarDirty('gen')
       } else if (field === 'activo') {

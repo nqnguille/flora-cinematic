@@ -25,7 +25,7 @@ import { aceites } from '../lib/productos'
         <div class="fl-spec-grid">
           {aceites.map((a) => (
             <article class="fl-spec-card fl-oil-card" style={`--oil:${a.color}`}>
-              <div class="fl-oil-photo">
+              <div class="fl-oil-photo" data-id={a.id}>
                 <img src={a.img} alt={`Gotero de aceite de cannabis medicinal Flora ${a.codigo}, 10 ml`} loading="lazy" width="600" height="750" />
                 <span class="fl-oil-badge">{a.codigo}</span>
               </div>
