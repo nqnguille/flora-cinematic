@@ -596,6 +596,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const cart = new Map() // "id|formato" → cantidad
     let activePedido = null // pedido pendiente/listo del socio, si hay
     const QTY_MAX = { flor: 50, preroll: 20 }
+    // Tope de la reserva completa (no por genética): ninguna reserva puede
+    // superar 40 g de flor ni 40 prerolls en total, bajo ningún concepto.
+    const TOTAL_MAX = { flor: 40, preroll: 40 }
     const ESTADO_TXT = {
       pendiente: 'Tu reserva está en preparación',
       listo: '¡Tu reserva está lista para retirar!',
@@ -652,10 +655,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return `${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`
     }
 
+    // Suma la cantidad de un formato en TODO el carrito, salvo una key (la
+    // que se está por tocar) — para saber cuánto margen le queda al tope
+    // total de la reserva antes de aplicar el cambio de esa línea.
+    function cartTotalExcept(formato, exceptKey) {
+      let sum = 0
+      for (const [k, c] of cart) if (k !== exceptKey && k.endsWith('|' + formato)) sum += c
+      return sum
+    }
+
     function stepQty(btn) {
       const key = btn.closest('.gn-qty').getAttribute('data-order')
       const formato = key.split('|')[1]
-      const next = Math.min(QTY_MAX[formato] || 20, Math.max(0, (cart.get(key) || 0) + Number(btn.getAttribute('data-q'))))
+      const totalCap = TOTAL_MAX[formato]
+      const maxForKey = totalCap == null ? (QTY_MAX[formato] || 20) : Math.min(QTY_MAX[formato] || 20, Math.max(0, totalCap - cartTotalExcept(formato, key)))
+      const next = Math.min(maxForKey, Math.max(0, (cart.get(key) || 0) + Number(btn.getAttribute('data-q'))))
       if (next === 0) cart.delete(key)
       else cart.set(key, next)
       syncQty(key)

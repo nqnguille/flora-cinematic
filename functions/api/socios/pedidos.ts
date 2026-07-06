@@ -13,10 +13,37 @@ const TTL_SECONDS = 90 * 24 * 60 * 60;
 const ESTADOS_ACTIVOS = ['pendiente', 'listo'];
 const MAX_ITEMS = 12;
 const MAX_CANTIDAD = { flor: 50, preroll: 20, producto: 10 } as Record<string, number>;
+// Tope de la RESERVA COMPLETA, no por línea: bajo ningún concepto una
+// reserva puede juntar más de 40 g de flor, 40 prerolls o 18 goteros de
+// aceite, sin importar cuántas genéticas o líneas distintas se sumen (la
+// ley habilita hasta 6 frascos de 30 ml; este tope es más conservador).
+const TOTAL_MAX = { flor: 40, preroll: 40, aceite: 18 } as Record<string, number>;
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
 
 function formatosDe(g: any): string[] {
   return Array.isArray(g.formatos) && g.formatos.length ? g.formatos : ['flor'];
+}
+
+// "producto" agrupa aceites/cremas/extracciones; el tope de 18 es solo para
+// los aceites (goteros), así que hay que distinguirlos por su id.
+function categoriaDe(item: { formato: string; id: string }): string {
+  if (item.formato === 'producto' && String(item.id).startsWith('aceite')) return 'aceite';
+  return item.formato;
+}
+
+function excedeTopeTotal(items: any[]): string | null {
+  const totales: Record<string, number> = {};
+  for (const it of items) {
+    const cat = categoriaDe(it);
+    totales[cat] = (totales[cat] || 0) + Number(it.cantidad || 0);
+  }
+  for (const [cat, max] of Object.entries(TOTAL_MAX)) {
+    if ((totales[cat] || 0) > max) {
+      const unidad = cat === 'flor' ? 'g de flor' : cat === 'preroll' ? 'prerolls' : 'goteros de aceite';
+      return `la reserva no puede superar ${max} ${unidad} en total`;
+    }
+  }
+  return null;
 }
 
 // Socio autenticado Y todavía en la lista (una baja invalida la sesión para pedir).
@@ -103,6 +130,8 @@ async function validarItems(env: Env, rawItems: any[]): Promise<{ items?: any[];
     }
     items.push({ id: g.id, nombre: g.nombre, formato, cantidad });
   }
+  const excede = excedeTopeTotal(items);
+  if (excede) return { error: excede };
   return { items };
 }
 
@@ -190,6 +219,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         return Response.json({ ok: false, error: 'la reserva ya tiene el máximo de ítems' }, { status: 400 });
       }
     }
+    // El chequeo de validarItems() ya vio los ítems NUEVOS de este request,
+    // pero no el total ya fusionado con lo que la reserva pendiente traía.
+    const excede = excedeTopeTotal(yaActivo.items);
+    if (excede) return Response.json({ ok: false, error: excede }, { status: 400 });
+
     if (body?.nota) yaActivo.nota = String(body.nota).slice(0, 400);
     yaActivo.actualizado = now;
     await env.PEDIDOS.put(`pedido:${yaActivo.id}`, JSON.stringify(yaActivo), { expirationTtl: TTL_SECONDS });
