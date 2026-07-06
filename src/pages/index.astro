@@ -215,8 +215,18 @@ const igFallback = [
     <ul class="nav-links" role="list">
       <li><a href="#perfiles">Cómo ayudamos</a></li>
       <li><a href="#entrevista">REPROCANN</a></li>
-      <li><a href="#productos">Productos</a></li>
-      <li><a href="#acceso">Ser socio</a></li>
+      <li class="nav-dropdown">
+        <button type="button" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
+          Servicios
+          <svg class="nav-dropdown-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <ul class="nav-dropdown-menu" role="list">
+          <li><a href="/aceites/">Aceites</a></li>
+          <li><a href="/cremas/">Cremas</a></li>
+          <li><a href="/extracciones/">Extracciones</a></li>
+          <li><a href="#acceso">Flores</a></li>
+        </ul>
+      </li>
       <li><a href="#legalidad">Legalidad</a></li>
       <li>
         <a href="/socios/" class="nav-socios">
@@ -264,8 +274,18 @@ const igFallback = [
       <ul role="list">
         <li><a href="#perfiles">Cómo ayudamos</a></li>
         <li><a href="#entrevista">REPROCANN</a></li>
-        <li><a href="#productos">Productos</a></li>
-        <li><a href="#acceso">Ser socio</a></li>
+        <li class="drawer-dropdown">
+          <button type="button" class="drawer-dropdown-trigger" aria-expanded="false">
+            Servicios
+            <svg class="drawer-dropdown-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <ul class="drawer-dropdown-menu" role="list">
+            <li><a href="/aceites/">Aceites</a></li>
+            <li><a href="/cremas/">Cremas</a></li>
+            <li><a href="/extracciones/">Extracciones</a></li>
+            <li><a href="#acceso">Flores</a></li>
+          </ul>
+        </li>
         <li><a href="#legalidad">Legalidad</a></li>
         <li><a href="#programa">Programa</a></li>
         <li><a href="#instagram">Instagram</a></li>
@@ -454,12 +474,12 @@ const igFallback = [
   <section class="fl-section fl-access" id="productos" aria-label="Qué hacemos y cómo accedés">
     <div class="fl-wrap">
       <header class="fl-head">
-        <span class="fl-eyebrow">Nuestros productos</span>
+        <span class="fl-eyebrow">Nuestros servicios</span>
         <h2 class="fl-title">De la planta, <em>a tu mano.</em></h2>
         <p class="fl-lead">
           Detrás de cada flor, cada extracto y cada crema hay un proceso que cuidamos de
           principio a fin. Cultivamos en salas propias, sin pesticidas y con análisis de
-          laboratorio para ofrecer productos en los que podés confiar.
+          laboratorio para ofrecerte un servicio en el que podés confiar.
         </p>
       </header>
 

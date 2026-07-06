@@ -481,6 +481,49 @@ function initMobileDrawer() {
   })
 }
 
+// ── Dropdown "Servicios" en el nav de desktop ──
+function initNavDropdown() {
+  const dropdown = document.querySelector<HTMLElement>('.nav-dropdown')
+  const trigger  = dropdown?.querySelector<HTMLButtonElement>('.nav-dropdown-trigger')
+  if (!dropdown || !trigger) return
+
+  const close = () => {
+    trigger.setAttribute('aria-expanded', 'false')
+    dropdown.classList.remove('is-open')
+  }
+  const toggle = () => {
+    const open = trigger.getAttribute('aria-expanded') === 'true'
+    trigger.setAttribute('aria-expanded', open ? 'false' : 'true')
+    dropdown.classList.toggle('is-open', !open)
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggle()
+  })
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target as Node)) close()
+  })
+  dropdown.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { close(); trigger.focus() }
+  })
+  dropdown.querySelectorAll<HTMLAnchorElement>('.nav-dropdown-menu a').forEach(link => {
+    link.addEventListener('click', close)
+  })
+}
+
+// ── Dropdown "Servicios" en el drawer mobile (acordeón) ──
+function initDrawerDropdown() {
+  const dropdown = document.querySelector<HTMLElement>('.drawer-dropdown')
+  const trigger  = dropdown?.querySelector<HTMLButtonElement>('.drawer-dropdown-trigger')
+  if (!dropdown || !trigger) return
+
+  trigger.addEventListener('click', () => {
+    const open = trigger.getAttribute('aria-expanded') === 'true'
+    trigger.setAttribute('aria-expanded', open ? 'false' : 'true')
+  })
+}
+
 // ── Init all ──
 // ── Productos: selector de formato (tabs) ──
 function initProductTabs() {
@@ -819,6 +862,8 @@ function init() {
   initLoader()
   initNav()
   initMobileDrawer()
+  initNavDropdown()
+  initDrawerDropdown()
   initHeroImage()
   initHeroVideo()
   initAccesoVideo()

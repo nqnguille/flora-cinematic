@@ -611,6 +611,41 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   color: var(--bone);
 }
 
+/* ── Dropdown "Servicios" (desktop) ── */
+/* padding-bottom + margin-bottom negativo: extiende el área hoverable del
+   li hasta el menú sin abrir un hueco muerto entre el trigger y el menú */
+.nav-dropdown { position: relative; padding-bottom: 14px; margin-bottom: -14px; }
+.nav-dropdown-trigger {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500;
+  color: rgba(244, 241, 230, 0.6); letter-spacing: 0.03em;
+  transition: color 0.2s;
+}
+.nav-dropdown-trigger:hover { color: var(--bone); }
+.site-nav.scrolled .nav-dropdown-trigger { color: rgba(28, 22, 38, 0.66); }
+.site-nav.scrolled .nav-dropdown-trigger:hover { color: var(--fl-violet); }
+.nav-dropdown-chev { width: 12px; height: 12px; flex-shrink: 0; transition: transform 0.2s ease; }
+.nav-dropdown.is-open .nav-dropdown-chev { transform: rotate(180deg); }
+.nav-dropdown-menu {
+  position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%);
+  min-width: 168px; list-style: none; padding: 8px; margin: 0;
+  background: #fff; border: 1px solid var(--fl-line); border-radius: 14px;
+  box-shadow: 0 18px 44px -20px rgba(56, 31, 86, 0.35);
+  opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.is-open .nav-dropdown-menu {
+  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+}
+.nav-dropdown-menu a {
+  display: block; padding: 9px 12px; border-radius: 8px;
+  font-family: var(--font-ui); font-size: 13.5px; font-weight: 600;
+  color: var(--fl-ink) !important; text-decoration: none; white-space: nowrap;
+}
+.nav-dropdown-menu a:hover { background: var(--fl-paper-2); color: var(--fl-violet) !important; }
+
 .nav-cta {
   height: 36px;
   padding: 0 20px;
@@ -773,6 +808,27 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .drawer-panel ul li a:focus {
   color: var(--fl-violet);
 }
+
+/* ── Dropdown "Servicios" (drawer mobile, acordeón) ── */
+.drawer-dropdown-trigger {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: 22px; font-weight: 700;
+  color: var(--fl-ink); padding: 12px 0; border-bottom: 1px solid var(--fl-line);
+  letter-spacing: -0.01em;
+}
+.drawer-dropdown-chev { width: 18px; height: 18px; flex-shrink: 0; transition: transform 0.2s ease; }
+.drawer-dropdown[aria-expanded="true"] .drawer-dropdown-chev,
+.drawer-dropdown-trigger[aria-expanded="true"] .drawer-dropdown-chev { transform: rotate(180deg); }
+.drawer-dropdown-menu {
+  list-style: none; display: flex; flex-direction: column; gap: 0;
+  max-height: 0; overflow: hidden; transition: max-height 0.25s ease;
+}
+.drawer-dropdown-menu li a {
+  font-size: 16px !important; font-weight: 600 !important; padding: 10px 0 10px 14px !important;
+  border-bottom: none !important; color: rgba(28, 22, 38, 0.68) !important;
+}
+.drawer-dropdown-trigger[aria-expanded="true"] + .drawer-dropdown-menu { max-height: 220px; }
 
 .drawer-cta {
   display: inline-flex !important;
@@ -1778,7 +1834,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-credencial-sello-img { flex: 0 0 auto; width: clamp(56px, 7vw, 76px); height: clamp(56px, 7vw, 76px); }
 
 /* ── Extracciones: mini-landing fumar vs vaporizar + nota médico-legal ── */
-.fl-vap { background: var(--fl-paper-2, #F6F4F2); }
+/* Reduce el padding vertical de estas 3 secciones consecutivas — por default
+   cada .fl-section suma su propio padding arriba y abajo, y stackeadas dejaban
+   saltos de aire enormes (hero→vía de administración, nota legal→catálogo) */
+.fl-ext-hero { padding-bottom: clamp(20px, 3vw, 32px); }
+.fl-vap { background: var(--fl-paper-2, #F6F4F2); padding-top: clamp(24px, 3vw, 36px); padding-bottom: clamp(28px, 3.5vw, 44px); }
 .fl-vap-compare {
   display: grid; grid-template-columns: 1fr; gap: 14px;
   margin-top: clamp(20px, 2.6vw, 28px); max-width: 48ch;
@@ -1812,7 +1872,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-vap-note p strong { color: #fff; }
 
 /* Grilla de extracciones: fondo blanco propio, separado de la mini-landing gris */
-.fl-analisis-ext { padding-top: clamp(32px, 4vw, 48px); }
+.fl-analisis-ext { padding-top: clamp(20px, 2.5vw, 32px); }
 
 /* ── Auditoría final: gateway en touch (tablets/celu), esquinas de fotos, link gate ── */
 .fl-panel-img { border-radius: inherit; }
