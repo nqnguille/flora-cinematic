@@ -10,11 +10,11 @@ interface Props {
   title: string
   tagline: string
   authTitle?: string
-  authSub: string
+  authSub?: string
   backHref?: string
 }
 const {
-  eyebrow = 'Acceso privado',
+  eyebrow,
   title,
   tagline,
   authTitle = 'Iniciá sesión',
@@ -30,15 +30,15 @@ const {
 
   <div class="sl-split">
     <div class="sl-panel">
-      <img class="sl-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
-      <span class="sl-eyebrow">{eyebrow}</span>
+      <img class="sl-logo" src="/img/flora-logo-cultivamos-conciencia-white.png" alt="Flora — Cultivamos conciencia" width="2000" height="795" />
+      {eyebrow && <span class="sl-eyebrow">{eyebrow}</span>}
       <h1 class="sl-title" set:html={title} />
       <p class="sl-tagline">{tagline}</p>
 
       <div class="sl-divider" aria-hidden="true"></div>
 
       <h2 class="sl-auth-title">{authTitle}</h2>
-      <p class="sl-sub">{authSub}</p>
+      {authSub && <p class="sl-sub">{authSub}</p>}
       <div id="g_id_button" class="sl-gbtn"></div>
       <p id="socios-login-msg" class="sl-msg" hidden></p>
       <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>
@@ -89,7 +89,7 @@ const {
 
   .sl-panel {
     position: absolute; top: 0; bottom: 0; left: 0;
-    width: 50%;
+    width: 58%;
     display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
     gap: 0.7rem;
     padding: clamp(32px, 5vw, 64px);
@@ -100,7 +100,7 @@ const {
 
   .sl-divider { width: 42px; height: 1px; background: rgba(183, 157, 230, 0.35); margin: 0.5rem 0; }
 
-  .sl-logo { height: clamp(24px, 2.6vw, 32px); width: auto; margin-bottom: 0.2rem; }
+  .sl-logo { height: clamp(56px, 8vw, 108px); width: auto; margin-bottom: 0.4rem; }
   .sl-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(183, 157, 230, 0.16);
