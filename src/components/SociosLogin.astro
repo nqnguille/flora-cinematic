@@ -88,23 +88,31 @@ const {
   }
   .sl-back:hover { color: var(--sl-cream); }
 
+  /* Los paneles emergen pegados al borde izq./der. de la pantalla y tapan
+     el video solo ahí — el centro (vertical y horizontal) queda despejado */
   .sl-split {
     position: relative; z-index: 2;
     min-height: 100svh;
-    display: flex; align-items: center; justify-content: center;
-    gap: clamp(20px, 4vw, 48px);
   }
 
   .sl-card {
-    width: 100%; max-width: 380px;
-    background: linear-gradient(165deg, rgba(38, 27, 58, 0.66), rgba(19, 13, 28, 0.78));
-    -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
-    border: 1px solid rgba(183, 157, 230, 0.28);
-    border-radius: 22px;
-    padding: clamp(26px, 3.2vw, 38px);
-    display: flex; flex-direction: column; align-items: flex-start; gap: 0.8rem;
-    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255,255,255,0.06);
+    position: absolute; top: 0; bottom: 0;
+    width: clamp(300px, 27vw, 400px);
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    gap: 0.8rem;
+    padding: clamp(28px, 4vw, 52px);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2); backdrop-filter: blur(20px) saturate(1.2);
     color: var(--sl-cream);
+  }
+  .sl-card-brand {
+    left: 0;
+    background: linear-gradient(90deg, rgba(19, 13, 28, 0.82) 0%, rgba(19, 13, 28, 0.6) 65%, rgba(19, 13, 28, 0) 100%);
+    border-right: 1px solid rgba(183, 157, 230, 0.22);
+  }
+  .sl-card-auth {
+    right: 0;
+    background: linear-gradient(270deg, rgba(19, 13, 28, 0.82) 0%, rgba(19, 13, 28, 0.6) 65%, rgba(19, 13, 28, 0) 100%);
+    border-left: 1px solid rgba(183, 157, 230, 0.22);
   }
 
   .sl-logo { height: clamp(24px, 2.6vw, 32px); width: auto; margin-bottom: 0.2rem; }
@@ -131,11 +139,26 @@ const {
   .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0; }
   .sl-note button { background: none; border: none; padding: 0; color: var(--sl-violet); text-decoration: underline; font-size: inherit; font-family: inherit; cursor: pointer; }
 
+  /* Mobile: no hay ancho para dos franjas laterales — los mismos paneles
+     "emergen" arriba y abajo en vez de izq./der., video despejado al medio */
   @media (max-width: 860px) {
-    .sl-split { flex-direction: column; gap: 1.25rem; }
-    .sl-card { align-items: flex-start; }
-  }
-  @media (max-width: 480px) {
-    .sl-card { max-width: 100%; }
+    .sl-scrim {
+      background:
+        linear-gradient(180deg, rgba(9, 6, 14, 0.7) 0%, rgba(9, 6, 14, 0.1) 26%, rgba(9, 6, 14, 0) 46%, rgba(9, 6, 14, 0.1) 66%, rgba(9, 6, 14, 0.7) 100%);
+    }
+    .sl-card {
+      left: 0; right: 0; width: auto;
+      padding: clamp(24px, 6vw, 36px) clamp(20px, 6vw, 28px);
+    }
+    .sl-card-brand {
+      top: 0; bottom: auto;
+      background: linear-gradient(180deg, rgba(19, 13, 28, 0.85) 0%, rgba(19, 13, 28, 0.55) 70%, rgba(19, 13, 28, 0) 100%);
+      border-right: none; border-bottom: 1px solid rgba(183, 157, 230, 0.22);
+    }
+    .sl-card-auth {
+      bottom: 0; top: auto;
+      background: linear-gradient(0deg, rgba(19, 13, 28, 0.85) 0%, rgba(19, 13, 28, 0.55) 70%, rgba(19, 13, 28, 0) 100%);
+      border-left: none; border-top: 1px solid rgba(183, 157, 230, 0.22);
+    }
   }
 </style>
