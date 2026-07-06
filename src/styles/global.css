@@ -1739,10 +1739,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* ── Credencial oficial (respaldo legal, inspirada en el cartel REPROCANN) ── */
 .fl-credencial { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; margin-top: clamp(28px, 4vw, 40px); box-shadow: 0 24px 60px -30px rgba(56, 31, 86, 0.45); }
 .fl-credencial-body { background: var(--fl-violet); color: #fff; padding: clamp(28px, 4vw, 44px); flex: 1; }
-.fl-credencial-badge { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-ui); font-weight: 800; font-size: clamp(15px, 2vw, 20px); letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.1; }
-.fl-credencial-badge svg { width: 22px; height: 22px; color: #4FC79E; flex-shrink: 0; }
-.fl-credencial-prog { display: block; font-family: var(--font-ui); font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-top: 8px; letter-spacing: 0.02em; }
-.fl-credencial-name { font-family: var(--font-ui); font-weight: 700; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -0.01em; color: #fff; margin: clamp(20px, 2.6vw, 28px) 0 clamp(18px, 2.2vw, 24px); }
+.fl-credencial-label { display: block; font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
+.fl-credencial-name { font-family: var(--font-ui); font-weight: 700; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -0.01em; color: #fff; margin: 6px 0 clamp(18px, 2.2vw, 24px); }
 .fl-credencial-data { display: grid; grid-template-columns: 1fr; gap: 0; }
 .fl-credencial-data > div { border-top: 1px solid rgba(255, 255, 255, 0.16); padding: 13px 0; }
 .fl-credencial-data dt { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
@@ -1758,7 +1756,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-legal-text .fl-lead { max-width: 48ch; }
 .fl-credencial-sm { margin-top: 0; box-shadow: 0 18px 44px -26px rgba(56, 31, 86, 0.42); }
 .fl-credencial-sm .fl-credencial-body { padding: clamp(24px, 3vw, 34px); }
-.fl-credencial-sm .fl-credencial-name { font-size: clamp(17px, 2vw, 21px); margin: clamp(16px, 2vw, 20px) 0 clamp(12px, 1.6vw, 16px); }
+.fl-credencial-sm .fl-credencial-name { font-size: clamp(17px, 2vw, 21px); margin: 6px 0 clamp(12px, 1.6vw, 16px); }
 .fl-credencial-sm .fl-credencial-data { grid-template-columns: 1fr; gap: 0; }
 .fl-credencial-sm .fl-credencial-data > div { border-top: 1px solid rgba(255, 255, 255, 0.16); border-left: none; padding: 11px 0 11px 0; }
 .fl-credencial-sm .fl-credencial-data dd { font-size: clamp(15px, 1.8vw, 18px); }
@@ -1771,9 +1769,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background: #fff; border: 1px solid var(--fl-line); box-shadow: 0 18px 44px -30px rgba(56, 31, 86, 0.24);
 }
 .fl-credencial-oficial .fl-credencial-body { background: transparent; color: var(--fl-ink); }
-.fl-credencial-oficial .fl-credencial-badge { color: var(--fl-violet); }
-.fl-credencial-oficial .fl-credencial-badge svg { color: var(--fl-green, #0A503C); }
-.fl-credencial-oficial .fl-credencial-prog { color: rgba(28, 22, 38, 0.55); }
+.fl-credencial-oficial .fl-credencial-label { color: rgba(28, 22, 38, 0.45); }
 .fl-credencial-oficial .fl-credencial-name { color: var(--fl-ink); }
 .fl-credencial-oficial .fl-credencial-data > div { border-top-color: var(--fl-line); }
 .fl-credencial-oficial .fl-credencial-data dt { color: rgba(28, 22, 38, 0.45); }
