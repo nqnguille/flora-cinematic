@@ -1,0 +1,197 @@
+---
+// Modal de Términos de Uso, compartido por todo el portal de socios.
+// Cualquier página que use SociosLogin y llame a /api/socios/login puede
+// recibir { needsTos: true } del backend (ver functions/api/socios/login.ts)
+// cuando el socio todavía no aceptó la versión vigente. Antes solo
+// carta.astro sabía mostrar el modal de aceptación — index.astro y
+// cuenta.astro no lo manejaban y mostraban un error genérico e inútil
+// ("no se pudo verificar tu cuenta"), dejando afuera a cualquier socio
+// nuevo que entrara por esas dos páginas primero.
+//
+// Uso desde el script de cada página:
+//   window.showSociosTos({ mode: 'view' })
+//   window.showSociosTos({ mode: 'accept', onAccept: async () => { ... } })
+//   window.hideSociosTos()
+---
+
+<div id="st-tos-modal" class="st-tos-modal" hidden>
+  <div class="st-tos-card" role="dialog" aria-modal="true" aria-labelledby="st-tos-title">
+    <h2 id="st-tos-title" class="st-tos-title">Términos de <em>uso</em></h2>
+    <div id="st-tos-body" class="st-tos-body">
+      <p class="st-tos-meta">Última actualización: 5 de julio de 2026</p>
+
+      <h3>1. Quién puede usar esta carta</h3>
+      <p>Esta carta es exclusiva para socios y socias <strong>mayores de 18 años</strong> de la Asociación Civil Cann de Cannabis Medicinal, con vínculo asociativo vigente y en el marco del programa REPROCANN (Ley 27.350). Al aceptar estos términos, declarás ser mayor de edad.</p>
+
+      <h3>2. Marco legal: cultivo solidario bajo REPROCANN</h3>
+      <p>La Ley 27.350 y su reglamentación (REPROCANN) reconocen el derecho de cada paciente a cultivar su propio cannabis medicinal, y prevén que una organización civil inscripta cultive en su nombre —de forma solidaria— cuando, por el motivo que sea, no pueda ejercer ese derecho en su domicilio. La Asociación Civil Cann de Cannabis Medicinal (CUIT 30-71827609-4) está inscripta en REPROCANN como organización civil cultivadora, con sitios de cultivo declarados en las provincias de Neuquén y Río Negro, y cuenta con Director Médico y responsable técnico designados conforme la normativa vigente. Para retirar en el club, cada socio debe contar con su propio trámite REPROCANN vigente, que designe a la Asociación como su cultivadora.</p>
+
+      <h3>3. Qué es (y qué no es) este servicio</h3>
+      <p>Por eso, lo que reservás y retirás en el club <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por tu vínculo REPROCANN con la Asociación. Este sitio no procesa pagos ni hace envíos — tu aporte y el retiro siempre se coordinan en persona, en la sede del club.</p>
+
+      <h3>4. Tus datos personales</h3>
+      <p>Para identificarte usamos el inicio de sesión con tu cuenta de Google, de donde tomamos tu nombre, foto y email. Guardamos también el historial de tus reservas para poder atenderte. Cuando reservás, le avisamos al equipo del club por WhatsApp usando un servicio de mensajería de terceros — solo se comparte el contenido de la reserva, nunca tu email ni tus datos personales. No vendemos ni compartimos tus datos con nadie más.</p>
+
+      <h3>5. Tus derechos sobre tus datos</h3>
+      <p>Conforme la Ley 25.326 de Protección de Datos Personales, en cualquier momento podés pedirnos acceder, corregir o eliminar tus datos, o dar de baja tu cuenta de la carta, escribiéndonos por WhatsApp.</p>
+
+      <h3>6. La información del catálogo es orientativa</h3>
+      <p>THC, CBD y demás datos publicados son de referencia y pueden variar de lote a lote. Las fotos son ilustrativas —gentileza de los bancos de semillas de las genéticas que cultivamos— y no reflejan necesariamente la cosecha exacta que vas a retirar. Nada de lo publicado acá reemplaza la indicación de tu médica o médico tratante.</p>
+
+      <h3>7. Disponibilidad y baja del servicio</h3>
+      <p>La disponibilidad de cada genética puede cambiar entre tu reserva y el retiro; te avisamos si hay cambios. El club puede, a su criterio, dar de baja el acceso de un socio a la carta ante un uso indebido del servicio.</p>
+
+      <h3>8. Cambios a estos términos</h3>
+      <p>Podemos actualizar este texto. Si el cambio es importante, te vamos a pedir que lo aceptes de nuevo la próxima vez que entres.</p>
+
+      <h3>9. Ley aplicable</h3>
+      <p>Estos términos se rigen por las leyes de la República Argentina. Ante cualquier consulta, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a>.</p>
+    </div>
+    <label id="st-tos-acceptrow" class="st-tos-check" hidden>
+      <input type="checkbox" id="st-tos-checkbox" />
+      <span>Leí y acepto estos términos</span>
+    </label>
+    <p id="st-tos-msg" class="st-tos-msg" hidden></p>
+    <div class="st-tos-actions">
+      <button id="st-tos-close" class="st-tos-btn-ghost" type="button">Cerrar</button>
+      <button id="st-tos-accept" class="st-tos-btn-primary" type="button" hidden disabled>Aceptar y continuar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let stTosMode = 'view'
+  let stTosOnAccept: (() => Promise<void>) | null = null
+
+  function stTosEl(id: string) { return document.getElementById(id) as HTMLElement }
+
+  function showSociosTos({ mode, onAccept }: { mode: 'view' | 'accept'; onAccept?: () => Promise<void> }) {
+    stTosMode = mode
+    stTosOnAccept = onAccept || null
+    ;(stTosEl('st-tos-acceptrow') as HTMLElement).hidden = mode !== 'accept'
+    ;(stTosEl('st-tos-accept') as HTMLElement).hidden = mode !== 'accept'
+    ;(stTosEl('st-tos-checkbox') as HTMLInputElement).checked = false
+    ;(stTosEl('st-tos-accept') as HTMLButtonElement).disabled = true
+    stTosEl('st-tos-msg').hidden = true
+    stTosEl('st-tos-modal').hidden = false
+    stTosEl('st-tos-body').scrollTop = 0
+  }
+
+  function hideSociosTos() {
+    stTosEl('st-tos-modal').hidden = true
+    if (stTosMode === 'accept') stTosOnAccept = null // cerrar sin aceptar cancela el login
+  }
+
+  declare global {
+    interface Window {
+      showSociosTos: typeof showSociosTos
+      hideSociosTos: typeof hideSociosTos
+    }
+  }
+  window.showSociosTos = showSociosTos
+  window.hideSociosTos = hideSociosTos
+
+  stTosEl('st-tos-close').addEventListener('click', hideSociosTos)
+  stTosEl('st-tos-modal').addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).id === 'st-tos-modal') hideSociosTos() // clic afuera cierra
+  })
+  stTosEl('st-tos-checkbox').addEventListener('change', (e) => {
+    ;(stTosEl('st-tos-accept') as HTMLButtonElement).disabled = !(e.target as HTMLInputElement).checked
+  })
+  stTosEl('st-tos-accept').addEventListener('click', async () => {
+    if (!stTosOnAccept) return
+    const btn = stTosEl('st-tos-accept') as HTMLButtonElement
+    btn.disabled = true
+    btn.textContent = 'Confirmando…'
+    try {
+      await stTosOnAccept()
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Aceptar y continuar'
+    }
+  })
+</script>
+
+<style is:global>
+  .st-tos-modal {
+    --st-bg:     #130d1c;
+    --st-card:   #1b1326;
+    --st-line:   rgba(183, 157, 230, 0.16);
+    --st-cream:  #f4f1f7;
+    --st-muted:  rgba(244, 241, 247, 0.55);
+    --st-violet: #b79de6;
+    --st-green:  #3cb492;
+
+    /* !important: algunas páginas del portal tienen reglas tipo
+       ".pt-main > * { position: relative }" que si no, pisan este fixed */
+    position: fixed !important; inset: 0 !important; z-index: 50 !important;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    background: rgba(10, 6, 16, 0.7);
+    backdrop-filter: blur(6px);
+    font-family: var(--font-ui);
+  }
+  .st-tos-modal[hidden] { display: none; }
+
+  .st-tos-card {
+    width: 100%; max-width: 640px; max-height: 86svh;
+    overflow-y: auto;
+    background: var(--st-card);
+    border: 1px solid var(--st-line);
+    border-radius: 22px;
+    padding: clamp(22px, 3.5vw, 34px);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+
+  .st-tos-title {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1; margin: 0 0 1.1rem;
+    color: var(--st-cream);
+  }
+  .st-tos-title em { font-style: italic; color: var(--st-green); }
+
+  .st-tos-body { max-height: 48svh; overflow-y: auto; padding-right: 0.4rem; margin-bottom: 1rem; }
+  .st-tos-meta { font-size: 0.75rem; color: var(--st-muted); font-style: italic; margin: 0 0 1rem; }
+  .st-tos-body h3 {
+    font-family: var(--font-ui); font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-violet);
+    margin: 1.1rem 0 0.4rem;
+  }
+  .st-tos-body h3:first-of-type { margin-top: 0; }
+  .st-tos-body p { font-size: 0.86rem; line-height: 1.6; color: var(--st-muted); margin: 0; }
+  .st-tos-body strong { color: var(--st-cream); font-weight: 700; }
+  .st-tos-body a { color: var(--st-green); }
+
+  .st-tos-check {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.88rem; font-weight: 600; color: var(--st-cream);
+    padding-top: 0.9rem; border-top: 1px solid var(--st-line);
+  }
+  .st-tos-check[hidden] { display: none; }
+  .st-tos-check input { width: 18px; height: 18px; accent-color: var(--st-violet); flex-shrink: 0; cursor: pointer; }
+
+  .st-tos-msg { font-size: 0.88rem; font-weight: 600; color: var(--st-green); margin: 0.9rem 0 0; }
+  .st-tos-msg.is-error { color: #f2818a; }
+
+  .st-tos-actions { display: flex; justify-content: flex-end; gap: 0.7rem; margin-top: 1.3rem; flex-wrap: wrap; }
+
+  .st-tos-btn-primary {
+    font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;
+    border: none; border-radius: 999px; padding: 0.6rem 1.35rem;
+    background: var(--st-violet); color: #130d1c;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  .st-tos-btn-primary:hover { background: #c8b2ec; }
+  .st-tos-btn-primary:active { transform: scale(0.97); }
+  .st-tos-btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+  .st-tos-btn-ghost {
+    font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;
+    border: 1px solid var(--st-line); border-radius: 999px; padding: 0.6rem 1.35rem;
+    background: none; color: var(--st-cream);
+    cursor: pointer; white-space: nowrap;
+    transition: border-color 0.15s ease;
+  }
+  .st-tos-btn-ghost:hover { border-color: var(--st-violet); }
+</style>

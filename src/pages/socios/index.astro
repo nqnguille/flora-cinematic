@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import SociosLogin from '../../components/SociosLogin.astro'
+import SociosTos from '../../components/SociosTos.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
@@ -23,6 +24,7 @@ const productIconsSvg = [
     <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
       <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
     </SociosLogin>
+    <SociosTos />
 
     <!-- ── Portal ── -->
     <div id="pt-content" class="pt-content" hidden>
@@ -105,24 +107,34 @@ const productIconsSvg = [
       return true
     }
 
-    window.handleGoogleCredential = async (response) => {
+    async function submitLogin(credential, tosAccept) {
       try {
         const res = await fetch('/api/socios/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ credential: response.credential }),
+          body: JSON.stringify({ credential, tosAccept: !!tosAccept }),
         })
         const data = await res.json()
-        if (!res.ok || !data.ok) {
-          showLoginError(data.error || 'No se pudo verificar tu cuenta.')
+        if (res.ok && data.ok) {
+          window.hideSociosTos()
+          await loadPrecios()
           return
         }
-        await loadPrecios()
+        if (data.needsTos) {
+          window.showSociosTos({
+            mode: 'accept',
+            onAccept: () => submitLogin(credential, true),
+          })
+          return
+        }
+        showLoginError(data.error || 'No se pudo verificar tu cuenta.')
       } catch (err) {
         showLoginError('Error de red al verificar con Google.')
       }
     }
+
+    window.handleGoogleCredential = (response) => submitLogin(response.credential, false)
 
     document.getElementById('pt-logout').addEventListener('click', async () => {
       await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
