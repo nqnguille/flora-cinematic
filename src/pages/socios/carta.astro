@@ -2035,16 +2035,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-circle-group { gap: 0.2rem; }
     .gn-circle-grouplabel { font-size: 0.52rem; letter-spacing: 0.14em; }
     .gn-circle-item { gap: 0.15rem; }
-    .gn-order { margin-top: 0.3rem; padding-top: 0.3rem; justify-content: space-between; }
-    .gn-order-pills { flex: 0 1 auto; }
+    .gn-order { margin-top: 0.25rem; padding-top: 0.25rem; justify-content: space-between; }
+    .gn-order-label { font-size: 0.54rem; }
+    .gn-order-pills { flex: 0 1 auto; gap: 0.35rem; }
     /* Pastilla siempre visible como UNA pieza (antes se leía como elementos sueltos) */
-    .gn-qty { background: rgba(244, 241, 247, 0.05); }
+    .gn-qty { background: rgba(244, 241, 247, 0.05); padding: 0.15rem 0.22rem; gap: 0.22rem; }
     .gn-item-body { overflow-y: auto; }
     .gn-circle { width: 34px; height: 34px; }
     .gn-circle svg { width: 20px; height: 20px; }
-    .gn-circle-label { font-size: 0.6rem; }
-    /* Botones del spinner más grandes para el pulgar */
-    .gn-qty-btn { width: 38px; height: 26px; font-size: 1.1rem; }
+    .gn-circle-label { font-size: 0.58rem; min-height: calc(0.58rem * 1.2 * 2); }
+    .gn-qty-ic { width: 20px; height: 20px; }
+    .gn-qty-ic svg { width: 12px; height: 12px; }
+    /* Botones del spinner: compactos, con el área táctil ampliada por
+       .gn-qty-btn::after (no hace falta que el botón visible sea grande). */
+    .gn-qty-btn { width: 28px; height: 20px; font-size: 0.9rem; }
+    .gn-qty-val { font-size: 0.85rem; }
     /* Con dos formatos las pastillas bajan de línea en vez de achicarse */
     .gn-order { flex-wrap: wrap; }
     .gn-order-pills { justify-content: center; }
