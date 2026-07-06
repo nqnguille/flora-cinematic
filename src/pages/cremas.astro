@@ -5,7 +5,7 @@ import { cremas } from '../lib/productos'
 
 <CatalogoShell
   title="Crema de CBD premium | Flora ONG"
-  description="Crema de alta concentración —1 gramo de CBD aislado por pote— para alivio localizado, sin efecto psicoactivo ni aroma a planta."
+  description="Crema de alta concentración: 1 gramo de CBD puro por pote, para alivio localizado, sin efecto psicoactivo."
   categoria="cremas"
 >
   <section class="fl-section" aria-label="Cremas">
@@ -15,9 +15,9 @@ import { cremas } from '../lib/productos'
           <span class="fl-eyebrow">Alta concentración de CBD</span>
           <h1 class="fl-spec-title">Alivio localizado, <em>sin humo.</em></h1>
           <p class="fl-spec-sub">
-            Formulada con CBD aislado de grado cosmético, en alta concentración: 1 gramo
-            de CBD puro en cada pote de 30 ml. Se aplica directamente sobre la zona para
-            un alivio localizado y preciso, sin efecto psicoactivo.
+            Alta concentración de CBD puro: 1 gramo en cada pote de 30 ml. Se aplica
+            directamente sobre la zona para un alivio localizado y preciso, sin efecto
+            psicoactivo.
           </p>
         </div>
 
@@ -25,7 +25,7 @@ import { cremas } from '../lib/productos'
           {cremas.map((c) => (
             <article class="fl-spec-card fl-oil-card" style="--oil:#0A503C">
               <div class="fl-oil-photo" data-id={c.id}>
-                <img src={c.img} alt={`${c.nombre} Flora, ${c.presentacion}`} loading="lazy" width="600" height="750" />
+                <img src={c.img} alt={`${c.nombre} Flora, ${c.presentacion}`} loading="lazy" width="900" height="900" />
                 <span class="fl-oil-badge">{c.presentacion}</span>
               </div>
               <div class="fl-oil-body">

@@ -68,7 +68,7 @@ export const cremas = [
     id: 'crema-30',
     nombre: 'Crema de CBD premium',
     presentacion: '1 g CBD · 30 ml',
-    desc: 'Crema tópica de alta concentración, formulada con CBD aislado de grado cosmético: 1 gramo de CBD puro en cada pote. Se aplica directamente sobre la zona, sin efecto psicoactivo ni aroma a planta.',
+    desc: 'Para alivio localizado, en tu rutina diaria.',
     para: ['Dolores articulares y musculares', 'Contracturas y tensión localizada', 'Uso diario, sin efecto psicoactivo'],
     img: '/img/prod-cremas.jpg',
     href: wa('Hola Flora, quiero consultar por la crema 🌿'),
