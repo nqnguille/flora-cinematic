@@ -8,18 +8,20 @@
 interface Props {
   eyebrow?: string
   title: string
-  tagline: string
+  tagline?: string
   authTitle?: string
   authSub?: string
   backHref?: string
+  hideNote?: boolean
 }
 const {
   eyebrow,
   title,
   tagline,
-  authTitle = 'Iniciá sesión',
+  authTitle,
   authSub,
   backHref = '/',
+  hideNote = false,
 } = Astro.props
 ---
 
@@ -33,15 +35,14 @@ const {
       <img class="sl-logo" src="/img/flora-logo-cultivamos-conciencia-white.png" alt="Flora — Cultivamos conciencia" width="2000" height="795" />
       {eyebrow && <span class="sl-eyebrow">{eyebrow}</span>}
       <h1 class="sl-title" set:html={title} />
-      <p class="sl-tagline">{tagline}</p>
+      {tagline && <p class="sl-tagline">{tagline}</p>}
 
-      <div class="sl-divider" aria-hidden="true"></div>
-
-      <h2 class="sl-auth-title">{authTitle}</h2>
+      {authTitle && <div class="sl-divider" aria-hidden="true"></div>}
+      {authTitle && <h2 class="sl-auth-title">{authTitle}</h2>}
       {authSub && <p class="sl-sub">{authSub}</p>}
       <div id="g_id_button" class="sl-gbtn"></div>
       <p id="socios-login-msg" class="sl-msg" hidden></p>
-      <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>
+      {!hideNote && <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>}
     </div>
   </div>
 </div>
