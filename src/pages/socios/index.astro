@@ -26,13 +26,18 @@ const productIconsSvg = [
 
       <a href="/" class="pt-login-back">← Volver al sitio</a>
 
-      <div class="pt-login-content">
-        <img class="pt-login-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
-        <span class="pt-login-eyebrow">Acceso privado</span>
-        <h1 class="pt-title">Portal de <em>socios</em></h1>
-        <p class="pt-sub">Precios de todos los productos y la carta de flores del mes, solo para socios verificados.</p>
-        <div id="g_id_button" class="pt-login-gbtn"></div>
-        <p id="pt-login-msg" class="pt-msg" hidden></p>
+      <div class="pt-login-split">
+        <div class="pt-login-block pt-login-block-left">
+          <img class="pt-login-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+          <span class="pt-login-eyebrow">Acceso privado</span>
+          <h1 class="pt-title">Portal de <em>socios</em></h1>
+        </div>
+
+        <div class="pt-login-block pt-login-block-right">
+          <p class="pt-sub">Precios de todos los productos y la carta de flores del mes, solo para socios verificados.</p>
+          <div id="g_id_button" class="pt-login-gbtn"></div>
+          <p id="pt-login-msg" class="pt-msg" hidden></p>
+        </div>
       </div>
     </div>
 
@@ -209,9 +214,9 @@ const productIconsSvg = [
   .pt-sub { line-height: 1.6; color: var(--pt-muted); font-size: 0.95rem; margin: 0; }
   .pt-msg { color: var(--pt-violet); font-size: 0.9rem; }
 
-  /* Login — experiencia de acceso premium: video de cultivo a pantalla completa,
-     sin card que lo tape. El contenido vive anclado abajo, en una franja angosta,
-     como el hero de la home (welcome-*): logo → eyebrow → título → CTA. */
+  /* Login — experiencia de acceso premium: video de cultivo a pantalla completa.
+     Dos bloques a los costados (marca+título a la izq., bajada+CTA a la der.)
+     dejan entrever el video limpio en el centro de la pantalla. */
   .pt-login {
     position: relative; overflow: hidden; isolation: isolate;
     min-height: 100svh;
@@ -223,12 +228,13 @@ const productIconsSvg = [
     width: 100%; height: 100%; object-fit: cover;
     filter: saturate(1.05) brightness(0.9);
   }
-  /* Scrim liviano arriba (el video respira limpio) y denso solo donde
-     vive el contenido, abajo — igual criterio que .welcome-scrim */
+  /* Scrim oscuro solo en los costados (donde vive cada bloque); el centro
+     de la pantalla queda claro para que el video se vea sin filtro */
   .pt-login-scrim {
     position: absolute; inset: 0; z-index: 1;
     background:
-      linear-gradient(180deg, rgba(10, 7, 16, 0.32) 0%, rgba(10, 7, 16, 0.06) 22%, rgba(10, 7, 16, 0.1) 48%, rgba(10, 7, 16, 0.72) 78%, rgba(8, 5, 13, 0.92) 100%);
+      linear-gradient(90deg, rgba(9, 6, 14, 0.7) 0%, rgba(9, 6, 14, 0.1) 32%, rgba(9, 6, 14, 0) 50%, rgba(9, 6, 14, 0.1) 68%, rgba(9, 6, 14, 0.7) 100%),
+      linear-gradient(180deg, rgba(9, 6, 14, 0.28) 0%, rgba(9, 6, 14, 0) 24%, rgba(9, 6, 14, 0) 76%, rgba(9, 6, 14, 0.35) 100%);
   }
 
   .pt-login-back {
@@ -239,16 +245,19 @@ const productIconsSvg = [
   }
   .pt-login-back:hover { color: var(--pt-cream); }
 
-  .pt-login-content {
+  .pt-login-split {
     position: relative; z-index: 2;
     min-height: 100svh;
-    max-width: 620px; margin: 0 auto;
-    padding-bottom: clamp(4.5rem, 11vh, 8rem);
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-end;
-    gap: 0.85rem;
-    text-align: center;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: clamp(24px, 6vw, 64px);
   }
+  .pt-login-block {
+    display: flex; flex-direction: column; gap: 0.85rem;
+    max-width: 360px;
+  }
+  .pt-login-block-left { align-items: flex-start; text-align: left; }
+  .pt-login-block-right { align-items: flex-start; text-align: left; }
+
   .pt-login-logo {
     height: clamp(26px, 3.2vw, 38px); width: auto;
     filter: drop-shadow(0 2px 18px rgba(0,0,0,0.55));
@@ -264,9 +273,14 @@ const productIconsSvg = [
     font-family: var(--font-ui); font-size: 0.72rem; font-weight: 600;
     letter-spacing: 0.14em; text-transform: uppercase;
   }
-  .pt-login-content .pt-title { text-shadow: 0 3px 30px rgba(0,0,0,0.65); }
-  .pt-login-content .pt-sub { max-width: 42ch; text-shadow: 0 1px 16px rgba(0,0,0,0.6); }
-  .pt-login-gbtn { margin-top: 0.6rem; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5)); }
+  .pt-login-block .pt-title { text-shadow: 0 3px 30px rgba(0,0,0,0.65); }
+  .pt-login-block .pt-sub { text-shadow: 0 1px 16px rgba(0,0,0,0.6); }
+  .pt-login-gbtn { margin-top: 0.2rem; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5)); }
+
+  @media (max-width: 860px) {
+    .pt-login-split { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 1.75rem; }
+    .pt-login-block-left, .pt-login-block-right { align-items: center; text-align: center; max-width: 440px; }
+  }
 
   /* Portal */
   .pt-content { max-width: 1080px; margin: 0 auto; padding: clamp(28px, 4vw, 56px) clamp(18px, 3vw, 32px) clamp(40px, 5vw, 64px); }
