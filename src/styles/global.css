@@ -1883,7 +1883,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-size: cover; background-position: right center; background-repeat: no-repeat;
   min-height: 260px;
 }
-.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: 78%; }
+.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(78%, 46ch); }
 @media (max-width: 560px) {
   /* En una columna angosta no hay lugar para "dejar ver" la foto a la
      derecha sin tapar el texto — el degradé pasa a cubrir casi toda la
@@ -1905,7 +1905,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* Marco médico-legal al fondo de la página: card centrada, no a todo el ancho */
 .fl-legal-footer { background: var(--fl-paper-2, #F6F4F2); }
 .fl-legal-footer .fl-wrap { display: flex; justify-content: center; }
-.fl-legal-footer .fl-vap-note { max-width: 640px; }
+.fl-legal-footer .fl-vap-note { max-width: 920px; width: 100%; }
 
 /* ── Auditoría final: gateway en touch (tablets/celu), esquinas de fotos, link gate ── */
 .fl-panel-img { border-radius: inherit; }
