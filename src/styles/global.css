@@ -1756,15 +1756,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* ── Respaldo legal: header + tarjeta chica al lado ── */
 .fl-legal-grid { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 44px); align-items: center; }
 .fl-legal-text .fl-lead { max-width: 48ch; }
-.fl-legal-link {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-ui); font-size: 14px; font-weight: 700;
-  color: var(--fl-violet); text-decoration: none; margin-top: 18px;
-  border-bottom: 1.5px solid transparent; transition: border-color 0.15s ease;
-}
-.fl-legal-link:hover { border-color: var(--fl-violet); }
-.fl-legal-link span { transition: transform 0.2s ease; }
-.fl-legal-link:hover span { transform: translateX(3px); }
 .fl-credencial-sm { margin-top: 0; box-shadow: 0 18px 44px -26px rgba(56, 31, 86, 0.42); }
 .fl-credencial-sm .fl-credencial-body { padding: clamp(24px, 3vw, 34px); }
 .fl-credencial-sm .fl-credencial-name { font-size: clamp(17px, 2vw, 21px); margin: clamp(16px, 2vw, 20px) 0 clamp(12px, 1.6vw, 16px); }
@@ -1773,6 +1764,24 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-credencial-sm .fl-credencial-data dd { font-size: clamp(15px, 1.8vw, 18px); }
 @media (min-width: 860px) {
   .fl-legal-grid { grid-template-columns: 1.05fr 0.95fr; gap: clamp(40px, 5vw, 72px); }
+}
+
+/* ── Credencial oficial: estilo documento claro, en vez del card violeta ── */
+.fl-credencial-oficial {
+  background: #fff; border: 1px solid var(--fl-line); box-shadow: 0 18px 44px -30px rgba(56, 31, 86, 0.24);
+}
+.fl-credencial-oficial .fl-credencial-body { background: transparent; color: var(--fl-ink); }
+.fl-credencial-oficial .fl-credencial-badge { color: var(--fl-violet); }
+.fl-credencial-oficial .fl-credencial-badge svg { color: var(--fl-green, #0A503C); }
+.fl-credencial-oficial .fl-credencial-prog { color: rgba(28, 22, 38, 0.55); }
+.fl-credencial-oficial .fl-credencial-name { color: var(--fl-ink); }
+.fl-credencial-oficial .fl-credencial-data > div { border-top-color: var(--fl-line); }
+.fl-credencial-oficial .fl-credencial-data dt { color: rgba(28, 22, 38, 0.45); }
+.fl-credencial-oficial .fl-credencial-data dd { color: var(--fl-ink); }
+.fl-credencial-oficial { flex-direction: column; }
+.fl-credencial-sello {
+  display: block; width: 100%; height: auto; padding: clamp(16px, 2.2vw, 22px) clamp(24px, 3vw, 34px);
+  border-top: 1px solid var(--fl-line); box-sizing: border-box;
 }
 
 /* ── Extracciones: mini-landing fumar vs vaporizar + nota médico-legal ── */
