@@ -90,7 +90,8 @@ const {
   .sl-panel {
     position: absolute; top: 0; bottom: 0; left: 0;
     width: 58%;
-    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center;
     gap: 0.7rem;
     padding: clamp(32px, 5vw, 64px);
     background: rgba(19, 13, 28, 0.9);
@@ -100,7 +101,7 @@ const {
 
   .sl-divider { width: 42px; height: 1px; background: rgba(183, 157, 230, 0.35); margin: 0.5rem 0; }
 
-  .sl-logo { height: clamp(56px, 8vw, 108px); width: auto; margin-bottom: 0.4rem; }
+  .sl-logo { height: clamp(90px, 13vw, 200px); width: auto; margin-bottom: 0.4rem; }
   .sl-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(183, 157, 230, 0.16);
@@ -112,7 +113,7 @@ const {
 
   .sl-title {
     font-family: var(--font-display); font-weight: 500; color: var(--sl-cream);
-    font-size: clamp(1.9rem, 3.4vw, 2.5rem); line-height: 1.05; margin: 0;
+    font-size: clamp(2.6rem, 5vw, 4rem); line-height: 1.08; margin: 0;
   }
   .sl-title em { font-style: italic; color: var(--sl-violet); }
   .sl-tagline { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0; }
