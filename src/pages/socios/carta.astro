@@ -42,7 +42,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
 
       <footer class="gn-pagefoot">
-        <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · I.G.J. 1994128 · Organización civil de cultivo solidario inscripta en REPROCANN (Ley 27.350). Reservás acá; abonás y retirás en el club. <button type="button" class="gn-tos-linkbtn gn-tos-open">Ver términos completos</button></p>
+        <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · Ley 27.350 / REPROCANN. <button type="button" class="gn-tos-linkbtn gn-tos-open">Ver términos completos</button></p>
       </footer>
 
       <!-- ── Barra de reserva (flotante) ── -->
@@ -1990,7 +1990,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-topbar { flex-wrap: wrap; row-gap: 0.6rem; margin-bottom: 2px; }
     .gn-logo { order: 1; }
     .gn-topbar-right { order: 2; }
-    /* Filtros: UNA sola fila deslizable a lo ancho */
+    /* Filtros: UNA sola fila deslizable a lo ancho. Máscara en el borde
+       derecho para que el corte se lea como "hay más" y no como un bug. */
     .gn-filters {
       order: 3;
       flex: 1 1 100%;
@@ -1999,6 +2000,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       overflow-x: auto;
       scrollbar-width: none;
       padding-bottom: 2px;
+      mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
     }
     .gn-filters::-webkit-scrollbar { display: none; }
     .gn-seg-label { padding-left: 0.5rem; }
@@ -2006,16 +2009,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }
 
     /* Carrusel: altura FIJA independiente del chrome — la ficha entra entera.
-       Tarjeta más angosta (se asoma la siguiente) y hero más apaisado:
-       las fotos 16:9 se ven con menos recorte/zoom. */
+       Tarjeta angosta: entran casi 2 genéticas en pantalla (con un adelanto
+       de la tercera), y el hero sigue siendo la parte más alta de la card. */
     .gn-track { flex: 0 0 auto; height: min(70svh, 600px); }
-    .gn-item { width: 68vw; }
-    .gn-item-hero { height: 48%; background: #0c0810; }
+    .gn-item { width: 46vw; }
+    .gn-item-hero { height: 58%; background: #0c0810; }
     /* Las fotos del banco tienen relaciones de aspecto mixtas (algunas muy
        verticales) y fondo casi negro: en vez de adivinar un recorte que
        siempre corta algo, mostramos la foto ENTERA (contain). El fondo del
        hero es casi idéntico al de la foto, así el margen no se nota. */
     .gn-item-img { object-fit: contain; }
+    /* Sellos de formato más chicos en mobile: menos superpuestos a la foto */
+    .gn-seal { width: 40px; height: 40px; top: 0.6rem; }
+    .gn-seal svg { width: 24px; height: 24px; }
     /* Ficha comprimida: más altura para la foto */
     .gn-item-body { padding: 0.7rem 0.8rem; }
     .gn-rule { margin: 0.45rem 0 0.5rem; }
