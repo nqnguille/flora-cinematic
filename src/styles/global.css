@@ -1834,20 +1834,14 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-credencial-sello-img { flex: 0 0 auto; width: clamp(56px, 7vw, 76px); height: clamp(56px, 7vw, 76px); }
 
 /* ── Extracciones: abre con el mini-landing educativo fumar vs vaporizar
-   + nota médico-legal (.fl-vap.fl-ext-hero, es la primera sección de la
-   página), después el catálogo (.fl-analisis-ext) ── */
+   (.fl-vap.fl-ext-hero, es la primera sección de la página), después el
+   catálogo (.fl-analisis-ext) y al fondo el marco médico-legal
+   (.fl-legal-footer) ── */
 .fl-vap { background: var(--fl-paper-2, #F6F4F2); padding-bottom: clamp(28px, 3.5vw, 44px); }
 /* .fl-ext-hero: como ahora es la apertura de la página, necesita el
    padding-top generoso de un hero (no el recortado que tenía cuando
    era una sección intermedia) — el padding-bottom lo controla .fl-vap */
 .fl-ext-hero { padding-top: clamp(56px, 7vw, 96px); }
-/* .fl-legal-grid en general usa align-items:center (columna corta queda
-   flotando en el medio); acá la nota médico-legal queda mucho más corta
-   que el texto+cards de al lado, así que la estiramos para que ocupe
-   toda la fila en vez de dejar aire abajo. Scopeado a .fl-vap para no
-   afectar el mismo grid en index.astro. */
-.fl-vap .fl-legal-grid { align-items: stretch; }
-.fl-vap .fl-vap-note { height: 100%; box-sizing: border-box; justify-content: center; }
 .fl-vap-compare {
   display: grid; grid-template-columns: 1fr; gap: 14px;
   margin-top: clamp(20px, 2.6vw, 28px); max-width: 48ch;
@@ -1870,7 +1864,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 
 .fl-vap-note {
   background: var(--fl-violet); color: #fff; border-radius: var(--fl-r-card, 20px);
-  padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px;
+  overflow: hidden;
 }
 .fl-vap-note-badge {
   align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
@@ -1880,6 +1874,26 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0; }
 .fl-vap-note p strong { color: #fff; }
 
+/* Variante con foto de fondo: la imagen (inline en el style= del componente,
+   junto con el degradé) queda alineada a la derecha de la card; el degradé
+   violeta cubre de sólido (izq., donde vive el texto) a transparente
+   (der., donde se ve la foto sin filtro) */
+.fl-vap-note--bgphoto {
+  background-image: linear-gradient(90deg, var(--fl-violet) 0%, var(--fl-violet) 38%, rgba(56,31,86,0.65) 60%, rgba(56,31,86,0.2) 82%, rgba(56,31,86,0) 100%), url('/img/extracciones-legal-vape.jpg');
+  background-size: cover; background-position: right center; background-repeat: no-repeat;
+  min-height: 260px;
+}
+.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: 78%; }
+@media (max-width: 560px) {
+  /* En una columna angosta no hay lugar para "dejar ver" la foto a la
+     derecha sin tapar el texto — el degradé pasa a cubrir casi toda la
+     card, dejando solo un borde de la foto asomando */
+  .fl-vap-note--bgphoto {
+    background-image: linear-gradient(90deg, var(--fl-violet) 0%, var(--fl-violet) 60%, rgba(56,31,86,0.8) 78%, rgba(56,31,86,0.4) 92%, rgba(56,31,86,0.15) 100%), url('/img/extracciones-legal-vape.jpg');
+  }
+  .fl-vap-note-body { max-width: 100%; }
+}
+
 /* Grilla de extracciones: fondo blanco propio, separado de la mini-landing gris */
 .fl-analisis-ext { padding-top: clamp(20px, 2.5vw, 32px); }
 /* .fl-spec trae su propio margin-top (pensado para separarse de un título
@@ -1887,6 +1901,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    de cards es lo único dentro de .fl-spec — y se sumaba al padding de la
    sección duplicando el salto de aire. */
 .fl-analisis-ext .fl-spec { margin-top: 0; }
+
+/* Marco médico-legal al fondo de la página: card centrada, no a todo el ancho */
+.fl-legal-footer { background: var(--fl-paper-2, #F6F4F2); }
+.fl-legal-footer .fl-wrap { display: flex; justify-content: center; }
+.fl-legal-footer .fl-vap-note { max-width: 640px; }
 
 /* ── Auditoría final: gateway en touch (tablets/celu), esquinas de fotos, link gate ── */
 .fl-panel-img { border-radius: inherit; }

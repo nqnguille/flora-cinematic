@@ -12,13 +12,11 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
   categoria="extracciones"
 >
   <!-- ══════════════════════════════════════════ -->
-  <!-- HERO EDUCATIVO: fumar vs. vaporizar, marco médico-legal.
-       Antes esta página abría con un hero de producto ("Vapor limpio,
-       sin combustión") y esto venía segundo — se invierte a pedido:
-       el abordaje educativo va primero, el catálogo después. -->
+  <!-- HERO EDUCATIVO: fumar vs. vaporizar. Solo la parte educativa —
+       el disclaimer médico-legal se movió al fondo de la página. -->
   <!-- ══════════════════════════════════════════ -->
   <section class="fl-section fl-vap fl-ext-hero" aria-label="Vaporizar cannabis: vía de administración">
-    <div class="fl-wrap fl-legal-grid">
+    <div class="fl-wrap">
       <div class="fl-legal-text">
         <span class="fl-eyebrow">Vía de administración</span>
         <h1 class="fl-title">Fumar o vaporizar: <em>dos formas de inhalar.</em></h1>
@@ -48,25 +46,6 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
           </div>
         </div>
       </div>
-
-      <aside class="fl-vap-note">
-        <span class="fl-vap-note-badge">Marco médico-legal</span>
-        <p>
-          Bajo la Ley 27.350 y el REPROCANN, la vía de administración la define tu
-          equipo médico según tu tratamiento. Muchos profesionales consideran vaporizar
-          una alternativa más cuidadosa que fumar para quienes inhalan cannabis de
-          forma sostenida, precisamente por evitar la combustión.
-        </p>
-        <p>
-          Los cartuchos de extracto de cannabis medicinal responden a un marco distinto
-          al de los cigarrillos electrónicos de nicotina. Estos últimos estuvieron
-          prohibidos en Argentina desde 2011 y en mayo de 2026 el Ministerio de Salud
-          los volvió a habilitar (Resolución 549/2026), con una regulación estricta
-          pensada para reducir su consumo entre adolescentes. El extracto de cannabis,
-          en cambio, se rige por la Ley 27.350 y el REPROCANN: es de uso exclusivo para
-          pacientes registrados, con indicación médica.
-        </p>
-      </aside>
     </div>
   </section>
 
@@ -106,6 +85,35 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
           ))}
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- MARCO MÉDICO-LEGAL: se movió al fondo de la página (antes vivía
+       al lado del bloque educativo, arriba de todo) -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-legal-footer" aria-label="Marco médico-legal">
+    <div class="fl-wrap">
+      <aside class="fl-vap-note fl-vap-note--bgphoto">
+        <div class="fl-vap-note-body">
+          <span class="fl-vap-note-badge">Marco médico-legal</span>
+          <p>
+            Bajo la Ley 27.350 y el REPROCANN, la vía de administración la define tu
+            equipo médico según tu tratamiento. Muchos profesionales consideran vaporizar
+            una alternativa más cuidadosa que fumar para quienes inhalan cannabis de
+            forma sostenida, precisamente por evitar la combustión.
+          </p>
+          <p>
+            Los cartuchos de extracto de cannabis medicinal responden a un marco distinto
+            al de los cigarrillos electrónicos de nicotina. Estos últimos estuvieron
+            prohibidos en Argentina desde 2011 y en mayo de 2026 el Ministerio de Salud
+            los volvió a habilitar (Resolución 549/2026), con una regulación estricta
+            pensada para reducir su consumo entre adolescentes. El extracto de cannabis,
+            en cambio, se rige por la Ley 27.350 y el REPROCANN: es de uso exclusivo para
+            pacientes registrados, con indicación médica.
+          </p>
+        </div>
+      </aside>
     </div>
   </section>
 </CatalogoShell>
