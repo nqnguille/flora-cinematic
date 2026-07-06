@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import SociosLogin from '../../components/SociosLogin.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
@@ -13,28 +14,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
   <main class="gn-main">
-    <!-- ── Login ── -->
-    <div id="gn-login" class="gn-login">
-      <div class="gn-login-card">
-        <div class="gn-brand">
-          <svg class="gn-brand-leaf" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span class="gn-brand-name">Flora <em>club</em></span>
-        </div>
-        <h1 class="gn-title">Carta de <em>genéticas</em></h1>
-        <p class="gn-sub">
-          Acá vas a encontrar el stock de flores y prerolls del club, en vivo. Elegís,
-          reservamos tu lugar, y coordinás el retiro y tu aporte en la sede — por acá
-          no se cobra nada.
-        </p>
-        <div id="g_id_button"></div>
-        <p class="gn-privacy-note">
-          Vamos a pedirte tu nombre, foto y email de Google para identificarte como socio.
-          <button type="button" class="gn-tos-linkbtn gn-tos-open">Leer los términos completos</button>
-        </p>
-        <p id="gn-login-msg" class="gn-msg" hidden></p>
-        <a href="/" class="gn-back">← Volver al sitio</a>
-      </div>
-    </div>
+    <SociosLogin
+      title="Carta de <em>genéticas</em>"
+      tagline="Elegís, reservamos tu lugar, y coordinás el retiro y tu aporte en la sede — no se cobra nada por acá."
+      authSub="Ingresá con la cuenta de Google que registraste como socio para reservar tu lugar."
+    >
+      <Fragment slot="note">
+        Vamos a pedirte tu nombre, foto y email de Google para identificarte como socio.
+        <button type="button" class="gn-tos-linkbtn gn-tos-open">Leer los términos completos</button>
+      </Fragment>
+    </SociosLogin>
 
     <!-- ── Carta (fullscreen · carrusel) ── -->
     <div id="gn-content" class="gn-content" hidden>
@@ -853,7 +842,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     function showContent(list) {
       allGeneticas = list
-      document.getElementById('gn-login').hidden = true
+      document.getElementById('socios-login').hidden = true
       document.getElementById('gn-content').hidden = false
       buildFilters()
       applyFilters()
@@ -863,7 +852,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // El mensaje de "no sos socio" lleva un link de WhatsApp para resolverlo al toque
     function showLoginError(message) {
-      const msg = document.getElementById('gn-login-msg')
+      const msg = document.getElementById('socios-login-msg')
       if (message === '__NOSOCIO__') {
         msg.innerHTML = 'Esa cuenta de Google todavía no figura como socia del club. Si ya sos socio, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a> para habilitarte el acceso.'
       } else {
@@ -1049,96 +1038,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-main > * { position: relative; z-index: 1; }
 
-  /* ── Marca ── */
-  .gn-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    color: var(--gn-violet);
-  }
-  .gn-brand-leaf { width: 30px; height: 30px; }
-  .gn-brand-name {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--gn-cream);
-  }
-  .gn-brand-name em {
-    font-style: normal;
-    color: var(--gn-violet);
-    font-weight: 600;
-  }
-
   .gn-tagline {
     font-family: var(--font-display);
     font-style: italic;
     font-size: 1.2rem;
     color: var(--gn-violet);
     text-align: right;
-  }
-
-  /* Título de página en Cormorant, con palabra-acento en verde itálica */
-  .gn-title {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: clamp(2.4rem, 5.5vw, 3.8rem);
-    line-height: 1;
-    letter-spacing: 0.005em;
-    margin: 0;
-    color: var(--gn-cream);
-  }
-  .gn-title em {
-    font-style: italic;
-    color: var(--gn-green);
-  }
-
-  .gn-back {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--gn-muted);
-    text-decoration: none;
-  }
-  .gn-back:hover { color: var(--gn-cream); }
-
-  /* ── Login ── */
-  .gn-login {
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-m) var(--space-s);
-  }
-  .gn-login[hidden] { display: none; }
-
-  .gn-login-card {
-    width: 100%;
-    max-width: 500px;
-    background: var(--gn-card);
-    border: 1px solid var(--gn-line);
-    border-radius: 22px;
-    padding: clamp(30px, 4vw, 48px);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
-  }
-  .gn-login-card .gn-title { font-size: clamp(2rem, 5vw, 2.9rem); }
-
-  .gn-sub {
-    line-height: 1.6;
-    color: var(--gn-muted);
-    font-size: 0.95rem;
-    margin: 0 0 0.4rem;
-  }
-
-  /* Nota de transparencia de datos, debajo del botón de Google */
-  .gn-privacy-note {
-    font-size: 0.76rem;
-    line-height: 1.55;
-    color: var(--gn-muted);
-    margin: 0.2rem 0 0;
   }
   .gn-tos-linkbtn {
     background: none;
@@ -1152,11 +1057,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     cursor: pointer;
   }
   .gn-tos-linkbtn:hover { color: var(--gn-cream); }
-
-  .gn-msg {
-    color: var(--gn-violet);
-    font-size: 0.9rem;
-  }
 
   /* ── Carta (fullscreen · carrusel) ── */
   .gn-content {
@@ -2059,7 +1959,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-sel:focus-visible,
   .gn-search:focus-visible,
   .gn-logout:focus-visible,
-  .gn-back:focus-visible,
   .gn-qty-btn:focus-visible,
   .gn-btn-primary:focus-visible,
   .gn-btn-ghost:focus-visible,

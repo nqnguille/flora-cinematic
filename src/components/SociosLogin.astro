@@ -1,0 +1,141 @@
+---
+// Login compartido de todo el portal de socios (index, carta, cuenta, admin).
+// Una sola experiencia visual: video de cultivo a pantalla completa + dos cards
+// (marca a la izq., acceso con Google a la der.). Cada página sigue dueña de
+// SU lógica de auth (distinto payload/POST-login), pero todas apuntan a los
+// mismos ids (#socios-login, #g_id_button, #socios-login-msg) para que este
+// componente sea el único lugar donde vive el diseño del login.
+interface Props {
+  eyebrow?: string
+  title: string
+  tagline: string
+  authTitle?: string
+  authSub: string
+  backHref?: string
+}
+const {
+  eyebrow = 'Acceso privado',
+  title,
+  tagline,
+  authTitle = 'Iniciá sesión',
+  authSub,
+  backHref = '/',
+} = Astro.props
+---
+
+<div id="socios-login" class="sl-login">
+  <video class="sl-video" src="/hero/socios-login.mp4" poster="/hero/socios-login_poster.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+  <div class="sl-scrim" aria-hidden="true"></div>
+
+  <a href={backHref} class="sl-back">← Volver al sitio</a>
+
+  <div class="sl-split">
+    <div class="sl-card sl-card-brand">
+      <img class="sl-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+      <span class="sl-eyebrow">{eyebrow}</span>
+      <h1 class="sl-title" set:html={title} />
+      <p class="sl-tagline">{tagline}</p>
+    </div>
+
+    <div class="sl-card sl-card-auth">
+      <h2 class="sl-auth-title">{authTitle}</h2>
+      <p class="sl-sub">{authSub}</p>
+      <div id="g_id_button" class="sl-gbtn"></div>
+      <p id="socios-login-msg" class="sl-msg" hidden></p>
+      <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  /* ═══════════════════════════════════════════════
+     SOCIOS LOGIN — componente único para todo el portal
+     Video de cultivo de fondo + dos cards de vidrio.
+  ═══════════════════════════════════════════════ */
+  .sl-login {
+    --sl-cream:  #f4f1f7;
+    --sl-muted:  rgba(244, 241, 247, 0.55);
+    --sl-violet: #b79de6;
+
+    position: relative; overflow: hidden; isolation: isolate;
+    min-height: 100svh;
+    padding: var(--space-m) var(--space-s);
+    background: #130d1c;
+    font-family: var(--font-ui);
+  }
+  .sl-login[hidden] { display: none; }
+
+  .sl-video {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: cover;
+    filter: saturate(1.05) brightness(0.9);
+  }
+  /* Scrim solo en los costados: el centro de la pantalla queda con el
+     video limpio, entre las dos cards */
+  .sl-scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(90deg, rgba(9, 6, 14, 0.55) 0%, rgba(9, 6, 14, 0.08) 30%, rgba(9, 6, 14, 0) 50%, rgba(9, 6, 14, 0.08) 70%, rgba(9, 6, 14, 0.55) 100%),
+      linear-gradient(180deg, rgba(9, 6, 14, 0.24) 0%, rgba(9, 6, 14, 0) 22%, rgba(9, 6, 14, 0) 78%, rgba(9, 6, 14, 0.3) 100%);
+  }
+
+  .sl-back {
+    position: absolute; z-index: 3; top: var(--space-s); left: var(--space-s);
+    color: rgba(244, 241, 247, 0.75); text-decoration: none; font-size: 0.85rem;
+    font-family: var(--font-ui);
+    text-shadow: 0 1px 12px rgba(0,0,0,0.6);
+    transition: color 0.2s ease;
+  }
+  .sl-back:hover { color: var(--sl-cream); }
+
+  .sl-split {
+    position: relative; z-index: 2;
+    min-height: 100svh;
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(20px, 4vw, 48px);
+  }
+
+  .sl-card {
+    width: 100%; max-width: 380px;
+    background: linear-gradient(165deg, rgba(38, 27, 58, 0.66), rgba(19, 13, 28, 0.78));
+    -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+    border: 1px solid rgba(183, 157, 230, 0.28);
+    border-radius: 22px;
+    padding: clamp(26px, 3.2vw, 38px);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.8rem;
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255,255,255,0.06);
+    color: var(--sl-cream);
+  }
+
+  .sl-logo { height: clamp(24px, 2.6vw, 32px); width: auto; margin-bottom: 0.2rem; }
+  .sl-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(183, 157, 230, 0.16);
+    border: 1px solid rgba(183, 157, 230, 0.4);
+    border-radius: 999px; padding: 6px 14px;
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+
+  .sl-title {
+    font-family: var(--font-display); font-weight: 500; color: var(--sl-cream);
+    font-size: clamp(1.9rem, 3.4vw, 2.5rem); line-height: 1.05; margin: 0;
+  }
+  .sl-title em { font-style: italic; color: var(--sl-violet); }
+  .sl-tagline { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0; }
+
+  .sl-auth-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0; color: var(--sl-cream); }
+  .sl-sub { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0; }
+  .sl-gbtn { margin-top: 0.3rem; }
+  .sl-msg { color: var(--sl-violet); font-size: 0.85rem; margin: 0; }
+  .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0; }
+  .sl-note button { background: none; border: none; padding: 0; color: var(--sl-violet); text-decoration: underline; font-size: inherit; font-family: inherit; cursor: pointer; }
+
+  @media (max-width: 860px) {
+    .sl-split { flex-direction: column; gap: 1.25rem; }
+    .sl-card { align-items: flex-start; }
+  }
+  @media (max-width: 480px) {
+    .sl-card { max-width: 100%; }
+  }
+</style>
