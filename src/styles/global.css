@@ -1391,18 +1391,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* Infografía CBD/THC como fondo grande del módulo (mismo criterio que el
    fondo sólido de .fl-reprocann, acá con imagen en vez de color plano) —
    la imagen ya tiene fondo blanco a propósito, para que se funda con el de
-   la sección sin necesitar overlay ni degradé. */
-.fl-perfiles { position: relative; overflow: hidden; }
-.fl-perfiles::before {
+   la sección sin necesitar overlay ni degradé. Acotada al HEADER (no a
+   toda la sección) para que ni las cards del carrusel ni ningún texto la
+   pisen nunca: es su propia caja, separada del resto del módulo. */
+.fl-perfiles .fl-head { position: relative; min-height: 340px; }
+.fl-perfiles .fl-head::before {
   content: ''; position: absolute; z-index: 0;
-  top: 0; right: 0; width: min(58%, 900px); height: 100%;
-  background: url('/img/cbd-thc-comparacion.webp') no-repeat top right / contain;
-  opacity: 0.9;
+  top: 0; right: 0; bottom: 0; width: min(44%, 620px);
+  background: url('/img/cbd-thc-comparacion-v2.webp') no-repeat center right / contain;
 }
-.fl-perfiles .fl-wrap { position: relative; z-index: 1; }
-.fl-perfiles-carousel-wrap { position: relative; z-index: 1; }
+.fl-perfiles .fl-head > * { position: relative; z-index: 1; }
 @media (max-width: 760px) {
-  .fl-perfiles::before { display: none; }
+  .fl-perfiles .fl-head { min-height: 0; }
+  .fl-perfiles .fl-head::before { display: none; }
 }
 
 .fl-spec { margin-top: clamp(56px, 7vw, 88px); }
