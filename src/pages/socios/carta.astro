@@ -29,6 +29,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
         </div>
         <div class="gn-topbar-right">
+        <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg>
+          <span id="gn-cart-badge" class="gn-cart-badge" hidden></span>
+        </button>
         <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
           <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
           <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
@@ -45,14 +49,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · Ley 27.350 / REPROCANN. <button type="button" class="gn-tos-linkbtn gn-tos-open">Ver términos completos</button></p>
       </footer>
 
-      <!-- ── Barra de reserva (flotante) ── -->
-      <div id="gn-cartbar" class="gn-cartbar" hidden>
-        <span id="gn-cartbar-txt" class="gn-cartbar-txt"></span>
-        <button id="gn-cartbar-btn" class="gn-btn-primary" type="button">Revisar reserva</button>
-      </div>
-
-      <!-- ── Modal de reserva ── -->
-      <div id="gn-modal" class="gn-modal" hidden data-lenis-prevent>
+      <!-- ── Modal de reserva (se abre desde el ícono de carrito del topbar) ── -->
+      <div id="gn-modal" class="gn-modal gn-modal--cart" hidden data-lenis-prevent>
         <div class="gn-modal-card" role="dialog" aria-modal="true" aria-labelledby="gn-modal-title">
           <h2 id="gn-modal-title" class="gn-modal-title">Tu <em>reserva</em></h2>
           <div id="gn-modal-body"></div>
@@ -616,27 +614,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     function updateCartBar() {
-      const bar = document.getElementById('gn-cartbar')
-      const txt = document.getElementById('gn-cartbar-txt')
-      const btn = document.getElementById('gn-cartbar-btn')
+      const trigger = document.getElementById('gn-cart-trigger')
+      const badge = document.getElementById('gn-cart-badge')
+      let label = ''
+      let count = 0
       if (activePedido) {
-        bar.hidden = false
-        bar.classList.toggle('is-listo', activePedido.estado === 'listo')
-        txt.textContent = ESTADO_TXT[activePedido.estado] || 'Tenés una reserva en curso'
-        btn.textContent = 'Ver reserva'
+        trigger.hidden = false
+        trigger.classList.toggle('is-listo', activePedido.estado === 'listo')
+        label = ESTADO_TXT[activePedido.estado] || 'Tenés una reserva en curso'
+        count = activePedido.items.reduce((s, i) => s + (i.cantidad || 0), 0)
       } else if (cart.size) {
         let g = 0, u = 0
         for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : (u += c)
-        bar.hidden = false
-        bar.classList.remove('is-listo')
-        txt.textContent = 'Tu reserva: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
-        btn.textContent = 'Revisar reserva'
+        trigger.hidden = false
+        trigger.classList.remove('is-listo')
+        label = 'Tu reserva: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
+        count = g + u
       } else {
-        bar.hidden = true
+        trigger.hidden = true
       }
-      // Con la barra visible, el pie reserva su alto: la barra no tapa ni los
-      // steppers de las tarjetas ni el disclaimer legal.
-      document.getElementById('gn-content').classList.toggle('has-cartbar', !bar.hidden)
+      trigger.title = label
+      trigger.setAttribute('aria-label', label || 'Tu reserva')
+      badge.textContent = count > 0 ? String(count) : ''
+      badge.hidden = count <= 0
     }
 
     function cartItems() {
@@ -730,10 +730,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar reserva</button>`
       }
       document.getElementById('gn-modal').hidden = false
+      document.getElementById('gn-cart-trigger').setAttribute('aria-expanded', 'true')
       if (successText) showModalMsg(successText, false)
       ;(document.getElementById('gn-modal-send') || document.getElementById('gn-modal-close'))?.focus()
     }
-    function closeModal() { document.getElementById('gn-modal').hidden = true }
+    function closeModal() {
+      document.getElementById('gn-modal').hidden = true
+      document.getElementById('gn-cart-trigger').setAttribute('aria-expanded', 'false')
+    }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !document.getElementById('gn-modal').hidden) closeModal()
     })
@@ -816,7 +820,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     }
 
-    document.getElementById('gn-cartbar-btn').addEventListener('click', () => openModal())
+    document.getElementById('gn-cart-trigger').addEventListener('click', () => openModal())
     document.getElementById('gn-modal').addEventListener('click', (e) => {
       if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
       if (e.target.id === 'gn-modal-close') closeModal()
@@ -1684,7 +1688,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     flex: 0 1 auto;
     min-width: 0;
     border: 1px solid var(--gn-line);
-    border-radius: 999px;
+    /* No es un stadium (999px): la columna de +/- apilados es más alta que
+       el radio de un pill completo puede contener sin que sus esquinas se
+       salgan del contorno — eso es lo que se leía como "uno cuadrado, uno
+       redondo". Un radio fijo y chico contiene la columna sin recortarla. */
+    border-radius: 10px;
     padding: 0.2rem 0.28rem;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
@@ -1744,33 +1752,45 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-qty.is-flor.has-qty .gn-qty-val { color: var(--gn-green); }
   .gn-qty.is-preroll.has-qty .gn-qty-val { color: var(--gn-violet); }
 
-  /* ── Barra de pedido flotante ── */
-  .gn-cartbar {
-    position: fixed;
-    left: 50%;
-    bottom: clamp(14px, 3vh, 28px);
-    transform: translateX(-50%);
-    z-index: 45;
-    display: flex;
+  /* ── Ícono de carrito en el topbar (reemplaza la barra flotante de antes:
+     mismo lenguaje visual que ".nav-cta--carta" del sitio público) ── */
+  .gn-cart-trigger {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 1rem;
-    max-width: min(92vw, 640px);
-    background: rgba(28, 20, 48, 0.92);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--gn-violet);
+    justify-content: center;
+    width: 38px;
+    height: 38px;
     border-radius: 999px;
-    padding: 0.6rem 0.7rem 0.6rem 1.3rem;
-    box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.8);
+    background: var(--gn-violet);
+    border: 1px solid var(--gn-violet);
+    color: var(--gn-cream);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
   }
-  .gn-cartbar[hidden] { display: none; }
-  .gn-cartbar.is-listo { border-color: var(--gn-green); }
-  .gn-cartbar-txt {
-    font-size: 0.9rem; font-weight: 600; color: var(--gn-cream);
-    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .gn-cart-trigger[hidden] { display: none; }
+  .gn-cart-trigger:hover { background: #4a3370; }
+  .gn-cart-trigger.is-listo { background: var(--gn-green); border-color: var(--gn-green); }
+  .gn-cart-trigger.is-listo:hover { background: #2a8a70; }
+  .gn-cart-trigger svg { width: 18px; height: 18px; }
+  .gn-cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--gn-cream);
+    color: var(--gn-violet);
+    font-family: var(--font-ui);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
   }
-  /* Con la barra visible el pie reserva su alto: no tapa steppers ni disclaimer */
-  .gn-content.has-cartbar .gn-pagefoot { padding-bottom: 62px; }
-  .gn-cartbar.is-listo .gn-cartbar-txt { color: var(--gn-green); }
+  .gn-cart-badge[hidden] { display: none; }
 
   .gn-btn-primary {
     font-family: var(--font-ui);
@@ -1826,6 +1846,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border-radius: 22px;
     padding: clamp(22px, 3.5vw, 34px);
     box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+  /* Modal de la reserva: en vez de un overlay centrado (que tapaba la carta
+     sin ninguna relación visual con lo que lo abrió), se ancla arriba a la
+     derecha, justo debajo del ícono de carrito del topbar que lo abre. El
+     modal de Términos (#gn-tos-modal, sin este modificador) sigue centrado. */
+  .gn-modal--cart { align-items: flex-start; justify-content: flex-end; padding: 0; }
+  .gn-modal--cart .gn-modal-card {
+    max-width: 420px;
+    max-height: min(80svh, 640px);
+    margin: 0;
+    border-radius: 0 0 0 22px;
+    border-top: none;
+  }
+  @media (max-width: 760px) {
+    .gn-modal--cart .gn-modal-card { max-width: 100%; border-radius: 0 0 22px 22px; }
   }
   .gn-modal-title {
     font-family: var(--font-display);
@@ -1978,11 +2013,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (max-width: 760px) {
-    /* En el celular la página SCROLLEA (el lienzo fijo 100svh es para la TV):
-       la tarjeta tiene altura fija generosa y el resto fluye debajo. */
+    /* Alto DEFINIDO (no auto): con height:auto el contenedor flex no tenía
+       espacio "sobrante" que repartir y .gn-track (flex:1 1 auto) no podía
+       crecer — colapsaba al alto de su contenido (0, sin viewport de donde
+       heredar %). Con 100svh fijo, .gn-track sí llena lo que topbar+pagefoot
+       no usan. overflow:visible deja que un contenido excepcionalmente alto
+       siga empujando el scroll de la página en vez de recortarse. */
     .gn-content {
-      height: auto;
-      min-height: 100svh;
+      height: 100svh;
       overflow: visible;
       gap: 10px;
     }
@@ -2008,10 +2046,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-seg-btn { padding: 0.35rem 0.85rem; font-size: 0.88rem; }
     .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }
 
-    /* Carrusel: altura FIJA independiente del chrome — la ficha entra entera.
+    /* Carrusel: SIN altura fija (hereda flex:1 1 auto/min-height:0 de la
+       regla base) para que ocupe todo lo que topbar+pagefoot no usan — un
+       cap fijo en vh dejaba aire muerto abajo en teléfonos altos.
        Tarjeta angosta: entran casi 2 genéticas en pantalla (con un adelanto
        de la tercera), y el hero sigue siendo la parte más alta de la card. */
-    .gn-track { flex: 0 0 auto; height: min(70svh, 600px); }
     .gn-item { width: 46vw; }
     .gn-item-hero { height: 58%; background: #0c0810; }
     /* Las fotos del banco tienen relaciones de aspecto mixtas (algunas muy
@@ -2039,7 +2078,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-order-label { font-size: 0.54rem; }
     .gn-order-pills { flex: 0 1 auto; gap: 0.35rem; }
     /* Pastilla siempre visible como UNA pieza (antes se leía como elementos sueltos) */
-    .gn-qty { background: rgba(244, 241, 247, 0.05); padding: 0.15rem 0.22rem; gap: 0.22rem; }
+    .gn-qty { background: rgba(244, 241, 247, 0.05); padding: 0.15rem 0.22rem; gap: 0.22rem; border-radius: 8px; }
     .gn-item-body { overflow-y: auto; }
     .gn-circle { width: 34px; height: 34px; }
     .gn-circle svg { width: 20px; height: 20px; }
@@ -2048,7 +2087,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-qty-ic svg { width: 12px; height: 12px; }
     /* Botones del spinner: compactos, con el área táctil ampliada por
        .gn-qty-btn::after (no hace falta que el botón visible sea grande). */
-    .gn-qty-btn { width: 28px; height: 20px; font-size: 0.9rem; }
+    .gn-qty-btn { width: 24px; height: 20px; font-size: 0.9rem; }
     .gn-qty-val { font-size: 0.85rem; }
     /* Con dos formatos las pastillas bajan de línea en vez de achicarse */
     .gn-order { flex-wrap: wrap; }
