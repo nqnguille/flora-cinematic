@@ -2023,33 +2023,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-seal { width: 40px; height: 40px; top: 0.6rem; }
     .gn-seal svg { width: 24px; height: 24px; }
     /* Ficha comprimida: más altura para la foto */
-    .gn-item-body { padding: 0.7rem 0.8rem; }
-    .gn-rule { margin: 0.45rem 0 0.5rem; }
-    .gn-meters { margin-bottom: 0.55rem; gap: 0.4rem 0.9rem; }
-    .gn-meter-label { margin-bottom: 0.35rem; }
-    .gn-circle-row { margin-top: 0.2rem; gap: 0.5rem; }
-    .gn-circle-group { gap: 0.35rem; }
-    .gn-circle-item { gap: 0.3rem; }
-    .gn-order { margin-top: 0.45rem; padding-top: 0.4rem; justify-content: space-between; }
+    .gn-item-body { padding: 0.6rem 0.75rem; }
+    .gn-rule { margin: 0.3rem 0 0.35rem; }
+    /* Especificaciones (predominancia, banco, efectos, sabores) más chicas:
+       le dejan lugar al gestor de reservas sin scrollear la card. */
+    .gn-info { font-size: 0.7rem; gap: 0.25rem 0.35rem; }
+    .gn-bank-line { font-size: 0.62rem; margin-top: 0.15rem; }
+    .gn-meters { margin-bottom: 0.3rem; gap: 0.3rem 0.7rem; }
+    .gn-meter-label { margin-bottom: 0.25rem; font-size: 0.6rem; }
+    .gn-circle-row { margin-top: 0.1rem; gap: 0.4rem; }
+    .gn-circle-group { gap: 0.2rem; }
+    .gn-circle-grouplabel { font-size: 0.52rem; letter-spacing: 0.14em; }
+    .gn-circle-item { gap: 0.15rem; }
+    .gn-order { margin-top: 0.3rem; padding-top: 0.3rem; justify-content: space-between; }
     .gn-order-pills { flex: 0 1 auto; }
     /* Pastilla siempre visible como UNA pieza (antes se leía como elementos sueltos) */
     .gn-qty { background: rgba(244, 241, 247, 0.05); }
     .gn-item-body { overflow-y: auto; }
-    .gn-circle { width: 38px; height: 38px; }
-    .gn-circle svg { width: 22px; height: 22px; }
-    .gn-circle-label { font-size: 0.62rem; }
+    .gn-circle { width: 34px; height: 34px; }
+    .gn-circle svg { width: 20px; height: 20px; }
+    .gn-circle-label { font-size: 0.6rem; }
     /* Botones del spinner más grandes para el pulgar */
     .gn-qty-btn { width: 38px; height: 26px; font-size: 1.1rem; }
     /* Con dos formatos las pastillas bajan de línea en vez de achicarse */
     .gn-order { flex-wrap: wrap; }
     .gn-order-pills { justify-content: center; }
 
-    /* Legal colapsado a 2 líneas; tocarlo lo expande */
-    .gn-pagefoot { padding-top: 6px; margin-top: 2px; }
+    /* Legal al mínimo: ya es una sola línea corta, no necesita el aire que
+       tenía cuando era un párrafo largo. Tocarlo lo expande si no entra. */
+    .gn-pagefoot { padding-top: 2px; margin-top: 0; }
     .gn-disclaimer {
-      font-size: 0.62rem;
+      font-size: 0.5rem;
+      line-height: 1.3;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
       cursor: pointer;
