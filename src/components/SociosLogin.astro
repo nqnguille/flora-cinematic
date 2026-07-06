@@ -56,6 +56,7 @@ const {
     --sl-cream:  #f4f1f7;
     --sl-muted:  rgba(244, 241, 247, 0.55);
     --sl-violet: #b79de6;
+    --sl-green:  #3cb492;
 
     position: relative; overflow: hidden; isolation: isolate;
     min-height: 100svh;
@@ -114,9 +115,10 @@ const {
 
   .sl-title {
     font-family: var(--font-display); font-weight: 500; color: var(--sl-cream);
-    font-size: clamp(2.6rem, 5vw, 4rem); line-height: 1.08; margin: 0;
+    font-size: clamp(2.1rem, 4.2vw, 3.3rem); line-height: 1.1; margin: 0;
   }
   .sl-title em { font-style: italic; color: var(--sl-violet); }
+  .sl-title em.sl-accent-green { color: var(--sl-green); }
   .sl-tagline { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0; }
 
   .sl-auth-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0; color: var(--sl-cream); }
@@ -137,9 +139,12 @@ const {
       transform: translate(-50%, -50%) rotate(90deg);
     }
     .sl-panel {
-      left: 0; right: 0; top: 0; bottom: 34%; width: auto; height: auto;
+      left: 0; right: 0; top: 0; bottom: 48%; width: auto; height: auto;
       justify-content: center;
-      padding: clamp(52px, 12vw, 64px) clamp(20px, 6vw, 28px) clamp(24px, 6vw, 36px);
+      gap: 0.5rem;
+      padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
     }
+    .sl-logo { height: clamp(56px, 16vw, 90px); }
+    .sl-title { font-size: clamp(1.6rem, 7vw, 2.2rem); }
   }
 </style>

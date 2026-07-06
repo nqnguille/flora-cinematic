@@ -20,10 +20,9 @@ const productIconsSvg = [
   noindex={true}
 >
   <main class="pt-main">
-    <SociosLogin
-      title="Acceso exclusivo<br />para <em>miembros del club</em>"
-      hideNote
-    />
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+      <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes. No compartimos tus datos.</Fragment>
+    </SociosLogin>
 
     <!-- ── Portal ── -->
     <div id="pt-content" class="pt-content" hidden>
