@@ -1536,37 +1536,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
 
-/* ── Teaser de genéticas disponibles (sin sesión, solo nombre+foto) ── */
-.fl-teaser {
-  display: flex; flex-wrap: nowrap; gap: 10px; overflow-x: auto; scrollbar-width: none;
-  margin: 20px auto 0; max-width: 640px; padding-bottom: 2px;
-}
-.fl-teaser::-webkit-scrollbar { display: none; }
-.fl-teaser[hidden] { display: none; }
-.fl-teaser-card {
-  position: relative; flex: 0 0 auto; width: 84px; height: 108px; border-radius: 12px;
-  overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
-}
-.fl-teaser-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fl-teaser-card::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 45%, rgba(10,10,16,0.88) 100%);
-}
-.fl-teaser-name {
-  position: absolute; left: 6px; right: 6px; bottom: 6px; z-index: 1;
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 800; letter-spacing: 0.01em;
-  color: #fff; line-height: 1.15; text-shadow: 0 1px 6px rgba(0,0,0,0.6);
-}
-.fl-teaser-more {
-  flex: 0 0 auto; width: 84px; height: 108px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-ui); font-size: 15px; font-weight: 800; color: #4FC79E;
-  background: rgba(79, 199, 158, 0.12); border: 1px dashed rgba(79, 199, 158, 0.4);
-}
-@media (min-width: 881px) {
-  .fl-teaser { margin: 20px 0 0; }
-}
-
 /* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
    el resto del cuadro queda libre para el video */
 @media (min-width: 881px) {

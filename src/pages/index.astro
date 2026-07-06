@@ -117,7 +117,7 @@ const productIconsSvg = [
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
 const waFooter = waAsociarse
-// Acceso a material vegetal — cultivo solidario. La cantidad (10 a 40 g por mes)
+// Acceso a material vegetal. La cantidad (10 a 40 g por mes)
 // se elige una vez adentro, por WhatsApp. Mismo acompañamiento y variedades para todos.
 const accesoWa = wa('Hola Flora, quiero acceder al material vegetal. ¿Me orientan para empezar?')
 
@@ -628,13 +628,13 @@ const igFallback = [
 
     <div class="fl-wrap fl-acceso-content">
       <div class="fl-acceso-head">
-        <span class="fl-eyebrow">Cultivo solidario</span>
-        <h2 class="fl-title">Esto es lo que <em>tenemos este mes.</em></h2>
+        <span class="fl-eyebrow">Genéticas disponibles</span>
+        <h2 class="fl-title">Acceso a <em>tu cannabis medicinal.</em></h2>
         <p class="fl-acceso-story">
-          Para quienes no pueden autocultivar en su casa, cultivamos nosotros.
-          Genéticas que rotan cada mes, con tu aporte mensual manteniendo viva cada planta.
+          Flora cultiva tu cannabis medicinal en tu nombre, amparado por tu propio
+          trámite REPROCANN. Genéticas que rotan según cosecha; tu aporte mensual
+          sostiene el proceso.
         </p>
-        <div id="fl-teaser" class="fl-teaser" aria-label="Genéticas disponibles este mes"></div>
         <p class="fl-acceso-datos">De 10 a 40&nbsp;g por mes · precios en el <strong>portal de socios</strong></p>
       </div>
 
@@ -928,37 +928,4 @@ const igFallback = [
     window.TIENDA = { categoria: 'aceites', static: true, public: true, googleClientId: '' }
   </script>
   <script src="/socios/tienda.js" is:inline></script>
-
-  <!-- Teaser público de la carta de genéticas (sin sesión): solo nombre + tipo,
-       la ficha completa (THC/CBD, banco, efectos, reserva) es exclusiva de socios. -->
-  <script is:inline>
-    (function () {
-      const TIPO_LABEL = { sativa: 'Sativa', indica: 'Indica', hibrida: 'Híbrida', cbd: 'Full CBD' }
-      function esc(s) {
-        return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
-      }
-      async function loadTeaser() {
-        const el = document.getElementById('fl-teaser')
-        if (!el) return
-        try {
-          const res = await fetch('/api/geneticas/preview')
-          const data = await res.json()
-          const items = (data.geneticas || []).slice(0, 6)
-          if (!items.length) { el.hidden = true; return }
-          el.innerHTML = items.map((g) => {
-            const tipo = TIPO_LABEL[g.tipo] ? g.tipo : 'hibrida'
-            const foto = `/socios/geneticas/${g.id}.webp`
-            return `
-              <div class="fl-teaser-card" data-tipo="${tipo}">
-                <img class="fl-teaser-img" src="${foto}" alt="" loading="lazy" onerror="this.remove()" />
-                <span class="fl-teaser-name">${esc(g.nombre)}</span>
-              </div>`
-          }).join('') + (data.total > items.length ? `<div class="fl-teaser-more">+${data.total - items.length}</div>` : '')
-        } catch {
-          el.hidden = true // sin red, no rompemos la landing por un teaser
-        }
-      }
-      loadTeaser()
-    })()
-  </script>
 </Layout>
