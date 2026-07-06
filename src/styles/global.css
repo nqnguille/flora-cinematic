@@ -642,7 +642,7 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .nav-socios:hover { border-color: var(--bone); background: rgba(255,255,255,0.1); color: #fff !important; }
 .site-nav.scrolled .nav-socios { border-color: rgba(56,31,86,0.35); color: var(--fl-violet) !important; }
 .site-nav.scrolled .nav-socios:hover { border-color: var(--fl-violet); background: rgba(56,31,86,0.06); }
-/* Variantes mobile: fuera del ul (que se oculta) — Asociarme manda, candado compacto */
+/* Variantes mobile: fuera del ul (que se oculta) — carrito manda, candado compacto */
 .nav-cta--mobile, .nav-socios--mobile { display: none; }
 @media (max-width: 940px) {
   .nav-cta--mobile { display: inline-flex; align-items: center; margin-left: auto; height: 40px; padding: 0 20px; }
@@ -1532,6 +1532,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   color: #fff; margin: 14px auto 0; max-width: 50ch;
 }
 .fl-acceso-datos strong { color: #4FC79E; }
+.fl-acceso-datos-wa { text-decoration: underline; text-underline-offset: 3px; }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
@@ -1840,7 +1841,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* ═══ Modo socio en la landing: la página se transforma con la sesión ═══ */
 /* Público por defecto; con body.is-socio se jerarquiza la carta */
 .nav-cta--carta, .fl-acceso-ctas--socio, .fl-acceso-reserva { display: none; }
-body.is-socio .nav-cta--publico { display: none !important; }
 body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: inline-flex; align-items: center; }
 @media (max-width: 940px) {
   body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: none; }
@@ -1911,15 +1911,14 @@ body.is-socio .drawer-socio-only { display: block; }
 
 /* ═══ Alineación de la topbar: gap uniforme, sin márgenes ad-hoc ═══ */
 .site-nav { gap: 14px; }
-/* Desktop: el último li agrupa CTAs (hola + carrito / asociarme) en fila */
+/* Desktop: el último li agrupa CTAs (hola + carrito) en fila */
 .nav-links li:last-child { display: flex; align-items: center; gap: 12px; }
 /* alturas uniformes SIN tocar display (la visibilidad la manejan las reglas de estado) */
 .nav-links .nav-cta, .nav-socios, .nav-hola { height: 36px; }
-.nav-cta--publico:not(.nav-cta--mobile), .nav-socios { display: inline-flex; align-items: center; }
+.nav-socios { display: inline-flex; align-items: center; }
 /* Mobile: el primer elemento visible del grupo derecho empuja con auto;
    el resto se separa por el gap del nav */
 @media (max-width: 940px) {
   .nav-cta--mobile, .nav-socios--mobile, .nav-hola--mobile, .nav-cta--carta.nav-cta--mobile { height: 38px; margin: 0; }
-  .nav-cta--publico.nav-cta--mobile { margin-left: auto; }
   body.is-socio .nav-hola.nav-hola--mobile:not([hidden]) { margin-left: auto; margin-right: 0; }
 }
