@@ -1784,15 +1784,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   padding: clamp(18px, 2.4vw, 26px) clamp(24px, 3vw, 34px);
   border-top: 1px solid var(--fl-line); box-sizing: border-box;
 }
-.fl-credencial-reprocann { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.fl-credencial-reprocann-name {
-  font-family: var(--font-ui); font-weight: 900; font-size: clamp(24px, 3.2vw, 32px);
-  letter-spacing: 0.01em; color: var(--fl-ink); line-height: 1;
-}
-.fl-credencial-reprocann-sub {
-  font-family: var(--font-ui); font-weight: 700; font-size: clamp(11px, 1.3vw, 13px);
-  letter-spacing: 0.02em; color: rgba(28, 22, 38, 0.55);
-}
+.fl-credencial-reprocann-logo { flex: 1 1 auto; min-width: 0; width: clamp(160px, 22vw, 220px); height: auto; }
 .fl-credencial-sello-img { flex: 0 0 auto; width: clamp(56px, 7vw, 76px); height: clamp(56px, 7vw, 76px); }
 
 /* ── Extracciones: mini-landing fumar vs vaporizar + nota médico-legal ── */
