@@ -378,6 +378,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       track.addEventListener('wheel', () => pauseTouchSoon(4000), { passive: true })
       track.addEventListener('focusin', () => pauseTouchSoon(8000))
       window.addEventListener('resize', () => requestAnimationFrame(measure))
+      window.addEventListener('resize', syncTopbarHeight)
+      syncTopbarHeight()
 
       // Arrastrar con el mouse para mover el carrusel a gusto
       // (salvo desde el stepper de reserva: ahí el gesto es tocar, no arrastrar)
@@ -693,6 +695,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     window.addEventListener('pointercancel', stopHold)
 
     /* ── Modal ── */
+    // El panel de reserva se ancla debajo del topbar (no es un overlay que lo
+    // tape): medimos su alto real —varía según haya 1 o 2 filas de filtros—
+    // y lo exponemos como variable CSS para que .gn-modal--cart lo respete.
+    function syncTopbarHeight() {
+      const tb = document.querySelector('.gn-topbar')
+      // getBoundingClientRect().bottom (no offsetHeight): incluye el padding
+      // superior de .gn-content, así el valor es la distancia real desde el
+      // borde de la pantalla, no solo el alto propio del topbar.
+      if (tb) document.documentElement.style.setProperty('--gn-topbar-h', `${tb.getBoundingClientRect().bottom}px`)
+    }
     function showModalMsg(text, isError) {
       const msg = document.getElementById('gn-modal-msg')
       msg.textContent = text
@@ -729,6 +741,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
           <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar reserva</button>`
       }
+      syncTopbarHeight()
       document.getElementById('gn-modal').hidden = false
       document.getElementById('gn-cart-trigger').setAttribute('aria-expanded', 'true')
       if (successText) showModalMsg(successText, false)
@@ -1851,10 +1864,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      sin ninguna relación visual con lo que lo abrió), se ancla arriba a la
      derecha, justo debajo del ícono de carrito del topbar que lo abre. El
      modal de Términos (#gn-tos-modal, sin este modificador) sigue centrado. */
-  .gn-modal--cart { align-items: flex-start; justify-content: flex-end; padding: 0; }
+  /* padding-top empuja la tarjeta debajo del topbar real (su alto varía según
+     haya 1 o 2 filas de filtros — lo mide JS en --gn-topbar-h) para que el
+     panel no tape el propio ícono de carrito ni el resto de los controles. */
+  .gn-modal--cart { align-items: flex-start; justify-content: flex-end; padding: calc(var(--gn-topbar-h, 90px) + 10px) 0 0; }
   .gn-modal--cart .gn-modal-card {
     max-width: 420px;
-    max-height: min(80svh, 640px);
+    /* Resta el hueco reservado arriba (topbar + gap) para que la tarjeta
+       nunca se pase del borde inferior de la pantalla. */
+    max-height: calc(100svh - var(--gn-topbar-h, 90px) - 20px);
     margin: 0;
     border-radius: 0 0 0 22px;
     border-top: none;
