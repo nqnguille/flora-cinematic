@@ -1275,8 +1275,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   content: ''; position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(180deg, rgba(20,16,28,0.05) 0%, rgba(20,16,28,0.35) 55%, rgba(15,10,20,0.92) 100%);
 }
-.fl-perfil-card-icon { position: absolute; z-index: 2; top: 20px; left: 20px; width: 32px; height: 32px; opacity: 0.9; }
-.fl-perfil-card-icon svg { display: block; width: 100%; height: 100%; }
 .fl-perfil-card-body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: 14px 20px 18px; display: flex; flex-direction: column; }
 /* Solo el título visible; el resto se expande en hover / tap / foco */
 .fl-perfil-card-toggle {
@@ -1322,6 +1320,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 
 .fl-access .fl-title { max-width: 20ch; }
+.fl-perfiles .fl-title { max-width: 26ch; }
 
 .fl-spec { margin-top: clamp(56px, 7vw, 88px); }
 .fl-spec-head { max-width: 640px; margin-bottom: clamp(24px, 3vw, 36px); }

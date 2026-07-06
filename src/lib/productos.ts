@@ -24,7 +24,7 @@ export const aceites = [
     pdf: '/analisis/Q1.pdf',
     img: '/img/prod-aceite-q1.jpg',
     color: '#C9396B',
-    ratio: 'THC:CBD ≈ 2,3:1',
+    ratio: 'THC:CBD ≈ 3:1',
     href: wa('Hola Flora, me interesa el aceite Q1 🌿'),
   },
   {
@@ -41,7 +41,7 @@ export const aceites = [
     pdf: '/analisis/Q2.pdf',
     img: '/img/prod-aceite-q2.jpg',
     color: '#6E54C8',
-    ratio: 'CBD:THC ≈ 1,4:1',
+    ratio: 'THC:CBD ≈ 1:1',
     href: wa('Hola Flora, me interesa el aceite Q2 🌿'),
   },
   {
@@ -58,7 +58,7 @@ export const aceites = [
     pdf: '/analisis/Q3.pdf',
     img: '/img/prod-aceite-q3.jpg',
     color: '#1F9389',
-    ratio: 'CBD:THC ≈ 27:1',
+    ratio: 'THC:CBD ≈ 1:20',
     href: wa('Hola Flora, me interesa el aceite Q3 🌿'),
   },
 ]
