@@ -629,12 +629,12 @@ const igFallback = [
     <div class="fl-wrap fl-acceso-content">
       <div class="fl-acceso-head">
         <span class="fl-eyebrow">Cultivo solidario</span>
-        <h2 class="fl-title">Cultivamos lo que <em>la ley te permite.</em></h2>
+        <h2 class="fl-title">Esto es lo que <em>tenemos este mes.</em></h2>
         <p class="fl-acceso-story">
-          REPROCANN reconoce tu derecho a cultivar tu propio cannabis medicinal —
-          pero no todos pueden ejercerlo en su casa. Ahí cultiva Flora por vos:
-          genéticas que rotan cada mes, y tu aporte mensual mantiene viva cada planta.
+          Para quienes no pueden autocultivar en su casa, cultivamos nosotros.
+          Genéticas que rotan cada mes, con tu aporte mensual manteniendo viva cada planta.
         </p>
+        <div id="fl-teaser" class="fl-teaser" aria-label="Genéticas disponibles este mes"></div>
         <p class="fl-acceso-datos">De 10 a 40&nbsp;g por mes · precios en el <strong>portal de socios</strong></p>
       </div>
 
@@ -670,12 +670,21 @@ const igFallback = [
         <span class="fl-eyebrow">Respaldo legal</span>
         <h2 class="fl-title">Con todo <em>en regla.</em></h2>
         <p class="fl-lead">
-          Flora es la Asociación Civil Cann de Cannabis Medicinal, con personería jurídica
-          propia (I.G.J. N° 1994128) e inscripta en REPROCANN conforme la Ley 27.350. Ese
-          marco es el que nos permite cultivar de forma solidaria para socios que, por el
-          motivo que sea, no pueden ejercer su derecho al autocultivo — y acompañarte en
-          cada paso.
+          La Ley 27.350 reconoce el derecho de cada paciente a cultivar su propio
+          cannabis medicinal, y REPROCANN —su registro simplificado— habilita tres
+          formas de ejercerlo: autocultivo, un tercero designado, o una organización
+          civil inscripta que cultive de forma solidaria para quienes, por el motivo
+          que sea, no pueden hacerlo en su casa.
         </p>
+        <p class="fl-lead">
+          Flora es la Asociación Civil Cann de Cannabis Medicinal, con personería
+          jurídica propia (I.G.J. N° 1994128) e inscripta en REPROCANN bajo esa
+          tercera modalidad. Contamos con Director Médico y responsable técnico
+          designados, sitios de cultivo declarados en Neuquén y Río Negro, y cada
+          socio mantiene su propio trámite REPROCANN vigente, que nos designa como
+          su cultivadora.
+        </p>
+        <a class="fl-legal-link" href="/socios/carta/?tos=1">Leer los términos legales completos <span aria-hidden="true">→</span></a>
       </div>
 
       <!-- Datos formales de la asociación (inspirado en el cartel propio) -->
@@ -919,4 +928,37 @@ const igFallback = [
     window.TIENDA = { categoria: 'aceites', static: true, public: true, googleClientId: '' }
   </script>
   <script src="/socios/tienda.js" is:inline></script>
+
+  <!-- Teaser público de la carta de genéticas (sin sesión): solo nombre + tipo,
+       la ficha completa (THC/CBD, banco, efectos, reserva) es exclusiva de socios. -->
+  <script is:inline>
+    (function () {
+      const TIPO_LABEL = { sativa: 'Sativa', indica: 'Indica', hibrida: 'Híbrida', cbd: 'Full CBD' }
+      function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+      }
+      async function loadTeaser() {
+        const el = document.getElementById('fl-teaser')
+        if (!el) return
+        try {
+          const res = await fetch('/api/geneticas/preview')
+          const data = await res.json()
+          const items = (data.geneticas || []).slice(0, 6)
+          if (!items.length) { el.hidden = true; return }
+          el.innerHTML = items.map((g) => {
+            const tipo = TIPO_LABEL[g.tipo] ? g.tipo : 'hibrida'
+            const foto = `/socios/geneticas/${g.id}.webp`
+            return `
+              <div class="fl-teaser-card" data-tipo="${tipo}">
+                <img class="fl-teaser-img" src="${foto}" alt="" loading="lazy" onerror="this.remove()" />
+                <span class="fl-teaser-name">${esc(g.nombre)}</span>
+              </div>`
+          }).join('') + (data.total > items.length ? `<div class="fl-teaser-more">+${data.total - items.length}</div>` : '')
+        } catch {
+          el.hidden = true // sin red, no rompemos la landing por un teaser
+        }
+      }
+      loadTeaser()
+    })()
+  </script>
 </Layout>
