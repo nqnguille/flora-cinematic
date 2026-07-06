@@ -1,19 +1,19 @@
 {
  "asset": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-genetica.mp4",
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-login.mp4",
   "type": "video",
   "photographer": "ArtHouse Studio",
-  "pexels_id": 7684717,
-  "source_url": "https://www.pexels.com/video/close-up-video-of-a-dried-cannabis-7684717/",
+  "pexels_id": 7684713,
+  "source_url": "https://www.pexels.com/video/dried-cannabis-in-a-jar-7684713/",
   "alt": "",
-  "keyword_final": "cannabis indoor",
+  "keyword_final": "cannabis medical",
   "width": 1920,
   "height": 1080,
-  "duration": 8.1,
-  "filesize": 5525870,
-  "poster_out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-genetica_poster.jpg",
+  "duration": 6.1,
+  "filesize": 4053392,
+  "poster_out": "/home/guillenqn/proyectos/flora-cinematic/public/hero/socios-login_poster.jpg",
   "aspect_real": 1.778,
   "ok": true,
-  "snippet": "<video src=\"/socios-genetica.mp4\" poster=\"/socios-genetica_poster.jpg\" autoplay muted loop playsinline></video>"
+  "snippet": "<video src=\"/socios-login.mp4\" poster=\"/socios-login_poster.jpg\" autoplay muted loop playsinline></video>"
  }
 }
