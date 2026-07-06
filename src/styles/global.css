@@ -1599,7 +1599,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
     padding-top: clamp(40px, 5.5vh, 72px);
   }
   .fl-acceso-head { text-align: left; }
-  .fl-acceso-head .fl-title { margin-left: 0; margin-right: 0; max-width: 15ch; }
+  .fl-acceso-head .fl-title { margin-left: 0; margin-right: 0; max-width: 21ch; }
   .fl-acceso-story { max-width: 44ch; margin: 18px 0 0; }
   .fl-acceso-side {
     display: flex; flex-direction: column; align-items: flex-end;
