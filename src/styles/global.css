@@ -1387,21 +1387,22 @@ html.no-js .reveal { opacity: 1; transform: none; }
 
 .fl-access .fl-title { max-width: 20ch; }
 .fl-perfiles .fl-title { max-width: 26ch; }
-/* La imagen al lado angosta la columna de texto: el ch-cap de arriba ya no
-   hace falta (el ancho de la columna es el límite) y el tamaño de fuente
-   baja un poco para que el título mantenga sus 2 líneas de siempre. */
-.fl-head--split .fl-title { max-width: none; font-size: clamp(28px, 3.6vw, 48px); }
 
-/* Encabezado con imagen al lado (desktop) — abajo del texto en mobile */
-.fl-head--split { display: flex; align-items: center; gap: clamp(24px, 4vw, 56px); }
-.fl-head--split .fl-head-text { flex: 1 1 54%; min-width: 0; }
-.fl-head-img {
-  flex: 1 1 42%; width: 42%; max-width: 560px; height: auto;
-  border-radius: 18px; box-shadow: 0 20px 48px -24px rgba(28,22,38,0.35);
+/* Infografía CBD/THC como fondo grande del módulo (mismo criterio que el
+   fondo sólido de .fl-reprocann, acá con imagen en vez de color plano) —
+   la imagen ya tiene fondo blanco a propósito, para que se funda con el de
+   la sección sin necesitar overlay ni degradé. */
+.fl-perfiles { position: relative; overflow: hidden; }
+.fl-perfiles::before {
+  content: ''; position: absolute; z-index: 0;
+  top: 0; right: 0; width: min(58%, 900px); height: 100%;
+  background: url('/img/cbd-thc-comparacion.webp') no-repeat top right / contain;
+  opacity: 0.9;
 }
+.fl-perfiles .fl-wrap { position: relative; z-index: 1; }
+.fl-perfiles-carousel-wrap { position: relative; z-index: 1; }
 @media (max-width: 760px) {
-  .fl-head--split { flex-direction: column; align-items: stretch; gap: 24px; }
-  .fl-head-img { width: 100%; max-width: none; }
+  .fl-perfiles::before { display: none; }
 }
 
 .fl-spec { margin-top: clamp(56px, 7vw, 88px); }
