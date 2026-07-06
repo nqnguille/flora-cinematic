@@ -35,7 +35,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
           <button id="gn-fs" class="gn-ctrl gn-ctrl-fs" type="button" aria-label="Pantalla completa"><svg class="ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 0-1 1h-4"/></svg><svg class="ic-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v3a2 2 0 0 1-2 2H4M15 4v3a2 2 0 0 0 2 2h3M9 20v-3a2 2 0 0 0-2-2H4M15 20v-3a2 2 0 0 1 2-2h3"/></svg></button>
         </div>
-        <button id="gn-logout" class="gn-logout" type="button" aria-label="Cerrar sesión">Salir</button>
+        <button id="gn-logout" class="gn-logout" type="button" aria-label="Volver al portal">Salir</button>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <!-- ── Modal de reserva ── -->
-      <div id="gn-modal" class="gn-modal" hidden>
+      <div id="gn-modal" class="gn-modal" hidden data-lenis-prevent>
         <div class="gn-modal-card" role="dialog" aria-modal="true" aria-labelledby="gn-modal-title">
           <h2 id="gn-modal-title" class="gn-modal-title">Tu <em>reserva</em></h2>
           <div id="gn-modal-body"></div>
@@ -65,7 +65,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <!-- ── Términos de uso (login y footer lo abren en modo "view";
          el login lo abre en modo "accept" cuando el socio todavía no aceptó
          la versión vigente) ── -->
-    <div id="gn-tos-modal" class="gn-modal" hidden>
+    <div id="gn-tos-modal" class="gn-modal" hidden data-lenis-prevent>
       <div class="gn-modal-card gn-tos-card" role="dialog" aria-modal="true" aria-labelledby="gn-tos-title">
         <h2 id="gn-tos-title" class="gn-modal-title">Términos de <em>uso</em></h2>
         <div class="gn-tos-body">
@@ -779,8 +779,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     }
 
+    // Confirmación en el mismo modal (sin confirm() nativo, que se ve feo y
+    // queda "modal encima de modal"): reemplaza los botones por Sí/No.
+    function askCancelConfirm() {
+      showModalMsg('¿Seguro que querés cancelar tu reserva? No se puede deshacer.', true)
+      document.getElementById('gn-modal-actions').innerHTML = `
+        <button id="gn-pedido-cancel-no" class="gn-btn-ghost" type="button">No, volver</button>
+        <button id="gn-pedido-cancel-yes" class="gn-btn-primary" type="button">Sí, cancelar</button>`
+    }
+
     async function cancelPedido() {
-      if (!activePedido || !confirm('¿Cancelar tu reserva?')) return
+      if (!activePedido) return
       try {
         const res = await fetch('/api/socios/pedidos', {
           method: 'DELETE',
@@ -812,7 +821,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
       if (e.target.id === 'gn-modal-close') closeModal()
       else if (e.target.id === 'gn-modal-send') sendPedido()
-      else if (e.target.id === 'gn-pedido-cancel') cancelPedido()
+      else if (e.target.id === 'gn-pedido-cancel') askCancelConfirm()
+      else if (e.target.id === 'gn-pedido-cancel-yes') cancelPedido()
+      else if (e.target.id === 'gn-pedido-cancel-no') openModal()
       else if (e.target.classList.contains('gn-modal-del')) {
         cart.delete(e.target.getAttribute('data-key'))
         syncQty(e.target.getAttribute('data-key'))
@@ -950,9 +961,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     window.handleGoogleCredential = (response) => submitLogin(response.credential, false)
 
-    document.getElementById('gn-logout').addEventListener('click', async () => {
-      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
-      location.reload()
+    // "Salir" acá significa "volver al portal" — no cierra la sesión. Cerrar
+    // sesión de verdad solo se hace desde "Mi cuenta" (cu-logout en cuenta.astro).
+    document.getElementById('gn-logout').addEventListener('click', () => {
+      location.href = '/socios/'
     })
 
     // Legal colapsado en mobile: tocarlo lo expande/colapsa (el link de términos
