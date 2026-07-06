@@ -37,6 +37,14 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
       </div>
     </nav>
 
+    <!-- ── Links cruzados entre las 4 categorías (Aceites/Cremas/Extracciones/Flores) ── -->
+    <div class="td-cat-tabs" aria-label="Categorías">
+      <a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a>
+      <a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a>
+      <a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a>
+      <a href="/socios/carta/">Flores</a>
+    </div>
+
     <!-- ── Invitación de socio: visible solo sin sesión ── -->
     <div id="td-gate" class="td-gate" hidden>
       <div class="td-gate-inner">

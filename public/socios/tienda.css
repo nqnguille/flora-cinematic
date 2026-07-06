@@ -204,6 +204,21 @@
 .td-pub-hola-foto { border-radius: 50%; display: block; }
 .td-pub-hola-foto[hidden] { display: none; }
 
+/* Links cruzados entre las 4 categorías del catálogo */
+.td-cat-tabs {
+  display: flex; align-items: center; gap: clamp(14px, 2.5vw, 26px); flex-wrap: wrap;
+  padding: 12px clamp(24px, 6vw, 80px);
+  border-bottom: 1px solid var(--fl-line, rgba(56,31,86,0.14));
+  background: #fff;
+}
+.td-cat-tabs a {
+  font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+  color: rgba(28,22,38,0.55); text-decoration: none;
+  padding-bottom: 2px; border-bottom: 2px solid transparent;
+}
+.td-cat-tabs a:hover { color: var(--fl-violet, #381F56); }
+.td-cat-tabs a.is-active { color: var(--fl-violet, #381F56); border-bottom-color: var(--fl-violet, #381F56); }
+
 /* Invitación de socio — banda de club, violeta de marca */
 .td-gate {
   background: linear-gradient(120deg, var(--fl-violet, #381F56) 0%, #4B2D6E 100%);
