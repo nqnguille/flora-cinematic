@@ -1,0 +1,54 @@
+---
+// Footer compartido por todas las páginas públicas (menos /socios/carta).
+// Los anclas van con "/" adelante para volver a la home y saltar a la
+// sección correspondiente, sin importar desde qué página se haga clic.
+const waFooter = 'https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F'
+const igProfile = 'https://www.instagram.com/flora.cultivamosconciencia/'
+---
+
+<footer class="fl-footer" id="contacto">
+  <div class="fl-wrap">
+    <div class="fl-footer-cta">
+      <h3 class="fl-footer-closer">Empezá hoy, <em>en regla</em> y acompañado.</h3>
+      <a href={waFooter} class="fl-footer-btn" target="_blank" rel="noopener noreferrer" aria-label="Asociarme a Flora por WhatsApp">
+        Escribirnos para asociarme <span aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <div class="fl-footer-grid">
+      <div class="fl-footer-brand">
+        <img class="fl-footer-logo-img" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        <p>
+          Asociación Civil Cann de Cannabis Medicinal · I.G.J. 1994128.
+          Ley 27.350 · REPROCANN. Neuquén, Patagonia.
+        </p>
+      </div>
+
+      <nav class="fl-footer-col" aria-label="Navegación del sitio">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="/#perfiles">Acompañamiento</a></li>
+          <li><a href="/#entrevista">REPROCANN</a></li>
+          <li><a href="/#productos">Servicios</a></li>
+          <li><a href="/#legalidad">Legalidad</a></li>
+          <li><a href="/#faq">Preguntas frecuentes</a></li>
+        </ul>
+      </nav>
+
+      <nav class="fl-footer-col" aria-label="Legal y comunidad">
+        <h4>Más</h4>
+        <ul>
+          <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350</a></li>
+          <li><a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN</a></li>
+          <li><a href="/#programa">Programa</a></li>
+          <li><a href={igProfile} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="fl-footer-bottom">
+      <p>© 2026 Flora · Asociación civil · Neuquén, Patagonia</p>
+      <p>Cultivamos conciencia</p>
+    </div>
+  </div>
+</footer>

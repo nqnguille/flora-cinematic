@@ -3,6 +3,7 @@
 // Todo el mundo ve la ficha completa; los PRECIOS y la RESERVA se desbloquean
 // solo con sesión de socio (tienda.js en modo public).
 import Layout from '../layouts/Layout.astro'
+import SiteFooter from './SiteFooter.astro'
 import '../styles/global.css'
 
 interface Props {
@@ -119,6 +120,8 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
 
     <slot />
   </main>
+
+  <SiteFooter />
 
   <script define:vars={{ categoria }}>
     window.TIENDA = { categoria, static: true }
