@@ -1,17 +1,17 @@
 {
- "sueno": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-sueno.jpg",
+ "ansiedad": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-ansiedad.jpg",
   "type": "image",
-  "photographer": "Ron Lach",
-  "pexels_id": 8070509,
-  "source_url": "https://www.pexels.com/photo/a-man-lying-on-the-bed-while-using-his-mobile-phone-8070509/",
-  "alt": "A man lying in bed using a smartphone beside a glowing bedside lamp.",
-  "keyword_final": "man insomnia bed",
+  "photographer": "www.kaboompics.com",
+  "pexels_id": 5240044,
+  "source_url": "https://www.pexels.com/photo/woman-working-in-an-office-5240044/",
+  "alt": "An adult woman appears stressed while sitting at a desk with a laptop,",
+  "keyword_final": "anxiety woman",
   "width": 1400,
   "height": 1750,
-  "filesize": 141903,
+  "filesize": 254594,
   "aspect_real": 0.8,
   "ok": true,
-  "snippet": "<img src=\"/perfil-sueno.jpg\" width=\"1400\" height=\"1750\" alt=\"A man lying in bed using a smartphone beside a glowing bedside lamp.\">"
+  "snippet": "<img src=\"/perfil-ansiedad.jpg\" width=\"1400\" height=\"1750\" alt=\"An adult woman appears stressed while sitting at a desk with a laptop,\">"
  }
 }
