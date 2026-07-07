@@ -1906,38 +1906,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-vap-compare-head > span, .fl-vap-compare-row > span { padding: 9px 8px; }
 }
 
-.fl-vap-note {
-  background: var(--fl-green); color: #fff; border-radius: var(--fl-r-card, 20px);
-  overflow: hidden;
-}
+/* Sin card, sin color propio: el texto vive directo sobre el fondo de
+   .fl-legal-footer, que ahora es el mismo violeta que el footer de abajo
+   — así el módulo se lee como parte del mismo bloque, no como una card
+   separada compitiendo en color con lo que sigue. */
+.fl-vap-note { color: #fff; }
 .fl-vap-note-badge {
   align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase; color: #B79DE6;
+  letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.1); border-radius: 999px; padding: 6px 14px;
 }
-.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0; }
+.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.78); margin: 0; }
 .fl-vap-note p strong { color: #fff; }
-
-/* Variante con foto de fondo: la imagen (inline en el style= del componente,
-   junto con el degradé) queda alineada a la derecha de la card; el degradé
-   verde cubre de sólido (izq., donde vive el texto) a transparente
-   (der., donde se ve la foto sin filtro). Verde, no violeta, para no
-   competir con el footer (también violeta) que queda justo debajo. */
-.fl-vap-note--bgphoto {
-  background-image: linear-gradient(90deg, var(--fl-green) 0%, var(--fl-green) 38%, rgba(10,80,60,0.65) 60%, rgba(10,80,60,0.2) 82%, rgba(10,80,60,0) 100%), url('/img/extracciones-legal-vape.jpg');
-  background-size: cover; background-position: right center; background-repeat: no-repeat;
-  min-height: 260px;
-}
-.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(78%, 46ch); }
-@media (max-width: 560px) {
-  /* En una columna angosta no hay lugar para "dejar ver" la foto a la
-     derecha sin tapar el texto — el degradé pasa a cubrir casi toda la
-     card, dejando solo un borde de la foto asomando */
-  .fl-vap-note--bgphoto {
-    background-image: linear-gradient(90deg, var(--fl-green) 0%, var(--fl-green) 60%, rgba(10,80,60,0.8) 78%, rgba(10,80,60,0.4) 92%, rgba(10,80,60,0.15) 100%), url('/img/extracciones-legal-vape.jpg');
-  }
-  .fl-vap-note-body { max-width: 100%; }
-}
+.fl-vap-note-body { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
 
 /* /cremas (vía tópica): foto grande arriba (su propia caja, sin la card
    adentro) + la card del producto pisándola solo a la mitad — la mitad de
@@ -1973,7 +1954,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-analisis-ext .fl-spec { margin-top: 0; }
 
 /* Marco médico-legal al fondo de la página: card centrada, no a todo el ancho */
-.fl-legal-footer { background: var(--fl-paper-2, #F6F4F2); }
+.fl-legal-footer { background: var(--fl-violet); }
 .fl-legal-footer .fl-wrap { display: flex; justify-content: center; }
 .fl-legal-footer .fl-vap-note { max-width: 920px; width: 100%; }
 
