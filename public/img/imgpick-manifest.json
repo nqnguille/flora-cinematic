@@ -1,17 +1,32 @@
 {
- "ansiedad": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-ansiedad.jpg",
+ "dolor": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-dolor.jpg",
   "type": "image",
-  "photographer": "www.kaboompics.com",
-  "pexels_id": 5240044,
-  "source_url": "https://www.pexels.com/photo/woman-working-in-an-office-5240044/",
-  "alt": "An adult woman appears stressed while sitting at a desk with a laptop,",
-  "keyword_final": "anxiety woman",
+  "photographer": "Fernanda Araujo",
+  "pexels_id": 13919295,
+  "source_url": "https://www.pexels.com/photo/a-person-stretching-13919295/",
+  "alt": "Detailed close-up of a person stretching their foot on a mat, focusing",
+  "keyword_final": "sports ankle foot closeup",
   "width": 1400,
   "height": 1750,
-  "filesize": 254594,
+  "filesize": 138429,
   "aspect_real": 0.8,
   "ok": true,
-  "snippet": "<img src=\"/perfil-ansiedad.jpg\" width=\"1400\" height=\"1750\" alt=\"An adult woman appears stressed while sitting at a desk with a laptop,\">"
+  "snippet": "<img src=\"/perfil-dolor.jpg\" width=\"1400\" height=\"1750\" alt=\"Detailed close-up of a person stretching their foot on a mat, focusing\">"
+ },
+ "nauseas": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-nauseas.jpg",
+  "type": "image",
+  "photographer": "Teona Swift",
+  "pexels_id": 6874258,
+  "source_url": "https://www.pexels.com/photo/crop-mature-unemotional-woman-eating-freshly-cooked-pasta-6874258/",
+  "alt": "Crop emotionless mature female in blue sweater eating tasty pasta with",
+  "keyword_final": "apetite",
+  "width": 1400,
+  "height": 1750,
+  "filesize": 215447,
+  "aspect_real": 0.8,
+  "ok": true,
+  "snippet": "<img src=\"/perfil-nauseas.jpg\" width=\"1400\" height=\"1750\" alt=\"Crop emotionless mature female in blue sweater eating tasty pasta with\">"
  }
 }
