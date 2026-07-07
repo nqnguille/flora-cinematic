@@ -1247,6 +1247,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
   color: var(--fl-ink); margin: 0; max-width: 16ch;
 }
 .fl-title em { font-style: normal; color: var(--fl-green); }
+/* Extracciones: "¿Cuál es la diferencia?" (23 caracteres) no entra en el
+   max-width:16ch general — se corta a la mitad. Modificador puntual con
+   más ancho, solo para este título. */
+.fl-title--wide { max-width: 24ch; }
 .fl-lead {
   font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6;
   color: rgba(28, 22, 38, 0.62); max-width: 52ch; margin: 20px 0 0;
