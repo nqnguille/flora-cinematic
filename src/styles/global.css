@@ -1382,6 +1382,32 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-access .fl-title { max-width: 35ch; }
 .fl-perfiles .fl-title { max-width: 26ch; }
 
+/* Comparativa de las 3 vías de administración — tabla clínica escaneable,
+   no fotos: el punto es comparar datos (ejemplo/efecto/uso), no vender un
+   producto. Vive entre el párrafo educativo y las 4 cards de formato. */
+.fl-vias-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  margin-top: clamp(28px, 3.4vw, 44px);
+}
+.fl-via-card {
+  border: 1px solid var(--fl-line); border-radius: var(--fl-r-card);
+  padding: 22px 22px 24px; background: var(--fl-paper-2);
+}
+.fl-via-label {
+  display: block; font-family: var(--font-ui); font-weight: 800; font-size: 20px;
+  color: var(--fl-violet); margin-bottom: 14px;
+}
+.fl-via-facts { display: flex; flex-direction: column; gap: 12px; }
+.fl-via-facts > div { display: flex; flex-direction: column; gap: 2px; }
+.fl-via-facts dt {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--fl-green);
+}
+.fl-via-facts dd { font-family: var(--font-ui); font-size: 14.5px; line-height: 1.4; color: var(--fl-ink); margin: 0; }
+@media (max-width: 760px) {
+  .fl-vias-grid { grid-template-columns: 1fr; gap: 12px; }
+}
+
 /* Infografía CBD/THC como fondo grande del módulo (mismo criterio que el
    fondo sólido de .fl-reprocann, acá con imagen en vez de color plano) —
    la imagen ya tiene fondo blanco a propósito, para que se funda con el de
@@ -1925,10 +1951,21 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-vap-note-body { max-width: 100%; }
 }
 
-/* Foto simple que acompaña el texto educativo de /cremas (vía tópica):
-   sin card ni degradé, solo una imagen redondeada al lado del texto */
-.fl-topica-photo { border-radius: var(--fl-r-card, 20px); overflow: hidden; align-self: start; }
-.fl-topica-photo img { width: 100%; height: 100%; object-fit: cover; display: block; aspect-ratio: 6 / 5; }
+/* /cremas (vía tópica): la foto de aplicación va de fondo, con la card del
+   producto flotando encima (no al lado) — degradé para que la card blanca
+   tenga contraste contra la foto */
+.fl-topica-photo {
+  position: relative; border-radius: var(--fl-r-card, 20px); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(28px, 4vw, 44px); min-height: 420px; align-self: start;
+}
+.fl-topica-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.fl-topica-photo::before {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgba(28,22,38,0.15) 0%, rgba(28,22,38,0.45) 100%);
+}
+.fl-topica-photo .fl-spec-grid { position: relative; z-index: 2; width: 100%; }
+.fl-topica-photo .fl-oil-card { box-shadow: 0 30px 60px -24px rgba(0,0,0,0.45); }
 
 /* Grilla de extracciones: fondo blanco propio, separado de la mini-landing gris */
 .fl-analisis-ext { padding-top: clamp(20px, 2.5vw, 32px); }
