@@ -1394,11 +1394,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    la sección sin necesitar overlay ni degradé. Acotada al HEADER (no a
    toda la sección) para que ni las cards del carrusel ni ningún texto la
    pisen nunca: es su propia caja, separada del resto del módulo. */
-.fl-perfiles .fl-head { position: relative; min-height: 340px; }
+.fl-perfiles .fl-head { position: relative; min-height: 420px; }
 .fl-perfiles .fl-head::before {
   content: ''; position: absolute; z-index: 0;
-  top: 0; right: 0; bottom: 0; width: min(44%, 620px);
-  background: url('/img/cbd-thc-comparacion-v2.webp') no-repeat center right / contain;
+  top: 0; right: 0; bottom: 0; width: min(38%, 460px);
+  background: url('/img/cbd-thc-flor.webp') no-repeat center right / contain;
 }
 .fl-perfiles .fl-head > * { position: relative; z-index: 1; }
 @media (max-width: 760px) {
