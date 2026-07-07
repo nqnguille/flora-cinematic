@@ -1906,18 +1906,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-vap-compare-head > span, .fl-vap-compare-row > span { padding: 9px 8px; }
 }
 
-/* Sin card, sin color propio: el texto vive directo sobre el fondo de
-   .fl-legal-footer, que ahora es el mismo violeta que el footer de abajo
-   — así el módulo se lee como parte del mismo bloque, no como una card
-   separada compitiendo en color con lo que sigue. */
-.fl-vap-note { color: #fff; }
+/* Sin card de color: sigue siendo su propio módulo (fondo gris neutro de
+   .fl-legal-footer, distinto del blanco de arriba y del violeta del
+   footer de abajo — esa diferencia de tono ES la separación), pero el
+   texto ya no vive dentro de una card violeta/verde compitiendo con nada. */
+.fl-vap-note { color: var(--fl-ink); }
 .fl-vap-note-badge {
   align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.1); border-radius: 999px; padding: 6px 14px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--fl-violet);
+  background: rgba(56, 31, 86, 0.08); border-radius: 999px; padding: 6px 14px;
 }
-.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.78); margin: 0; }
-.fl-vap-note p strong { color: #fff; }
+.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(28, 22, 38, 0.68); margin: 0; }
+.fl-vap-note p strong { color: var(--fl-ink); }
 .fl-vap-note-body { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
 
 /* /cremas (vía tópica): foto grande arriba (su propia caja, sin la card
@@ -1954,7 +1954,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-analisis-ext .fl-spec { margin-top: 0; }
 
 /* Marco médico-legal al fondo de la página: card centrada, no a todo el ancho */
-.fl-legal-footer { background: var(--fl-violet); }
+.fl-legal-footer { background: var(--fl-paper-2, #F6F4F2); }
 .fl-legal-footer .fl-wrap { display: flex; justify-content: center; }
 .fl-legal-footer .fl-vap-note { max-width: 920px; width: 100%; }
 
