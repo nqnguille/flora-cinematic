@@ -1899,19 +1899,41 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-vap-compare-head > span, .fl-vap-compare-row > span { padding: 9px 8px; }
 }
 
-/* Sin card de color: sigue siendo su propio módulo (fondo gris neutro de
-   .fl-legal-footer, distinto del blanco de arriba y del violeta del
-   footer de abajo — esa diferencia de tono ES la separación), pero el
-   texto ya no vive dentro de una card violeta/verde compitiendo con nada. */
-.fl-vap-note { color: var(--fl-ink); }
+/* La foto de vaporizadores tiene fondo gris-azulado uniforme (#B4BEC9) —
+   se pinta el módulo entero de ese mismo color, así la foto "se funde" con
+   el fondo de la card sin costura ni degradé, sin perder su propio bloque
+   separado (contraste de tono contra blanco arriba / violeta del footer
+   abajo sigue de pie). */
+.fl-vap-note {
+  color: var(--fl-ink); background: #B4BEC9; border-radius: var(--fl-r-card, 20px);
+  overflow: hidden;
+}
 .fl-vap-note-badge {
   align-self: flex-start; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--fl-violet);
-  background: rgba(56, 31, 86, 0.08); border-radius: 999px; padding: 6px 14px;
+  background: rgba(56, 31, 86, 0.1); border-radius: 999px; padding: 6px 14px;
 }
-.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(28, 22, 38, 0.68); margin: 0; }
+.fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(28, 22, 38, 0.72); margin: 0; }
 .fl-vap-note p strong { color: var(--fl-ink); }
-.fl-vap-note-body { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+
+/* La foto ancla a la derecha, tamaño real (contain) para no recortar los
+   vaporizadores; a la izquierda el mismo #B4BEC9 sólido hace de fondo del
+   texto — mismo color en ambos lados, no hace falta degradé. */
+.fl-vap-note--bgphoto {
+  background-image: url('/img/extracciones-legal-vape.jpg');
+  background-repeat: no-repeat; background-position: right center; background-size: contain;
+  min-height: 300px;
+}
+.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(60%, 44ch); }
+@media (max-width: 700px) {
+  /* En una columna angosta la foto no entra al lado del texto sin taparlo
+     — pasa a ir arriba, a todo el ancho, y el texto abajo. */
+  .fl-vap-note--bgphoto {
+    background-position: top center; background-size: 70% auto;
+    padding-top: min(65vw, 260px);
+  }
+  .fl-vap-note-body { max-width: 100%; }
+}
 
 /* /cremas (vía tópica): foto grande arriba (su propia caja, sin la card
    adentro) + la card del producto pisándola solo a la mitad — la mitad de
@@ -1946,18 +1968,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
    sección duplicando el salto de aire. */
 .fl-analisis-ext .fl-spec { margin-top: 0; }
 
-/* Marco médico-legal al fondo de la página: texto + foto de vaporizadores
-   al lado (no de fondo detrás del texto — se apilan en mobile) */
+/* Marco médico-legal al fondo de la página: card centrada, no a todo el ancho */
 .fl-legal-footer { background: var(--fl-paper-2, #F6F4F2); }
-.fl-legal-footer-grid { display: flex; align-items: center; justify-content: center; gap: clamp(28px, 4vw, 56px); flex-wrap: wrap; }
-.fl-legal-footer .fl-vap-note { max-width: 560px; flex: 1 1 420px; }
-.fl-vap-note-img {
-  flex: 1 1 260px; max-width: 320px; width: 100%; height: auto;
-  border-radius: var(--fl-r-card, 20px); object-fit: cover;
-}
-@media (max-width: 760px) {
-  .fl-vap-note-img { max-width: 100%; order: -1; }
-}
+.fl-legal-footer .fl-wrap { display: flex; justify-content: center; }
+.fl-legal-footer .fl-vap-note { max-width: 920px; width: 100%; }
 
 /* ── Auditoría final: gateway en touch (tablets/celu), esquinas de fotos, link gate ── */
 .fl-panel-img { border-radius: inherit; }
