@@ -1952,21 +1952,30 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-vap-note-body { max-width: 100%; }
 }
 
-/* /cremas (vía tópica): la foto de aplicación va de fondo, con la card del
-   producto flotando encima (no al lado) — degradé para que la card blanca
-   tenga contraste contra la foto */
+/* /cremas (vía tópica): foto grande arriba (su propia caja, sin la card
+   adentro) + la card del producto pisándola solo a la mitad — la mitad de
+   arriba de la card queda sobre la foto, la mitad de abajo cae sobre el
+   fondo de la sección (var(--fl-paper-2) de .fl-vap) */
+.fl-topica-col { align-self: start; }
 .fl-topica-photo {
   position: relative; border-radius: var(--fl-r-card, 20px); overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  padding: clamp(28px, 4vw, 44px); min-height: 420px; align-self: start;
+  aspect-ratio: 4 / 3;
 }
-.fl-topica-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-.fl-topica-photo::before {
-  content: ''; position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(180deg, rgba(28,22,38,0.15) 0%, rgba(28,22,38,0.45) 100%);
+.fl-topica-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Degradé solo en la mitad inferior de la foto, para que la mitad de la
+   card que la pisa tenga contraste — el resto de la foto queda sin filtro */
+.fl-topica-photo::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  background: linear-gradient(180deg, rgba(28,22,38,0) 0%, rgba(28,22,38,0.4) 100%);
 }
-.fl-topica-photo .fl-spec-grid { position: relative; z-index: 2; width: 100%; }
-.fl-topica-photo .fl-oil-card { box-shadow: 0 30px 60px -24px rgba(0,0,0,0.45); }
+.fl-topica-card-wrap {
+  position: relative; z-index: 2; margin-top: -120px;
+  padding: 0 clamp(16px, 4vw, 28px); justify-content: center;
+}
+.fl-topica-card-wrap .fl-oil-card { box-shadow: 0 30px 60px -24px rgba(0,0,0,0.4); }
+@media (max-width: 560px) {
+  .fl-topica-card-wrap { margin-top: -80px; }
+}
 
 /* Grilla de extracciones: fondo blanco propio, separado de la mini-landing gris */
 .fl-analisis-ext { padding-top: clamp(20px, 2.5vw, 32px); }

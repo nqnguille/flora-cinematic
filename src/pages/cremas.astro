@@ -31,9 +31,11 @@ import { cremas } from '../lib/productos'
         </p>
       </div>
 
-      <div class="fl-topica-photo">
-        <img class="fl-topica-bg" src="/img/cremas-legal-topica.jpg" alt="" aria-hidden="true" loading="lazy" />
-        <div class="fl-spec-grid td-grid-1-compact">
+      <div class="fl-topica-col">
+        <div class="fl-topica-photo">
+          <img class="fl-topica-bg" src="/img/cremas-legal-topica.jpg" alt="" aria-hidden="true" loading="lazy" />
+        </div>
+        <div class="fl-topica-card-wrap fl-spec-grid td-grid-1-compact">
           {cremas.map((c) => (
             <article class="fl-spec-card fl-oil-card" style="--oil:#0A503C">
               <div class="fl-oil-photo" data-id={c.id}>
