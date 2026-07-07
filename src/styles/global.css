@@ -1262,17 +1262,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
   text-decoration: none; color: #fff;
   transition: flex-grow 0.55s cubic-bezier(0.4, 0, 0.1, 1), box-shadow 0.4s ease;
 }
-.fl-panel::before { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(165deg, var(--fl-violet) 0%, var(--fl-green) 135%); }
-.fl-panel-2::before { background: linear-gradient(165deg, var(--fl-green) 0%, var(--fl-violet-2) 140%); }
-.fl-panel-3::before { background: linear-gradient(165deg, #2A1A47 0%, var(--fl-green-2) 150%); }
-.fl-panel-4::before { background: linear-gradient(165deg, var(--fl-green-2) 0%, var(--fl-violet) 140%); }
-
-/* Distintivo: solo se marca lo que requiere entrevista médica/REPROCANN —
-   lo de venta libre queda implícito, sin etiqueta. */
-.fl-panel > .fl-panel::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, transparent 28%, rgba(18, 9, 28, 0.5) 100%); }
+/* Sin tinte de color de marca sobre la foto (se sacó a pedido, para que las
+   fotos wellness se vean con sus colores reales) — solo un scrim neutro
+   abajo para que el texto blanco siga legible sobre cualquier foto. */
+.fl-panel::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.6) 100%); }
 .fl-panel > * { position: relative; z-index: 2; }
-.fl-panel-icon { position: absolute; top: 28px; left: 30px; width: 40px; height: 40px; opacity: 0.85; }
-.fl-panel-icon svg { display: block; width: 100%; height: 100%; }
 .fl-panel-title { display: block; font-family: var(--font-ui); font-weight: 700; font-size: clamp(20px, 2vw, 27px); line-height: 1.12; }
 .fl-panel-desc {
   display: block; font-family: var(--font-ui); font-size: 14.5px; line-height: 1.55;
@@ -1519,7 +1513,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @media (max-width: 760px) {
   .fl-gateway { flex-direction: column; height: auto; }
   .fl-panel { display: flex; justify-content: flex-start; min-height: 0; padding: 80px 22px 26px; box-shadow: none; }
-  .fl-panel-icon { top: 26px; left: 22px; }
   .fl-panel-desc { max-height: none !important; opacity: 1 !important; margin-top: 10px !important; overflow: visible; }
   .fl-panel-cta { opacity: 1 !important; transform: none !important; margin-top: 14px; }
   .fl-panel-title { font-size: 21px; margin-top: 6px; }
@@ -1535,7 +1528,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-gateway { display: block !important; height: auto !important; }
   .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding: 24px 22px 26px !important; margin-bottom: 12px; }
   .fl-panel::before, .fl-panel::after { border-radius: inherit; }
-  .fl-panel-icon { position: static !important; display: block !important; margin-bottom: 14px; width: 32px !important; height: 32px !important; opacity: .9; }
   .fl-panel-body { display: block !important; }
   .fl-panel-title, .fl-panel-desc, .fl-panel-cta { position: static !important; display: block !important; max-height: none !important; opacity: 1 !important; transform: none !important; overflow: visible !important; }
   .fl-panel-title { margin: 6px 0; font-size: 21px; }
@@ -1707,19 +1699,14 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-analisis { background: var(--fl-paper-2); border-top: 1px solid var(--fl-line); }
 .fl-analisis .fl-spec { margin-top: 0; }
 
-/* ── Imagen de fondo en los paneles gateway (con scrim de marca encima) ── */
+/* ── Imagen de fondo en los paneles gateway (sin tinte de color, solo el
+   scrim neutro definido más arriba para legibilidad del texto) ── */
 .fl-panel-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; z-index: 0;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.1, 1);
 }
 .fl-panel:hover .fl-panel-img, .fl-panel:focus-visible .fl-panel-img { transform: scale(1.06); }
-/* El gradiente de marca pasa a ser un scrim semi-transparente sobre la foto */
-.fl-panel::before { z-index: 1; background: linear-gradient(165deg, rgba(56,31,86,0.74) 0%, rgba(11,60,45,0.72) 130%); }
-.fl-panel-2::before { background: linear-gradient(165deg, rgba(10,80,60,0.72) 0%, rgba(56,31,86,0.76) 140%); }
-.fl-panel-3::before { background: linear-gradient(165deg, rgba(42,26,71,0.74) 0%, rgba(20,121,79,0.72) 150%); }
-.fl-panel-4::before { background: linear-gradient(165deg, rgba(20,121,79,0.72) 0%, rgba(56,31,86,0.76) 140%); }
-.fl-panel::after { z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .fl-panel-img { transition: none; } }
 
 /* ── FAQ — acordeón (details nativo, sin JS) ── */
@@ -1958,7 +1945,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @media (hover: none) {
   .fl-gateway { display: block !important; height: auto !important; }
   .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: hidden !important; padding: 24px 22px 26px !important; margin-bottom: 12px; }
-  .fl-panel-icon { position: static !important; display: block !important; margin-bottom: 14px; width: 32px !important; height: 32px !important; }
   .fl-panel-body { display: block !important; }
   .fl-panel-title, .fl-panel-desc, .fl-panel-cta { position: static !important; display: block !important; max-height: none !important; opacity: 1 !important; transform: none !important; overflow: visible !important; }
   .fl-panel-title { margin: 6px 0; font-size: 21px; }
