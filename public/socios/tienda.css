@@ -251,6 +251,10 @@
    .td-ext-grid en Extracciones (antes 520px de ancho, se veía desproporcionada
    frente al resto del catálogo) */
 .td-grid-1-compact { grid-template-columns: minmax(0, 300px) !important; justify-content: center; }
+/* El aspect-ratio de la IMG no alcanza solo: hereda width/height:100% de
+   .fl-oil-photo img (global.css), así que la forma real la define el
+   contenedor — sin esto seguía saliendo 4:5 (alto), no cuadrada */
+.td-grid-1-compact .fl-oil-photo { aspect-ratio: 1 / 1; }
 .td-grid-1-compact .fl-oil-photo img, .td-grid-1-compact .td-ext-visual { aspect-ratio: 1 / 1; }
 .td-grid-1-compact .fl-oil-body { padding: 14px 16px 16px; }
 .td-grid-1-compact .fl-oil-title { font-size: 14px; margin-bottom: 6px; }

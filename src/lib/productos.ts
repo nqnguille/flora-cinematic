@@ -67,7 +67,7 @@ export const cremas = [
   {
     id: 'crema-30',
     nombre: 'Crema de CBD premium',
-    presentacion: '1 g CBD · 30 ml',
+    presentacion: '30 ml',
     desc: 'Para alivio localizado, en tu rutina diaria.',
     para: ['Dolores articulares y musculares', 'Contracturas y tensión localizada', 'Uso diario, sin efecto psicoactivo'],
     img: '/img/prod-cremas.jpg',
