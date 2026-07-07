@@ -686,6 +686,22 @@ function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
 function initWelcome() {
   const section  = document.querySelector<HTMLElement>('.welcome')
   if (!section) return
+
+  // El hero-intro (scroll-scrubbed, varias pantallas de largo) se muestra UNA
+  // sola vez por dispositivo — en visitas siguientes aburre. Se saca del DOM
+  // antes de armar el ScrollTrigger, así ni pinea ni resta scroll: se entra
+  // directo al resto de la home.
+  const HERO_KEY = 'flora-hero-seen'
+  const HERO_TTL = 180 * 24 * 60 * 60 * 1000 // 180 días
+  try {
+    const t = Number(localStorage.getItem(HERO_KEY) || 0)
+    if (t && Date.now() - t < HERO_TTL) {
+      section.remove()
+      return
+    }
+    localStorage.setItem(HERO_KEY, String(Date.now()))
+  } catch { /* sin storage, el hero se muestra normal */ }
+
   const stage    = section.querySelector<HTMLElement>('.welcome-stage')
   const imgs     = gsap.utils.toArray<HTMLElement>('.welcome-img')
   const lines    = gsap.utils.toArray<HTMLElement>('.welcome-line')
