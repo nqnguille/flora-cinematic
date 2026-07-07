@@ -1,32 +1,17 @@
 {
- "dolor": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-dolor.jpg",
+ "cremas-legal-topica": {
+  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/cremas-legal-topica.jpg",
   "type": "image",
-  "photographer": "Fernanda Araujo",
-  "pexels_id": 13919295,
-  "source_url": "https://www.pexels.com/photo/a-person-stretching-13919295/",
-  "alt": "Detailed close-up of a person stretching their foot on a mat, focusing",
-  "keyword_final": "sports ankle foot closeup",
+  "photographer": "Thirdman",
+  "pexels_id": 7219915,
+  "source_url": "https://www.pexels.com/photo/close-up-photo-of-hands-with-lotion-7219915/",
+  "alt": "Hands applying moisturizing cream for healthy skin care treatment.",
+  "keyword_final": "applying hand cream moisturizer skin closeup",
   "width": 1400,
-  "height": 1750,
-  "filesize": 138429,
-  "aspect_real": 0.8,
+  "height": 1176,
+  "filesize": 202515,
+  "aspect_real": 1.19,
   "ok": true,
-  "snippet": "<img src=\"/perfil-dolor.jpg\" width=\"1400\" height=\"1750\" alt=\"Detailed close-up of a person stretching their foot on a mat, focusing\">"
- },
- "nauseas": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-nauseas.jpg",
-  "type": "image",
-  "photographer": "Teona Swift",
-  "pexels_id": 6874258,
-  "source_url": "https://www.pexels.com/photo/crop-mature-unemotional-woman-eating-freshly-cooked-pasta-6874258/",
-  "alt": "Crop emotionless mature female in blue sweater eating tasty pasta with",
-  "keyword_final": "apetite",
-  "width": 1400,
-  "height": 1750,
-  "filesize": 215447,
-  "aspect_real": 0.8,
-  "ok": true,
-  "snippet": "<img src=\"/perfil-nauseas.jpg\" width=\"1400\" height=\"1750\" alt=\"Crop emotionless mature female in blue sweater eating tasty pasta with\">"
+  "snippet": "<img src=\"/cremas-legal-topica.jpg\" width=\"1400\" height=\"1176\" alt=\"Hands applying moisturizing cream for healthy skin care treatment.\">"
  }
 }

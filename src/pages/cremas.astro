@@ -4,23 +4,66 @@ import { cremas } from '../lib/productos'
 ---
 
 <CatalogoShell
-  title="Crema de CBD premium | Flora ONG"
-  description="Crema de alta concentración: 1 gramo de CBD puro por pote, para alivio localizado, sin efecto psicoactivo."
+  title="Crema de CBD premium — vía tópica | Flora ONG"
+  description="Crema de alta concentración: 1 gramo de CBD puro por pote. Cómo actúa la vía tópica y en qué se diferencia de la vía sublingual o inhalatoria."
   categoria="cremas"
 >
-  <section class="fl-section" aria-label="Cremas">
+  <!-- ══════════════════════════════════════════ -->
+  <!-- HERO EDUCATIVO: tópica vs. sistémica. Mismo patrón que el mini-landing
+       de /extracciones (fumar vs. vaporizar) — comparación criterio por
+       criterio en vez de dos cards separadas. -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-vap fl-ext-hero" aria-label="Vía tópica: vía de administración">
+    <div class="fl-wrap fl-legal-grid">
+      <div class="fl-legal-text">
+        <span class="fl-eyebrow">Vía de administración</span>
+        <h1 class="fl-title">Tópica: <em>actúa donde la aplicás.</em></h1>
+        <p class="fl-lead">
+          La crema de cannabis medicinal se aplica directo sobre la piel, en la zona
+          que necesita alivio. A diferencia de la vía sublingual (aceite en gotas) o
+          inhalatoria (flor o vaporizador), no pasa a la sangre: el efecto queda
+          localizado, sin alcanzar el resto del cuerpo.
+        </p>
+      </div>
+
+      <div class="fl-vap-compare">
+        <div class="fl-vap-compare-head">
+          <span class="fl-vap-compare-crit" aria-hidden="true"></span>
+          <span class="fl-vap-compare-col-label">Sistémica</span>
+          <span class="fl-vap-compare-col-label fl-vap-compare-col-label--topica">Tópica</span>
+        </div>
+        <div class="fl-vap-compare-row">
+          <span class="fl-vap-compare-crit">Cómo llega</span>
+          <span class="fl-vap-compare-val">Pasa a la sangre, circula por el cuerpo</span>
+          <span class="fl-vap-compare-val fl-vap-compare-val--topica">Se absorbe por la piel, queda en la zona</span>
+        </div>
+        <div class="fl-vap-compare-row">
+          <span class="fl-vap-compare-crit">Efecto psicoactivo</span>
+          <span class="fl-vap-compare-val">Puede darse, según el cannabinoide y la dosis</span>
+          <span class="fl-vap-compare-val fl-vap-compare-val--topica">Ninguno, aunque la crema tenga THC</span>
+        </div>
+        <div class="fl-vap-compare-row">
+          <span class="fl-vap-compare-crit">Alcance</span>
+          <span class="fl-vap-compare-val">General, en todo el organismo</span>
+          <span class="fl-vap-compare-val fl-vap-compare-val--topica">Local, solo en la zona aplicada</span>
+        </div>
+        <div class="fl-vap-compare-row">
+          <span class="fl-vap-compare-crit">Velocidad</span>
+          <span class="fl-vap-compare-val">Rápida (inhalada) a intermedia (sublingual)</span>
+          <span class="fl-vap-compare-val fl-vap-compare-val--topica">Gradual, de minutos a horas</span>
+        </div>
+        <div class="fl-vap-compare-row">
+          <span class="fl-vap-compare-crit">Se usa para</span>
+          <span class="fl-vap-compare-val">Dolor generalizado, ansiedad, sueño, epilepsia</span>
+          <span class="fl-vap-compare-val fl-vap-compare-val--topica">Dolor articular, muscular o de piel puntual</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fl-section fl-analisis-ext" aria-label="Catálogo de cremas">
     <div class="fl-wrap">
       <div class="fl-spec">
-        <div class="fl-spec-head">
-          <span class="fl-eyebrow">Alta concentración de CBD</span>
-          <h1 class="fl-spec-title">Alivio localizado, <em>sin humo.</em></h1>
-          <p class="fl-spec-sub">
-            Alta concentración de CBD puro: 1 gramo en cada pote de 30 ml. Se aplica
-            directamente sobre la zona para un alivio localizado y preciso, sin efecto
-            psicoactivo.
-          </p>
-        </div>
-
         <div class="fl-spec-grid td-grid-1-compact">
           {cremas.map((c) => (
             <article class="fl-spec-card fl-oil-card" style="--oil:#0A503C">
@@ -58,6 +101,32 @@ import { cremas } from '../lib/productos'
           ))}
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- MARCO MÉDICO-LEGAL: al fondo de la página, mismo patrón que
+       /extracciones (fl-legal-footer + fl-vap-note--bgphoto) -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-legal-footer" aria-label="Marco médico-legal">
+    <div class="fl-wrap">
+      <aside class="fl-vap-note fl-vap-note--bgphoto" style="--vap-note-photo:url('/img/cremas-legal-topica.jpg')">
+        <div class="fl-vap-note-body">
+          <span class="fl-vap-note-badge">Marco médico-legal</span>
+          <p>
+            La vía tópica suele ser la puerta de entrada más simple al cannabis
+            medicinal: al no pasar a la sangre, no genera efecto psicoactivo ni
+            requiere los cuidados de otras vías. Se aplica dentro del mismo marco de
+            la Ley 27.350 y el REPROCANN que el resto de nuestros productos.
+          </p>
+          <p>
+            Esta crema tiene una concentración de CBD verificada — 1 gramo puro por
+            pote de 30 ml, no una estimación. Es una garantía que no ofrecen las
+            cremas de cáñamo genéricas que se consiguen sin receta en kioscos y
+            farmacias.
+          </p>
+        </div>
+      </aside>
     </div>
   </section>
 </CatalogoShell>
