@@ -1888,11 +1888,27 @@ html.no-js .reveal { opacity: 1; transform: none; }
   color: var(--fl-green); font-weight: 600;
   background: color-mix(in srgb, var(--fl-green) 6%, #fff);
 }
-@media (max-width: 480px) {
-  .fl-vap-compare { grid-template-columns: minmax(70px, 0.7fr) 1fr 1fr; }
-  /* El texto NO se achica en mobile (era la única tabla del sitio que lo
-     hacía) — justo donde más importa la legibilidad en pantalla chica. */
-  .fl-vap-compare-head > span, .fl-vap-compare-row > span { padding: 9px 8px; }
+/* En mobile la tabla de 3 columnas queda muy angosta (7 filas hoy, y
+   crece) — el label del criterio se parte en dos líneas apretadas y los
+   valores quedan comprimidos. En vez de eso, cada fila pasa a ser un
+   bloque apilado: criterio arriba, "Fumar" y "Vaporizar" abajo con su
+   propia etiqueta inline (los headers de columna ya no hacen falta). */
+@media (max-width: 640px) {
+  .fl-vap-compare-head { display: none; }
+  .fl-vap-compare-row {
+    display: block; padding: 14px clamp(14px, 4vw, 18px);
+    border-bottom: 1px solid var(--fl-line);
+  }
+  .fl-vap-compare-row:last-child { border-bottom: none; }
+  .fl-vap-compare-row > span { display: block; padding: 0; border: none; }
+  .fl-vap-compare-crit { background: none; margin-bottom: 8px; }
+  .fl-vap-compare-val, .fl-vap-compare-val--vapor { padding: 3px 0; background: none; }
+  .fl-vap-compare-val::before, .fl-vap-compare-val--vapor::before {
+    display: inline-block; font-weight: 700; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.03em; width: 76px;
+  }
+  .fl-vap-compare-val::before { content: "Fumar"; color: rgba(28, 22, 38, 0.4); }
+  .fl-vap-compare-val--vapor::before { content: "Vaporizar"; color: var(--fl-green); }
 }
 
 /* La foto de vaporizadores tiene fondo gris-azulado uniforme (#B4BEC9) —
