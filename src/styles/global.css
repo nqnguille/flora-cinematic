@@ -1919,19 +1919,29 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* La foto ancla a la derecha; la imagen fuente ya viene recortada bien
    cerca de los vapes (poco margen gris suelto), así "contain" ya se ve
    "con zoom" sin necesidad de agrandarla por CSS y sin cortar ningún
-   vaporizador. A la izquierda el mismo #B4BEC9 sólido hace de fondo del
-   texto — mismo color en ambos lados, no queda costura que suavizar. */
+   vaporizador. Mismo color de fondo (#B4BEC9) a ambos lados, y un degradé
+   por ENCIMA de la foto (misma paleta, sólido → transparente) tapa el
+   borde recto de la imagen para que el encuentro con el texto se sienta
+   difuminado en vez de una costura recta. */
 .fl-vap-note--bgphoto {
-  background-image: url('/img/extracciones-legal-vape.jpg');
-  background-repeat: no-repeat; background-position: right center; background-size: contain;
+  background-image:
+    linear-gradient(90deg, #B4BEC9 0%, rgba(180,190,201,0.9) 10%, rgba(180,190,201,0) 30%, rgba(180,190,201,0) 100%),
+    url('/img/extracciones-legal-vape.jpg');
+  background-repeat: no-repeat, no-repeat;
+  background-position: right center, right center;
+  background-size: 100% 100%, contain;
   min-height: 300px;
 }
 .fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(58%, 42ch); }
 @media (max-width: 700px) {
   /* En una columna angosta la foto no entra al lado del texto sin taparlo
-     — pasa a ir arriba, a todo el ancho, y el texto abajo. */
+     — pasa a ir arriba, a todo el ancho, y el texto abajo. El degradé
+     también rota a vertical (se difumina hacia abajo, contra el texto). */
   .fl-vap-note--bgphoto {
-    background-position: top center; background-size: 78% auto;
+    background-image:
+      linear-gradient(180deg, rgba(180,190,201,0) 0%, rgba(180,190,201,0) 65%, rgba(180,190,201,0.9) 85%, #B4BEC9 100%),
+      url('/img/extracciones-legal-vape.jpg');
+    background-position: top center, top center; background-size: 100% 100%, 78% auto;
     padding-top: min(65vw, 260px);
   }
   .fl-vap-note-body { max-width: 100%; }
