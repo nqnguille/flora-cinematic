@@ -21,15 +21,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <!-- ── Carta (fullscreen · carrusel) ── -->
     <div id="gn-content" class="gn-content" hidden>
       <div class="gn-topbar">
-        <img class="gn-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        <a class="gn-logo-link" href="/" aria-label="Volver al inicio de Flora">
+          <img class="gn-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        </a>
         <div class="gn-filters">
           <div id="gn-seg" class="gn-seg" role="group" aria-label="Formato"></div>
           <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
           <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
           <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
+          <span id="gn-count" class="gn-count"></span>
         </div>
         <div class="gn-topbar-right">
-        <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva" hidden>
+        <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg>
           <span id="gn-cart-badge" class="gn-cart-badge" hidden></span>
         </button>
@@ -311,9 +314,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     let loopOffset = 0   // ancho de una copia (para el loop sin costura)
     let singleCount = 0  // tarjetas de UNA copia
     let pendingRecenter = false
-    let userPaused = false   // pausa explícita (botón)
-    let hoverPaused = false  // pausa temporal (mouse encima / arrastrando)
-    let touchPaused = false  // pausa temporal (touch/wheel/prev/next reciente)
+    let userPaused = false   // pausa explícita (botón) — la única que no se auto-reanuda
+    let touchPaused = false  // pausa temporal (hover/touch/wheel/prev/next/carrito reciente):
+                              // siempre se reanuda sola a los N segundos de inactividad,
+                              // no importa dónde haya quedado el cursor
     let resumeTimer = null
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -371,8 +375,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       // (el canvas mide bien recién ahí).
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitNames(track))
 
-      track.addEventListener('mouseenter', () => { hoverPaused = true })
-      track.addEventListener('mouseleave', () => { hoverPaused = false })
+      // Hover ya no es una pausa permanente: reanuda sola a los 5s de no mover
+      // el mouse, esté o no todavía encima de la tarjeta.
+      track.addEventListener('mouseenter', () => pauseTouchSoon(5000))
+      track.addEventListener('mousemove', () => pauseTouchSoon(5000))
       track.addEventListener('touchstart', () => { touchPaused = true; clearTimeout(resumeTimer) }, { passive: true })
       track.addEventListener('touchend', () => pauseTouchSoon(4000), { passive: true })
       track.addEventListener('wheel', () => pauseTouchSoon(4000), { passive: true })
@@ -425,9 +431,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       function frame() {
         if (loopOffset > 0) {
-          // Con ítems en el carrito el carrusel no avanza solo: el socio está
-          // armando su reserva y la marquesina ya cumplió su rol.
-          if (!userPaused && !hoverPaused && !touchPaused && !reduceMotion && !cart.size) {
+          // Toda pausa "de actividad" (hover, touch, carrito, etc.) se reanuda
+          // sola a los pocos segundos de inactividad — solo el botón de pausa
+          // explícito (userPaused) frena el carrusel de forma permanente.
+          if (!userPaused && !touchPaused && !reduceMotion) {
             track.scrollLeft += SPEED
           }
           // Loop infinito en ambos sentidos: mantener en [loopOffset, 2·loopOffset)
@@ -442,6 +449,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function applyFilters() {
       const list = allGeneticas.filter(matches)
       const track = document.getElementById('gn-grid')
+
+      const countEl = document.getElementById('gn-count')
+      countEl.textContent = allGeneticas.length ? `${list.length} variedad${list.length === 1 ? '' : 'es'}` : ''
 
       if (!list.length) {
         singleCount = 0
@@ -631,13 +641,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       } else if (cart.size) {
         let g = 0, u = 0
         for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : (u += c)
-        trigger.hidden = false
         trigger.classList.remove('is-listo')
         label = 'Tu reserva: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
         count = g + u
       } else {
-        trigger.hidden = true
+        // Visible desde el arranque, aunque esté vacío: así el socio sabe que
+        // puede tocar + en una tarjeta para empezar a armar su reserva.
+        trigger.classList.remove('is-listo')
+        label = 'Tu reserva — todavía vacía'
       }
+      trigger.hidden = false
       trigger.title = label
       trigger.setAttribute('aria-label', label || 'Tu reserva')
       badge.textContent = count > 0 ? String(count) : ''
@@ -1163,6 +1176,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     margin-bottom: clamp(8px, 1.2vh, 16px);
   }
   .gn-logo { height: clamp(24px, 2.7vh, 36px); width: auto; display: block; }
+  .gn-logo-link { display: block; flex-shrink: 0; line-height: 0; }
+  .gn-logo-link:focus-visible { outline: 2px solid var(--gn-green); outline-offset: 3px; border-radius: 4px; }
+  .gn-count {
+    font-family: var(--font-ui, inherit); font-size: 0.78rem; font-weight: 600;
+    color: var(--gn-muted); white-space: nowrap; margin-left: 0.2rem;
+  }
   .gn-topbar-right { display: flex; align-items: center; gap: 0.6rem; }
 
   .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
@@ -2059,7 +2078,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     /* Topbar en 2 renglones: logo + controles arriba, filtros abajo */
     .gn-topbar { flex-wrap: wrap; row-gap: 0.6rem; margin-bottom: 2px; }
-    .gn-logo { order: 1; }
+    .gn-logo-link { order: 1; }
     .gn-topbar-right { order: 2; }
     /* Filtros: UNA sola fila deslizable a lo ancho. Máscara en el borde
        derecho para que el corte se lea como "hay más" y no como un bug. */
