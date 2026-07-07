@@ -98,9 +98,6 @@ const perfilesLoop = [...perfiles, ...perfiles, ...perfiles]
 // Aceites: ficha técnica compartida en src/lib/productos.ts
 
 const waAsociarse = `${WA}?text=Hola%20Flora%2C%20quiero%20asociarme%20a%20Flora.%20%C2%BFQu%C3%A9%20necesito%20para%20empezar%3F`
-// Acceso a material vegetal. La cantidad (10 a 40 g por mes)
-// se elige una vez adentro, por WhatsApp. Mismo acompañamiento y variedades para todos.
-const accesoWa = wa('Hola Flora, quiero acceder al material vegetal. ¿Me orientan para empezar?')
 
 // Programa de YouTube — "Espacio libre de prejuicios"
 const ytChannel = 'https://www.youtube.com/@FloraCultivamosConciencia'
@@ -655,11 +652,8 @@ const igFallback = [
       <div class="fl-acceso-side">
         <h3 class="fl-acceso-cta-title">Vení a conocer nuestra carta del mes</h3>
         <div class="fl-acceso-ctas fl-acceso-ctas--publico">
-          <a class="fl-acceso-cta" href="/socios/">
+          <a class="fl-acceso-cta fl-acceso-cta--solo" href="/socios/">
             Ingresar al catálogo de genéticas <span aria-hidden="true">→</span>
-          </a>
-          <a class="fl-acceso-cta fl-acceso-cta--ghost" href={accesoWa} target="_blank" rel="noopener noreferrer">
-            Escribinos por WhatsApp
           </a>
         </div>
         <div class="fl-acceso-ctas fl-acceso-ctas--socio">
@@ -668,9 +662,6 @@ const igFallback = [
           </a>
         </div>
         <div id="td-activo" class="td-activo fl-acceso-reserva"></div>
-        <p class="fl-acceso-note">
-          ¿No tenés REPROCANN todavía? Podés <a href="#entrevista" class="fl-acceso-link">arrancar por la entrevista</a> igual.
-        </p>
       </div>
     </div>
   </section>

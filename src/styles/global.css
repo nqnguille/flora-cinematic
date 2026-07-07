@@ -1642,19 +1642,13 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgba(0,0,0,0.6); }
 .fl-acceso-cta > span[aria-hidden] { display: inline-block; transition: transform 0.25s ease; }
 .fl-acceso-cta:hover > span[aria-hidden] { transform: translateX(4px); }
-.fl-acceso-cta--ghost .lock-shackle { transition: transform 0.3s ease; transform-origin: 12px 10px; }
-.fl-acceso-cta--ghost:hover .lock-shackle { transform: translateY(-1.6px) rotate(-14deg); }
 .fl-acceso-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.fl-acceso-cta--ghost {
-  background: transparent; color: #fff;
-  border: 1.5px solid rgba(255,255,255,0.55);
-  box-shadow: none;
+/* Único CTA público (sin WhatsApp ni nota al lado): más presencia — sombra
+   propia en reposo, no solo al hover, para que no quede huérfano bajo el hook */
+.fl-acceso-cta--solo {
+  font-size: 16px; padding: 18px 34px;
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,0.55);
 }
-.fl-acceso-cta--ghost:hover { background: rgba(255,255,255,0.12); border-color: #fff; box-shadow: none; }
-.fl-acceso-cta--ghost svg { width: 15px; height: 15px; flex-shrink: 0; }
-.fl-acceso-note { font-family: var(--font-ui); font-size: 13px; line-height: 1.55; color: rgba(255,255,255,0.68); max-width: 56ch; margin: 12px auto 0; }
-.fl-acceso-note strong { color: #fff; }
-@media (min-width: 881px) { .fl-acceso-note { margin: 12px 0 0; max-width: 40ch; } }
 
 /* ── REPROCANN: banda violeta (hook del primer paso / entrevista médica) ── */
 .fl-reprocann { background: var(--fl-violet); color: #fff; overflow: hidden; }
