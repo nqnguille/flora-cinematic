@@ -1916,20 +1916,22 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-vap-note p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(28, 22, 38, 0.72); margin: 0; }
 .fl-vap-note p strong { color: var(--fl-ink); }
 
-/* La foto ancla a la derecha, tamaño real (contain) para no recortar los
-   vaporizadores; a la izquierda el mismo #B4BEC9 sólido hace de fondo del
-   texto — mismo color en ambos lados, no hace falta degradé. */
+/* La foto ancla a la derecha; la imagen fuente ya viene recortada bien
+   cerca de los vapes (poco margen gris suelto), así "contain" ya se ve
+   "con zoom" sin necesidad de agrandarla por CSS y sin cortar ningún
+   vaporizador. A la izquierda el mismo #B4BEC9 sólido hace de fondo del
+   texto — mismo color en ambos lados, no queda costura que suavizar. */
 .fl-vap-note--bgphoto {
   background-image: url('/img/extracciones-legal-vape.jpg');
   background-repeat: no-repeat; background-position: right center; background-size: contain;
   min-height: 300px;
 }
-.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(60%, 44ch); }
+.fl-vap-note-body { padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; max-width: min(58%, 42ch); }
 @media (max-width: 700px) {
   /* En una columna angosta la foto no entra al lado del texto sin taparlo
      — pasa a ir arriba, a todo el ancho, y el texto abajo. */
   .fl-vap-note--bgphoto {
-    background-position: top center; background-size: 70% auto;
+    background-position: top center; background-size: 78% auto;
     padding-top: min(65vw, 260px);
   }
   .fl-vap-note-body { max-width: 100%; }
