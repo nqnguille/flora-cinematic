@@ -69,6 +69,7 @@ export const cremas = [
     nombre: 'Crema de CBD premium',
     presentacion: '30 ml',
     desc: 'Para alivio localizado, en tu rutina diaria.',
+    claim: '1 gramo de CBD puro en cada pote.',
     para: ['Dolores articulares y musculares', 'Contracturas y tensión localizada', 'Uso diario, sin efecto psicoactivo'],
     img: '/img/prod-cremas.jpg',
     href: wa('Hola Flora, quiero consultar por la crema 🌿'),

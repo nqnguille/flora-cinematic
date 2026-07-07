@@ -43,11 +43,10 @@ import { cremas } from '../lib/productos'
                 <span class="fl-oil-badge">{c.presentacion}</span>
               </div>
               <div class="fl-oil-body">
-                <h2 class="fl-oil-title">{c.nombre}</h2>
-                <p class="fl-oil-desc">{c.desc}</p>
+                <h2 class="fl-oil-title">{c.claim}</h2>
 
                 <div class="fl-oil-para">
-                  <span class="fl-oil-para-label">Puede acompañar en</span>
+                  <span class="fl-oil-para-label">Ideal para</span>
                   <ul class="fl-oil-para-list">
                     {c.para.map((p) => <li>{p}</li>)}
                   </ul>
