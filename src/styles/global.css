@@ -1601,14 +1601,17 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-story, .fl-acceso-note { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
-/* Hook de una sola línea (no badge + título apilados: en una franja 16:9
-   angosta, dos headers antes de los botones era demasiado texto) */
-.fl-acceso-cta-title {
-  font-family: var(--font-ui); font-weight: 800; font-size: clamp(18px, 2vw, 22px);
-  line-height: 1.25; color: #fff; margin: 0 auto; max-width: 22ch;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.6);
-}
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
+/* "Portal": marco de vidrio alrededor del único CTA — sin hook de texto al
+   lado, el botón necesitaba su propio momento en vez de flotar solo sobre
+   el video. Mismo tratamiento glass que usábamos en el badge que sacamos. */
+.fl-acceso-portal {
+  margin-top: 0; padding: clamp(16px, 2.2vw, 22px);
+  background: rgba(255,255,255,0.1);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.24); border-radius: 28px;
+  box-shadow: 0 24px 60px -24px rgba(0,0,0,0.5);
+}
 
 /* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
    el resto del cuadro queda libre para el video */
@@ -1629,7 +1632,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
     display: flex; flex-direction: column; align-items: flex-end;
     flex-shrink: 0; text-align: right; margin-top: 14px;
   }
-  .fl-acceso-cta-title { margin: 0; max-width: 20ch; }
   .fl-acceso-ctas { margin-top: 0; flex-wrap: nowrap; justify-content: flex-end; }
 }
 .fl-acceso-cta {
