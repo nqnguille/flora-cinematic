@@ -3,6 +3,7 @@ import { createSessionCookie } from './_session';
 
 interface Env {
   SOCIOS: KVNamespace;
+  INTENTOS: KVNamespace;
   GOOGLE_CLIENT_ID: string;
   SESSION_SECRET: string;
   ADMIN_EMAILS?: string;
@@ -45,11 +46,34 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const isSocio = await env.SOCIOS.get(email);
   if (isSocio === null) {
+    // Capturamos el intento como prospecto (solo el de la carta — un admin
+    // que se equivoca de cuenta en /socios/admin/ no es un lead de socio).
+    // Nunca bloqueamos el login por esto: si falla el guardado, igual 403.
+    if (appContext !== 'admin') {
+      try {
+        const now = new Date().toISOString();
+        const prevRaw = await env.INTENTOS.get(email);
+        const prev = prevRaw ? JSON.parse(prevRaw) : {};
+        await env.INTENTOS.put(email, JSON.stringify({
+          name: payload.name || prev.name || '',
+          picture: payload.picture || prev.picture || '',
+          locale: payload.locale || prev.locale || '',
+          firstAttempt: prev.firstAttempt || now,
+          lastAttempt: now,
+          attempts: (prev.attempts || 0) + 1,
+        }));
+      } catch {
+        // no bloquea el rechazo del login
+      }
+    }
     return Response.json(
       { ok: false, error: 'tu cuenta de Google no está en la lista de socios verificados' },
       { status: 403 }
     );
   }
+
+  // Si ya estaba en la lista de intentos y ahora es socio, dejamos de rastrearlo ahí.
+  try { await env.INTENTOS.delete(email); } catch {}
 
   let rec: any = {};
   try { rec = JSON.parse(isSocio); } catch { rec = {}; } // valor legado "ok" → {}

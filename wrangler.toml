@@ -17,3 +17,7 @@ id = "721e23b4adcc42df8b2871f3aad1604c"
 [[kv_namespaces]]
 binding = "PEDIDOS"
 id = "f5f7e26245e641c6a3b9311351c187fe"
+
+[[kv_namespaces]]
+binding = "INTENTOS"
+id = "2d141ca74029483f81490cc81c1490e9"
