@@ -29,7 +29,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="gn-dd-tipo" class="gn-dd" data-dim="tipo"></div>
           <div id="gn-dd-efecto" class="gn-dd" data-dim="efecto"></div>
           <div id="gn-dd-sabor" class="gn-dd" data-dim="sabor"></div>
-          <span id="gn-count" class="gn-count"></span>
         </div>
         <div class="gn-topbar-right">
         <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva">
@@ -450,8 +449,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const list = allGeneticas.filter(matches)
       const track = document.getElementById('gn-grid')
 
-      const countEl = document.getElementById('gn-count')
-      countEl.textContent = allGeneticas.length ? `${list.length} variedad${list.length === 1 ? '' : 'es'}` : ''
+      // La burbuja "Ver:" del selector de formato duplica como contador de
+      // resultados — evita sumar un elemento nuevo al topbar.
+      const segLabel = document.getElementById('gn-seg-label')
+      if (segLabel) segLabel.textContent = allGeneticas.length ? `Viendo (${list.length}):` : 'Ver:'
 
       if (!list.length) {
         singleCount = 0
@@ -492,7 +493,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         ['flor', 'Flores', ICON_FLOR],
         ['preroll', 'Prerolls', ICON_PREROLL],
       ]
-      el.innerHTML = '<span class="gn-seg-label">Ver:</span>' + opts
+      el.innerHTML = '<span id="gn-seg-label" class="gn-seg-label">Ver:</span>' + opts
         .map(([val, lab, icon]) =>
           `<button class="gn-seg-btn is-${val}${!counts[val] ? ' is-empty' : ''}" type="button" data-formato="${val}" aria-pressed="false">${icon ? `<span class="gn-seg-ic">${icon}</span>` : ''}${lab}</button>`
         )
@@ -1178,10 +1179,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-logo { height: clamp(24px, 2.7vh, 36px); width: auto; display: block; }
   .gn-logo-link { display: block; flex-shrink: 0; line-height: 0; }
   .gn-logo-link:focus-visible { outline: 2px solid var(--gn-green); outline-offset: 3px; border-radius: 4px; }
-  .gn-count {
-    font-family: var(--font-ui, inherit); font-size: 0.78rem; font-weight: 600;
-    color: var(--gn-muted); white-space: nowrap; margin-left: 0.2rem;
-  }
   .gn-topbar-right { display: flex; align-items: center; gap: 0.6rem; }
 
   .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
