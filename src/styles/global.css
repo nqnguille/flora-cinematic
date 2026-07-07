@@ -1885,7 +1885,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    valores quedan comprimidos. En vez de eso, cada fila pasa a ser un
    bloque apilado: criterio arriba, "Fumar" y "Vaporizar" abajo con su
    propia etiqueta inline (los headers de columna ya no hacen falta). */
-@media (max-width: 640px) {
+/* El breakpoint tenía que llegar hasta donde .fl-legal-grid pasa a 2
+   columnas (860px) — entre 640 y 860px el texto y la tabla ya estaban
+   lado a lado pero angostos, y la tabla seguía en formato de 3 columnas
+   apretado (el bug que reportó Guille). */
+@media (max-width: 900px) {
   .fl-vap-compare { display: block; }
   .fl-vap-compare-head { display: none; }
   .fl-vap-compare-row {
