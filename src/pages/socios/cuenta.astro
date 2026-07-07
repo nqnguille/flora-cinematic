@@ -143,7 +143,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           return
         }
         const msg = document.getElementById('socios-login-msg')
-        msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
+        if (res.status === 403) {
+          const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
+          msg.innerHTML = `Flora funciona por invitación: para entrar, primero conocé el club. Escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a> y coordinamos una visita.`
+        } else {
+          msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
+        }
         msg.hidden = false
       } catch {
         const msg = document.getElementById('socios-login-msg')

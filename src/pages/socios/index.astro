@@ -95,7 +95,12 @@ const productIconsSvg = [
 
     function showLoginError(message) {
       const msg = document.getElementById('socios-login-msg')
-      msg.textContent = message
+      if (message === '__NOSOCIO__') {
+        const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
+        msg.innerHTML = `Flora funciona por invitación: para entrar, primero conocé el club. Escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a> y coordinamos una visita.`
+      } else {
+        msg.textContent = message
+      }
       msg.hidden = false
     }
 
@@ -126,6 +131,10 @@ const productIconsSvg = [
             mode: 'accept',
             onAccept: () => submitLogin(credential, true),
           })
+          return
+        }
+        if (res.status === 403) {
+          showLoginError('__NOSOCIO__')
           return
         }
         showLoginError(data.error || 'No se pudo verificar tu cuenta.')

@@ -889,7 +889,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function showLoginError(message) {
       const msg = document.getElementById('socios-login-msg')
       if (message === '__NOSOCIO__') {
-        msg.innerHTML = 'Esa cuenta de Google todavía no figura como socia del club. Si ya sos socio, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a> para habilitarte el acceso.'
+        const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
+        msg.innerHTML = `Flora funciona por invitación: para entrar a la carta, primero conocé el club. Escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a> y coordinamos una visita.`
       } else {
         msg.textContent = message
       }
