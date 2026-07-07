@@ -1382,33 +1382,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-access .fl-title { max-width: 35ch; }
 .fl-perfiles .fl-title { max-width: 26ch; }
 
-/* Comparativa side-by-side de las 3 vías de administración — tabla real
-   (no cards) para poder leer una fila (ej. "Tiempo de efecto") y comparar
-   las 3 columnas de un vistazo. Vive entre el párrafo educativo y las 4
-   cards de formato. En mobile scrollea horizontal en vez de apilarse: es
-   justamente la comparación lado a lado lo que se pidió. */
-.fl-vias-table-wrap {
-  margin-top: clamp(28px, 3.4vw, 44px);
-  border: 1px solid var(--fl-line); border-radius: var(--fl-r-card);
-  overflow-x: auto; background: var(--fl-paper);
-}
-.fl-vias-table { width: 100%; min-width: 620px; border-collapse: collapse; font-family: var(--font-ui); }
-.fl-vias-table thead th {
-  background: var(--fl-violet); color: #fff; font-weight: 700; font-size: 14px;
-  padding: 16px 18px; text-align: left; white-space: nowrap;
-}
-.fl-vias-table thead .fl-vias-th-blank { background: var(--fl-violet-2); width: 1%; }
-.fl-vias-table tbody th {
-  text-align: left; font-weight: 700; font-size: 13px; color: var(--fl-green);
-  padding: 14px 18px; white-space: nowrap; background: var(--fl-paper-2);
-  border-top: 1px solid var(--fl-line);
-}
-.fl-vias-table tbody td {
-  padding: 14px 18px; font-size: 14px; line-height: 1.4; color: var(--fl-ink);
-  border-top: 1px solid var(--fl-line); border-left: 1px solid var(--fl-line);
-}
-.fl-vias-table tbody tr:nth-child(even) td { background: rgba(56, 31, 86, 0.03); }
-
 /* Infografía CBD/THC como fondo grande del módulo (mismo criterio que el
    fondo sólido de .fl-reprocann, acá con imagen en vez de color plano) —
    la imagen ya tiene fondo blanco a propósito, para que se funda con el de
