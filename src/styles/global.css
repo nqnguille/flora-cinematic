@@ -1269,7 +1269,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-panel > * { position: relative; z-index: 2; }
 .fl-panel-title { display: block; font-family: var(--font-ui); font-weight: 700; font-size: clamp(20px, 2vw, 27px); line-height: 1.12; }
 .fl-panel-desc {
-  display: block; font-family: var(--font-ui); font-size: 14.5px; line-height: 1.55;
+  display: block; font-family: var(--font-ui); font-size: clamp(14.5px, 1.6vw, 16px); line-height: 1.55;
   color: rgba(255, 255, 255, 0.84); max-width: 36ch;
   max-height: 0; opacity: 0; overflow: hidden; margin-top: 0;
   transition: max-height 0.5s ease, opacity 0.4s ease, margin 0.4s ease;
@@ -1407,8 +1407,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
    mantiene su propio ancho angosto (fl-spec-sub) para seguir siendo cómodo
    de leer. */
 .fl-spec-head { max-width: 820px; margin-bottom: clamp(24px, 3vw, 36px); }
-.fl-spec-title { font-family: var(--font-ui); font-weight: 800; font-size: clamp(30px, 4.2vw, 56px); letter-spacing: -0.02em; color: var(--fl-ink); margin-top: 14px; }
-.fl-spec-sub { font-family: var(--font-ui); font-size: 14.5px; line-height: 1.55; color: rgba(28,22,38,0.64); margin-top: 12px; max-width: 640px; }
+.fl-spec-title { font-family: var(--font-ui); font-weight: 800; font-size: clamp(34px, 5vw, 68px); letter-spacing: -0.02em; color: var(--fl-ink); margin-top: 14px; }
+.fl-spec-sub { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55; color: rgba(28,22,38,0.64); margin-top: 12px; max-width: 640px; }
 .fl-spec-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .fl-spec-card { border: 1px solid var(--fl-line); border-radius: var(--fl-r-card); padding: 26px; background: #fff; }
 
@@ -1417,12 +1417,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-oil-card:hover { transform: translateY(-4px); box-shadow: 0 22px 48px -26px rgba(56,31,86,0.32); }
 .fl-oil-photo { position: relative; aspect-ratio: 4 / 5; background: #ECE0D0; overflow: hidden; }
 .fl-oil-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
-.fl-oil-badge {
-  position: absolute; top: 14px; left: 14px; z-index: 2;
-  font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: 0.02em;
-  color: #fff; background: var(--oil, var(--fl-violet)); border-radius: 999px; padding: 6px 14px;
-  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--oil) 70%, transparent);
-}
 .fl-oil-badge {
   position: absolute; top: 14px; left: 14px; z-index: 2;
   font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: 0.02em;
@@ -1510,7 +1504,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @media (max-width: 760px) {
   .fl-panel { justify-content: flex-start; min-height: 0; padding: 82px 24px 26px; }
   .fl-panel-desc { max-height: none; }
-  .fl-panel-title { font-size: 21px; }
 }
 
 /* fl-panel-body: wrapper explícito flex (evita colapso de altura en mobile) */
@@ -1520,7 +1513,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-panel { display: flex; justify-content: flex-start; min-height: 0; padding: 80px 22px 26px; box-shadow: none; }
   .fl-panel-desc { max-height: none !important; opacity: 1 !important; margin-top: 10px !important; overflow: visible; }
   .fl-panel-cta { opacity: 1 !important; transform: none !important; margin-top: 14px; }
-  .fl-panel-title { font-size: 21px; margin-top: 6px; }
+  .fl-panel-title { margin-top: 6px; }
 }
 
 /* Fix definitivo mobile gateway: altura auto (los paneles crecen al contenido) */
@@ -1566,7 +1559,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-footer-btn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--fl-violet); font-family: var(--font-ui); font-weight: 700; font-size: 15px; padding: 15px 28px; border-radius: 999px; text-decoration: none; white-space: nowrap; transition: transform 0.2s ease; }
 .fl-footer-btn:hover { transform: translateY(-2px); }
 .fl-footer-grid { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 40px); }
-.fl-footer-logo { font-family: var(--font-ui); font-weight: 800; font-size: 22px; letter-spacing: 0.04em; }
 .fl-footer-brand p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7); max-width: 42ch; margin-top: 12px; }
 .fl-footer-col h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
 .fl-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -1607,7 +1599,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-head .fl-title { color: #fff; margin-left: auto; margin-right: auto; max-width: 18ch; text-shadow: 0 2px 28px rgba(0,0,0,0.6); }
 .fl-acceso-head .fl-title em { color: #4FC79E; }
 .fl-acceso-story, .fl-acceso-note { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
-.fl-acceso-story { font-family: var(--font-ui); font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
+.fl-acceso-story { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
 
@@ -1662,7 +1654,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-reprocann .fl-eyebrow { color: #4FC79E; }
 .fl-reprocann .fl-title { color: #fff; max-width: 17ch; margin: 0 auto; }
 .fl-reprocann .fl-title em { color: #4FC79E; }
-.fl-reprocann-lead { font-family: var(--font-ui); font-size: clamp(16px, 2vw, 20px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 54ch; margin: 22px auto 0; }
+.fl-reprocann-lead { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.82); max-width: 54ch; margin: 22px auto 0; }
 /* Encabezado: título a la izquierda, credencial entrando desde el borde
    derecho de la pantalla (margen negativo hasta el viewport; el overflow
    de la sección contiene el sangrado) */
@@ -1894,8 +1886,9 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 @media (max-width: 480px) {
   .fl-vap-compare { grid-template-columns: minmax(70px, 0.7fr) 1fr 1fr; }
-  .fl-vap-compare-head > span, .fl-vap-compare-row > span { font-size: 12px; padding: 9px 8px; }
-  .fl-vap-compare-crit { font-size: 10.5px; }
+  /* El texto NO se achica en mobile (era la única tabla del sitio que lo
+     hacía) — justo donde más importa la legibilidad en pantalla chica. */
+  .fl-vap-compare-head > span, .fl-vap-compare-row > span { padding: 9px 8px; }
 }
 
 .fl-vap-note {
