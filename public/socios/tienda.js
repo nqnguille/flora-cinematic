@@ -403,8 +403,6 @@
     if (login) login.hidden = true
     const content = document.getElementById('td-content')
     if (content) content.hidden = false
-    const gate = document.getElementById('td-gate')
-    if (gate) gate.hidden = true
     render()
     cargarActivo()
   }
@@ -418,13 +416,7 @@
 
   async function loadPrecios() {
     const res = await fetch('/api/socios/precios', { credentials: 'include' })
-    if (!res.ok) {
-      if (CFG.public) {
-        const gate = document.getElementById('td-gate')
-        if (gate) gate.hidden = false
-      }
-      return false
-    }
+    if (!res.ok) return false
     const data = await res.json()
     showContent(data.precios || {})
     return true
@@ -463,6 +455,66 @@
     })
   } else if (gBtn) {
     showLoginError('Falta configurar el Google Client ID del sitio.')
+  }
+
+  // ── Dropdown "Servicios" del nav del catálogo (mismo patrón que el home,
+  // pero standalone porque estas páginas no cargan main.ts) ──
+  const serviciosDropdown = document.getElementById('td-servicios-dropdown')
+  if (serviciosDropdown) {
+    const trigger = serviciosDropdown.querySelector('.nav-dropdown-trigger')
+    const close = () => {
+      trigger.setAttribute('aria-expanded', 'false')
+      serviciosDropdown.classList.remove('is-open')
+    }
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const open = trigger.getAttribute('aria-expanded') === 'true'
+      trigger.setAttribute('aria-expanded', open ? 'false' : 'true')
+      serviciosDropdown.classList.toggle('is-open', !open)
+    })
+    document.addEventListener('click', (e) => {
+      if (!serviciosDropdown.contains(e.target)) close()
+    })
+    serviciosDropdown.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { close(); trigger.focus() }
+    })
+  }
+
+  // ── Drawer mobile (mismo componente que el home, sin Lenis acá) ──
+  const hamburger = document.querySelector('.nav-hamburger')
+  const drawer = document.getElementById('mobile-drawer')
+  if (hamburger && drawer) {
+    const backdrop = drawer.querySelector('.drawer-backdrop')
+    const closeBtn = drawer.querySelector('.drawer-close')
+
+    const openDrawer = () => {
+      drawer.hidden = false
+      hamburger.setAttribute('aria-expanded', 'true')
+      document.body.style.overflow = 'hidden'
+      setTimeout(() => closeBtn && closeBtn.focus(), 50)
+    }
+    const closeDrawer = () => {
+      drawer.hidden = true
+      hamburger.setAttribute('aria-expanded', 'false')
+      document.body.style.overflow = ''
+      hamburger.focus()
+    }
+
+    hamburger.addEventListener('click', openDrawer)
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer)
+    if (backdrop) backdrop.addEventListener('click', closeDrawer)
+    drawer.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer() })
+    drawer.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeDrawer))
+  }
+
+  // ── Dropdown "Servicios" del drawer mobile (acordeón) ──
+  const drawerDropdown = document.querySelector('.drawer-dropdown')
+  const drawerTrigger = drawerDropdown && drawerDropdown.querySelector('.drawer-dropdown-trigger')
+  if (drawerTrigger) {
+    drawerTrigger.addEventListener('click', () => {
+      const open = drawerTrigger.getAttribute('aria-expanded') === 'true'
+      drawerTrigger.setAttribute('aria-expanded', open ? 'false' : 'true')
+    })
   }
 
   loadFotosPublicas()

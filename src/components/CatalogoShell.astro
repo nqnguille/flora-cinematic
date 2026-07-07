@@ -11,57 +11,108 @@ interface Props {
   categoria: string
 }
 const { title, description, categoria } = Astro.props
-const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero asociarme 🌿')
 ---
 
 <Layout title={title} description={description}>
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-public">
-    <!-- ── Nav del catálogo: logo + tabs de categoría centrados + acciones de socio ── -->
-    <nav class="td-pub-nav" aria-label="Navegación del catálogo">
-      <a class="td-pub-logo" href="/" aria-label="Volver al inicio de Flora">
-        <img src="/img/flora-logo.png" alt="Flora" width="1472" height="298" />
+    <!-- ── Nav = el mismo topbar del resto del sitio (global.css .site-nav),
+         siempre en su estado "scrolled" (claro) porque estas páginas no
+         tienen hero oscuro debajo. Los anclas a secciones del home van
+         prefijadas con "/" para volver ahí y scrollear (#perfiles, etc). ── -->
+    <nav class="site-nav scrolled" aria-label="Navegación principal">
+      <a href="/" class="nav-logo" aria-label="Volver al inicio de Flora">
+        <img class="nav-logo-img nav-logo-violet" src="/img/flora-logo.png" alt="Flora" width="1472" height="298" />
       </a>
 
-      <!-- Links cruzados entre las 4 categorías (Aceites/Cremas/Extracciones/Flores) -->
-      <div class="td-cat-tabs" aria-label="Categorías">
-        <a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a>
-        <a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a>
-        <a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a>
-        <a href="/socios/carta/">Flores</a>
-      </div>
+      <ul class="nav-links" role="list">
+        <li><a href="/#perfiles">Acompañamiento</a></li>
+        <li><a href="/#entrevista">REPROCANN</a></li>
+        <li class="nav-dropdown" id="td-servicios-dropdown">
+          <button type="button" class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
+            Servicios
+            <svg class="nav-dropdown-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <ul class="nav-dropdown-menu" role="list">
+            <li><a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a></li>
+            <li><a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a></li>
+            <li><a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a></li>
+            <li><a href="/#acceso">Flores</a></li>
+          </ul>
+        </li>
+        <li><a href="/#legalidad">Legalidad</a></li>
+        <li>
+          <a href="/socios/" class="nav-socios">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            Acceso socios
+          </a>
+        </li>
+        <li>
+          <a href="/socios/cuenta/" class="nav-hola" data-socio-hola hidden title="Mi cuenta">
+            <img class="nav-hola-foto" data-socio-foto alt="" width="22" height="22" hidden />
+            <span>¡Hola, <b data-socio-nombre></b>!</span>
+          </a>
+          <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+        </li>
+      </ul>
 
-      <div class="td-pub-nav-right">
-        <a href={waAsociarse} class="td-pub-cta" target="_blank" rel="noopener noreferrer">Asociarme</a>
-        <a href="/socios/" class="td-pub-socios">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-          Acceso socios
-        </a>
-        <a href="/socios/cuenta/" class="td-pub-hola" data-socio-hola hidden>
-          <img class="td-pub-hola-foto" data-socio-foto alt="" width="20" height="20" hidden />
-          <span>¡Hola, <b data-socio-nombre></b>!</span>
-        </a>
-        <a href="/socios/carta/" class="td-pub-carrito" data-socio-hola hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
-      </div>
+      <!-- Mobile: Acceso socios compacto, siempre visible -->
+      <a href="/socios/cuenta/" class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</a>
+      <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+      <a href="/socios/" class="nav-socios nav-socios--mobile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+        Acceso socios
+      </a>
+
+      <!-- Hamburguesa — solo mobile -->
+      <button class="nav-hamburger" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mobile-drawer">
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+      </button>
     </nav>
 
-    <!-- ── Invitación de socio: visible solo sin sesión ── -->
-    <div id="td-gate" class="td-gate" hidden>
-      <div class="td-gate-inner">
-        <span class="td-gate-leaf" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </span>
-        <div class="td-gate-text">
-          <strong>¿Sos parte del club?</strong>
-          <span>Ingresá y esta página se transforma: precios, reservas y tu carta del mes.</span>
-        </div>
-        <div class="td-gate-actions">
-          <div id="g_id_button"></div>
-          <a href={waAsociarse} class="td-gate-asociarme" target="_blank" rel="noopener noreferrer">Todavía no soy socio →</a>
-        </div>
-      </div>
-      <p id="td-login-msg" class="td-msg" hidden></p>
+    <!-- Drawer mobile — mismo componente que el home -->
+    <div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Menú de navegación" hidden>
+      <div class="drawer-backdrop"></div>
+      <nav class="drawer-panel" aria-label="Navegación mobile">
+        <button class="drawer-close" aria-label="Cerrar menú">
+          <span aria-hidden="true">✕</span>
+        </button>
+        <ul role="list">
+          <li><a href="/#perfiles">Acompañamiento</a></li>
+          <li><a href="/#entrevista">REPROCANN</a></li>
+          <li class="drawer-dropdown">
+            <button type="button" class="drawer-dropdown-trigger" aria-expanded="false">
+              Servicios
+              <svg class="drawer-dropdown-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <ul class="drawer-dropdown-menu" role="list">
+              <li><a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a></li>
+              <li><a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a></li>
+              <li><a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a></li>
+              <li><a href="/#acceso">Flores</a></li>
+            </ul>
+          </li>
+          <li><a href="/#legalidad">Legalidad</a></li>
+          <li><a href="/#programa">Programa</a></li>
+          <li><a href="/#instagram">Instagram</a></li>
+          <li>
+            <a href={waAsociarse} class="drawer-cta" target="_blank" rel="noopener noreferrer">
+              Asociarme por WhatsApp
+            </a>
+          </li>
+          <li class="drawer-socio-only"><a href="/socios/cuenta/">Mi cuenta</a></li>
+          <li class="drawer-socio-only"><button type="button" class="drawer-logout nav-logout-action">Cerrar sesión</button></li>
+          <li>
+            <a href="/socios/" class="drawer-cta drawer-cta--socios">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+              Acceso socios
+            </a>
+          </li>
+        </ul>
+      </nav>
     </div>
 
     <div id="td-activo" class="td-activo td-activo-pub"></div>
@@ -69,9 +120,8 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
     <slot />
   </main>
 
-  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
-  <script define:vars={{ googleClientId, categoria }}>
-    window.TIENDA = { categoria, static: true, public: true, googleClientId }
+  <script define:vars={{ categoria }}>
+    window.TIENDA = { categoria, static: true }
   </script>
   <script src="/socios/tienda.js" is:inline></script>
 </Layout>
