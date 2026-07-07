@@ -1379,7 +1379,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-perfil-card { width: 72vw; }
 }
 
-.fl-access .fl-title { max-width: 20ch; }
+.fl-access .fl-title { max-width: 35ch; }
 .fl-perfiles .fl-title { max-width: 26ch; }
 
 /* Infografía CBD/THC como fondo grande del módulo (mismo criterio que el
