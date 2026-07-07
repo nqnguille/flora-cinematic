@@ -1625,9 +1625,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
   transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.42);
   box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6);
 }
-.fl-acceso-portal > span[aria-hidden] { display: inline-block; transition: transform 0.25s ease; }
-.fl-acceso-portal:hover > span[aria-hidden] { transform: translateX(4px); }
+.fl-acceso-portal span[aria-hidden] { display: inline-block; transition: transform 0.25s ease; }
+.fl-acceso-portal:hover span[aria-hidden] { transform: translateX(4px); }
 .fl-acceso-portal:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+/* Variante con kicker: "Exclusivo para socios" chico arriba, la acción
+   grande abajo — el CTA de socio logueado ya no necesita el emoji, el
+   badge de exclusividad hace ese trabajo. */
+.fl-acceso-portal--kicker { flex-direction: column; gap: 4px; }
+.fl-acceso-kicker {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+}
+.fl-acceso-portal-action { display: inline-flex; align-items: center; gap: 8px; }
 
 /* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
    el resto del cuadro queda libre para el video */
