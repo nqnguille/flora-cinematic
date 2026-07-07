@@ -174,6 +174,11 @@
 }
 .td-pub-logo img { height: 26px; width: auto; display: block; }
 .td-pub-nav-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 860px) {
+  /* Necesario para que .td-cat-tabs (flex: 1 1 100%; order: 3) pueda
+     bajar a su propia línea en vez de apretarse en la misma fila */
+  .td-pub-nav { flex-wrap: wrap; }
+}
 @media (max-width: 560px) {
   .td-pub-nav { flex-wrap: wrap; gap: 10px; }
   .td-pub-nav-right { gap: 8px; }
@@ -204,12 +209,11 @@
 .td-pub-hola-foto { border-radius: 50%; display: block; }
 .td-pub-hola-foto[hidden] { display: none; }
 
-/* Links cruzados entre las 4 categorías del catálogo */
+/* Links cruzados entre las 4 categorías del catálogo — viven integrados en
+   .td-pub-nav (entre el logo y las acciones de socio), no en su propia fila */
 .td-cat-tabs {
-  display: flex; align-items: center; gap: clamp(14px, 2.5vw, 26px); flex-wrap: wrap;
-  padding: 12px clamp(24px, 6vw, 80px);
-  border-bottom: 1px solid var(--fl-line, rgba(56,31,86,0.14));
-  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(14px, 2.5vw, 26px); flex: 1; flex-wrap: wrap;
 }
 .td-cat-tabs a {
   font-family: var(--font-ui); font-weight: 600; font-size: 13px;
@@ -218,6 +222,11 @@
 }
 .td-cat-tabs a:hover { color: var(--fl-violet, #381F56); }
 .td-cat-tabs a.is-active { color: var(--fl-violet, #381F56); border-bottom-color: var(--fl-violet, #381F56); }
+@media (max-width: 860px) {
+  /* No entra en la misma fila que logo + acciones sin apretarse — pasa a
+     su propia línea, alineada a la izquierda como una barra secundaria */
+  .td-cat-tabs { flex: 1 1 100%; justify-content: flex-start; order: 3; gap: 18px; }
+}
 
 /* Invitación de socio — banda de club, violeta de marca */
 .td-gate {

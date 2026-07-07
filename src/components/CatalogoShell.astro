@@ -18,11 +18,20 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
 <Layout title={title} description={description}>
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-public">
-    <!-- ── Nav simple del catálogo ── -->
+    <!-- ── Nav del catálogo: logo + tabs de categoría centrados + acciones de socio ── -->
     <nav class="td-pub-nav" aria-label="Navegación del catálogo">
       <a class="td-pub-logo" href="/" aria-label="Volver al inicio de Flora">
         <img src="/img/flora-logo.png" alt="Flora" width="1472" height="298" />
       </a>
+
+      <!-- Links cruzados entre las 4 categorías (Aceites/Cremas/Extracciones/Flores) -->
+      <div class="td-cat-tabs" aria-label="Categorías">
+        <a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a>
+        <a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a>
+        <a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a>
+        <a href="/socios/carta/">Flores</a>
+      </div>
+
       <div class="td-pub-nav-right">
         <a href={waAsociarse} class="td-pub-cta" target="_blank" rel="noopener noreferrer">Asociarme</a>
         <a href="/socios/" class="td-pub-socios">
@@ -36,14 +45,6 @@ const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Ho
         <a href="/socios/carta/" class="td-pub-carrito" data-socio-hola hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
       </div>
     </nav>
-
-    <!-- ── Links cruzados entre las 4 categorías (Aceites/Cremas/Extracciones/Flores) ── -->
-    <div class="td-cat-tabs" aria-label="Categorías">
-      <a href="/aceites/" class={categoria === 'aceites' ? 'is-active' : ''}>Aceites</a>
-      <a href="/cremas/" class={categoria === 'cremas' ? 'is-active' : ''}>Cremas</a>
-      <a href="/extracciones/" class={categoria === 'extracciones' ? 'is-active' : ''}>Extracciones</a>
-      <a href="/socios/carta/">Flores</a>
-    </div>
 
     <!-- ── Invitación de socio: visible solo sin sesión ── -->
     <div id="td-gate" class="td-gate" hidden>
