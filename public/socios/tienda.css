@@ -169,7 +169,7 @@
 /* Nav = .site-nav compartido con el resto del sitio (global.css), siempre
    forzado a "scrolled" acá porque no hay hero oscuro debajo — por eso el
    padding-top: compensa que .site-nav es fixed (60px de alto). */
-.td-public { background: var(--fl-paper, #fff); min-height: 100svh; padding-top: 60px; padding-bottom: 120px; }
+.td-public { background: var(--fl-paper, #fff); min-height: 100svh; padding-top: 60px; }
 
 /* Categoría activa dentro del dropdown "Servicios" (el home no la usa,
    ninguno de sus links de categoría es "actual" de forma persistente) */
