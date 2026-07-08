@@ -1698,15 +1698,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
 .fl-acceso-card-photo {
-  position: absolute; z-index: 0; object-fit: cover; border-radius: inherit;
-  /* La foto trae su propio filo con luz de estudio (rim light) justo en el
-     borde — a este tamaño se lee como un marco agregado. En vez de
-     transform:scale() (que en varios navegadores escala la capa YA
-     rasterizada al tamaño de layout, no la imagen fuente — ahí es donde
-     entraba el pixelado que reportó Guille), el "zoom" se logra agrandando
-     el elemento en sí con inset negativo: sigue siendo un resize normal,
-     con el mismo muestreo de alta calidad que object-fit:cover. */
-  inset: -5%; width: 110%; height: 110%;
+  /* Nada de transform/inset extra: tanto scale() como el inset negativo
+     terminaban rasterizándose en la capa compuesta del padre (que tiene
+     su propio transition:transform para el hover-lift) con un muestreo
+     de baja calidad — ahí salían los bordes dentados que reportó Guille,
+     no era un tema de resolución del archivo. El recorte del rim-light
+     ahora viene HORNEADO en el archivo (v3, ya sin margen sobrante), así
+     acá no hace falta más que un object-fit:cover 1:1 sin escalar nada. */
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
