@@ -2134,7 +2134,6 @@ body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: inline-flex; alig
   body.is-socio .nav-cta--carta.nav-cta--mobile { display: inline-flex; align-items: center; margin-left: auto; height: 40px; padding: 0 20px; }
 }
 body.is-socio .fl-acceso-ctas--publico { display: none; }
-body.is-socio .fl-acceso-badge--publico { display: none; }
 body.is-socio .fl-acceso-ctas--socio { display: flex; }
 body.is-socio .fl-acceso-reserva.is-on {
   display: flex; max-width: 46ch; margin-top: 14px;
