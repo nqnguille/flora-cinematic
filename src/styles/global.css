@@ -1621,11 +1621,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    marcas de esquina tipo placa de museo prestadas de la propuesta
    "minimalista editorial", kicker en tipografía serif de marca. */
 .fl-acceso-portal {
-  --fl-radius: 14px;
+  --fl-radius: 18px;
   --fl-mx: 22%; --fl-my: 8%; /* posición del brillo de estudio; fallback sin JS */
 
   position: relative; isolation: isolate; overflow: hidden;
-  margin-top: 0; padding: clamp(22px, 2.8vw, 30px) clamp(36px, 4.6vw, 54px);
+  margin-top: 0; padding: clamp(32px, 4.2vw, 46px) clamp(48px, 6vw, 70px);
   border-radius: var(--fl-radius);
 
   /* Placa de metal: glint de estudio fijo (sup-izq) + sombra de esquina
@@ -1646,7 +1646,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
     inset 1px 0 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(0,0,0,0.4);
 
   font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.02em;
-  font-size: clamp(17px, 2vw, 20px); color: #f1ecf4; text-decoration: none;
+  font-size: clamp(20px, 2.6vw, 26px); color: #f1ecf4; text-decoration: none;
   text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 -1px 0 rgba(255,255,255,0.18), 0 0 16px rgba(0,0,0,0.3);
 
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
@@ -1655,8 +1655,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* Bisel grabado + marcas de esquina tipo placa de museo (dos "L" finas,
    arriba-izq / abajo-der) — un solo gesto de precisión, no un anillo girando */
 .fl-acceso-portal::before {
-  content: ''; position: absolute; inset: 6px; z-index: 1; pointer-events: none;
-  border-radius: calc(var(--fl-radius) - 6px);
+  content: ''; position: absolute; inset: 8px; z-index: 1; pointer-events: none;
+  border-radius: calc(var(--fl-radius) - 8px);
   background-repeat: no-repeat;
   background-image:
     linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
@@ -1664,7 +1664,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
     linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
     linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
   background-position: left top, left top, right bottom, right bottom;
-  background-size: 1px 13px, 13px 1px, 1px 13px, 13px 1px;
+  background-size: 1px 18px, 18px 1px, 1px 18px, 18px 1px;
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.55),
     inset 0 0 0 1px rgba(255,255,255,0.14),
@@ -1726,7 +1726,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-kicker {
   position: relative; z-index: 3; display: block;
   font-family: var(--font-display), Georgia, serif; font-style: italic;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+  font-size: 16px; font-weight: 600; letter-spacing: 0.06em;
   color: rgba(241,236,244,0.65);
   padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.16);
   text-shadow: 0 1px 0 rgba(0,0,0,0.4);
