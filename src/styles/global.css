@@ -1612,6 +1612,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
    de la card — dos capas de botón era redundante). El link completo tiene
    el fondo glass, el texto y el hover. */
 .fl-acceso-portal {
+  position: relative; overflow: hidden;
   margin-top: 0; padding: clamp(18px, 2.4vw, 26px) clamp(26px, 3.2vw, 36px);
   background: rgba(255,255,255,0.1);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -1624,6 +1625,24 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-portal:hover {
   transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.42);
   box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6);
+}
+/* Look VIP: brillo que cruza la card cada tanto, como una tarjeta premium
+   catching light — pausa larga, glint corto, se repite. */
+.fl-acceso-portal::before {
+  content: ''; position: absolute; inset: -20% -40%;
+  background: linear-gradient(115deg,
+    transparent 42%, rgba(255,255,255,0.5) 49%, rgba(255,255,255,0.7) 50%,
+    rgba(255,255,255,0.5) 51%, transparent 58%);
+  transform: translateX(-135%);
+  animation: fl-acceso-shine 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+@keyframes fl-acceso-shine {
+  0%, 76% { transform: translateX(-135%); }
+  100% { transform: translateX(135%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-portal::before { animation: none; display: none; }
 }
 .fl-acceso-portal span[aria-hidden] { display: inline-block; transition: transform 0.25s ease; }
 .fl-acceso-portal:hover span[aria-hidden] { transform: translateX(4px); }
