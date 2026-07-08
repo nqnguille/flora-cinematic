@@ -187,7 +187,8 @@
   // una columna con + arriba y − abajo (en vez de fila −/valor/+).
   function stepperHtml(dataAttr, key, qty, tope, unidad, extraClass) {
     unidad = unidad || ''
-    const cls = extraClass ? `td-stepper ${extraClass}` : 'td-stepper'
+    let cls = qty > 0 ? 'td-stepper has-qty' : 'td-stepper'
+    if (extraClass) cls += ` ${extraClass}`
     return `
       <div class="${cls}" data-${dataAttr}="${esc(key)}">
         <span class="td-step-num">${qty}${unidad}</span>

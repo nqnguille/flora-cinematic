@@ -91,19 +91,34 @@
 .td-menu .td-item-precio { margin: 0 6px 0 0; }
 
 /* Stepper */
-/* Stepper con el criterio de la carta de flores: valor + columna +/- */
-.td-stepper { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-.td-menu .td-stepper { margin: 0; }
-.td-step-num { min-width: 28px; text-align: center; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.td-step-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-.td-step-btn {
-  width: 36px; height: 25px; border-radius: 9px; border: 1.5px solid var(--td-line);
-  background: none; color: var(--td-cream); font-size: 1.05rem; font-weight: 800; line-height: 1;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  padding: 0; transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+/* Misma "pastilla" que resolvimos en la carta de flores (.gn-qty): contorno
+   redondeado que se enciende con el color del producto cuando hay cantidad,
+   en vez de dos cajas sueltas con borde suelto. --oil lo pisan las fichas de
+   aceites/cremas/extracciones; sin eso cae al violeta de marca. */
+.td-stepper {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+  border: 1px solid var(--td-line); border-radius: 10px; padding: 6px 10px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.td-step-btn:hover:not(:disabled) { border-color: var(--td-violet); background: rgba(183,157,230,0.16); transform: scale(1.06); }
-.td-step-btn:active:not(:disabled) { transform: scale(0.94); }
+.td-menu .td-stepper { margin: 0; }
+.td-stepper.has-qty {
+  border-color: var(--oil, var(--td-violet));
+  background: color-mix(in srgb, var(--oil, var(--td-violet)) 16%, transparent);
+}
+.td-step-num {
+  min-width: 22px; text-align: center; font-weight: 800; font-size: 1.1rem;
+  font-variant-numeric: tabular-nums; color: var(--td-muted); transition: color 0.2s ease;
+}
+.td-stepper.has-qty .td-step-num { color: var(--oil, var(--td-violet)); }
+.td-step-col { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+.td-step-btn {
+  width: 30px; height: 21px; border-radius: 7px; border: none;
+  background: rgba(244,241,247,0.1); color: var(--td-cream); font-size: 1rem; font-weight: 800; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  padding: 0; transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.td-step-btn:hover:not(:disabled) { background: var(--oil, var(--td-violet)); color: #170c2b; }
+.td-step-btn:active:not(:disabled) { transform: scale(0.92); }
 .td-step-btn:disabled { opacity: 0.3; cursor: default; }
 
 /* ── Barra de reserva flotante ── */
@@ -159,9 +174,12 @@
   font-size: 1.5rem; font-weight: 800; color: var(--fl-green, #0A503C);
   font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
 }
-.td-onlight .td-step-btn { color: var(--fl-ink, #1C1626); border-color: rgba(56, 31, 86, 0.25); }
-.td-onlight .td-step-btn:hover { border-color: var(--fl-violet, #381F56); background: rgba(56, 31, 86, 0.08); }
-.td-onlight .td-step-num { color: var(--fl-ink, #1C1626); }
+.td-onlight .td-stepper { border-color: rgba(56, 31, 86, 0.18); }
+.td-onlight .td-stepper.has-qty { border-color: var(--oil, var(--fl-violet, #381F56)); }
+.td-onlight .td-step-btn { color: var(--fl-ink, #1C1626); background: rgba(28, 22, 38, 0.06); }
+.td-onlight .td-step-btn:hover:not(:disabled) { background: var(--oil, var(--fl-violet, #381F56)); color: #fff; }
+.td-onlight .td-step-num { color: rgba(28, 22, 38, 0.55); }
+.td-onlight .td-stepper.has-qty .td-step-num { color: var(--oil, var(--fl-violet, #381F56)); }
 
 /* Sección de la landing embebida en la tienda (fondo blanco, full-bleed suave) */
 .td-landing-section { border-radius: 26px; margin-top: 10px; }
