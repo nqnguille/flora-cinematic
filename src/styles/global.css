@@ -1608,91 +1608,128 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
-/* "Portal": la card de vidrio ES el CTA (ya no hay una pill blanca adentro
-   de la card — dos capas de botón era redundante). El link completo tiene
-   el fondo glass, el texto y el hover. */
-@property --fl-angle {
-  syntax: '<angle>'; initial-value: 0deg; inherits: false;
-}
+/* "Portal" → placa de metal grabado, tipo tarjeta de membresía física
+   (llave de hotel 5 estrellas / Centurion). Ganó un panel de 3 jueces IA
+   sobre otras 3 propuestas (gema engastada, orgánico-bioluminiscente,
+   minimalista editorial) precisamente por lo que NO tiene: nada de loops
+   infinitos (glow pulsante, anillo girando, brillo cruzando — las 3
+   iteraciones anteriores, todas rechazadas por "básico"). Está quieta
+   hasta que se la toca, como un objeto físico caro. Ese comportamiento
+   ES el argumento de lujo.
+   Cambios sobre la propuesta ganadora original (fixes que pidieron los
+   jueces): sin font-variant:small-caps (se sintetiza mal con tildes/ñ),
+   marcas de esquina tipo placa de museo prestadas de la propuesta
+   "minimalista editorial", kicker en tipografía serif de marca. */
 .fl-acceso-portal {
-  position: relative; overflow: hidden;
-  margin-top: 0; padding: clamp(24px, 3.2vw, 34px) clamp(34px, 4.4vw, 50px);
-  background: rgba(255,255,255,0.1);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.24); border-radius: 32px;
-  /* Sombra de caída + filo de luz interior arriba (glass real, no plano) */
-  box-shadow: 0 24px 60px -24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
-  font-family: var(--font-ui); font-weight: 700; font-size: clamp(17px, 2vw, 20px);
-  color: #fff; text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  /* Glow VIP en dos tonos de marca (violeta + verde), no plano — drop-shadow
-     para no pisar la transición del box-shadow del hover ni clipearse con el
-     overflow:hidden de la card */
-  animation: fl-acceso-glow 4.2s ease-in-out infinite;
+  --fl-radius: 14px;
+  --fl-mx: 22%; --fl-my: 8%; /* posición del brillo de estudio; fallback sin JS */
+
+  position: relative; isolation: isolate; overflow: hidden;
+  margin-top: 0; padding: clamp(22px, 2.8vw, 30px) clamp(36px, 4.6vw, 54px);
+  border-radius: var(--fl-radius);
+
+  /* Placa de metal: glint de estudio fijo (sup-izq) + sombra de esquina
+     (inf-der) + líneas cepilladas + degradé base gunmetal-amatista */
+  background:
+    radial-gradient(60% 90% at var(--fl-mx) calc(var(--fl-my) - 20%), rgba(255,255,255,0.55), transparent 55%),
+    radial-gradient(120% 100% at 92% 118%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(101deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 3px),
+    linear-gradient(155deg, #4c4160 0%, #372c48 20%, #291f36 42%, #1a1422 66%, #100c16 100%);
+  background-blend-mode: screen, multiply, overlay, normal;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 20px 42px -20px rgba(0,0,0,0.7), 0 3px 0 rgba(0,0,0,0.5),
+    /* luz ambiente de marca, estática — nunca pulsa */
+    0 0 46px -16px rgba(79,199,158,0.16), 0 0 64px -20px rgba(129,92,181,0.20),
+    inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.55),
+    inset 1px 0 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(0,0,0,0.4);
+
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.02em;
+  font-size: clamp(17px, 2vw, 20px); color: #f1ecf4; text-decoration: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 -1px 0 rgba(255,255,255,0.18), 0 0 16px rgba(0,0,0,0.3);
+
+  transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
-.fl-acceso-portal:hover {
-  transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.5);
-  box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.55);
-}
-@keyframes fl-acceso-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 14px rgba(155, 110, 224, 0.45)) drop-shadow(0 0 26px rgba(79, 199, 158, 0.2));
-  }
-  50% {
-    filter: drop-shadow(0 0 30px rgba(155, 110, 224, 0.8)) drop-shadow(0 0 46px rgba(79, 199, 158, 0.4));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal {
-    animation: none;
-    filter: drop-shadow(0 0 20px rgba(155, 110, 224, 0.55)) drop-shadow(0 0 30px rgba(79, 199, 158, 0.28));
-  }
-}
-/* Anillo de borde: gradiente violeta↔verde girando despacio — el detalle que
-   más lee "tarjeta VIP" (foil edge), no un borde plano de un solo color.
-   inset:0 (no sangra afuera) para no chocar con el overflow:hidden del brillo. */
-.fl-acceso-portal::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(from var(--fl-angle, 0deg),
-    #381F56, #6B4A96, #4FC79E, #6B4A96, #381F56);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  pointer-events: none;
-  animation: fl-acceso-border-spin 6.5s linear infinite;
-}
-@keyframes fl-acceso-border-spin { to { --fl-angle: 360deg; } }
-@media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal::after { animation: none; }
-}
-/* Look VIP: brillo que cruza la card cada tanto, como una tarjeta premium
-   catching light — pausa larga, glint corto, se repite. */
+
+/* Bisel grabado + marcas de esquina tipo placa de museo (dos "L" finas,
+   arriba-izq / abajo-der) — un solo gesto de precisión, no un anillo girando */
 .fl-acceso-portal::before {
-  content: ''; position: absolute; inset: -20% -40%;
-  background: linear-gradient(115deg,
-    transparent 42%, rgba(255,255,255,0.5) 49%, rgba(255,255,255,0.7) 50%,
-    rgba(255,255,255,0.5) 51%, transparent 58%);
-  transform: translateX(-135%);
-  animation: fl-acceso-shine 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  pointer-events: none;
+  content: ''; position: absolute; inset: 6px; z-index: 1; pointer-events: none;
+  border-radius: calc(var(--fl-radius) - 6px);
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
+  background-position: left top, left top, right bottom, right bottom;
+  background-size: 1px 13px, 13px 1px, 1px 13px, 13px 1px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(255,255,255,0.14),
+    inset 0 1px 2px rgba(0,0,0,0.35);
 }
-@keyframes fl-acceso-shine {
-  0%, 76% { transform: translateX(-135%); }
-  100% { transform: translateX(135%); }
+
+/* Brillo de estudio: solo aparece en hover/focus, no hace loop.
+   Sin JS queda fijo en --fl-mx/--fl-my (arriba). Con JS (abajo), sigue
+   al cursor vía --mx/--my con throttle por requestAnimationFrame. */
+.fl-acceso-portal::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(240px 240px at var(--mx, var(--fl-mx)) var(--my, var(--fl-my)), rgba(255,255,255,0.4), transparent 62%);
+  mix-blend-mode: soft-light;
+  opacity: 0; transition: opacity 0.45s ease;
 }
+.fl-acceso-portal:hover,
+.fl-acceso-portal:focus-visible {
+  transform: translateY(-3px); border-color: rgba(255,255,255,0.24);
+  box-shadow:
+    0 28px 54px -20px rgba(0,0,0,0.75), 0 3px 0 rgba(0,0,0,0.5),
+    0 0 56px -14px rgba(79,199,158,0.24), 0 0 76px -18px rgba(129,92,181,0.28),
+    inset 0 1.5px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(0,0,0,0.55),
+    inset 1px 0 0 rgba(255,255,255,0.14), inset -1px 0 0 rgba(0,0,0,0.4);
+}
+.fl-acceso-portal:hover::after, .fl-acceso-portal:focus-visible::after { opacity: 1; }
+
+/* Anillo de foco en capas (más visible que un outline simple, sigue siendo
+   100% accesible con teclado) */
+.fl-acceso-portal:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(16,12,22,0.9), 0 0 0 6px rgba(241,236,244,0.85),
+    0 20px 42px -20px rgba(0,0,0,0.7), 0 3px 0 rgba(0,0,0,0.5);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal::before { animation: none; display: none; }
+  .fl-acceso-portal, .fl-acceso-portal::after { transition: none; }
+  .fl-acceso-portal:hover, .fl-acceso-portal:focus-visible { transform: none; }
 }
-.fl-acceso-portal span[aria-hidden] { display: inline-block; transition: transform 0.25s ease; }
-.fl-acceso-portal:hover span[aria-hidden] { transform: translateX(4px); }
-.fl-acceso-portal:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-/* Variante con kicker: "Exclusivo para socios" chico arriba, la acción
-   grande abajo — el CTA de socio logueado ya no necesita el emoji, el
-   badge de exclusividad hace ese trabajo. */
-.fl-acceso-portal--kicker { flex-direction: column; gap: 4px; }
+
+/* Flecha: el único detalle de color de marca, "joya incrustada" */
+.fl-acceso-portal span[aria-hidden] {
+  position: relative; z-index: 3; display: inline-block;
+  color: #6fe0b8; text-shadow: 0 0 10px rgba(79,199,158,0.55), 0 1px 1px rgba(0,0,0,0.5);
+  transition: transform 0.25s ease;
+}
+.fl-acceso-portal:hover span[aria-hidden] { transform: translateX(5px); }
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-portal span[aria-hidden] { transition: none; }
+}
+
+/* Texto por encima de las capas de brillo/bisel */
+.fl-acceso-portal-action, .fl-acceso-portal > :not(span[aria-hidden]) { position: relative; z-index: 3; }
+
+/* Variante con kicker: leyenda tipo placa de nombre de club (serif de
+   marca, hairline debajo) + la acción abajo */
+.fl-acceso-portal--kicker { flex-direction: column; align-items: flex-start; gap: 4px; }
 .fl-acceso-kicker {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
+  position: relative; z-index: 3; display: block;
+  font-family: var(--font-display), Georgia, serif; font-style: italic;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+  color: rgba(241,236,244,0.65);
+  padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.16);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
 }
 .fl-acceso-portal-action { display: inline-flex; align-items: center; gap: 8px; }
 

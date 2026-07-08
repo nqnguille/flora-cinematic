@@ -170,6 +170,34 @@ function initAccesoScene() {
   }
 }
 
+// ── CTA "placa de metal": brillo de estudio que sigue al cursor ──
+// Progressive enhancement — sin JS, el brillo queda fijo en la posición
+// definida por --fl-mx/--fl-my en el CSS. Con JS, sigue al puntero vía
+// --mx/--my, con throttle por requestAnimationFrame (nunca más de un
+// recálculo de estilo por frame).
+function initAccesoPortalGlint() {
+  if (prefersReducedMotion) return
+
+  let raf = 0
+  document.querySelectorAll<HTMLElement>('.fl-acceso-portal').forEach(el => {
+    el.addEventListener('pointermove', (e) => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect()
+        const mx = ((e.clientX - r.left) / r.width) * 100
+        const my = ((e.clientY - r.top) / r.height) * 100
+        el.style.setProperty('--mx', `${mx}%`)
+        el.style.setProperty('--my', `${my}%`)
+        raf = 0
+      })
+    })
+    el.addEventListener('pointerleave', () => {
+      el.style.removeProperty('--mx')
+      el.style.removeProperty('--my')
+    })
+  })
+}
+
 // ── Split words ──
 // IMPORTANTE: No ponemos opacity:0 en CSS. GSAP setea el from sólo si hay animaciones.
 function splitWords() {
@@ -936,6 +964,7 @@ function init() {
   initHeroVideo()
   initAccesoVideo()
   initAccesoScene()
+  initAccesoPortalGlint()
   initYouTubeFacades()
   initParticles()
 
