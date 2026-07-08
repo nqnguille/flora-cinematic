@@ -1607,11 +1607,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    tratamiento VIP: vidrio oscuro + borde metálico, no el pill blanco
    genérico del eyebrow original. */
 .fl-acceso-badge {
-  box-sizing: border-box; display: block; margin-bottom: 14px;
-  width: clamp(230px, 22vw, 305px); text-align: center;
-  padding: 9px 18px; border-radius: 999px;
-  font-family: var(--font-ui); font-weight: 700; font-size: 11.5px;
-  letter-spacing: 0.14em; text-transform: uppercase;
+  box-sizing: border-box; display: block; margin: 0 auto 14px;
+  width: clamp(230px, 22vw, 305px); text-align: center; white-space: nowrap;
+  padding: clamp(7px, 1.6vw, 9px) clamp(10px, 2.4vw, 18px); border-radius: 999px;
+  font-family: var(--font-ui); font-weight: 700; font-size: clamp(9px, 2.3vw, 11.5px);
+  letter-spacing: 0.1em; text-transform: uppercase;
   color: rgba(241,236,244,0.85);
   background: linear-gradient(155deg, #4c4160 0%, #291f36 60%, #140f1c 100%);
   border: 1px solid rgba(255,255,255,0.2);
@@ -1634,18 +1634,22 @@ html.no-js .reveal { opacity: 1; transform: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px;
   text-align: center;
   width: clamp(230px, 22vw, 305px); aspect-ratio: 1.586 / 1;
-  margin-top: 0; padding: clamp(16px, 2vw, 22px);
+  margin: 0 auto; padding: clamp(16px, 2vw, 22px);
   border-radius: var(--fl-radius);
 
-  /* Luz de estudio dramática: key light angosto y brillante desde una
-     esquina, cae a negro casi puro en la opuesta — como una tarjeta
-     fotografiada en un estudio oscuro con un solo spot, no luz plana */
+  /* Brillo tipo tarjeta física (referencia: Visa Signature negra) — una
+     franja diagonal glossy que cruza la tarjeta, como plástico laqueado
+     reflejando una fuente de luz de arriba, no un spot radial cayendo a
+     negro en una esquina. Base bien oscura y pareja; el brillo es la
+     franja, no un degradé de fondo a fondo. */
   background:
-    radial-gradient(42% 65% at var(--fl-mx) calc(var(--fl-my) - 12%), rgba(255,255,255,0.8), transparent 48%),
-    radial-gradient(135% 115% at 96% 128%, rgba(0,0,0,0.78), transparent 55%),
-    repeating-linear-gradient(101deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 3px),
-    linear-gradient(155deg, #55486e 0%, #372c48 16%, #221a30 38%, #140f1c 62%, #08050c 100%);
-  background-blend-mode: screen, multiply, overlay, normal;
+    linear-gradient(122deg,
+      transparent 0%, transparent 38%,
+      rgba(160,150,190,0.22) 45%, rgba(215,210,235,0.42) 50%, rgba(160,150,190,0.2) 55%,
+      transparent 62%, transparent 100%),
+    repeating-linear-gradient(101deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 3px),
+    linear-gradient(150deg, #241c30 0%, #170f20 45%, #0c0812 75%, #060409 100%);
+  background-blend-mode: screen, overlay, normal;
 
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow:
@@ -1773,6 +1777,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
     flex-shrink: 0; text-align: right; margin-top: 14px;
   }
   .fl-acceso-ctas { margin-top: 0; flex-wrap: nowrap; justify-content: flex-end; }
+  /* Los auto-margins de .fl-acceso-badge/-card centran en mobile (donde
+     .fl-acceso-side no es flex); acá align-items:flex-end ya alinea a la
+     derecha, así que se cancelan para no pisar ese alineado. */
+  .fl-acceso-badge, .fl-acceso-card { margin-left: 0; margin-right: 0; }
 }
 /* ── REPROCANN: banda violeta (hook del primer paso / entrevista médica) ── */
 .fl-reprocann { background: var(--fl-violet); color: #fff; overflow: hidden; }
