@@ -150,18 +150,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
 
   .sl-auth-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0; color: var(--sl-cream); }
   .sl-sub { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0 auto; }
-  /* Marco "tarjeta black" alrededor del botón de Google (el interior del
-     iframe de Google no se puede tocar, pero sí el estuche que lo contiene)
-     — mismo brillo diagonal glossy que la card VIP de la home. */
-  .sl-gbtn {
-    margin-top: 0.5rem; display: flex; justify-content: center;
-    padding: 10px; border-radius: 999px;
-    background:
-      linear-gradient(122deg, transparent 0%, transparent 38%, rgba(150,150,160,0.18) 45%, rgba(200,200,210,0.34) 50%, rgba(150,150,160,0.14) 55%, transparent 62%, transparent 100%),
-      linear-gradient(150deg, #100d15 0%, #0a0710 45%, #050308 75%, #010102 100%);
-    border: 1px solid rgba(255,255,255,0.14);
-    box-shadow: 0 14px 28px -14px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.22);
-  }
+  .sl-gbtn { margin-top: 0.3rem; display: flex; justify-content: center; }
   .sl-msg { color: var(--sl-violet); font-size: 0.85rem; margin: 0; }
   .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0 auto; }
   .sl-note button { background: none; border: none; padding: 0; color: var(--sl-violet); text-decoration: underline; font-size: inherit; font-family: inherit; cursor: pointer; }
