@@ -1700,7 +1700,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
      dentro de un ancestro con isolation:isolate. background-image pinta
      directo sobre la caja de la card, sin ese pipeline de "elemento
      reemplazado" — mismo resultado visual, ruta de render más simple. */
-  background: url('/img/flora-carta-tarjeta-metal-v3.png') center / cover no-repeat;
+  background: url('/img/flora-carta-tarjeta-metal-v4.png') center / cover no-repeat;
   padding: 0; border: none;
   box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6);
 }
