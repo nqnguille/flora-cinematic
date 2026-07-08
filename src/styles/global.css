@@ -1672,19 +1672,17 @@ html.no-js .reveal { opacity: 1; transform: none; }
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
-/* Isotipo de Flora grabado al centro — el logo real (FLORA con la chala
-   adentro de la O) como máscara sobre el propio degradé metálico de la
-   tarjeta (toma el color del metal, no un logo plano pegado encima) +
-   drop-shadow trazando el contorno para el relieve grabado/repujado.
-   Reemplaza el texto "FLORA" suelto — el logo ya lo incluye. */
+/* Isotipo de Flora al centro de la card de socio logueado. Antes era un
+   mask + drop-shadow sobre un degradé (para que "tome" el color del
+   metal) — la combinación mask+filter es justo la que más problemas de
+   render/dentado da en varios navegadores, y es la otra card que Guille
+   reportó con el mismo defecto. <img> directo del logo blanco, solo
+   translate (sin scale) para centrar: pipeline mucho más simple. */
 .fl-acceso-card-emblem {
   position: absolute; z-index: 1; top: 50%; left: 50%;
-  width: 68%; aspect-ratio: 1472 / 298;
+  width: 68%; height: auto;
   transform: translate(-50%, -50%);
-  background: linear-gradient(155deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0.12) 100%);
-  -webkit-mask: url('/img/flora-logo-white.png') center / contain no-repeat;
-  mask: url('/img/flora-logo-white.png') center / contain no-repeat;
-  filter: drop-shadow(1px 1.5px 1px rgba(0,0,0,0.65)) drop-shadow(-1px -1px 1px rgba(255,255,255,0.22));
+  opacity: 0.85;
   pointer-events: none;
 }
 
