@@ -43,7 +43,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
 
   <div class="sl-split">
     <div class="sl-panel">
-      <img class="sl-logo" src="/img/flora-logo-cultivamos-conciencia-white.png" alt="Flora — Cultivamos conciencia" width="2000" height="795" />
+      <img class="sl-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
       {eyebrow && <span class="sl-eyebrow">{eyebrow}</span>}
       <h1 class="sl-title" set:html={title} />
       {tagline && <p class="sl-tagline">{tagline}</p>}
@@ -125,7 +125,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
 
   .sl-divider { width: 42px; height: 1px; background: rgba(183, 157, 230, 0.35); margin: 0.5rem 0; }
 
-  .sl-logo { height: clamp(90px, 13vw, 200px); width: auto; margin-bottom: 0.4rem; }
+  .sl-logo { width: clamp(190px, 24vw, 300px); height: auto; margin-bottom: 0.4rem; }
   .sl-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(183, 157, 230, 0.16);
@@ -184,7 +184,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
       gap: 0.85rem;
       padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
     }
-    .sl-logo { height: clamp(95px, 26vw, 140px); }
+    .sl-logo { width: clamp(190px, 52vw, 260px); }
     .sl-title { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
 
     /* Título, tagline, nota y botón comparten un ancho de columna parecido
