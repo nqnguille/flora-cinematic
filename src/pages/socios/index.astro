@@ -2,17 +2,10 @@
 import Layout from '../../layouts/Layout.astro'
 import SociosLogin from '../../components/SociosLogin.astro'
 import SociosTos from '../../components/SociosTos.astro'
+import SociosGateway from '../../components/SociosGateway.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
-
-// Íconos del gateway — idénticos a los de la landing pública
-const productIconsSvg = [
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="4" y="5.5" width="16" height="4.5" rx="1"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 6h8l-1.2 3.4H9.2z"/><rect x="7.5" y="9.4" width="9" height="12.1" rx="2.5"/></svg>`,
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11M12 11c3.5-.4 6-3 6-7-3.5.4-6 3-6 7zM12 13C8.5 12.6 6 10 6 6c3.5.4 6 3 6 7z"/></svg>`,
-]
 ---
 
 <Layout
@@ -35,47 +28,7 @@ const productIconsSvg = [
         <button id="pt-logout" class="pt-logout" type="button">Salir</button>
       </header>
 
-      <div class="fl-gateway fl-prod-gateway pt-gw" role="list">
-        <a class="fl-panel fl-panel-1" href="/aceites/" role="listitem" aria-label="Aceites">
-          <img class="fl-panel-img" src="/img/prod-aceites-trio.jpg" alt="" loading="lazy" width="1448" height="1010" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[0]} />
-          <span class="fl-panel-body">
-            <span class="fl-panel-title">Aceites</span>
-            <span class="fl-panel-desc">Q1, Q2 y Q3 con su cromatografía. Elegí el tuyo y reservalo.</span>
-            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
-          </span>
-        </a>
-
-        <a class="fl-panel fl-panel-2" href="/cremas/" role="listitem" aria-label="Cremas">
-          <img class="fl-panel-img" src="/img/prod-cremas.jpg" alt="" loading="lazy" width="1400" height="1750" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[1]} />
-          <span class="fl-panel-body">
-            <span class="fl-panel-title">Cremas</span>
-            <span class="fl-panel-desc">Tópicas, para alivio localizado. Reservá la tuya.</span>
-            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
-          </span>
-        </a>
-
-        <a class="fl-panel fl-panel-3" href="/extracciones/" role="listitem" aria-label="Extracciones">
-          <img class="fl-panel-img" src="/img/prod-extracciones.jpg" alt="" loading="lazy" width="1003" height="1254" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[2]} />
-          <span class="fl-panel-body">
-            <span class="fl-panel-title">Extracciones</span>
-            <span class="fl-panel-desc">Cartuchos y baterías 510, discretos y dosificados.</span>
-            <span class="fl-panel-cta">Ver y reservar <span aria-hidden="true">→</span></span>
-          </span>
-        </a>
-
-        <a class="fl-panel fl-panel-4" href="/socios/carta/" role="listitem" aria-label="Flores">
-          <img class="fl-panel-img" src="/img/prod-flores.jpg" alt="" loading="lazy" width="1400" height="1750" />
-          <span class="fl-panel-icon" aria-hidden="true" set:html={productIconsSvg[3]} />
-          <span class="fl-panel-body">
-            <span class="fl-panel-title">Flores</span>
-            <span class="fl-panel-desc">La carta del mes, con reserva por gramos y prerolls.</span>
-            <span class="fl-panel-cta">Abrir la carta <span aria-hidden="true">→</span></span>
-          </span>
-        </a>
-      </div>
+      <SociosGateway class="pt-gw" />
 
       <p class="pt-foot">Portal exclusivo para personas asociadas · las reservas se abonan al retirar en el club.</p>
     </div>

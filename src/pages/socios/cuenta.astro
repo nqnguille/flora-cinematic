@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro'
 import SociosLogin from '../../components/SociosLogin.astro'
 import SociosTos from '../../components/SociosTos.astro'
+import SociosGateway from '../../components/SociosGateway.astro'
 import '../../styles/global.css'
 
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
@@ -48,12 +49,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <p id="cu-sin-historial" class="cu-vacio" hidden>Todavía no hiciste reservas.</p>
       </section>
 
-      <div class="cu-links">
-        <a class="cu-carta" href="/socios/carta/">🌿 Abrir la carta del mes</a>
-        <a class="cu-link" href="/aceites/">Aceites</a>
-        <a class="cu-link" href="/cremas/">Cremas</a>
-        <a class="cu-link" href="/extracciones/">Extracciones</a>
-      </div>
+      <section class="cu-sec">
+        <h2 class="cu-sec-title">Categorías</h2>
+        <SociosGateway class="cu-gw" />
+      </section>
     </div>
   </main>
 
@@ -202,31 +201,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-vacio { color: rgba(244, 241, 247, 0.55); font-size: 0.92rem; }
     .cu-vacio a { color: #b79de6; }
     .cu-vacio[hidden] { display: none; }
-    /* Mismo tratamiento "tarjeta black" de la card VIP de la home. */
-    .cu-carta {
-      position: relative; isolation: isolate; overflow: hidden;
-      display: inline-flex; align-items: center; gap: 8px;
-      color: #f1ecf4; text-decoration: none; text-transform: uppercase; letter-spacing: 0.03em;
-      font-weight: 700; font-size: 0.85rem; padding: 14px 26px; border-radius: 999px;
-      background:
-        linear-gradient(122deg, transparent 0%, transparent 38%, rgba(150,150,160,0.22) 45%, rgba(200,200,210,0.4) 50%, rgba(150,150,160,0.18) 55%, transparent 62%, transparent 100%),
-        linear-gradient(150deg, #241c30 0%, #170f20 45%, #0c0812 75%, #060409 100%);
-      border: 1px solid rgba(255,255,255,0.16);
-      box-shadow:
-        0 14px 28px -14px rgba(0,0,0,0.8),
-        0 0 30px -12px rgba(79,199,158,0.16), 0 0 40px -14px rgba(129,92,181,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.35);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    .cu-carta:hover {
-      transform: translateY(-2px); border-color: rgba(255,255,255,0.28);
-      box-shadow:
-        0 18px 34px -14px rgba(0,0,0,0.85),
-        0 0 36px -10px rgba(79,199,158,0.22), 0 0 48px -12px rgba(129,92,181,0.26),
-        inset 0 1px 0 rgba(255,255,255,0.45);
-    }
-    .cu-links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
-    .cu-link { color: rgba(244, 241, 247, 0.7); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 3px; }
-    .cu-link:hover { color: #fff; }
+    .cu-gw { margin-top: 4px; }
   </style>
 </Layout>
