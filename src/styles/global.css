@@ -1592,6 +1592,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-acceso-scrim {
     background: linear-gradient(180deg, rgba(12,8,17,0.68) 0%, rgba(15,10,20,0.56) 45%, rgba(12,8,17,0.72) 100%);
   }
+  /* Más aire entre el bloque de texto y el badge+tarjeta que sigue —
+     antes quedaban casi pegados, apilados sin respiro */
+  .fl-acceso-side { margin-top: 40px; }
+  .fl-acceso-badge { margin-bottom: 18px; }
 }
 .fl-acceso-content { position: relative; z-index: 2; max-width: 1200px; width: 100%; }
 .fl-acceso-head { text-align: center; }
