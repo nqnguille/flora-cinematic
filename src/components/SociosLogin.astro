@@ -13,6 +13,7 @@ interface Props {
   authSub?: string
   backHref?: string
   hideNote?: boolean
+  joinPrompt?: boolean
 }
 const {
   eyebrow,
@@ -22,7 +23,17 @@ const {
   authSub,
   backHref = '/',
   hideNote = false,
+  joinPrompt = false,
 } = Astro.props
+
+// Imán para curiosos que todavía no son socios: la entrada por Google de
+// arriba es para quien YA está en el padrón — esto es la puerta de al lado,
+// para quien recién está averiguando. Mismo WhatsApp que usa el mensaje de
+// "no encontrado" tras un login fallido, pero con el mensaje ya armado según
+// si tiene REPROCANN o no (así el equipo sabe por dónde orientarlo).
+const waNumero = '5492996375723'
+const waSi = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, tengo mi REPROCANN y quiero ver la carta para asociarme al club 🌿')}`
+const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, todavía no tengo mi REPROCANN, pero quiero ver la carta y asociarme al club 🌿')}`
 ---
 
 <div id="socios-login" class="sl-login">
@@ -43,6 +54,17 @@ const {
       <div id="g_id_button" class="sl-gbtn"></div>
       <p id="socios-login-msg" class="sl-msg" hidden></p>
       {!hideNote && <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>}
+
+      {joinPrompt && (
+        <div class="sl-join">
+          <div class="sl-join-divider" aria-hidden="true"></div>
+          <p class="sl-join-q">¿Todavía no sos socio? ¿Tenés REPROCANN?</p>
+          <div class="sl-join-btns">
+            <a class="sl-join-btn" href={waSi} target="_blank" rel="noopener noreferrer">Sí, tengo REPROCANN</a>
+            <a class="sl-join-btn sl-join-btn-ghost" href={waNo} target="_blank" rel="noopener noreferrer">Todavía no</a>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 </div>
@@ -127,6 +149,24 @@ const {
   .sl-msg { color: var(--sl-violet); font-size: 0.85rem; margin: 0; }
   .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0 auto; }
   .sl-note button { background: none; border: none; padding: 0; color: var(--sl-violet); text-decoration: underline; font-size: inherit; font-family: inherit; cursor: pointer; }
+
+  /* Imán para curiosos: puerta de al lado del login, para quien todavía no
+     es socio. Deliberadamente más chico y separado — la entrada con Google
+     sigue siendo la acción principal de la pantalla. */
+  .sl-join { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-top: 0.4rem; }
+  .sl-join-divider { width: 42px; height: 1px; background: rgba(183, 157, 230, 0.35); }
+  .sl-join-q { font-size: 0.82rem; color: var(--sl-muted); margin: 0; }
+  .sl-join-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .sl-join-btn {
+    display: inline-flex; align-items: center; font-family: var(--font-ui);
+    font-size: 0.78rem; font-weight: 700; text-decoration: none; white-space: nowrap;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(60, 180, 146, 0.5);
+    background: rgba(60, 180, 146, 0.14); color: var(--sl-green);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  }
+  .sl-join-btn:hover { background: rgba(60, 180, 146, 0.24); transform: translateY(-1px); }
+  .sl-join-btn-ghost { background: none; border-color: rgba(244, 241, 247, 0.2); color: var(--sl-muted); }
+  .sl-join-btn-ghost:hover { border-color: rgba(244, 241, 247, 0.4); background: rgba(244, 241, 247, 0.06); color: var(--sl-cream); }
 
   /* Mobile: el panel único ocupa la mitad superior (ancho completo), y el
      video se rota 90° para que el recorte que antes quedaba centro-izquierda
