@@ -1689,7 +1689,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
    su propio metal, logo grabado y texto "Ingresar a la carta" — y solo
    queda la imagen llenando la card + el hover-lift compartido. */
 .fl-acceso-card--photo {
-  background: none; padding: 0;
+  background: none; padding: 0; border: none;
   box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6);
 }
 .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
