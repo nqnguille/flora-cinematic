@@ -179,7 +179,7 @@ function initAccesoPortalGlint() {
   if (prefersReducedMotion) return
 
   let raf = 0
-  document.querySelectorAll<HTMLElement>('.fl-acceso-portal').forEach(el => {
+  document.querySelectorAll<HTMLElement>('.fl-acceso-card').forEach(el => {
     el.addEventListener('pointermove', (e) => {
       if (raf) return
       raf = requestAnimationFrame(() => {

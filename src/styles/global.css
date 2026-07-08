@@ -1608,24 +1608,20 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
-/* "Portal" → placa de metal grabado, tipo tarjeta de membresía física
-   (llave de hotel 5 estrellas / Centurion). Ganó un panel de 3 jueces IA
-   sobre otras 3 propuestas (gema engastada, orgánico-bioluminiscente,
-   minimalista editorial) precisamente por lo que NO tiene: nada de loops
-   infinitos (glow pulsante, anillo girando, brillo cruzando — las 3
-   iteraciones anteriores, todas rechazadas por "básico"). Está quieta
-   hasta que se la toca, como un objeto físico caro. Ese comportamiento
-   ES el argumento de lujo.
-   Cambios sobre la propuesta ganadora original (fixes que pidieron los
-   jueces): sin font-variant:small-caps (se sintetiza mal con tildes/ñ),
-   marcas de esquina tipo placa de museo prestadas de la propuesta
-   "minimalista editorial", kicker en tipografía serif de marca. */
-.fl-acceso-portal {
+/* Tarjeta física real: proporción ISO/IEC 7810 ID-1 (85.6×54mm ≈ 1.586:1),
+   estética "Black Card" — metal oscuro, chip, marca de "contactless",
+   wordmark de Flora donde iría el logo de la red (VISA/Mastercard).
+   Sigue sin loops infinitos (el detalle que hizo ganar la iteración
+   anterior en el panel de jueces): quieta hasta que se la toca. */
+.fl-acceso-card {
   --fl-radius: 18px;
   --fl-mx: 22%; --fl-my: 8%; /* posición del brillo de estudio; fallback sin JS */
 
   position: relative; isolation: isolate; overflow: hidden;
-  margin-top: 0; padding: clamp(32px, 4.2vw, 46px) clamp(48px, 6vw, 70px);
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 10px;
+  text-align: left;
+  width: clamp(300px, 30vw, 380px); aspect-ratio: 1.586 / 1;
+  margin-top: 0; padding: clamp(20px, 2.4vw, 28px);
   border-radius: var(--fl-radius);
 
   /* Placa de metal: glint de estudio fijo (sup-izq) + sombra de esquina
@@ -1646,25 +1642,16 @@ html.no-js .reveal { opacity: 1; transform: none; }
     inset 1px 0 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(0,0,0,0.4);
 
   font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.02em;
-  font-size: clamp(20px, 2.6vw, 26px); color: #f1ecf4; text-decoration: none;
+  font-size: clamp(17px, 1.9vw, 21px); line-height: 1.2; color: #f1ecf4; text-decoration: none;
   text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 -1px 0 rgba(255,255,255,0.18), 0 0 16px rgba(0,0,0,0.3);
 
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
-/* Bisel grabado + marcas de esquina tipo placa de museo (dos "L" finas,
-   arriba-izq / abajo-der) — un solo gesto de precisión, no un anillo girando */
-.fl-acceso-portal::before {
+/* Bisel grabado (el canto de la tarjeta) */
+.fl-acceso-card::before {
   content: ''; position: absolute; inset: 8px; z-index: 1; pointer-events: none;
   border-radius: calc(var(--fl-radius) - 8px);
-  background-repeat: no-repeat;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
-    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
-    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
-    linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55));
-  background-position: left top, left top, right bottom, right bottom;
-  background-size: 1px 18px, 18px 1px, 1px 18px, 18px 1px;
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.55),
     inset 0 0 0 1px rgba(255,255,255,0.14),
@@ -1674,27 +1661,27 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* Brillo de estudio: solo aparece en hover/focus, no hace loop.
    Sin JS queda fijo en --fl-mx/--fl-my (arriba). Con JS (abajo), sigue
    al cursor vía --mx/--my con throttle por requestAnimationFrame. */
-.fl-acceso-portal::after {
+.fl-acceso-card::after {
   content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
   border-radius: inherit;
-  background: radial-gradient(240px 240px at var(--mx, var(--fl-mx)) var(--my, var(--fl-my)), rgba(255,255,255,0.4), transparent 62%);
+  background: radial-gradient(280px 280px at var(--mx, var(--fl-mx)) var(--my, var(--fl-my)), rgba(255,255,255,0.4), transparent 62%);
   mix-blend-mode: soft-light;
   opacity: 0; transition: opacity 0.45s ease;
 }
-.fl-acceso-portal:hover,
-.fl-acceso-portal:focus-visible {
-  transform: translateY(-3px); border-color: rgba(255,255,255,0.24);
+.fl-acceso-card:hover,
+.fl-acceso-card:focus-visible {
+  transform: translateY(-4px) scale(1.015); border-color: rgba(255,255,255,0.24);
   box-shadow:
-    0 28px 54px -20px rgba(0,0,0,0.75), 0 3px 0 rgba(0,0,0,0.5),
+    0 30px 58px -20px rgba(0,0,0,0.78), 0 3px 0 rgba(0,0,0,0.5),
     0 0 56px -14px rgba(79,199,158,0.24), 0 0 76px -18px rgba(129,92,181,0.28),
     inset 0 1.5px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(0,0,0,0.55),
     inset 1px 0 0 rgba(255,255,255,0.14), inset -1px 0 0 rgba(0,0,0,0.4);
 }
-.fl-acceso-portal:hover::after, .fl-acceso-portal:focus-visible::after { opacity: 1; }
+.fl-acceso-card:hover::after, .fl-acceso-card:focus-visible::after { opacity: 1; }
 
 /* Anillo de foco en capas (más visible que un outline simple, sigue siendo
    100% accesible con teclado) */
-.fl-acceso-portal:focus-visible {
+.fl-acceso-card:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 3px rgba(16,12,22,0.9), 0 0 0 6px rgba(241,236,244,0.85),
@@ -1702,36 +1689,70 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal, .fl-acceso-portal::after { transition: none; }
-  .fl-acceso-portal:hover, .fl-acceso-portal:focus-visible { transform: none; }
+  .fl-acceso-card, .fl-acceso-card::after { transition: none; }
+  .fl-acceso-card:hover, .fl-acceso-card:focus-visible { transform: none; }
 }
 
-/* Flecha: el único detalle de color de marca, "joya incrustada" */
-.fl-acceso-portal span[aria-hidden] {
-  position: relative; z-index: 3; display: inline-block;
+/* Chip EMV — esquina superior izquierda, dorado, con las líneas de
+   contacto grabadas (igual que una tarjeta real) */
+.fl-acceso-card-chip {
+  position: absolute; z-index: 3; top: clamp(20px, 2.4vw, 28px); left: clamp(20px, 2.4vw, 28px);
+  width: 34px; height: 26px; border-radius: 5px;
+  background:
+    linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.55) 45%, transparent 60%),
+    linear-gradient(155deg, #f4e3ba 0%, #caa968 35%, #8a6a35 65%, #d9c087 100%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.4);
+}
+.fl-acceso-card-chip::before {
+  content: ''; position: absolute; inset: 4px 3px; border: 1px solid rgba(0,0,0,0.28); border-radius: 2px;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28)), linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28));
+  background-repeat: no-repeat;
+  background-position: center, center;
+  background-size: 100% 1px, 1px 100%;
+}
+
+/* Marca "contactless" — esquina superior derecha, en verde de marca */
+.fl-acceso-card-mark {
+  position: absolute; z-index: 3; top: clamp(20px, 2.4vw, 28px); right: clamp(20px, 2.4vw, 28px);
+  width: 24px; height: 24px; color: #6fe0b8;
+  filter: drop-shadow(0 0 6px rgba(79,199,158,0.5));
+}
+.fl-acceso-card-mark svg { width: 100%; height: 100%; }
+
+/* Acción (donde iría el número/nombre grabado) — el texto que realmente
+   dice qué hace el link, por eso el más grande y legible de la tarjeta */
+.fl-acceso-card-action {
+  position: relative; z-index: 3;
+  display: inline-flex; align-items: center; gap: 8px;
+  max-width: calc(100% - 4px);
+}
+.fl-acceso-card-action span[aria-hidden] {
+  display: inline-block; flex-shrink: 0;
   color: #6fe0b8; text-shadow: 0 0 10px rgba(79,199,158,0.55), 0 1px 1px rgba(0,0,0,0.5);
   transition: transform 0.25s ease;
 }
-.fl-acceso-portal:hover span[aria-hidden] { transform: translateX(5px); }
+.fl-acceso-card:hover .fl-acceso-card-action span[aria-hidden] { transform: translateX(5px); }
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal span[aria-hidden] { transition: none; }
+  .fl-acceso-card-action span[aria-hidden] { transition: none; }
 }
 
-/* Texto por encima de las capas de brillo/bisel */
-.fl-acceso-portal-action, .fl-acceso-portal > :not(span[aria-hidden]) { position: relative; z-index: 3; }
+/* Wordmark de Flora — donde iría el logo de VISA/Mastercard */
+.fl-acceso-card-brand {
+  position: relative; z-index: 3; align-self: flex-end;
+  font-family: var(--font-ui); font-weight: 800; font-size: 12px; letter-spacing: 0.28em;
+  color: rgba(241,236,244,0.55); text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
 
 /* Variante con kicker: leyenda tipo placa de nombre de club (serif de
-   marca, hairline debajo) + la acción abajo */
-.fl-acceso-portal--kicker { flex-direction: column; align-items: flex-start; gap: 4px; }
+   marca) arriba de la acción, ambas ancladas abajo-izquierda */
 .fl-acceso-kicker {
   position: relative; z-index: 3; display: block;
   font-family: var(--font-display), Georgia, serif; font-style: italic;
-  font-size: 16px; font-weight: 600; letter-spacing: 0.06em;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.06em;
   color: rgba(241,236,244,0.65);
-  padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.16);
   text-shadow: 0 1px 0 rgba(0,0,0,0.4);
 }
-.fl-acceso-portal-action { display: inline-flex; align-items: center; gap: 8px; }
 
 /* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
    el resto del cuadro queda libre para el video */
