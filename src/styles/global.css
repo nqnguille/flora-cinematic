@@ -1613,11 +1613,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
   font-family: var(--font-ui); font-weight: 700; font-size: clamp(9px, 2.3vw, 11.5px);
   letter-spacing: 0.1em; text-transform: uppercase;
   color: rgba(241,236,244,0.85);
-  background: linear-gradient(155deg, #4c4160 0%, #291f36 60%, #140f1c 100%);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: linear-gradient(155deg, #221c2c 0%, #130f1a 55%, #060409 100%);
+  border: 1px solid rgba(255,255,255,0.16);
   box-shadow:
     0 10px 22px -10px rgba(0,0,0,0.7),
-    inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 2px rgba(0,0,0,0.5);
+    inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 2px rgba(0,0,0,0.6);
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
@@ -1645,13 +1645,13 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background:
     linear-gradient(122deg,
       transparent 0%, transparent 38%,
-      rgba(160,150,190,0.22) 45%, rgba(215,210,235,0.42) 50%, rgba(160,150,190,0.2) 55%,
+      rgba(150,150,160,0.18) 45%, rgba(200,200,210,0.36) 50%, rgba(150,150,160,0.16) 55%,
       transparent 62%, transparent 100%),
-    repeating-linear-gradient(101deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 3px),
-    linear-gradient(150deg, #241c30 0%, #170f20 45%, #0c0812 75%, #060409 100%);
+    repeating-linear-gradient(101deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px),
+    linear-gradient(150deg, #100d15 0%, #0a0710 45%, #050308 75%, #010102 100%);
   background-blend-mode: screen, overlay, normal;
 
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.11);
   box-shadow:
     0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
     /* luz ambiente de marca, estática — nunca pulsa */
