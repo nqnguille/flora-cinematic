@@ -1780,7 +1780,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
    el resto del cuadro queda libre para el video */
 @media (min-width: 881px) {
   .fl-acceso {
-    aspect-ratio: 8 / 3;
+    aspect-ratio: 5 / 2;
     padding-top: 0; padding-bottom: 0;
   }
   .fl-acceso-content {
