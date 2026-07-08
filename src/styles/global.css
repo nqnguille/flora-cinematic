@@ -1684,6 +1684,20 @@ html.no-js .reveal { opacity: 1; transform: none; }
   pointer-events: none;
 }
 
+/* Variante con foto real de la tarjeta (generada) en vez del render CSS:
+   se apaga el degradé/textura/bisel/brillo de estudio — la foto ya trae
+   su propio metal, logo grabado y texto "Ingresar a la carta" — y solo
+   queda la imagen llenando la card + el hover-lift compartido. */
+.fl-acceso-card--photo {
+  background: none; padding: 0;
+  box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6);
+}
+.fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
+.fl-acceso-card-photo {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+}
+
 /* Bisel grabado (el canto de la tarjeta) */
 .fl-acceso-card::before {
   content: ''; position: absolute; inset: 8px; z-index: 1; pointer-events: none;
