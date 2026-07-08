@@ -64,7 +64,7 @@ function initSmoothAnchors() {
   }
 
   document.addEventListener('click', (e) => {
-    const link = (e.target as HTMLElement)?.closest?.('a[href*="#"]') as HTMLAnchorElement | null
+    const link = (e.target as HTMLElement)?.closest?.('a[href]') as HTMLAnchorElement | null
     if (!link) return
     let url: URL
     try {
@@ -72,8 +72,18 @@ function initSmoothAnchors() {
     } catch {
       return
     }
-    if (url.pathname !== location.pathname || !url.hash) return
-    if (scrollToHash(url.hash)) e.preventDefault()
+    if (url.pathname !== location.pathname) return
+    if (url.hash) {
+      if (scrollToHash(url.hash)) e.preventDefault()
+      return
+    }
+    // Link a la misma página sin hash (ej. el logo con href="/" estando ya
+    // en home): en vez de la navegación/recarga nativa, sube suave arriba.
+    lenis.scrollTo(0, {
+      duration: 1.3,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+    })
+    e.preventDefault()
   })
 
   // Llegada con hash en la URL (desde otra página, o F5 con #ancla): en vez
