@@ -1611,31 +1611,59 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* "Portal": la card de vidrio ES el CTA (ya no hay una pill blanca adentro
    de la card — dos capas de botón era redundante). El link completo tiene
    el fondo glass, el texto y el hover. */
+@property --fl-angle {
+  syntax: '<angle>'; initial-value: 0deg; inherits: false;
+}
 .fl-acceso-portal {
   position: relative; overflow: hidden;
   margin-top: 0; padding: clamp(18px, 2.4vw, 26px) clamp(26px, 3.2vw, 36px);
   background: rgba(255,255,255,0.1);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.24); border-radius: 28px;
-  box-shadow: 0 24px 60px -24px rgba(0,0,0,0.5);
+  /* Sombra de caída + filo de luz interior arriba (glass real, no plano) */
+  box-shadow: 0 24px 60px -24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
   font-family: var(--font-ui); font-weight: 700; font-size: 16px;
   color: #fff; text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  /* Glow VIP: halo violeta que respira — drop-shadow (no box-shadow, para no
-     pisar la transición de sombra del hover) y no lo clipea el overflow:hidden
-     de la card, así puede sangrar hacia afuera. */
-  animation: fl-acceso-glow 3.6s ease-in-out infinite;
+  /* Glow VIP en dos tonos de marca (violeta + verde), no plano — drop-shadow
+     para no pisar la transición del box-shadow del hover ni clipearse con el
+     overflow:hidden de la card */
+  animation: fl-acceso-glow 4.2s ease-in-out infinite;
 }
 .fl-acceso-portal:hover {
-  transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.42);
-  box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6);
+  transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.5);
+  box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.55);
 }
 @keyframes fl-acceso-glow {
-  0%, 100% { filter: drop-shadow(0 0 16px rgba(155, 110, 224, 0.4)); }
-  50% { filter: drop-shadow(0 0 34px rgba(155, 110, 224, 0.75)); }
+  0%, 100% {
+    filter: drop-shadow(0 0 14px rgba(155, 110, 224, 0.45)) drop-shadow(0 0 26px rgba(79, 199, 158, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(155, 110, 224, 0.8)) drop-shadow(0 0 46px rgba(79, 199, 158, 0.4));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-portal { animation: none; filter: drop-shadow(0 0 20px rgba(155, 110, 224, 0.5)); }
+  .fl-acceso-portal {
+    animation: none;
+    filter: drop-shadow(0 0 20px rgba(155, 110, 224, 0.55)) drop-shadow(0 0 30px rgba(79, 199, 158, 0.28));
+  }
+}
+/* Anillo de borde: gradiente violeta↔verde girando despacio — el detalle que
+   más lee "tarjeta VIP" (foil edge), no un borde plano de un solo color.
+   inset:0 (no sangra afuera) para no chocar con el overflow:hidden del brillo. */
+.fl-acceso-portal::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--fl-angle, 0deg),
+    #381F56, #6B4A96, #4FC79E, #6B4A96, #381F56);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+  animation: fl-acceso-border-spin 6.5s linear infinite;
+}
+@keyframes fl-acceso-border-spin { to { --fl-angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-portal::after { animation: none; }
 }
 /* Look VIP: brillo que cruza la card cada tanto, como una tarjeta premium
    catching light — pausa larga, glint corto, se repite. */
