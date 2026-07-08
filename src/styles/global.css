@@ -1698,13 +1698,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
 .fl-acceso-card-photo {
-  position: absolute; inset: 0; z-index: 0;
-  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+  position: absolute; z-index: 0; object-fit: cover; border-radius: inherit;
   /* La foto trae su propio filo con luz de estudio (rim light) justo en el
-     borde — a este tamaño se lee como un marco agregado. Un ligero
-     "zoom" vía scale lo empuja fuera del recorte redondeado (overflow
-     hidden del padre), sin tocar el archivo fuente. */
-  transform: scale(1.08);
+     borde — a este tamaño se lee como un marco agregado. En vez de
+     transform:scale() (que en varios navegadores escala la capa YA
+     rasterizada al tamaño de layout, no la imagen fuente — ahí es donde
+     entraba el pixelado que reportó Guille), el "zoom" se logra agrandando
+     el elemento en sí con inset negativo: sigue siendo un resize normal,
+     con el mismo muestreo de alta calidad que object-fit:cover. */
+  inset: -5%; width: 110%; height: 110%;
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
