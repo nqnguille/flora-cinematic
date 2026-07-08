@@ -83,6 +83,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <span id="pa-ped-count" class="pa-count"></span>
             <span id="pa-ped-status" class="pa-save-status"></span>
           </div>
+          <div id="pa-ped-top" class="pa-ped-top" hidden></div>
           <div id="pa-pedidos-list" class="pa-socios-list"></div>
         </div>
 
@@ -769,6 +770,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div class="pa-ped-actions">${pedidoAcciones(p)}</div>
         </article>`
     }
+    // Ranking "Más reservado": suma cantidades por producto en todos los pedidos
+    // no cancelados — mismo dato que ya viaja en PEDIDOS, sin pegarle a otro endpoint.
+    function renderPedidosTop() {
+      const top = document.getElementById('pa-ped-top')
+      const cantidades = new Map()
+      for (const p of PEDIDOS) {
+        if (p.estado === 'cancelado') continue
+        for (const i of p.items || []) {
+          const clave = i.nombre || '(sin nombre)'
+          cantidades.set(clave, (cantidades.get(clave) || 0) + (i.cantidad || 0))
+        }
+      }
+      const ranking = [...cantidades.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
+      if (!ranking.length) { top.hidden = true; top.innerHTML = ''; return }
+      top.hidden = false
+      top.innerHTML = '<span class="pa-ped-top-label">Más reservado:</span>' +
+        ranking.map(([nombre, n]) => `<span class="pa-ped-top-chip">${esc(nombre)} <strong>${n}</strong></span>`).join('')
+    }
     function renderPedidos() {
       const list = document.getElementById('pa-pedidos-list')
       // Triage: pendientes primero, después listas, después el histórico
@@ -779,6 +798,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         : ordenadas
       const activos = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
       pintarStats()
+      renderPedidosTop()
       document.getElementById('pa-ped-count').textContent = `${activos} activa(s) · ${PEDIDOS.length} en total`
       const dot = document.getElementById('pa-ped-dot')
       dot.hidden = activos === 0
@@ -1632,6 +1652,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     background: var(--pa-green); color: #08160f;
   }
   .pa-ped-dot[hidden] { display: none; }
+  .pa-ped-top {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    margin: 0 0 1rem; padding: 0.7rem 0.9rem;
+    background: rgba(183, 157, 230, 0.08); border: 1px solid var(--pa-line); border-radius: 12px;
+  }
+  .pa-ped-top[hidden] { display: none; }
+  .pa-ped-top-label {
+    font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--pa-muted);
+  }
+  .pa-ped-top-chip {
+    font-size: 0.82rem; font-weight: 600; color: var(--pa-cream);
+    padding: 0.28rem 0.6rem; border-radius: 999px; background: rgba(255, 255, 255, 0.04);
+  }
+  .pa-ped-top-chip strong { color: var(--pa-green); margin-left: 0.25rem; }
   .pa-btn-slim { padding: 0.42rem 0.95rem; font-size: 0.82rem; margin-top: 0; }
   .pa-pedido { align-items: stretch; }
   .pa-ped-items { list-style: none; margin: 0.25rem 0 0.2rem; padding: 0; }
