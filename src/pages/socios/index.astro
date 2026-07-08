@@ -22,9 +22,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <!-- ── Portal ── -->
     <div id="pt-content" class="pt-content" hidden>
       <header class="pt-head">
-        <img class="pt-head-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        <a href="/" class="pt-head-logo-link" aria-label="Ir al sitio de Flora">
+          <img class="pt-head-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+        </a>
         <h1 class="pt-title">Hola, <em id="pt-nombre">socio</em></h1>
-        <p class="pt-sub pt-sub-head">Elegí una categoría para ver precios y reservar. Retirás en el club.</p>
+        <p class="pt-sub pt-sub-head">¿Qué estás buscando hoy? Elegí una categoría para ver precios y reservar. Retirás en el club.</p>
         <button id="pt-logout" class="pt-logout" type="button">Salir</button>
       </header>
 
@@ -184,7 +186,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pt-content[hidden] { display: none; }
   .pt-head { position: relative; margin-bottom: clamp(24px, 3.5vw, 40px); }
-  .pt-head-logo { height: 26px; width: auto; margin-bottom: 14px; }
+  .pt-head-logo-link { display: inline-block; opacity: 1; transition: opacity 0.2s ease; }
+  .pt-head-logo-link:hover { opacity: 0.75; }
+  .pt-head-logo { height: 26px; width: auto; margin-bottom: 14px; display: block; }
   .pt-head .pt-title { margin: 12px 0 8px; }
   .pt-sub-head { max-width: 52ch; }
   .pt-logout {
