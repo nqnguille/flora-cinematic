@@ -1639,8 +1639,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
   position: relative; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 10px;
   text-align: left;
-  width: clamp(300px, 30vw, 380px); aspect-ratio: 1.586 / 1;
-  margin-top: 0; padding: clamp(20px, 2.4vw, 28px);
+  width: clamp(230px, 22vw, 305px); aspect-ratio: 1.586 / 1;
+  margin-top: 0; padding: clamp(16px, 2vw, 22px);
   border-radius: var(--fl-radius);
 
   /* Luz de estudio dramática: key light angosto y brillante desde una
@@ -1663,11 +1663,27 @@ html.no-js .reveal { opacity: 1; transform: none; }
     inset 1.5px 0 0 rgba(200,220,255,0.16), inset -1px 0 0 rgba(0,0,0,0.6),
     inset 0 1.5px 0 rgba(255,255,255,0.62), inset 0 -3px 5px rgba(0,0,0,0.7);
 
-  font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.02em;
-  font-size: clamp(17px, 1.9vw, 21px); line-height: 1.2; color: #f1ecf4; text-decoration: none;
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.03em;
+  font-size: clamp(13px, 1.3vw, 15px); line-height: 1.25; color: #f1ecf4; text-decoration: none;
   text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 -1px 0 rgba(255,255,255,0.18), 0 0 16px rgba(0,0,0,0.3);
 
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+/* Isotipo de Flora grabado al centro — la hoja como máscara sobre el
+   propio degradé metálico de la tarjeta (toma el color del metal, no un
+   logo plano pegado encima) + drop-shadow trazando el borde de la hoja
+   para el relieve grabado/repujado. */
+.fl-acceso-card-emblem {
+  position: absolute; z-index: 1; top: 50%; left: 50%;
+  width: 46%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(155deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 45%, rgba(0,0,0,0.05) 100%);
+  -webkit-mask: url('/img/loader-leaf.png') center / contain no-repeat;
+  mask: url('/img/loader-leaf.png') center / contain no-repeat;
+  filter: drop-shadow(1px 1.5px 1px rgba(0,0,0,0.6)) drop-shadow(-1px -1px 1px rgba(255,255,255,0.14));
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
@@ -1721,6 +1737,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   position: relative; z-index: 3;
   display: inline-flex; align-items: center; gap: 8px;
   max-width: calc(100% - 4px);
+  text-transform: uppercase;
 }
 .fl-acceso-card-action span[aria-hidden] {
   display: inline-block; flex-shrink: 0;
