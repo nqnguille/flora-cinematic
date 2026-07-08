@@ -1672,20 +1672,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
-/* Isotipo de Flora al centro de la card de socio logueado. Antes era un
-   mask + drop-shadow sobre un degradé (para que "tome" el color del
-   metal) — la combinación mask+filter es justo la que más problemas de
-   render/dentado da en varios navegadores, y es la otra card que Guille
-   reportó con el mismo defecto. <img> directo del logo blanco, solo
-   translate (sin scale) para centrar: pipeline mucho más simple. */
-.fl-acceso-card-emblem {
-  position: absolute; z-index: 1; top: 50%; left: 50%;
-  width: 68%; height: auto;
-  transform: translate(-50%, -50%);
-  opacity: 0.85;
-  pointer-events: none;
-}
-
 /* Variante con foto real de la tarjeta (generada) en vez del render CSS:
    se apaga el degradé/textura/bisel/brillo de estudio — la foto ya trae
    su propio metal, logo grabado y texto "Ingresar a la carta" — y solo
@@ -1747,34 +1733,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card, .fl-acceso-card::after { transition: none; }
   .fl-acceso-card:hover, .fl-acceso-card:focus-visible { transform: none; }
-}
-
-/* Acción (donde iría el número/nombre grabado) — el texto que realmente
-   dice qué hace el link, por eso el más grande y legible de la tarjeta */
-.fl-acceso-card-action {
-  position: relative; z-index: 3;
-  display: inline-flex; align-items: center; gap: 8px;
-  max-width: calc(100% - 4px);
-  text-transform: uppercase;
-}
-.fl-acceso-card-action span[aria-hidden] {
-  display: inline-block; flex-shrink: 0;
-  color: #6fe0b8; text-shadow: 0 0 10px rgba(79,199,158,0.55), 0 1px 1px rgba(0,0,0,0.5);
-  transition: transform 0.25s ease;
-}
-.fl-acceso-card:hover .fl-acceso-card-action span[aria-hidden] { transform: translateX(5px); }
-@media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card-action span[aria-hidden] { transition: none; }
-}
-
-/* Variante con kicker: leyenda tipo placa de nombre de club (serif de
-   marca) arriba de la acción, ambas centradas abajo */
-.fl-acceso-kicker {
-  position: relative; z-index: 3; display: block;
-  font-family: var(--font-display), Georgia, serif; font-style: italic;
-  font-size: 14px; font-weight: 600; letter-spacing: 0.06em;
-  color: rgba(241,236,244,0.65);
-  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
 }
 
 /* Desktop: fotograma 16:9 — todo el contenido en la franja superior,
