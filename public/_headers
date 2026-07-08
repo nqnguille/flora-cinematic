@@ -1,0 +1,11 @@
+# tienda.js/tienda.css son scripts compartidos del panel de socios/carrito
+# que se editan seguido — Cloudflare Pages les pone por default un cache de
+# horas al no tener hash en el nombre, así que un navegador con sesión
+# abierta podía quedarse sirviendo una versión vieja sin siquiera volver a
+# preguntarle al server. no-cache obliga a revalidar (ETag/Last-Modified)
+# en cada visita, así el deploy se ve al toque, sin perder el 304 rápido.
+/socios/tienda.js
+  Cache-Control: no-cache
+
+/socios/tienda.css
+  Cache-Control: no-cache
