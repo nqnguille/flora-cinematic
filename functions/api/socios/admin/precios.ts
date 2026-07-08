@@ -69,8 +69,11 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
       }
       idsVistos.add(id);
       if (!label) return Response.json({ ok: false, error: `falta el nombre del producto ${id}` }, { status: 400 });
-      if (!Number.isFinite(precio) || precio < 0 || precio > 100_000_000) {
-        return Response.json({ ok: false, error: `precio inválido para ${label}` }, { status: 400 });
+      // precio <= 0 (no solo < 0): un precio en 0 no es un caso legítimo acá
+      // — casi siempre es un campo que quedó vacío por error — y sin este
+      // chequeo el producto queda reservable gratis en el sitio público.
+      if (!Number.isFinite(precio) || precio <= 0 || precio > 100_000_000) {
+        return Response.json({ ok: false, error: `precio inválido para ${label} (tiene que ser mayor a $0)` }, { status: 400 });
       }
       const item: any = { id, label, detalle: String(it?.detalle || '').trim(), precio };
       const foto = String(it?.foto || '').trim();

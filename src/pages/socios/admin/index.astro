@@ -81,6 +81,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             </div>
             <button id="pa-ped-refresh" type="button" class="pa-btn pa-btn-ghost pa-btn-slim">↻ Actualizar</button>
             <span id="pa-ped-count" class="pa-count"></span>
+            <span id="pa-ped-status" class="pa-save-status"></span>
           </div>
           <div id="pa-pedidos-list" class="pa-socios-list"></div>
         </div>
@@ -168,6 +169,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     window.addEventListener('unhandledrejection', (e) => showFatal('promesa rechazada: ' + (e.reason?.message || e.reason)))
 
     let CATALOG = []
+    let CATALOG_VERSION = 0 // control de concurrencia: ver comentario en geneticas.ts
 
     // ── Confirmación de marca (promesa): reemplaza el confirm() nativo ──
     let confirmResolve = null
@@ -308,6 +310,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id: g.id, activo: g.activo }),
         })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && data.version) CATALOG_VERSION = data.version
         flashStatus(res.ok ? 'Disponibilidad guardada ✓' : 'Error al guardar')
       } catch { flashStatus('Error de red') }
     }
@@ -437,8 +441,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     })
 
     document.getElementById('pa-save').addEventListener('click', async () => {
+      const btn = document.getElementById('pa-save')
       const status = document.getElementById('pa-save-status')
+      status.classList.remove('is-ok', 'is-err')
       status.textContent = 'Guardando…'
+      btn.disabled = true
       CATALOG.forEach((g) => {
         if (!g.id) g.id = slugify(g.nombre) || `genetica-${Date.now()}`
         g.banco = (window.FLORA_BANCOS[g.bancoSlug] || {}).nombre || g.banco || ''
@@ -448,16 +455,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ geneticas: CATALOG }),
+          body: JSON.stringify({ geneticas: CATALOG, version: CATALOG_VERSION }),
         })
         const data = await res.json()
-        if (res.ok && data.ok) { genDirty = 0; status.classList.remove('is-err'); status.classList.add('is-ok') }
-        else status.classList.add('is-err')
-        status.textContent = res.ok && data.ok ? 'Guardado ✓' : `Error: ${data.error || res.status}`
+        if (res.ok && data.ok) {
+          genDirty = 0; CATALOG_VERSION = data.version || CATALOG_VERSION
+          status.classList.add('is-ok'); status.textContent = 'Guardado ✓'
+        } else if (res.status === 409 && data.conflict) {
+          // Alguien más guardó desde que esta pantalla cargó — no pisamos:
+          // traemos la versión del servidor y avisamos en vez de sobrescribir
+          // en silencio. Las ediciones sin guardar de esta pantalla se pierden
+          // (mejor eso que perder las del otro admin sin que nadie se entere).
+          CATALOG = data.geneticas || CATALOG
+          CATALOG_VERSION = data.version || CATALOG_VERSION
+          render()
+          status.classList.add('is-err')
+          status.textContent = data.error || 'Alguien más guardó cambios — se recargó la versión más reciente, revisá tus ediciones.'
+        } else {
+          status.classList.add('is-err')
+          status.textContent = `Error: ${data.error || res.status}`
+        }
       } catch {
         status.classList.add('is-err')
         status.textContent = 'Error de red al guardar.'
       }
+      btn.disabled = false
       setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err'); pintarPendientes() }, 4000)
     })
 
@@ -545,6 +567,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const add = e.target.closest('.pa-prod-add')
       if (add) {
         const cat = add.getAttribute('data-cat')
+        // Las páginas de Aceites/Cremas/Extracciones muestran una lista fija
+        // (foto, ficha técnica, análisis de laboratorio si aplica) que vive
+        // en el código, no acá — un producto realmente nuevo necesita que un
+        // desarrollador lo sume a esa página. Lo que se guarda acá queda en
+        // la base de datos pero NO aparece solo en el sitio.
+        if (!(await paConfirm('Un producto nuevo acá queda guardado, pero no va a aparecer solo en la página pública — hace falta que alguien sume la foto y la ficha en el código. Si es para eso (por ejemplo, dejar el precio ya cargado para cuando se agregue), seguí. Si buscás algo que ya está en el sitio, cancelá y buscalo en la lista de abajo.'))) return
         PRECIOS[cat] = PRECIOS[cat] || []
         PRECIOS[cat].push({ id: `nuevo-${Date.now().toString(36)}`, label: '', detalle: '', precio: 0 })
         renderProductos()
@@ -600,6 +628,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     document.getElementById('pa-prod-save').addEventListener('click', async () => {
       const status = document.getElementById('pa-prod-status')
+      // Precio en $0: nunca es un caso legítimo acá — casi siempre un campo
+      // que quedó vacío por error — y el servidor ahora lo rechaza igual,
+      // pero avisarlo ANTES de guardar (con el/los producto(s) señalados) es
+      // mucho más claro que un error genérico después del intento.
+      const sinPrecio = Object.values(PRECIOS).flat().filter((it) => !(it.precio > 0))
+      if (sinPrecio.length) {
+        status.classList.remove('is-ok'); status.classList.add('is-err')
+        status.textContent = `Sin precio: ${sinPrecio.map((it) => it.label).join(', ')} — completá el precio antes de guardar.`
+        return
+      }
       // Saltos de precio >50%: el error más caro del panel es un cero de más o de menos
       const saltos = Object.values(PRECIOS).flat().filter((it) => {
         const antes = PRECIOS_ORIG[it.id]
@@ -785,6 +823,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (!btn) return
       const estado = btn.dataset.estado
       if (estado === 'cancelado' && !(await paConfirm('¿Cancelar esta reserva? El socio la va a ver como cancelada.'))) return
+      const pedStatus = document.getElementById('pa-ped-status')
+      pedStatus.classList.remove('is-ok', 'is-err')
+      pedStatus.textContent = ''
       btn.disabled = true
       try {
         const res = await fetch('/api/socios/admin/pedidos', {
@@ -793,9 +834,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           credentials: 'include',
           body: JSON.stringify({ id: btn.dataset.id, estado }),
         })
-        if (res.ok) await loadPedidos()
-        else btn.disabled = false
-      } catch { btn.disabled = false }
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && data.ok) {
+          await loadPedidos()
+        } else {
+          btn.disabled = false
+          pedStatus.classList.add('is-err')
+          pedStatus.textContent = data.error || `No se pudo actualizar (${res.status}) — probá de nuevo.`
+          if (data.conflict) await loadPedidos() // trae el estado real, aunque el click no haya aplicado
+          setTimeout(() => { pedStatus.textContent = ''; pedStatus.classList.remove('is-err') }, 6000)
+        }
+      } catch {
+        btn.disabled = false
+        pedStatus.classList.add('is-err')
+        pedStatus.textContent = 'Error de red — probá de nuevo.'
+        setTimeout(() => { pedStatus.textContent = ''; pedStatus.classList.remove('is-err') }, 6000)
+      }
     })
 
     /* ── Socios ── */
@@ -1143,6 +1197,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
       const data = await res.json()
       CATALOG = data.geneticas || []
+      CATALOG_VERSION = data.version || 0
       // La pestaña Socios solo la ve el super admin.
       if (!data.isSuperAdmin) {
         const tabSocios = document.querySelector('.pa-tab[data-tab="socios"]')
@@ -1384,6 +1439,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     padding: 0.6rem 1.35rem; cursor: pointer; border: none; transition: transform 0.08s ease, background 0.15s ease;
   }
   .pa-btn:active { transform: scale(0.97); }
+  .pa-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .pa-btn-ghost { background: none; border: 1.5px dashed var(--pa-line); color: var(--pa-violet); margin-top: 1.2rem; }
   .pa-btn-ghost:hover { border-color: var(--pa-violet); }
   .pa-btn-primary { background: var(--pa-violet); color: #130d1c; }

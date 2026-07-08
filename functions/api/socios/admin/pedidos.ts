@@ -55,6 +55,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!raw) return Response.json({ ok: false, error: 'pedido inexistente' }, { status: 404 });
 
   const pedido = JSON.parse(raw);
+  // Un pedido en 'entregado' o 'cancelado' es un estado final — sin este
+  // chequeo, una pantalla de admin desactualizada podía "revivir" un pedido
+  // que el socio ya había cancelado (o pisar un 'entregado' ya registrado)
+  // sin ningún aviso de conflicto.
+  if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
+    return Response.json({
+      ok: false,
+      conflict: true,
+      error: `Este pedido ya está "${pedido.estado}" (puede haber cambiado desde otra pantalla) — recargá la lista antes de tocarlo de nuevo.`,
+      pedido,
+    }, { status: 409 });
+  }
   pedido.estado = estado;
   pedido.actualizado = new Date().toISOString();
   await env.PEDIDOS.put(`pedido:${id}`, JSON.stringify(pedido), { expirationTtl: TTL_SECONDS });

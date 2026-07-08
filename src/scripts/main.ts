@@ -528,6 +528,14 @@ function initParticles() {
 
 // ── Mobile drawer ──
 function initMobileDrawer() {
+  // La home carga main.ts Y tienda.js (para el carrito) — tienda.js trae su
+  // propia copia standalone del hamburguesa/drawer/dropdowns para las
+  // páginas de catálogo que no cargan main.ts. tienda.js es un <script>
+  // clásico (is:inline) que corre ANTES que este módulo, así que si ya
+  // marcó la página, no nos enganchamos de nuevo — las dos versiones se
+  // pisaban el aria-expanded en cada click (una lo ponía en true, la otra
+  // lo volvía a false en el mismo evento).
+  if ((window as any).__floraNavInit) return
   const hamburger = document.querySelector<HTMLButtonElement>('.nav-hamburger')
   const drawer    = document.getElementById('mobile-drawer') as HTMLElement | null
   const backdrop  = drawer?.querySelector<HTMLElement>('.drawer-backdrop')
@@ -570,6 +578,7 @@ function initMobileDrawer() {
 
 // ── Dropdown "Servicios" en el nav de desktop ──
 function initNavDropdown() {
+  if ((window as any).__floraNavInit) return // ver comentario en initMobileDrawer
   const dropdown = document.querySelector<HTMLElement>('.nav-dropdown')
   const trigger  = dropdown?.querySelector<HTMLButtonElement>('.nav-dropdown-trigger')
   if (!dropdown || !trigger) return
@@ -601,11 +610,10 @@ function initNavDropdown() {
 
 // ── Dropdown "Servicios" en el drawer mobile (acordeón) ──
 function initDrawerDropdown() {
-  const dropdown = document.querySelector<HTMLElement>('.drawer-dropdown')
-  const trigger  = dropdown?.querySelector<HTMLButtonElement>('.drawer-dropdown-trigger')
-  if (!dropdown || !trigger) return
-
-  trigger.addEventListener('click', () => {
+  if ((window as any).__floraNavInit) return // ver comentario en initMobileDrawer
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement)?.closest?.('.drawer-dropdown-trigger') as HTMLButtonElement | null
+    if (!trigger) return
     const open = trigger.getAttribute('aria-expanded') === 'true'
     trigger.setAttribute('aria-expanded', open ? 'false' : 'true')
   })

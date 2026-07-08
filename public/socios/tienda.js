@@ -236,6 +236,11 @@
         if (precioEl) precioEl.textContent = fmt(it.precio)
         const slot = document.querySelector(`.td-slot[data-id="${it.id}"]`)
         if (slot) slot.innerHTML = stepperHtml('id', it.id, qty, 10)
+        // Título "Nombre · Detalle" (ej. extracciones): antes solo el precio
+        // viajaba desde el panel de admin a la ficha pública, el nombre/detalle
+        // quedaban desactualizados aunque el guardado dijera "éxito".
+        const titleEl = document.querySelector(`.fl-oil-title[data-id="${it.id}"]`)
+        if (titleEl && it.label) titleEl.textContent = it.detalle ? `${it.label} · ${it.detalle}` : it.label
       }
       barra()
       return
@@ -456,6 +461,13 @@
   } else if (gBtn) {
     showLoginError('Falta configurar el Google Client ID del sitio.')
   }
+
+  // Marca la página como "nav ya inicializado" — este script corre como
+  // <script> clásico (is:inline), antes que main.ts (module, deferred). En
+  // la home cargan los dos: si main.ts encuentra este flag ya puesto, se
+  // salta su propia versión del hamburguesa/drawer/dropdowns en vez de
+  // pisarle el aria-expanded a esta en cada click.
+  window.__floraNavInit = true
 
   // ── Dropdown "Servicios" del nav del catálogo (mismo patrón que el home,
   // pero standalone porque estas páginas no cargan main.ts) ──

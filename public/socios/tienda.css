@@ -92,17 +92,18 @@
 
 /* Stepper */
 /* Stepper con el criterio de la carta de flores: valor + columna +/- */
-.td-stepper { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.td-stepper { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .td-menu .td-stepper { margin: 0; }
-.td-step-num { min-width: 26px; text-align: center; font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
-.td-step-col { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+.td-step-num { min-width: 28px; text-align: center; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.td-step-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .td-step-btn {
-  width: 30px; height: 20px; border-radius: 7px; border: 1px solid var(--td-line);
-  background: none; color: var(--td-cream); font-size: 0.95rem; font-weight: 700; line-height: 1;
+  width: 36px; height: 25px; border-radius: 9px; border: 1.5px solid var(--td-line);
+  background: none; color: var(--td-cream); font-size: 1.05rem; font-weight: 800; line-height: 1;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  padding: 0; transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  padding: 0; transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
-.td-step-btn:hover { border-color: var(--td-violet); background: rgba(183,157,230,0.16); }
+.td-step-btn:hover:not(:disabled) { border-color: var(--td-violet); background: rgba(183,157,230,0.16); transform: scale(1.06); }
+.td-step-btn:active:not(:disabled) { transform: scale(0.94); }
 .td-step-btn:disabled { opacity: 0.3; cursor: default; }
 
 /* ── Barra de reserva flotante ── */
@@ -292,10 +293,29 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-cart-vacio { color: var(--td-muted, rgba(244,241,247,0.55)); font-size: 0.9rem; line-height: 1.55; margin: 0; }
 .td-cart-vacio[hidden] { display: none; }
 .td-cart-msg { color: #4FC79E; font-weight: 700; font-size: 0.9rem; margin: 0; }
+/* Mismo tratamiento "tarjeta black" de la card VIP de la home (metal oscuro +
+   franja diagonal glossy) — acá en versión pill, para CTAs chicos como este. */
 .td-cart-carta {
+  position: relative; isolation: isolate; overflow: hidden;
   display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
-  background: var(--td-violet, #b79de6); color: #170c2b; text-decoration: none;
-  font-weight: 700; font-size: 0.92rem; padding: 12px 20px; border-radius: 999px;
+  color: #f1ecf4; text-decoration: none; text-transform: uppercase; letter-spacing: 0.03em;
+  font-weight: 700; font-size: 0.82rem; padding: 13px 22px; border-radius: 999px;
+  background:
+    linear-gradient(122deg, transparent 0%, transparent 38%, rgba(150,150,160,0.22) 45%, rgba(200,200,210,0.4) 50%, rgba(150,150,160,0.18) 55%, transparent 62%, transparent 100%),
+    linear-gradient(150deg, #241c30 0%, #170f20 45%, #0c0812 75%, #060409 100%);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 14px 28px -14px rgba(0,0,0,0.8),
+    0 0 30px -12px rgba(79,199,158,0.16), 0 0 40px -14px rgba(129,92,181,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.td-cart-carta:hover {
+  transform: translateY(-1px); border-color: rgba(255,255,255,0.28);
+  box-shadow:
+    0 18px 34px -14px rgba(0,0,0,0.85),
+    0 0 36px -10px rgba(79,199,158,0.22), 0 0 48px -12px rgba(129,92,181,0.26),
+    inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .td-cart-hint { font-size: 0.78rem; color: var(--td-muted, rgba(244,241,247,0.55)); line-height: 1.5; margin: 0; }
 @media (max-width: 560px) {

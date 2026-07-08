@@ -92,7 +92,7 @@ const iconoBateria = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
               </div>
 
               <div class="fl-oil-body">
-                <h2 class="fl-oil-title">{x.nombre} · {x.detalle}</h2>
+                <h2 class="fl-oil-title" data-id={x.id}>{x.nombre} · {x.detalle}</h2>
                 <p class="fl-oil-desc">{x.desc}</p>
 
                 <div class="td-buy td-onlight" data-buy={x.id} hidden>
