@@ -1608,6 +1608,25 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-story { font-family: var(--font-ui); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6; color: rgba(255,255,255,0.85); max-width: 50ch; margin: 18px auto 0; }
 .fl-acceso-side { text-align: center; }
 .fl-acceso-ctas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; }
+
+/* Burbuja "Exclusivo para miembros del club" — vivía como eyebrow del lado
+   izquierdo (educación), pasó al lado derecho (invitación) con su propio
+   tratamiento VIP: vidrio oscuro + borde metálico, no el pill blanco
+   genérico del eyebrow original. */
+.fl-acceso-badge {
+  display: inline-block; margin-bottom: 14px;
+  padding: 9px 18px; border-radius: 999px;
+  font-family: var(--font-ui); font-weight: 700; font-size: 11.5px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(241,236,244,0.85);
+  background: linear-gradient(155deg, #4c4160 0%, #291f36 60%, #140f1c 100%);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow:
+    0 10px 22px -10px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 2px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
 /* Tarjeta física real: proporción ISO/IEC 7810 ID-1 (85.6×54mm ≈ 1.586:1),
    estética "Black Card" — metal oscuro, chip, marca de "contactless",
    wordmark de Flora donde iría el logo de la red (VISA/Mastercard).
@@ -1624,22 +1643,25 @@ html.no-js .reveal { opacity: 1; transform: none; }
   margin-top: 0; padding: clamp(20px, 2.4vw, 28px);
   border-radius: var(--fl-radius);
 
-  /* Placa de metal: glint de estudio fijo (sup-izq) + sombra de esquina
-     (inf-der) + líneas cepilladas + degradé base gunmetal-amatista */
+  /* Luz de estudio dramática: key light angosto y brillante desde una
+     esquina, cae a negro casi puro en la opuesta — como una tarjeta
+     fotografiada en un estudio oscuro con un solo spot, no luz plana */
   background:
-    radial-gradient(60% 90% at var(--fl-mx) calc(var(--fl-my) - 20%), rgba(255,255,255,0.55), transparent 55%),
-    radial-gradient(120% 100% at 92% 118%, rgba(0,0,0,0.55), transparent 60%),
+    radial-gradient(42% 65% at var(--fl-mx) calc(var(--fl-my) - 12%), rgba(255,255,255,0.8), transparent 48%),
+    radial-gradient(135% 115% at 96% 128%, rgba(0,0,0,0.78), transparent 55%),
     repeating-linear-gradient(101deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 3px),
-    linear-gradient(155deg, #4c4160 0%, #372c48 20%, #291f36 42%, #1a1422 66%, #100c16 100%);
+    linear-gradient(155deg, #55486e 0%, #372c48 16%, #221a30 38%, #140f1c 62%, #08050c 100%);
   background-blend-mode: screen, multiply, overlay, normal;
 
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow:
-    0 20px 42px -20px rgba(0,0,0,0.7), 0 3px 0 rgba(0,0,0,0.5),
+    0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
     /* luz ambiente de marca, estática — nunca pulsa */
-    0 0 46px -16px rgba(79,199,158,0.16), 0 0 64px -20px rgba(129,92,181,0.20),
-    inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.55),
-    inset 1px 0 0 rgba(255,255,255,0.1), inset -1px 0 0 rgba(0,0,0,0.4);
+    0 0 50px -14px rgba(79,199,158,0.14), 0 0 70px -18px rgba(129,92,181,0.18),
+    /* rim light: un filo de luz fría en el borde izquierdo, como si la
+       tomara un segundo foco desde atrás — el gesto más "cinematográfico" */
+    inset 1.5px 0 0 rgba(200,220,255,0.16), inset -1px 0 0 rgba(0,0,0,0.6),
+    inset 0 1.5px 0 rgba(255,255,255,0.62), inset 0 -3px 5px rgba(0,0,0,0.7);
 
   font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.02em;
   font-size: clamp(17px, 1.9vw, 21px); line-height: 1.2; color: #f1ecf4; text-decoration: none;
@@ -1672,10 +1694,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-card:focus-visible {
   transform: translateY(-4px) scale(1.015); border-color: rgba(255,255,255,0.24);
   box-shadow:
-    0 30px 58px -20px rgba(0,0,0,0.78), 0 3px 0 rgba(0,0,0,0.5),
-    0 0 56px -14px rgba(79,199,158,0.24), 0 0 76px -18px rgba(129,92,181,0.28),
-    inset 0 1.5px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(0,0,0,0.55),
-    inset 1px 0 0 rgba(255,255,255,0.14), inset -1px 0 0 rgba(0,0,0,0.4);
+    0 34px 64px -18px rgba(0,0,0,0.9), 0 4px 0 rgba(0,0,0,0.6),
+    0 0 60px -12px rgba(79,199,158,0.24), 0 0 82px -16px rgba(129,92,181,0.28),
+    inset 1.5px 0 0 rgba(200,220,255,0.24), inset -1px 0 0 rgba(0,0,0,0.6),
+    inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
 }
 .fl-acceso-card:hover::after, .fl-acceso-card:focus-visible::after { opacity: 1; }
 
@@ -1692,33 +1714,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-acceso-card, .fl-acceso-card::after { transition: none; }
   .fl-acceso-card:hover, .fl-acceso-card:focus-visible { transform: none; }
 }
-
-/* Chip EMV — esquina superior izquierda, dorado, con las líneas de
-   contacto grabadas (igual que una tarjeta real) */
-.fl-acceso-card-chip {
-  position: absolute; z-index: 3; top: clamp(20px, 2.4vw, 28px); left: clamp(20px, 2.4vw, 28px);
-  width: 34px; height: 26px; border-radius: 5px;
-  background:
-    linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.55) 45%, transparent 60%),
-    linear-gradient(155deg, #f4e3ba 0%, #caa968 35%, #8a6a35 65%, #d9c087 100%);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.4);
-}
-.fl-acceso-card-chip::before {
-  content: ''; position: absolute; inset: 4px 3px; border: 1px solid rgba(0,0,0,0.28); border-radius: 2px;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28)), linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28));
-  background-repeat: no-repeat;
-  background-position: center, center;
-  background-size: 100% 1px, 1px 100%;
-}
-
-/* Marca "contactless" — esquina superior derecha, en verde de marca */
-.fl-acceso-card-mark {
-  position: absolute; z-index: 3; top: clamp(20px, 2.4vw, 28px); right: clamp(20px, 2.4vw, 28px);
-  width: 24px; height: 24px; color: #6fe0b8;
-  filter: drop-shadow(0 0 6px rgba(79,199,158,0.5));
-}
-.fl-acceso-card-mark svg { width: 100%; height: 100%; }
 
 /* Acción (donde iría el número/nombre grabado) — el texto que realmente
    dice qué hace el link, por eso el más grande y legible de la tarjeta */
@@ -2149,6 +2144,7 @@ body.is-socio .nav-cta--carta:not(.nav-cta--mobile) { display: inline-flex; alig
   body.is-socio .nav-cta--carta.nav-cta--mobile { display: inline-flex; align-items: center; margin-left: auto; height: 40px; padding: 0 20px; }
 }
 body.is-socio .fl-acceso-ctas--publico { display: none; }
+body.is-socio .fl-acceso-badge--publico { display: none; }
 body.is-socio .fl-acceso-ctas--socio { display: flex; }
 body.is-socio .fl-acceso-reserva.is-on {
   display: flex; max-width: 46ch; margin-top: 14px;
