@@ -1595,13 +1595,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-acceso-content { position: relative; z-index: 2; max-width: 1200px; width: 100%; }
 .fl-acceso-head { text-align: center; }
-.fl-acceso-head .fl-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px; color: #fff;
-  background: rgba(255,255,255,0.14);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 7px 14px;
-}
-.fl-acceso-head .fl-eyebrow svg { width: 14px; height: 14px; flex-shrink: 0; }
 .fl-acceso-head .fl-title { color: #fff; margin-left: auto; margin-right: auto; max-width: 18ch; text-shadow: 0 2px 28px rgba(0,0,0,0.6); }
 .fl-acceso-head .fl-title em { color: #4FC79E; }
 .fl-acceso-story, .fl-acceso-note { text-shadow: 0 1px 16px rgba(0,0,0,0.65); }
@@ -1670,17 +1663,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
   transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
-/* Isotipo de Flora grabado al centro — la hoja como máscara sobre el
-   propio degradé metálico de la tarjeta (toma el color del metal, no un
-   logo plano pegado encima) + drop-shadow trazando el borde de la hoja
-   para el relieve grabado/repujado. */
+/* Isotipo de Flora grabado al centro — el logo real (FLORA con la chala
+   adentro de la O) como máscara sobre el propio degradé metálico de la
+   tarjeta (toma el color del metal, no un logo plano pegado encima) +
+   drop-shadow trazando el contorno para el relieve grabado/repujado.
+   Reemplaza el texto "FLORA" suelto — el logo ya lo incluye. */
 .fl-acceso-card-emblem {
   position: absolute; z-index: 1; top: 50%; left: 50%;
-  width: 46%; aspect-ratio: 1;
+  width: 68%; aspect-ratio: 1472 / 298;
   transform: translate(-50%, -50%);
   background: linear-gradient(155deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 45%, rgba(0,0,0,0.05) 100%);
-  -webkit-mask: url('/img/loader-leaf.png') center / contain no-repeat;
-  mask: url('/img/loader-leaf.png') center / contain no-repeat;
+  -webkit-mask: url('/img/flora-logo-white.png') center / contain no-repeat;
+  mask: url('/img/flora-logo-white.png') center / contain no-repeat;
   filter: drop-shadow(1px 1.5px 1px rgba(0,0,0,0.6)) drop-shadow(-1px -1px 1px rgba(255,255,255,0.14));
   opacity: 0.85;
   pointer-events: none;
@@ -1747,13 +1741,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-card:hover .fl-acceso-card-action span[aria-hidden] { transform: translateX(5px); }
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card-action span[aria-hidden] { transition: none; }
-}
-
-/* Wordmark de Flora — donde iría el logo de VISA/Mastercard */
-.fl-acceso-card-brand {
-  position: relative; z-index: 3; align-self: flex-end;
-  font-family: var(--font-ui); font-weight: 800; font-size: 12px; letter-spacing: 0.28em;
-  color: rgba(241,236,244,0.55); text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Variante con kicker: leyenda tipo placa de nombre de club (serif de
