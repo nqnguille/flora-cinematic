@@ -27,16 +27,31 @@ async function hmac(secret: string, message: string): Promise<string> {
   return toHex(sig);
 }
 
-export async function createSessionCookie(email: string, secret: string): Promise<string> {
+// floraong.ar y www.floraong.ar sirven el mismo sitio sin redirect entre sí
+// (los dos devuelven 200 directo) — sin Domain, la cookie queda host-only y
+// una sesión iniciada en uno no vale en el otro (el "deslogueo random" que
+// reportó Guille). En local/preview (*.pages.dev, localhost) NO se puede
+// setear Domain=floraong.ar — el browser rechaza cualquier Domain que no sea
+// el host actual o un padre de ese host — por eso el atributo es condicional.
+function domainAttr(hostname: string): string {
+  return hostname === 'floraong.ar' || hostname.endsWith('.floraong.ar')
+    ? '; Domain=floraong.ar'
+    : '';
+}
+
+export async function createSessionCookie(email: string, secret: string, hostname: string): Promise<string> {
   const expires = Date.now() + TTL_MS;
   const payloadB64 = b64urlEncode(JSON.stringify({ email, expires }));
   const sig = await hmac(secret, payloadB64);
   const value = `${payloadB64}.${sig}`;
-  return `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${TTL_MS / 1000}`;
+  return `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${TTL_MS / 1000}${domainAttr(hostname)}`;
 }
 
-export function clearSessionCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+export function clearSessionCookie(hostname: string): string {
+  // El Domain acá tiene que ser IGUAL al que se usó al crearla — si no
+  // coincide, el browser no la borra, solo crea una cookie host-only nueva
+  // (vacía) y la de floraong.ar (con el email real) queda viva.
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0${domainAttr(hostname)}`;
 }
 
 export async function readSessionEmail(cookieHeader: string | null, secret: string): Promise<string | null> {

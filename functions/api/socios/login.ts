@@ -122,7 +122,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // si falla el guardado del perfil, no bloqueamos el login
   }
 
-  const cookie = await createSessionCookie(email, env.SESSION_SECRET);
+  const cookie = await createSessionCookie(email, env.SESSION_SECRET, new URL(request.url).hostname);
   return Response.json(
     { ok: true, email },
     { headers: { 'Set-Cookie': cookie } }
