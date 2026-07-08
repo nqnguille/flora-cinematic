@@ -33,6 +33,7 @@
 
 .td-brand { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--td-violet); }
 .td-brand svg { width: 30px; height: 30px; }
+.td-brand-logo { height: 24px; width: auto; }
 .td-brand-name { font-family: var(--font-display); font-size: 1.15rem; }
 .td-brand-name em { font-style: italic; }
 .td-title { font-family: var(--font-display); font-weight: 500; color: var(--td-cream); font-size: clamp(2rem, 5vw, 2.7rem); line-height: 1.05; }
