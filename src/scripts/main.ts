@@ -40,6 +40,55 @@ const unlockScroll = () => {
   lenis.start()
 }
 
+// ── Anchors suaves: cualquier link a #id (del nav, de una card, de un CTA)
+// scrollea con la misma curva de Lenis en vez del salto instantáneo nativo
+// del navegador — incluye los links que vienen de OTRA página con /#id
+// (ej. "Acompañamiento" desde /aceites/), que hacen una navegación real y
+// after eso arrancan el scroll suave hacia la sección en vez de aparecer
+// ya saltados ahí. offset negativo para que la sección no quede tapada
+// por el nav fijo (60px de alto).
+function initSmoothAnchors() {
+  const NAV_OFFSET = -76
+
+  function scrollToHash(hash: string): boolean {
+    const id = hash.replace('#', '')
+    if (!id) return false
+    const target = document.getElementById(id)
+    if (!target) return false
+    lenis.scrollTo(target, {
+      offset: NAV_OFFSET,
+      duration: 1.3,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+    })
+    return true
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = (e.target as HTMLElement)?.closest?.('a[href*="#"]') as HTMLAnchorElement | null
+    if (!link) return
+    let url: URL
+    try {
+      url = new URL(link.href, location.href)
+    } catch {
+      return
+    }
+    if (url.pathname !== location.pathname || !url.hash) return
+    if (scrollToHash(url.hash)) e.preventDefault()
+  })
+
+  // Llegada con hash en la URL (desde otra página, o F5 con #ancla): en vez
+  // de dejar que el navegador salte de golpe antes de que Lenis levante,
+  // arrancamos arriba y scrolleamos suave una vez que la página está lista.
+  if (location.hash) {
+    const hash = location.hash
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+    window.addEventListener('load', () => {
+      setTimeout(() => scrollToHash(hash), 120)
+    })
+  }
+}
+
 // ── Nav scroll behavior ──
 function initNav() {
   const nav = document.querySelector<HTMLElement>('.site-nav')
@@ -956,6 +1005,7 @@ function initPerfilesCarousel() {
 
 function init() {
   initLoader()
+  initSmoothAnchors()
   initNav()
   initMobileDrawer()
   initNavDropdown()
