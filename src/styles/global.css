@@ -1686,7 +1686,12 @@ html.no-js .reveal { opacity: 1; transform: none; }
      reemplazado" — mismo resultado visual, ruta de render más simple. */
   background: url('/img/flora-carta-tarjeta-metal-v4.png') center / cover no-repeat;
   padding: 0; border: none;
-  box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6);
+  /* Glow permanente (no solo al hover) para que la card negra se destaque
+     del fondo oscuro del módulo — teal + violeta de marca, bien visible
+     en reposo; el hover (más abajo) lo intensifica todavía más. */
+  box-shadow:
+    0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
+    0 0 50px -6px rgba(20,138,145,0.45), 0 0 80px -10px rgba(56,31,86,0.4);
 }
 .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
 
