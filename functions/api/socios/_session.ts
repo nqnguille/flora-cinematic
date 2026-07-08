@@ -47,32 +47,40 @@ export async function createSessionCookie(email: string, secret: string, hostnam
   return `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${TTL_MS / 1000}${domainAttr(hostname)}`;
 }
 
-export function clearSessionCookie(hostname: string): string {
-  // El Domain acá tiene que ser IGUAL al que se usó al crearla — si no
-  // coincide, el browser no la borra, solo crea una cookie host-only nueva
-  // (vacía) y la de floraong.ar (con el email real) queda viva.
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0${domainAttr(hostname)}`;
+// Devuelve LAS DOS variantes (host-only y Domain=floraong.ar) para borrar en
+// el mismo logout — sesiones creadas antes de que existiera domainAttr()
+// quedaron como cookie host-only; si solo mandamos el clear con Domain, esa
+// cookie vieja nunca se borra y la sesión sigue viva.
+export function clearSessionCookie(hostname: string): string[] {
+  const base = `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+  const withDomain = domainAttr(hostname);
+  return withDomain ? [base, `${base}${withDomain}`] : [base];
 }
 
 export async function readSessionEmail(cookieHeader: string | null, secret: string): Promise<string | null> {
   if (!cookieHeader) return null;
-  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-  if (!match) return null;
+  // Puede haber DOS cookies "flora_socio" a la vez (una host-only vieja +
+  // una Domain=floraong.ar nueva) — el browser manda las dos en el mismo
+  // header y la del medio no necesariamente es la válida. Probamos todas
+  // las que aparezcan, no solo la primera.
+  const matches = [...cookieHeader.matchAll(new RegExp(`${COOKIE_NAME}=([^;]+)`, 'g'))];
+  for (const match of matches) {
+    const parts = match[1].split('.');
+    if (parts.length !== 2) continue;
+    const [payloadB64, sig] = parts;
 
-  const parts = match[1].split('.');
-  if (parts.length !== 2) return null;
-  const [payloadB64, sig] = parts;
+    const expected = await hmac(secret, payloadB64);
+    if (expected !== sig) continue;
 
-  const expected = await hmac(secret, payloadB64);
-  if (expected !== sig) return null;
+    let payload: { email: string; expires: number };
+    try {
+      payload = JSON.parse(b64urlDecode(payloadB64));
+    } catch {
+      continue;
+    }
+    if (Date.now() > payload.expires) continue;
 
-  let payload: { email: string; expires: number };
-  try {
-    payload = JSON.parse(b64urlDecode(payloadB64));
-  } catch {
-    return null;
+    return payload.email;
   }
-  if (Date.now() > payload.expires) return null;
-
-  return payload.email;
+  return null;
 }
