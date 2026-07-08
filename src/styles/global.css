@@ -1621,10 +1621,21 @@ html.no-js .reveal { opacity: 1; transform: none; }
   font-family: var(--font-ui); font-weight: 700; font-size: 16px;
   color: #fff; text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  /* Glow VIP: halo violeta que respira — drop-shadow (no box-shadow, para no
+     pisar la transición de sombra del hover) y no lo clipea el overflow:hidden
+     de la card, así puede sangrar hacia afuera. */
+  animation: fl-acceso-glow 3.6s ease-in-out infinite;
 }
 .fl-acceso-portal:hover {
   transform: translateY(-2px); background: rgba(255,255,255,0.17); border-color: rgba(255,255,255,0.42);
   box-shadow: 0 28px 64px -20px rgba(0,0,0,0.6);
+}
+@keyframes fl-acceso-glow {
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(155, 110, 224, 0.4)); }
+  50% { filter: drop-shadow(0 0 34px rgba(155, 110, 224, 0.75)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-portal { animation: none; filter: drop-shadow(0 0 20px rgba(155, 110, 224, 0.5)); }
 }
 /* Look VIP: brillo que cruza la card cada tanto, como una tarjeta premium
    catching light — pausa larga, glint corto, se repite. */
