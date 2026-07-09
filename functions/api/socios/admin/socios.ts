@@ -40,15 +40,55 @@ async function guard(request: Request, env: Env) {
 async function enviarMailTemporal(env: Env, { email, name }: { email: string; name: string }): Promise<{ enviado: boolean; error?: string }> {
   if (!env.RESEND_API_KEY) return { enviado: false, error: 'RESEND_API_KEY no configurado' };
   const saludo = name ? name.split(/\s+/)[0] : '';
+  // Mismo look que el portal /socios (video de cultivo + card de vidrio
+  // violeta oscura): logo blanco, título serif con acento violeta, botón
+  // verde bosque de siempre. Tabla + estilos inline porque los clientes de
+  // mail no soportan backdrop-filter ni la mayoría del CSS del sitio.
   const html = `
-    <div style="font-family:-apple-system,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#1C1626">
-      <p style="font-size:16px;line-height:1.6">${saludo ? `Hola ${saludo},` : 'Hola,'}</p>
-      <p style="font-size:16px;line-height:1.6">Ya podés entrar a conocer la carta de Flora. Este acceso es <strong>temporal</strong>, pensado para que veas cómo trabajamos antes de dar el resto de los pasos.</p>
-      <p style="font-size:16px;line-height:1.6">Entrá con tu cuenta de Google (<strong>${email}</strong>) acá:</p>
-      <p style="margin:24px 0"><a href="https://floraong.ar/socios/" style="background:#0A503C;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700;display:inline-block">Entrar a Flora</a></p>
-      <p style="font-size:14px;line-height:1.6;color:#666">Cualquier duda, escribinos por WhatsApp — <a href="https://wa.me/5492996375723">acá</a>.</p>
-      <p style="font-size:14px;line-height:1.6;color:#666">— Equipo Flora</p>
-    </div>`;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Flora</title>
+</head>
+<body style="margin:0;padding:0;background:#130d1c;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#130d1c;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;background:#1b1326;border:1px solid #2b2140;border-radius:20px;">
+        <tr><td style="padding:40px 36px 0;text-align:center;">
+          <img src="https://floraong.ar/img/flora-logo-white.png" width="140" alt="Flora" style="display:block;margin:0 auto 22px;width:140px;height:auto;border:0;">
+          <span style="display:inline-block;background:#221c2c;border:1px solid rgba(255,255,255,0.14);border-radius:999px;padding:7px 16px;font-family:Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#d8d2e0;">Acceso temporal</span>
+        </td></tr>
+        <tr><td style="padding:20px 36px 0;text-align:center;">
+          <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.3;color:#f4f1f7;">${saludo ? `Hola ${saludo},` : 'Hola,'}<br>ya podés entrar a <em style="font-style:italic;color:#b79de6;">conocer Flora</em></h1>
+        </td></tr>
+        <tr><td style="padding:16px 36px 0;text-align:center;">
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#c9c3d4;">Ya podés ver la carta completa. Este acceso es <strong style="color:#f4f1f7;">temporal</strong>, pensado para que conozcas cómo trabajamos antes de dar el resto de los pasos.</p>
+        </td></tr>
+        <tr><td style="padding:28px 36px 0;text-align:center;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+            <tr><td style="border-radius:999px;background:#0A503C;">
+              <a href="https://floraong.ar/socios/" style="display:inline-block;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:999px;">Entrar a Flora →</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:14px 36px 0;text-align:center;">
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#8d859b;">Entrá con tu cuenta de Google: <strong style="color:#c9c3d4;">${email}</strong></p>
+        </td></tr>
+        <tr><td style="padding:32px 36px 0;">
+          <div style="height:1px;line-height:1px;background:#2b2140;">&nbsp;</div>
+        </td></tr>
+        <tr><td style="padding:20px 36px 36px;text-align:center;">
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8d859b;">¿Dudas? Escribinos por <a href="https://wa.me/5492996375723" style="color:#3cb492;text-decoration:none;font-weight:600;">WhatsApp</a><br>— Equipo Flora</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
