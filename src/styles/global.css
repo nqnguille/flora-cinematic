@@ -1733,50 +1733,62 @@ html.no-js .reveal { opacity: 1; transform: none; }
      reemplazado" — mismo resultado visual, ruta de render más simple. */
   background: url('/img/flora-carta-tarjeta-metal-v4.png') center / cover no-repeat;
   padding: 0; border: none;
-  /* Dos luces girando en órbitas opuestas alrededor de la tarjeta
-     flotando — teal "adelante" (a la misma fase que el reflejo de
-     ::after, más abajo) y violeta "atrás" (180° desfasada). Mismo
-     período (6s) que fl-acceso-card-sweep para que las dos luces y el
-     reflejo giren juntos, sincronizados. */
-  animation: fl-acceso-card-glow-orbit 6s linear infinite;
+  box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6);
+  /* .fl-acceso-card hereda overflow:hidden — hace falta para el reflejo
+     de adelante (recortado a la forma redondeada, ::after más abajo),
+     pero NO para el glow de atrás (::before), que tiene que derramarse
+     hacia afuera del borde. Cada pseudo se autoclipea con su propio
+     border-radius, así que abrir overflow acá es seguro: el fondo
+     (background:url(...)) igual respeta border-radius solo. */
+  overflow: visible;
 }
-.fl-acceso-card--photo::before { content: none; }
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
-/* Reflejo (el mismo brillo que en el resto de las cards sigue al mouse)
-   trazando una órbita circular DENTRO del borde de la tarjeta (5%–95%,
-   nunca sale del área visible) — un reflector girando los 360° sobre la
-   cara de la tarjeta, siempre visible, no una luz que se apaga al pasar
-   por afuera del borde. */
-@keyframes fl-acceso-card-sweep {
-  0%    { --mx: 50%; --my: 5%;  }
-  12.5% { --mx: 82%; --my: 18%; }
-  25%   { --mx: 95%; --my: 50%; }
-  37.5% { --mx: 82%; --my: 82%; }
-  50%   { --mx: 50%; --my: 95%; }
-  62.5% { --mx: 18%; --my: 82%; }
-  75%   { --mx: 5%;  --my: 50%; }
-  87.5% { --mx: 18%; --my: 18%; }
-  100%  { --mx: 50%; --my: 5%;  }
+
+/* Dos luces girando — SOLO transform (rotate) + opacity, nada de
+   box-shadow animado ni @property acá. La primera versión de este
+   efecto animaba box-shadow (fuerza repaint en cada frame; varios
+   navegadores lo throttlean o directamente lo saltean en modo ahorro de
+   batería / pestaña sin foco) y dependía de --mx/--my vía @property
+   para mover un radial-gradient (soporte parejo recién desde 2023-24;
+   si el motor no lo registra, no interpola el custom property y la
+   animación queda congelada en el valor inicial — sin ningún error
+   visible, exactamente el síntoma reportado: "para mí gira, para Guille
+   está fija"). rotate() sobre un conic-gradient corre en el compositor
+   desde el día uno, con soporte universal incluso en Android viejo. */
+.fl-acceso-card--photo::before {
+  content: '';
+  position: absolute; inset: -42% -36%; z-index: 0; pointer-events: none;
+  border-radius: 50%;
+  /* Dos bandas de color (teal + violeta de marca) a 180° una de otra —
+     se leen como dos focos, no uno solo — bien anchas y opacas para que
+     se noten incluso contra el fondo fotográfico del módulo (no es un
+     fondo liso oscuro donde un glow tenue ya se destaca solo). */
+  background: conic-gradient(from 0deg at 50% 50%,
+    rgba(20,138,145,0.95) 0deg, transparent 70deg,
+    transparent 160deg,
+    rgba(56,31,86,0.95) 180deg, transparent 250deg,
+    transparent 360deg);
+  filter: blur(38px);
+  opacity: 0.95;
+  animation: fl-card-orbit-back 13s linear infinite reverse;
 }
-@keyframes fl-acceso-card-glow-orbit {
-  0%    { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px -16px 70px -4px rgba(20,138,145,0.65), 0px 16px 100px -6px rgba(56,31,86,0.58); }
-  12.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 11px -11px 70px -4px rgba(20,138,145,0.65), -11px 11px 100px -6px rgba(56,31,86,0.58); }
-  25%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 16px 0px 70px -4px rgba(20,138,145,0.65), -16px 0px 100px -6px rgba(56,31,86,0.58); }
-  37.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 11px 11px 70px -4px rgba(20,138,145,0.65), -11px -11px 100px -6px rgba(56,31,86,0.58); }
-  50%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px 16px 70px -4px rgba(20,138,145,0.65), 0px -16px 100px -6px rgba(56,31,86,0.58); }
-  62.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -11px 11px 70px -4px rgba(20,138,145,0.65), 11px -11px 100px -6px rgba(56,31,86,0.58); }
-  75%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -16px 0px 70px -4px rgba(20,138,145,0.65), 16px 0px 100px -6px rgba(56,31,86,0.58); }
-  87.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -11px -11px 70px -4px rgba(20,138,145,0.65), 11px 11px 100px -6px rgba(56,31,86,0.58); }
-  100%  { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px -16px 70px -4px rgba(20,138,145,0.65), 0px 16px 100px -6px rgba(56,31,86,0.58); }
+.fl-acceso-card--photo::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  border-radius: var(--fl-radius);
+  background: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, transparent 40deg,
+    rgba(255,255,255,0.95) 90deg,
+    transparent 140deg, transparent 360deg);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+  animation: fl-card-orbit-front 8s linear infinite;
 }
+@keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fl-card-orbit-back  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo {
-    animation: none;
-    box-shadow:
-      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
-      0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
-  }
+  .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
@@ -1809,24 +1821,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
     inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
 }
 .fl-acceso-card:hover::after, .fl-acceso-card:focus-visible::after { opacity: 1; }
-
-/* El reflejo que en el resto de las cards solo aparece al hover, acá
-   (la card con foto) NO depende de hover: barre solo, en loop, para que
-   el efecto de "luz moviéndose sobre metal" se vea sin que nadie toque
-   la tarjeta. Va después de la regla base para ganarle en la cascada
-   (misma especificidad, orden de aparición decide). El soft-light +
-   40% blanco de la versión base es casi invisible sobre una foto de
-   metal oscuro — acá lo reemplazamos por un glint más chico y opaco en
-   screen, que sí se nota como brillo continuo cruzando la superficie. */
-.fl-acceso-card--photo::after {
-  background: radial-gradient(190px 190px at var(--mx, 22%) var(--my, 8%), rgba(255,255,255,0.9), rgba(255,255,255,0.2) 45%, transparent 72%);
-  mix-blend-mode: screen;
-  opacity: 0.85;
-  animation: fl-acceso-card-sweep 6s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo::after { animation: none; opacity: 0.4; }
-}
 
 /* Anillo de foco en capas (más visible que un outline simple, sigue siendo
    100% accesible con teclado) */
