@@ -55,6 +55,7 @@ async function requireSocio(request: Request, env: Env): Promise<{ email: string
   let rec: any = {};
   try { rec = JSON.parse(raw); } catch { rec = {}; }
   if (typeof rec !== 'object' || rec === null) rec = {};
+  if (rec.temporal && rec.tempExpiraEn && Date.now() > new Date(rec.tempExpiraEn).getTime()) return null;
   return { email, rec };
 }
 
@@ -183,6 +184,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const socio = await requireSocio(request, env);
   if (!socio) return Response.json({ ok: false, error: 'no autenticado' }, { status: 401 });
+
+  // Acceso de prueba: puede armar el carrito y ver precios, pero la reserva
+  // real (que le llega a Sofi por WhatsApp) queda para pacientes vinculados.
+  if (socio.rec.temporal) {
+    return Response.json({
+      ok: false,
+      error: 'Para reservar necesitás ser paciente vinculado a Flora. Escribinos por WhatsApp y te ayudamos a completar el proceso.',
+    }, { status: 403 });
+  }
 
   let body: any;
   try { body = await request.json(); } catch {
