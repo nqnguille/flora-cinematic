@@ -88,6 +88,10 @@ const {
             <span>Celular (WhatsApp)</span>
             <input type="tel" id="sl-sol-phone" name="phone" autocomplete="tel" placeholder="Tu número de WhatsApp" required />
           </label>
+          <label class="sl-solicitud-field" id="sl-sol-file-field" hidden>
+            <span>Foto o PDF de tu REPROCANN vigente <em>(opcional, agiliza la aprobación)</em></span>
+            <input type="file" id="sl-sol-file" name="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
+          </label>
           <input type="text" id="sl-sol-website" name="website" class="sl-solicitud-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <p id="sl-solicitud-msg" class="sl-solicitud-msg" hidden></p>
           <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Solicitar acceso</button>
@@ -126,6 +130,8 @@ const {
         const msg = document.getElementById('sl-solicitud-msg') as HTMLElement
         const submitBtn = document.getElementById('sl-solicitud-submit') as HTMLButtonElement
         const titleEl = document.getElementById('sl-solicitud-title') as HTMLElement
+        const fileField = document.getElementById('sl-sol-file-field') as HTMLElement
+        const fileInput = document.getElementById('sl-sol-file') as HTMLInputElement
         let intent: SlIntent = 'acceso'
 
         function open(next: SlIntent) {
@@ -133,6 +139,10 @@ const {
           const copy = SL_COPY[intent]
           titleEl.textContent = copy.title
           submitBtn.textContent = copy.submit
+          // El adjunto de REPROCANN solo tiene sentido si ya dice tenerlo —
+          // quien pide la entrevista todavía no tramitó nada que adjuntar.
+          fileField.hidden = intent !== 'acceso'
+          fileInput.value = ''
           slModal!.hidden = false
           form.hidden = false
           okBlock.hidden = true
@@ -171,6 +181,17 @@ const {
             })
             const result = await res.json().catch(() => ({}))
             if (res.ok && result.ok) {
+              // Paso 2, best-effort: si adjuntó archivo, subirlo aparte no
+              // bloquea el "listo" — la solicitud ya quedó guardada igual.
+              const file = fileInput.files?.[0]
+              if (file) {
+                try {
+                  const fd = new FormData()
+                  fd.append('email', String(data.get('email') || ''))
+                  fd.append('file', file)
+                  await fetch('/api/socios/solicitud-adjunto', { method: 'POST', body: fd })
+                } catch { /* no afecta el éxito de la solicitud */ }
+              }
               okMsg.textContent = SL_COPY[intent].ok
               form.hidden = true
               okBlock.hidden = false
@@ -315,7 +336,13 @@ const {
   .sl-solicitud-form { display: flex; flex-direction: column; gap: 0.9rem; }
   .sl-solicitud-form[hidden] { display: none; }
   .sl-solicitud-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; color: var(--sl-muted); }
-  .sl-solicitud-field input {
+  .sl-solicitud-field em { font-style: normal; opacity: 0.75; }
+  .sl-solicitud-field input[type="file"] {
+    font-size: 0.78rem; color: var(--sl-muted);
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(244, 241, 247, 0.18);
+    border-radius: 10px; padding: 0.55em 0.7em;
+  }
+  .sl-solicitud-field input:not([type="file"]) {
     font: inherit; font-size: 0.92rem; color: var(--sl-cream); background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(244, 241, 247, 0.18); border-radius: 10px; padding: 0.65em 0.8em;
   }

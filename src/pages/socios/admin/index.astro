@@ -1260,6 +1260,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const phoneLine = i.phone
         ? `<div class="pa-socio-meta">📱 <a href="https://wa.me/${esc(i.phone.replace(/\D/g, ''))}" target="_blank" rel="noopener noreferrer">${esc(i.phone)}</a></div>`
         : ''
+      const adjuntoLine = i.tieneAdjunto
+        ? `<div class="pa-socio-meta">📎 <a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(i.email)}" target="_blank" rel="noopener noreferrer">Ver REPROCANN adjunto</a></div>`
+        : ''
       return `
         <article class="pa-socio pa-intento">
           ${ava}
@@ -1270,6 +1273,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             </div>
             <div class="pa-socio-email">${esc(i.email)}</div>
             ${phoneLine}
+            ${adjuntoLine}
             <div class="pa-socio-meta">${fechaLine}</div>
           </div>
           <div class="pa-intento-actions">
