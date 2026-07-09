@@ -1438,10 +1438,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       render()
       loadPrecios()
-      // Aterrizar donde está el trabajo del día: Reservas si hay activas
+      // Aterrizar donde está el trabajo del día: Reservas si hay activas —
+      // salvo que se llegue con ?ir=socios (link directo del aviso de
+      // WhatsApp de una solicitud nueva), que siempre manda.
       await loadPedidos()
-      const activas = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
-      irATab(activas > 0 ? 'pedidos' : 'geneticas')
+      const irDirecto = new URLSearchParams(location.search).get('ir')
+      if (irDirecto === 'socios' && data.isSuperAdmin) {
+        irATab('socios')
+      } else {
+        const activas = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
+        irATab(activas > 0 ? 'pedidos' : 'geneticas')
+      }
       return true
     }
 
