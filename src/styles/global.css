@@ -1113,11 +1113,13 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   .welcome-cue-line { display: none; }
 }
 
-/* Omitir introducción — debajo del nav fijo (60px), no compite con "Acceso socios" */
+/* Omitir introducción — centrado arriba, debajo del nav fijo (60px) y de
+   los dots de progreso, en desktop y mobile por igual */
 .welcome-skip {
   position: absolute;
-  top: calc(60px + 1rem + env(safe-area-inset-top, 0px));
-  right: calc(1.4rem + env(safe-area-inset-right, 0px));
+  left: 50%;
+  top: calc(60px + 2.15rem + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
   z-index: 4;
   font-family: var(--font-ui);
   font-size: 0.72rem;
@@ -1145,7 +1147,7 @@ html.no-js .welcome-skip { display: none; }
 .welcome-dots {
   position: absolute;
   left: 50%;
-  top: calc(60px + 1.3rem + env(safe-area-inset-top, 0px));
+  top: calc(60px + 1rem + env(safe-area-inset-top, 0px));
   transform: translateX(-50%);
   z-index: 4;
   display: flex;
