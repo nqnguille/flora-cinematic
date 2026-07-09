@@ -1688,7 +1688,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
      cascada CSS lo tapaba, y por eso mi testing con mouse-hover
      automatizado en Chromium desktop nunca lo reproducía). Es
      exactamente el "cuadrado" que se reportó viendo en mobile. */
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent !important;
 
   position: relative; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px;
@@ -1773,37 +1773,41 @@ html.no-js .reveal { opacity: 1; transform: none; }
    visible, exactamente el síntoma reportado: "para mí gira, para Guille
    está fija"). rotate() sobre un conic-gradient corre en el compositor
    desde el día uno, con soporte universal incluso en Android viejo. */
-/* Nuevo intento, más simple: un solo rayo lineal (no un blob), con el
-   eje pasando por el centro exacto de la tarjeta — la banda del
-   linear-gradient está centrada en el propio ::after (inset:0, mismo
-   tamaño que la card), así que "rotate()" gira ese eje central sin
-   necesidad de compensar ninguna posición descentrada. Sin
-   conic-gradient (bordes duros) ni radial-gradient offset (quedaba como
-   blob, no como rayo) — un linear-gradient ya se desvanece solo a los
-   costados de la banda. */
-.fl-acceso-card--photo::before { content: none; }
+/* Vuelta al "foco de luz" (dos blobs radiales) — el rayo lineal se
+   probó a pedido pero se vio peor, así que se revierte a la última
+   versión buena: un foco blanco "de atrás" (::before, blur, contenido
+   dentro del borde) + un reflejo blanco "de adelante" (::after, screen
+   blend), cada uno girando en su propio eje. */
+.fl-acceso-card--photo::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  box-shadow: none;
+  border-radius: var(--fl-radius);
+  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 40%);
+  filter: blur(18px);
+  opacity: 1;
+  animation: fl-card-orbit-back 13s linear infinite reverse;
+}
 .fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
   border-radius: var(--fl-radius);
-  background: linear-gradient(90deg,
-    transparent 0%, transparent 44%,
-    rgba(255,255,255,0.95) 50%,
-    transparent 56%, transparent 100%);
+  background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
   mix-blend-mode: screen;
-  opacity: 1;
-  transform-origin: center center;
-  animation: fl-card-beam-rotate 8s linear infinite;
+  opacity: 0.95;
+  animation: fl-card-orbit-front 8s linear infinite;
 }
-@keyframes fl-card-beam-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-/* Al hover/focus, el giro se pausa — quieto mientras se interactúa,
-   sigue girando solo en reposo. */
-.fl-acceso-card--photo:hover::after, .fl-acceso-card--photo:focus-visible::after {
+@keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fl-card-orbit-back  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* Al hover/focus, el giro de las luces se pausa — quieto mientras se
+   interactúa, sigue girando solo en reposo. */
+.fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
+.fl-acceso-card--photo:focus-visible::before, .fl-acceso-card--photo:focus-visible::after {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo::after { animation: none; }
+  .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
@@ -1846,23 +1850,25 @@ html.no-js .reveal { opacity: 1; transform: none; }
     0 20px 42px -20px rgba(0,0,0,0.7), 0 3px 0 rgba(0,0,0,0.5);
 }
 
-/* Con el efecto de profundidad ya permanente (en la regla base de
-   .fl-acceso-card--photo, arriba), el hover/focus de la card genérica
-   (transform + box-shadow distintos, más el anillo de foco de 6px
-   sólido de la regla anterior) no debe agregar NADA nuevo acá — eso era
-   lo que se veía como "un cuadrado" apareciendo de golpe al pasar el
-   mouse. Va DESPUÉS de esas dos reglas en el archivo para ganarles en
-   la cascada (misma especificidad, orden de aparición decide).
-   Repetir los mismos valores en vez de sacarlos anula el efecto visual
-   sin sacarle el :focus-visible al teclado (el card sigue siendo
-   tabbable, solo que ya no dibuja un anillo extra). */
+/* Arranca de cero: CERO efectos de hover/focus para esta card. Ya se
+   probó "repetir los mismos valores" (sin !important) dos veces y el
+   cuadrado seguía apareciendo — así que ahora esto usa !important en
+   TODO lo que cualquier regla de la card genérica (.fl-acceso-card:hover,
+   .fl-acceso-card:focus-visible, el anillo de foco de 6px sólido, lo que
+   sea) pudiera llegar a cambiar, para que absolutamente nada pueda
+   pisarlo por especificidad. El :focus-visible se mantiene funcional
+   para teclado (el outline queda en none, accesible igual, solo sin
+   dibujar nada extra). */
 .fl-acceso-card--photo:hover,
 .fl-acceso-card--photo:focus-visible {
-  outline: none; transform: translateY(-4px) scale(1.015); border-color: transparent;
+  outline: none !important;
+  transform: translateY(-4px) scale(1.015) !important;
+  border-color: transparent !important;
+  filter: none !important;
   box-shadow:
     0 34px 64px -18px rgba(0,0,0,0.9), 0 4px 0 rgba(0,0,0,0.6),
     inset 1.5px 0 0 rgba(200,220,255,0.24), inset -1px 0 0 rgba(0,0,0,0.6),
-    inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
+    inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
