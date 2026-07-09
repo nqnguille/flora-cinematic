@@ -76,8 +76,8 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
     <div id="sl-solicitud-modal" class="sl-solicitud-modal" hidden data-lenis-prevent>
       <div class="sl-solicitud-card" role="dialog" aria-modal="true" aria-labelledby="sl-solicitud-title">
         <button type="button" id="sl-solicitud-close" class="sl-solicitud-x" aria-label="Cerrar">✕</button>
-        <h2 id="sl-solicitud-title" class="sl-solicitud-title">Dejanos tus datos</h2>
-        <p class="sl-solicitud-sub">Te contactamos para coordinar tu ingreso al club.</p>
+        <h2 id="sl-solicitud-title" class="sl-solicitud-title">Solicitar acceso</h2>
+        <p class="sl-solicitud-sub">Dejanos tus datos y te contactamos para coordinar tu ingreso al club.</p>
         <form id="sl-solicitud-form" class="sl-solicitud-form">
           <label class="sl-solicitud-field">
             <span>Nombre y apellido</span>
@@ -93,10 +93,10 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
           </label>
           <input type="text" id="sl-sol-website" name="website" class="sl-solicitud-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <p id="sl-solicitud-msg" class="sl-solicitud-msg" hidden></p>
-          <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Enviar</button>
+          <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Solicitar acceso</button>
         </form>
         <div id="sl-solicitud-ok" class="sl-solicitud-ok" hidden>
-          <p>¡Listo! Ya le avisamos al equipo — te contactamos por WhatsApp a la brevedad.</p>
+          <p>¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.</p>
           <button type="button" id="sl-solicitud-ok-close" class="sl-solicitud-submit">Cerrar</button>
         </div>
       </div>
@@ -159,7 +159,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
             msg.hidden = false
           } finally {
             submitBtn.disabled = false
-            submitBtn.textContent = 'Enviar'
+            submitBtn.textContent = 'Solicitar acceso'
           }
         })
       }
