@@ -1686,20 +1686,49 @@ html.no-js .reveal { opacity: 1; transform: none; }
      reemplazado" — mismo resultado visual, ruta de render más simple. */
   background: url('/img/flora-carta-tarjeta-metal-v4.png') center / cover no-repeat;
   padding: 0; border: none;
-  /* Glow permanente, ya a la intensidad de hover (no el valor tenue de
-     reposo) — a pedido explícito: "quiero el efecto de iluminación
-     similar al que tiene cuando le pasás el mouse", sin depender del
-     hover. Reemplaza el loop que respira (probado antes, no era esto). */
-  box-shadow:
-    0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
-    0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
+  /* Dos luces girando en órbitas opuestas alrededor de la tarjeta
+     flotando — teal "adelante" (a la misma fase que el reflejo de
+     ::after, más abajo) y violeta "atrás" (180° desfasada). Mismo
+     período (6s) que fl-acceso-card-sweep para que las dos luces y el
+     reflejo giren juntos, sincronizados. */
+  animation: fl-acceso-card-glow-orbit 6s linear infinite;
 }
 .fl-acceso-card--photo::before { content: none; }
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
+/* Reflejo (el mismo brillo que en el resto de las cards sigue al mouse)
+   trazando una órbita elíptica alrededor de la tarjeta — con overshoot
+   fuera del borde (mx/my salen de 0–100%) para que se sienta como una
+   luz circulando en el aire, no un brillo que solo se mueve adentro. */
 @keyframes fl-acceso-card-sweep {
-  0%, 100% { --mx: 10%; --my: 0%; }
-  50% { --mx: 90%; --my: 60%; }
+  0%    { --mx: 50%;  --my: -10%; }
+  12.5% { --mx: 85%;  --my: -3%;  }
+  25%   { --mx: 110%; --my: 50%;  }
+  37.5% { --mx: 85%;  --my: 103%; }
+  50%   { --mx: 50%;  --my: 110%; }
+  62.5% { --mx: 15%;  --my: 103%; }
+  75%   { --mx: -10%; --my: 50%;  }
+  87.5% { --mx: 15%;  --my: -3%;  }
+  100%  { --mx: 50%;  --my: -10%; }
+}
+@keyframes fl-acceso-card-glow-orbit {
+  0%    { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px -16px 70px -4px rgba(20,138,145,0.65), 0px 16px 100px -6px rgba(56,31,86,0.58); }
+  12.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 11px -11px 70px -4px rgba(20,138,145,0.65), -11px 11px 100px -6px rgba(56,31,86,0.58); }
+  25%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 16px 0px 70px -4px rgba(20,138,145,0.65), -16px 0px 100px -6px rgba(56,31,86,0.58); }
+  37.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 11px 11px 70px -4px rgba(20,138,145,0.65), -11px -11px 100px -6px rgba(56,31,86,0.58); }
+  50%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px 16px 70px -4px rgba(20,138,145,0.65), 0px -16px 100px -6px rgba(56,31,86,0.58); }
+  62.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -11px 11px 70px -4px rgba(20,138,145,0.65), 11px -11px 100px -6px rgba(56,31,86,0.58); }
+  75%   { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -16px 0px 70px -4px rgba(20,138,145,0.65), 16px 0px 100px -6px rgba(56,31,86,0.58); }
+  87.5% { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), -11px -11px 70px -4px rgba(20,138,145,0.65), 11px 11px 100px -6px rgba(56,31,86,0.58); }
+  100%  { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px -16px 70px -4px rgba(20,138,145,0.65), 0px 16px 100px -6px rgba(56,31,86,0.58); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-card--photo {
+    animation: none;
+    box-shadow:
+      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
+      0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
+  }
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
@@ -1738,7 +1767,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
    el efecto de "luz moviéndose sobre metal" se vea sin que nadie toque
    la tarjeta. Va después de la regla base para ganarle en la cascada
    (misma especificidad, orden de aparición decide). */
-.fl-acceso-card--photo::after { opacity: 1; animation: fl-acceso-card-sweep 5s ease-in-out infinite; }
+.fl-acceso-card--photo::after { opacity: 1; animation: fl-acceso-card-sweep 6s linear infinite; }
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card--photo::after { animation: none; opacity: 0.6; }
 }
