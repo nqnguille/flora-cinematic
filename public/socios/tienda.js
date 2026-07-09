@@ -43,9 +43,7 @@
           </section>
           <p class="td-cart-vacio" id="td-cart-vacio">Tu carrito está vacío. Sumá productos con los botones <b>+</b> de cada ficha, o abrí la carta de flores.</p>
           <p class="td-cart-msg" id="td-cart-msg" hidden></p>
-          <a class="fl-acceso-card fl-acceso-card--photo" href="/socios/carta/" aria-label="Abrir la carta de flores">
-            <img class="fl-acceso-card-photo" src="/img/flora-carta-tarjeta-metal-v3.png" alt="" width="900" height="584" loading="lazy" />
-          </a>
+          <a class="fl-acceso-card fl-acceso-card--photo" href="/socios/carta/" aria-label="Abrir la carta de flores"></a>
           <p class="td-cart-hint">Es una <strong>reserva</strong>: la retirás y abonás en el club. Por el sitio no se cobra nada.</p>
           <div class="td-cart-foot">
             <a class="td-cart-cuenta" href="/socios/cuenta/">Mi cuenta</a>
