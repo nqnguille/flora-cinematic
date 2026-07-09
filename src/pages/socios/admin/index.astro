@@ -138,6 +138,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
     </div>
 
+    <!-- Reasignar un pedido de la cuenta compartida (living del club) al socio real -->
+    <div id="pa-reasignar" class="pa-confirm" hidden>
+      <div class="pa-confirm-card pa-reasignar-card" role="dialog" aria-modal="true" aria-labelledby="pa-reasignar-title">
+        <h2 id="pa-reasignar-title" class="pa-confirm-txt">¿Quién se lo llevó?</h2>
+        <p class="pa-help">Buscá al socio que retiró este pedido — el pedido pasa a su cuenta.</p>
+        <input id="pa-reasignar-buscar" class="pa-input" type="search" placeholder="Nombre o email…" autocomplete="off" />
+        <div id="pa-reasignar-resultados" class="pa-reasignar-resultados"></div>
+        <div class="pa-confirm-actions">
+          <button id="pa-reasignar-skip" class="pa-btn pa-btn-ghost" type="button" hidden>Dejar en la cuenta del club</button>
+          <button id="pa-reasignar-cerrar" class="pa-btn pa-btn-ghost" type="button">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Confirmación de marca (reemplaza el confirm() nativo) -->
     <div id="pa-confirm" class="pa-confirm" hidden>
       <div class="pa-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="pa-confirm-txt">
@@ -722,6 +736,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }, 60000)
 
     /* ── Pedidos ── */
+    // Cuenta que se usa en el living del club: varios socios se sientan ahí y
+    // reservan con ESTA sesión, no la propia — por eso "Marcar entregada"
+    // ofrece asignar el pedido al socio real que se lo llevó.
+    const CUENTA_COMPARTIDA = 'floraclubdecultivo@gmail.com'
+    function esCuentaCompartida(p) { return p.email === CUENTA_COMPARTIDA || !!p.reasignadoDe }
     let PEDIDOS = []
     let pedFilter = 'activos'
     const PED_BADGE = {
@@ -735,23 +754,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         .map((i) => `<li>${esc(`${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}`)}${i.formato === 'preroll' ? ' <span class="pa-ped-fmt">preroll</span>' : ''}</li>`)
         .join('')
     }
-    // Una sola acción primaria grande (triage con el pulgar); Cancelar vive
-    // escondida en el menú ⋯ para que nadie cancele sin querer.
+    // Una sola acción primaria grande (triage con el pulgar); Cancelar y
+    // Asignar a socio viven escondidas en el menú ⋯.
     function pedidoAcciones(p) {
-      const menu = `
-        <div class="pa-ped-menu">
-          <button type="button" class="pa-ped-menubtn" data-menu="${esc(p.id)}" aria-label="Más acciones">⋯</button>
-          <div class="pa-ped-menupanel" data-menupanel="${esc(p.id)}" hidden>
-            <button type="button" class="pa-btn pa-btn-danger pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar reserva</button>
-          </div>
-        </div>`
+      const compartida = esCuentaCompartida(p)
+      const reasignarBtn = compartida
+        ? `<button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-ped-reasignar" data-id="${esc(p.id)}">${p.reasignadoDe ? '↺ Reasignar de nuevo' : '👤 Asignar a socio'}</button>`
+        : ''
+      const esFinal = p.estado === 'entregado' || p.estado === 'cancelado'
+      const cancelBtn = esFinal ? '' : `<button type="button" class="pa-btn pa-btn-danger pa-btn-slim pa-ped-action" data-id="${esc(p.id)}" data-estado="cancelado">Cancelar reserva</button>`
+      const menuBody = reasignarBtn + cancelBtn
+      const menu = menuBody
+        ? `<div class="pa-ped-menu">
+            <button type="button" class="pa-ped-menubtn" data-menu="${esc(p.id)}" aria-label="Más acciones">⋯</button>
+            <div class="pa-ped-menupanel" data-menupanel="${esc(p.id)}" hidden>${menuBody}</div>
+          </div>`
+        : ''
       if (p.estado === 'pendiente') {
         return `<button type="button" class="pa-btn pa-btn-primary pa-ped-action pa-ped-primary" data-id="${esc(p.id)}" data-estado="listo">Marcar lista</button>${menu}`
       }
       if (p.estado === 'listo') {
         return `<button type="button" class="pa-btn pa-btn-primary pa-ped-action pa-ped-primary" data-id="${esc(p.id)}" data-estado="entregado">Marcar entregada</button>${menu}`
       }
-      return ''
+      return menu
     }
     function pedidoRow(p) {
       const [label, cls] = PED_BADGE[p.estado] || [p.estado, '']
@@ -764,6 +789,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               <span class="pa-socio-meta">${esc(fmtFecha(p.creado))}</span>
             </div>
             <div class="pa-socio-email">${esc(p.email)}</div>
+            ${p.reasignadoDe ? `<div class="pa-socio-meta pa-ped-reasignado">Reasignado — pedido original de ${esc(p.reasignadoDe)}</div>` : ''}
             <ul class="pa-ped-items">${pedidoItems(p)}</ul>
             ${p.nota ? `<div class="pa-socio-meta">Nota: ${esc(p.nota)}</div>` : ''}
           </div>
@@ -843,33 +869,111 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (!btn) return
       const estado = btn.dataset.estado
       if (estado === 'cancelado' && !(await paConfirm('¿Cancelar esta reserva? El socio la va a ver como cancelada.'))) return
+
+      // Al entregar un pedido de la cuenta compartida del living, ofrecemos
+      // asignarlo al socio real antes de cerrar el estado.
+      if (estado === 'entregado') {
+        const pedido = PEDIDOS.find((p) => p.id === btn.dataset.id)
+        if (pedido && esCuentaCompartida(pedido)) {
+          abrirReasignar(btn.dataset.id, 'entregado')
+          return
+        }
+      }
+      btn.disabled = true
+      await marcarPedido({ id: btn.dataset.id, estado }, btn)
+    })
+
+    // Llama a la API de pedidos (cambio de estado y/o reasignación) y refleja
+    // el resultado en el cartel de estado — usado tanto por el click directo
+    // como por el modal de reasignar.
+    async function marcarPedido(body, btn) {
       const pedStatus = document.getElementById('pa-ped-status')
       pedStatus.classList.remove('is-ok', 'is-err')
-      pedStatus.textContent = ''
-      btn.disabled = true
+      pedStatus.textContent = body.reasignarA ? 'Asignando…' : ''
       try {
         const res = await fetch('/api/socios/admin/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id: btn.dataset.id, estado }),
+          body: JSON.stringify(body),
         })
         const data = await res.json().catch(() => ({}))
         if (res.ok && data.ok) {
+          pedStatus.textContent = ''
           await loadPedidos()
         } else {
-          btn.disabled = false
+          if (btn) btn.disabled = false
           pedStatus.classList.add('is-err')
           pedStatus.textContent = data.error || `No se pudo actualizar (${res.status}) — probá de nuevo.`
           if (data.conflict) await loadPedidos() // trae el estado real, aunque el click no haya aplicado
           setTimeout(() => { pedStatus.textContent = ''; pedStatus.classList.remove('is-err') }, 6000)
         }
       } catch {
-        btn.disabled = false
+        if (btn) btn.disabled = false
         pedStatus.classList.add('is-err')
         pedStatus.textContent = 'Error de red — probá de nuevo.'
         setTimeout(() => { pedStatus.textContent = ''; pedStatus.classList.remove('is-err') }, 6000)
       }
+    }
+
+    /* ── Reasignar pedido (cuenta compartida → socio real) ── */
+    let reasignarCtx = null // { id, estadoAlConfirmar }
+    async function abrirReasignar(pedidoId, estadoAlConfirmar) {
+      reasignarCtx = { id: pedidoId, estadoAlConfirmar: estadoAlConfirmar || null }
+      document.getElementById('pa-reasignar-buscar').value = ''
+      document.getElementById('pa-reasignar-resultados').innerHTML = ''
+      document.getElementById('pa-reasignar-skip').hidden = !estadoAlConfirmar
+      document.getElementById('pa-reasignar').hidden = false
+      document.getElementById('pa-reasignar-buscar').focus()
+      if (!SOCIOS_LIST.length) await loadSocios() // primera vez en la sesión: trae la lista para buscar
+    }
+    function cerrarReasignar() {
+      document.getElementById('pa-reasignar').hidden = true
+      reasignarCtx = null
+    }
+    function pintarReasignarResultados(q) {
+      const cont = document.getElementById('pa-reasignar-resultados')
+      const term = q.trim().toLowerCase()
+      if (!term) { cont.innerHTML = ''; return }
+      const matches = SOCIOS_LIST
+        .filter((s) => s.email !== CUENTA_COMPARTIDA)
+        .filter((s) => s.email.toLowerCase().includes(term) || (s.name || '').toLowerCase().includes(term))
+        .slice(0, 8)
+      cont.innerHTML = matches.length
+        ? matches.map((s) => `
+            <button type="button" class="pa-reasignar-opt" data-email="${esc(s.email)}">
+              <span>${esc(s.name || s.email)}</span>
+              ${s.name ? `<span class="pa-reasignar-email">${esc(s.email)}</span>` : ''}
+            </button>`).join('')
+        : '<p class="pa-empty">Sin coincidencias.</p>'
+    }
+    document.getElementById('pa-reasignar-buscar').addEventListener('input', (e) => pintarReasignarResultados(e.target.value))
+    document.getElementById('pa-reasignar').addEventListener('click', async (e) => {
+      const opt = e.target.closest('.pa-reasignar-opt')
+      if (opt) {
+        const ctx = reasignarCtx
+        cerrarReasignar()
+        const body = { id: ctx.id, reasignarA: opt.getAttribute('data-email') }
+        if (ctx.estadoAlConfirmar) body.estado = ctx.estadoAlConfirmar
+        await marcarPedido(body)
+        return
+      }
+      if (e.target.id === 'pa-reasignar-skip') {
+        const ctx = reasignarCtx
+        cerrarReasignar()
+        if (ctx?.estadoAlConfirmar) await marcarPedido({ id: ctx.id, estado: ctx.estadoAlConfirmar })
+        return
+      }
+      if (e.target.id === 'pa-reasignar-cerrar' || e.target.id === 'pa-reasignar') cerrarReasignar()
+    })
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('pa-reasignar').hidden) cerrarReasignar()
+    })
+    document.addEventListener('click', (e) => {
+      const rbtn = e.target.closest && e.target.closest('.pa-ped-reasignar')
+      if (!rbtn) return
+      document.querySelectorAll('.pa-ped-menupanel').forEach((p) => { p.hidden = true })
+      abrirReasignar(rbtn.getAttribute('data-id'), null)
     })
 
     /* ── Socios ── */
@@ -1841,6 +1945,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pa-confirm-txt { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; line-height: 1.35; color: var(--pa-cream); margin: 0 0 1.2rem; }
   .pa-confirm-actions { display: flex; justify-content: flex-end; gap: 0.7rem; }
+
+  /* ── Reasignar pedido a un socio ── */
+  .pa-reasignar-card .pa-help { margin: -0.6rem 0 0.9rem; }
+  .pa-reasignar-card .pa-input { width: 100%; margin-bottom: 0.6rem; }
+  .pa-reasignar-resultados { display: flex; flex-direction: column; gap: 0.35rem; max-height: 42vh; overflow-y: auto; margin-bottom: 0.9rem; }
+  .pa-reasignar-opt {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;
+    width: 100%; text-align: left; padding: 0.55rem 0.75rem; border-radius: 10px;
+    border: 1px solid var(--pa-line); background: rgba(255, 255, 255, 0.02);
+    color: var(--pa-cream); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  }
+  .pa-reasignar-opt:hover, .pa-reasignar-opt:focus-visible { border-color: var(--pa-violet); background: rgba(183, 157, 230, 0.1); }
+  .pa-reasignar-email { font-size: 0.78rem; font-weight: 500; color: var(--pa-muted); }
+  .pa-ped-reasignado { color: var(--pa-violet); }
 
   /* ── Foco de marca + táctil en todo el panel ── */
   .pa-tab:focus-visible, .pa-stat:focus-visible, .pa-avail:focus-visible,
