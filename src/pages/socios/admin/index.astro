@@ -1015,6 +1015,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return { total: rs.length, activa }
     }
 
+    // Acceso temporal: sin tempExpiraEn todavía no usó el primer login (el
+    // conteo de 24h arranca ahí, no en la aprobación — ver login.ts).
+    function tempBadge(s) {
+      if (!s.temporal) return ''
+      if (!s.tempExpiraEn) return `<span class="pa-socio-badge is-warn" title="El conteo de 24hs arranca en su primer login">Prueba · sin usar</span>`
+      const ms = new Date(s.tempExpiraEn).getTime() - Date.now()
+      if (ms <= 0) return `<span class="pa-socio-badge" title="Venció ${esc(fmtFecha(s.tempExpiraEn))}">Prueba vencida</span>`
+      const h = Math.max(1, Math.round(ms / 3600000))
+      return `<span class="pa-socio-badge is-warn" title="Vence ${esc(fmtFecha(s.tempExpiraEn))}">Prueba · vence en ${h}h</span>`
+    }
     function socioRow(s) {
       const ava = `<span class="pa-socio-ava"><span class="pa-socio-ini">${esc(initials(s.name || s.email))}</span>${s.picture ? `<img src="${esc(s.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
       const estado = s.lastLogin
@@ -1050,6 +1060,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <div class="pa-socio-top">
               <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
               ${estado}
+              ${tempBadge(s)}
               ${chipRes}
               ${invitar}
             </div>
@@ -1177,13 +1188,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       else socioSort = { key, dir: -1 }
       renderSocios()
     })
-    async function saveSocio(email, nota) {
+    async function saveSocio(email, nota, extra) {
       try {
         const res = await fetch('/api/socios/admin/socios', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ email, nota }),
+          body: JSON.stringify({ email, nota, ...(extra || {}) }),
         })
         const data = await res.json().catch(() => ({}))
         // ok real de negocio, no solo el status HTTP: el server ahora confirma
@@ -1263,6 +1274,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           </div>
           <div class="pa-intento-actions">
             <button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-intento-add" data-email="${esc(i.email)}">+ Agregar como socio</button>
+            <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-intento-temporal" data-email="${esc(i.email)}" data-name="${esc(i.name || '')}">Aprobar temporal (24h)</button>
             <button type="button" class="pa-socio-del pa-intento-del" data-email="${esc(i.email)}" data-tipo="${esc(i.tipo)}" aria-label="Descartar">×</button>
           </div>
         </article>`
@@ -1321,6 +1333,37 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         status.classList.remove('is-ok')
         status.classList.add('is-err')
         status.textContent = `Error al agregar${error ? ': ' + error : ''} — probá de nuevo`
+        setTimeout(() => { status.textContent = ''; status.classList.remove('is-err') }, 6000)
+      }
+    })
+    document.addEventListener('click', async (e) => {
+      const temp = e.target.closest && e.target.closest('.pa-intento-temporal')
+      if (!temp) return
+      const email = temp.getAttribute('data-email')
+      const name = temp.getAttribute('data-name') || ''
+      const item = INTENTOS_LIST.find((i) => i.email === email)
+      const endpoint = item?.tipo === 'formulario' ? SOLICITUD_ENDPOINT.formulario : SOLICITUD_ENDPOINT.intento
+      if (!(await paConfirm(`¿Darle a ${name || email} acceso temporal de 24hs a la carta? Le llega un mail avisándole que ya puede entrar.`))) return
+      temp.disabled = true
+      temp.textContent = 'Aprobando…'
+      const nota = 'Acceso temporal (24h desde el primer login)'
+      const { ok, error } = await saveSocio(email, nota, { name, temporal: true })
+      if (ok) {
+        await fetch(endpoint, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email }),
+        })
+        loadSocios()
+        loadIntentos()
+      } else {
+        temp.disabled = false
+        temp.textContent = 'Aprobar temporal (24h)'
+        const status = document.getElementById('pa-socio-status')
+        status.classList.remove('is-ok')
+        status.classList.add('is-err')
+        status.textContent = `Error al aprobar${error ? ': ' + error : ''} — probá de nuevo`
         setTimeout(() => { status.textContent = ''; status.classList.remove('is-err') }, 6000)
       }
     })
