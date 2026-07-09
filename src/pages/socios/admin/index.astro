@@ -1081,9 +1081,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           credentials: 'include',
           body: JSON.stringify({ email, nota }),
         })
-        return res.ok
+        const data = await res.json().catch(() => ({}))
+        // ok real de negocio, no solo el status HTTP: el server ahora confirma
+        // con un read-back que el alta pegó de verdad antes de decir que sí.
+        return { ok: res.ok && data.ok !== false, error: data.error || '' }
       } catch {
-        return false // sin red: que el caller muestre el error, nunca silencio
+        return { ok: false, error: 'sin conexión' } // sin red: que el caller muestre el error, nunca silencio
       }
     }
     document.getElementById('pa-socio-form').addEventListener('submit', async (e) => {
@@ -1093,20 +1096,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const status = document.getElementById('pa-socio-status')
       const email = emailEl.value.trim().toLowerCase()
       if (!email) return
+      status.classList.remove('is-ok', 'is-err')
       status.textContent = 'Guardando…'
-      const ok = await saveSocio(email, notaEl.value.trim())
-      status.textContent = ok ? 'Socio agregado ✓' : 'Error al agregar'
+      const { ok, error } = await saveSocio(email, notaEl.value.trim())
+      status.textContent = ok ? 'Socio agregado ✓' : `Error al agregar${error ? ': ' + error : ''} — probá de nuevo`
+      status.classList.add(ok ? 'is-ok' : 'is-err')
       if (ok) { emailEl.value = ''; notaEl.value = ''; loadSocios() }
-      setTimeout(() => (status.textContent = ''), 3000)
+      setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err') }, 6000)
     })
     document.addEventListener('change', async (e) => {
       const nota = e.target.closest && e.target.closest('.pa-socio-nota')
       if (!nota) return
       const status = document.getElementById('pa-socio-status')
+      status.classList.remove('is-ok', 'is-err')
       status.textContent = 'Guardando nota…'
-      const ok = await saveSocio(nota.getAttribute('data-email'), nota.value)
+      const { ok } = await saveSocio(nota.getAttribute('data-email'), nota.value)
       status.textContent = ok ? 'Nota guardada ✓' : 'Error al guardar la nota — probá de nuevo'
-      setTimeout(() => (status.textContent = ''), 3000)
+      status.classList.add(ok ? 'is-ok' : 'is-err')
+      setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err') }, 6000)
     })
     document.addEventListener('click', async (e) => {
       const del = e.target.closest && e.target.closest('.pa-socio-del')
@@ -1168,7 +1175,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const email = add.getAttribute('data-email')
       add.disabled = true
       add.textContent = 'Agregando…'
-      const ok = await saveSocio(email, '')
+      const { ok, error } = await saveSocio(email, '')
       if (ok) {
         await fetch('/api/socios/admin/intentos', {
           method: 'DELETE',
@@ -1181,6 +1188,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       } else {
         add.disabled = false
         add.textContent = '+ Agregar como socio'
+        const status = document.getElementById('pa-socio-status')
+        status.classList.remove('is-ok')
+        status.classList.add('is-err')
+        status.textContent = `Error al agregar${error ? ': ' + error : ''} — probá de nuevo`
+        setTimeout(() => { status.textContent = ''; status.classList.remove('is-err') }, 6000)
       }
     })
     document.addEventListener('click', async (e) => {

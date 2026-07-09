@@ -80,7 +80,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const rec = parseRec(existente);
   rec.nota = String(body?.nota ?? rec.nota ?? '');
   if (existente === null) rec.alta = new Date().toISOString(); // fecha real de alta en el club
-  await env.SOCIOS.put(email, JSON.stringify(rec));
+  const payload = JSON.stringify(rec);
+  await env.SOCIOS.put(email, payload);
+
+  // Confirmamos con un read-back que el alta pegó de verdad antes de decir que
+  // sí: sin esto, un fallo silencioso de KV podía devolver 200 sin que el
+  // socio quedara cargado — el panel mostraba "✓" y no había nada guardado.
+  const verify = await env.SOCIOS.get(email);
+  if (verify !== payload) {
+    return Response.json({ ok: false, error: 'el guardado no se pudo confirmar, probá de nuevo' }, { status: 500 });
+  }
   return Response.json({ ok: true, email });
 };
 
