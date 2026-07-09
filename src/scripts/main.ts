@@ -34,6 +34,12 @@ const lockScroll = () => {
   document.body.style.overflow = 'hidden'
   lenis.stop()
 }
+// El welcome (hero-story) necesita saber si el loader de edad ya terminó
+// antes de escuchar sus propios gestos — si llega tarde a un 'flora:loader-done'
+// que ya se disparó (caso: EDAD_KEY ya validado, el loader ni se muestra),
+// un simple addEventListener se lo perdería. Esta bandera cubre ese caso.
+let loaderDone = false
+
 const unlockScroll = () => {
   document.documentElement.style.overflow = ''
   document.body.style.overflow = ''
@@ -361,6 +367,7 @@ function initLoader() {
     const t = Number(localStorage.getItem(EDAD_KEY) || 0)
     if (t && Date.now() - t < EDAD_TTL) {
       loader.remove()
+      loaderDone = true
       window.dispatchEvent(new CustomEvent('flora:loader-done'))
       return
     }
@@ -386,6 +393,7 @@ function initLoader() {
     loader.style.display = 'none'
     // Aviso para el hero: recién ahí puede empezar a escuchar sus propios
     // gestos, para que el swipe que cierra el loader no le robe un paso.
+    loaderDone = true
     window.dispatchEvent(new CustomEvent('flora:loader-done'))
   }
 
@@ -766,25 +774,24 @@ function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
 
 // ── Welcome: relato de bienvenida con fondos que evolucionan ──
 // El relato del hero (5 beats: 4 líneas + "Bienvenido a Flora") es una
-// navegación paso a paso, no un scroll-scrub continuo: cada gesto (rueda,
-// swipe, tecla) avanza o retrocede EXACTAMENTE un beat, con el mismo "lock"
-// anti-ráfaga que el gate de edad, para que un movimiento brusco de dedo no
-// se salte líneas sin leerlas — como ir pasando reels, no scrolleando.
-// Recién al pedir avanzar desde el último beat (con los botones ya
-// visibles) se libera el scroll y el usuario sigue navegando el sitio.
-// El relato del hero vuelve a ser scroll-scrub continuo (no un lock por
-// pasos): el intento de "un swipe = un paso" bloqueaba el scroll real de la
-// página apenas el usuario no scrolleaba con el timing exacto que esperaba
-// el cooldown, y eso rompía la navegación del sitio entero. Para que un
-// swipe brusco no se salte todo el relato igual, la distancia de scroll
-// virtual es generosa (steps * 1.6 pantallas) sin llegar a bloquear nada.
+// navegación paso a paso, no scroll-scrub: cada gesto (rueda, swipe, tecla)
+// avanza o retrocede EXACTAMENTE un beat, sin importar qué tan brusco sea,
+// para que no se salteen líneas sin leerlas — como ir pasando reels.
+//
+// Ya hubo un intento anterior de esto que se revirtió: bloqueaba el scroll
+// real de la página cuando algo fallaba, dejando el sitio entero trabado.
+// Esta versión evita ese riesgo de tres formas:
+//   1. lockScroll()/unlockScroll() (el mismo mecanismo ya probado del gate
+//      de edad) en vez de intentar interceptar el scroll nativo a medias.
+//   2. El botón "Omitir introducción" siempre funciona, pase lo que pase
+//      con el estado interno — es la vía de escape garantizada.
+//   3. Un timeout de seguridad libera el lock solo si algo se cuelga.
 function initWelcome() {
   const section  = document.querySelector<HTMLElement>('.welcome')
   if (!section) return
 
-  // El hero-intro (scroll-scrubbed, varias pantallas de largo) se muestra UNA
-  // sola vez por dispositivo — en visitas siguientes aburre. Se saca del DOM
-  // antes de armar el ScrollTrigger, así ni pinea ni resta scroll: se entra
+  // El hero-intro se muestra UNA sola vez por dispositivo — en visitas
+  // siguientes aburre. Se saca del DOM antes de armar nada, así se entra
   // directo al resto de la home.
   const HERO_KEY = 'flora-hero-seen'
   const HERO_TTL = 180 * 24 * 60 * 60 * 1000 // 180 días
@@ -797,11 +804,13 @@ function initWelcome() {
     localStorage.setItem(HERO_KEY, String(Date.now()))
   } catch { /* sin storage, el hero se muestra normal */ }
 
-  const stage    = section.querySelector<HTMLElement>('.welcome-stage')
-  const imgs     = gsap.utils.toArray<HTMLElement>('.welcome-img')
-  const lines    = gsap.utils.toArray<HTMLElement>('.welcome-line')
-  const outro    = section.querySelector<HTMLElement>('.welcome-outro')
-  const cue      = section.querySelector<HTMLElement>('.welcome-cue')
+  const stage   = section.querySelector<HTMLElement>('.welcome-stage')
+  const imgs    = gsap.utils.toArray<HTMLElement>('.welcome-img')
+  const lines   = gsap.utils.toArray<HTMLElement>('.welcome-line')
+  const outro   = section.querySelector<HTMLElement>('.welcome-outro')
+  const cue     = section.querySelector<HTMLElement>('.welcome-cue')
+  const dots    = gsap.utils.toArray<HTMLElement>('.welcome-dot')
+  const skipBtn = section.querySelector<HTMLButtonElement>('.welcome-skip')
   if (!stage || imgs.length === 0 || lines.length === 0) return
 
   const steps = lines.length
@@ -815,7 +824,7 @@ function initWelcome() {
     })
   }
 
-  // Reduced motion: mostramos el cierre del relato (poster estático), sin scrub
+  // Reduced motion: mostramos el cierre del relato (poster estático), sin gestos
   if (prefersReducedMotion) {
     gsap.set(imgs, { opacity: 0 })
     gsap.set(imgs[steps - 1], { opacity: 1 })
@@ -823,6 +832,8 @@ function initWelcome() {
     gsap.set(lines[steps - 1], { opacity: 1 })
     if (outro) gsap.set(outro, { opacity: 1, y: 0 })
     if (cue) gsap.set(cue, { opacity: 0 })
+    if (skipBtn) skipBtn.hidden = true
+    dots.forEach((d, i) => d.classList.toggle('is-on', i === steps - 1))
     return
   }
 
@@ -832,6 +843,7 @@ function initWelcome() {
   gsap.set(lines, { opacity: 0, y: 36 })
   gsap.set(lines[0], { opacity: 1, y: 0 })
   if (outro) gsap.set(outro, { opacity: 0, y: 36 })
+  dots.forEach((d, i) => d.classList.toggle('is-on', i === 0))
 
   playOnly(0) // arranca el primer clip
 
@@ -842,55 +854,136 @@ function initWelcome() {
     gsap.to(cueWheel, { y: 9, opacity: 0, duration: 0.7, ease: 'power1.in', repeat: -1, yoyo: true, repeatDelay: 0.3 })
   }
 
-  const TRANS = 0.6   // crossfade
-  const HOLD = 1.0    // permanencia de cada beat
+  const TRANS = 0.5       // crossfade entre beats
+  const CUE_DELAY = 1.6   // si no gesticula nada, el cue reaparece a los X seg de asentado el beat
 
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: () => '+=' + Math.round(window.innerHeight * steps * 1.0),
-      pin: stage,
-      scrub: 1,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-    },
-  })
+  let current = 0
+  let animating = false
+  let finished = false
+  let cueTimer: ReturnType<typeof setTimeout> | null = null
+  let safetyTimer: ReturnType<typeof setTimeout> | null = null
 
-  for (let i = 0; i < steps; i++) {
-    // Reproduce el clip de este beat (fire en ambos sentidos del scrub)
-    tl.call(() => playOnly(i), undefined, i === 0 ? 0 : '<')
-
-    // Ken Burns: la imagen activa se asienta de 1.12 → 1.0 durante su beat
-    tl.to(imgs[i], { scale: 1.0, duration: HOLD + TRANS, ease: 'none' }, i === 0 ? 0 : '<')
-
-    if (i > 0) {
-      tl.to(imgs[i], { opacity: 1, duration: TRANS }, '<')
-      tl.to(imgs[i - 1], { opacity: 0, duration: TRANS }, '<')
-      tl.to(lines[i], { opacity: 1, y: 0, duration: TRANS * 0.9 }, '<0.1')
-    }
-
-    tl.to({}, { duration: HOLD }) // hold
-
-    if (i < steps - 1) {
-      tl.to(lines[i], { opacity: 0, y: -36, duration: TRANS * 0.8 })
-    }
+  function showCue(show: boolean) {
+    if (!cue) return
+    if (cueTimer) clearTimeout(cueTimer)
+    gsap.to(cue, { opacity: show ? 1 : 0, duration: 0.35, ease: 'power1.out' })
+  }
+  function scheduleCue() {
+    if (!cue || finished) return
+    if (cueTimer) clearTimeout(cueTimer)
+    cueTimer = setTimeout(() => showCue(true), CUE_DELAY * 1000)
   }
 
-  if (outro) tl.to(outro, { opacity: 1, y: 0, duration: TRANS }, '-=0.1')
+  function goToStep(i: number, dir: 1 | -1) {
+    animating = true
+    showCue(false)
+    playOnly(i)
+    const from = current
+    current = i
+    dots.forEach((d, k) => d.classList.toggle('is-on', k === i))
 
-  // El cue desaparece apenas se empieza a scrollear
-  if (cue) {
-    gsap.to(cue, {
-      opacity: 0,
-      scrollTrigger: {
-        trigger: section,
-        start: 'top top',
-        end: '+=' + Math.round(window.innerHeight * 0.5),
-        scrub: true,
+    // Salvavidas: si por lo que sea el timeline no dispara onComplete, no
+    // queremos que 'animating' quede en true para siempre — a los 2s se
+    // libera solo, en el peor caso el usuario siente medio segundo de más.
+    if (safetyTimer) clearTimeout(safetyTimer)
+    safetyTimer = setTimeout(() => { animating = false }, 2000)
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        animating = false
+        if (safetyTimer) clearTimeout(safetyTimer)
+        scheduleCue()
       },
     })
+    tl.to(imgs[i], { scale: 1.0, duration: TRANS * 1.8, ease: 'none' }, 0)
+    tl.to(imgs[i], { opacity: 1, duration: TRANS }, 0)
+    tl.to(imgs[from], { opacity: 0, duration: TRANS }, 0)
+    tl.to(lines[from], { opacity: 0, y: dir === 1 ? -36 : 36, duration: TRANS * 0.8 }, 0)
+    tl.to(lines[i], { opacity: 1, y: 0, duration: TRANS * 0.9 }, TRANS * 0.15)
   }
+
+  function finishIntro() {
+    if (finished) return
+    finished = true
+    showCue(false)
+    if (dots.length) gsap.to(dots, { opacity: 0, duration: 0.3 })
+    if (skipBtn) gsap.to(skipBtn, { opacity: 0, duration: 0.3, onComplete: () => { skipBtn.hidden = true } })
+    if (outro) gsap.to(outro, { opacity: 1, y: 0, duration: 0.5 })
+    stopListening()
+    unlockScroll()
+  }
+
+  function next() {
+    if (finished) return
+    if (animating) return
+    if (current < steps - 1) goToStep(current + 1, 1)
+    else finishIntro()
+  }
+  function prev() {
+    if (finished || animating || current === 0) return
+    goToStep(current - 1, -1)
+  }
+
+  // ── Gestos: rueda, swipe táctil y teclado — cada uno vale por UN paso,
+  //    sin importar la distancia/velocidad del gesto físico. ──
+  let touchStartX = 0
+  let touchStartY = 0
+  const SWIPE_MIN = 36 // px — piso para contar como gesto intencional
+
+  function onWheel(e: WheelEvent) {
+    e.preventDefault()
+    if (Math.abs(e.deltaY) < 2) return
+    if (e.deltaY > 0) next(); else prev()
+  }
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.touches[0].clientX
+    touchStartY = e.touches[0].clientY
+  }
+  function onTouchMove(e: TouchEvent) {
+    e.preventDefault() // frena el scroll/rebote nativo mientras dura el relato
+  }
+  function onTouchEnd(e: TouchEvent) {
+    const dy = touchStartY - e.changedTouches[0].clientY
+    const dx = touchStartX - e.changedTouches[0].clientX
+    if (Math.abs(dy) < SWIPE_MIN || Math.abs(dy) < Math.abs(dx)) return // gesto horizontal o muy chico: ignorar
+    if (dy > 0) next(); else prev()
+  }
+  function onKeydown(e: KeyboardEvent) {
+    if (['ArrowDown', 'ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next() }
+    else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev() }
+    else if (e.key === 'Escape') finishIntro()
+  }
+
+  // Timeout de seguridad extra a nivel de toda la experiencia: si algo
+  // impidiera el hand-off normal, esto libera el scroll solo igual — nunca
+  // más "el sitio entero trabado" por este componente.
+  let globalSafety: ReturnType<typeof setTimeout> | null = null
+
+  function startListening() {
+    lockScroll()
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('keydown', onKeydown)
+    scheduleCue()
+    globalSafety = setTimeout(finishIntro, 90_000)
+  }
+  function stopListening() {
+    window.removeEventListener('wheel', onWheel)
+    window.removeEventListener('touchstart', onTouchStart)
+    window.removeEventListener('touchmove', onTouchMove)
+    window.removeEventListener('touchend', onTouchEnd)
+    window.removeEventListener('keydown', onKeydown)
+    if (cueTimer) clearTimeout(cueTimer)
+    if (safetyTimer) clearTimeout(safetyTimer)
+    if (globalSafety) clearTimeout(globalSafety)
+  }
+
+  if (skipBtn) skipBtn.addEventListener('click', finishIntro)
+
+  if (loaderDone) startListening()
+  else window.addEventListener('flora:loader-done', startListening, { once: true })
 }
 
 // ── Reveal simple: el movimiento por defecto del giro (fade + y al entrar) ──

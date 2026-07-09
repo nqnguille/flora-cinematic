@@ -1113,6 +1113,54 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   .welcome-cue-line { display: none; }
 }
 
+/* Omitir introducción — debajo del nav fijo (60px), no compite con "Acceso socios" */
+.welcome-skip {
+  position: absolute;
+  top: calc(60px + 1rem + env(safe-area-inset-top, 0px));
+  right: calc(1.4rem + env(safe-area-inset-right, 0px));
+  z-index: 4;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(244,241,230,0.72);
+  background: rgba(10,18,12,0.35);
+  border: 1px solid rgba(244,241,230,0.28);
+  border-radius: 999px;
+  padding: 0.5em 1.1em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.welcome-skip:hover, .welcome-skip:focus-visible {
+  color: var(--bone);
+  border-color: rgba(244,241,230,0.6);
+  background: rgba(10,18,12,0.55);
+  outline: none;
+}
+html.no-js .welcome-skip { display: none; }
+
+/* Puntos de progreso del relato — debajo del nav fijo (60px), si no quedan
+   ilegibles contra los links del nav (mismo problema que tenía welcome-skip) */
+.welcome-dots {
+  position: absolute;
+  left: 50%;
+  top: calc(60px + 1.3rem + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+}
+.welcome-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(244,241,230,0.35);
+  transition: background 0.35s ease, transform 0.35s ease;
+}
+.welcome-dot.is-on { background: var(--bone); transform: scale(1.35); }
+html.no-js .welcome-dots { display: none; }
+
 /* Fallback sin JS: mostramos el cierre del relato */
 html.no-js .welcome-img[data-bg="0"] { opacity: 0; }
 html.no-js .welcome-img[data-bg="4"] { opacity: 1; }
