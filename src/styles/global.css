@@ -1688,12 +1688,31 @@ html.no-js .reveal { opacity: 1; transform: none; }
   padding: 0; border: none;
   /* Glow permanente (no solo al hover) para que la card negra se destaque
      del fondo oscuro del módulo — teal + violeta de marca, bien visible
-     en reposo; el hover (más abajo) lo intensifica todavía más. */
+     en reposo; el hover (más abajo) lo intensifica todavía más. Late en
+     loop despacio (4s) — a pedido explícito, aun sabiendo que la versión
+     estática fue la que ganó una comparación de diseño anterior. */
   box-shadow:
     0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
     0 0 50px -6px rgba(20,138,145,0.45), 0 0 80px -10px rgba(56,31,86,0.4);
+  animation: fl-acceso-card-breathe 4s ease-in-out infinite;
 }
 .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
+.fl-acceso-card--photo:hover, .fl-acceso-card--photo:focus-visible { animation-play-state: paused; }
+@keyframes fl-acceso-card-breathe {
+  0%, 100% {
+    box-shadow:
+      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
+      0 0 50px -6px rgba(20,138,145,0.45), 0 0 80px -10px rgba(56,31,86,0.4);
+  }
+  50% {
+    box-shadow:
+      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
+      0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-card--photo { animation: none; }
+}
 
 /* Bisel grabado (el canto de la tarjeta) */
 .fl-acceso-card::before {
