@@ -1778,11 +1778,20 @@ html.no-js .reveal { opacity: 1; transform: none; }
    versión buena: un foco blanco "de atrás" (::before, blur, contenido
    dentro del borde) + un reflejo blanco "de adelante" (::after, screen
    blend), cada uno girando en su propio eje. */
+/* SIN border-radius acá a propósito: estos pseudo-elementos son cajas
+   rectangulares del mismo tamaño que la card (inset:0) que ROTAN. Si
+   además tienen su PROPIO border-radius, al girar sus esquinas/bordes
+   rectos se asoman por fuera de las esquinas redondeadas (que no
+   rotan) de la card padre — eso es lo que se veía como "una versión
+   girada del contorno del rectángulo" fantasma. El único recorte que
+   tiene que existir es el de la card padre (overflow:hidden, estático,
+   nunca rota) — estas cajas quedan sin su propio radio, y como el
+   contenido (radial-gradient) ya se apaga solo en el 40-42% del radio,
+   no hace falta clipearlas para que se vean redondeadas. */
 .fl-acceso-card--photo::before {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   box-shadow: none;
-  border-radius: var(--fl-radius);
   background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 40%);
   filter: blur(18px);
   opacity: 1;
@@ -1792,7 +1801,6 @@ html.no-js .reveal { opacity: 1; transform: none; }
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
-  border-radius: var(--fl-radius);
   background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
   mix-blend-mode: screen;
   opacity: 0.95;
