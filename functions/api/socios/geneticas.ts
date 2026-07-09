@@ -20,6 +20,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (esSocio === null) {
     return Response.json({ ok: false, error: 'ya no sos socio de Flora' }, { status: 403 });
   }
+  let rec: any = {};
+  try { rec = JSON.parse(esSocio); } catch { rec = {}; }
+  if (rec?.temporal && rec?.tempExpiraEn && Date.now() > new Date(rec.tempExpiraEn).getTime()) {
+    return Response.json({ ok: false, error: 'Tu acceso de prueba expiró — escribinos por WhatsApp si querés asociarte.' }, { status: 403 });
+  }
 
   const raw = await env.GENETICAS.get(CATALOG_KEY);
   const catalogo = raw ? JSON.parse(raw) : [];
