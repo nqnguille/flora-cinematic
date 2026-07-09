@@ -1750,14 +1750,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
     0 34px 64px -18px rgba(0,0,0,0.9), 0 4px 0 rgba(0,0,0,0.6),
     inset 1.5px 0 0 rgba(200,220,255,0.24), inset -1px 0 0 rgba(0,0,0,0.6),
     inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
-  /* El glow de atrás (::before) originalmente se derramaba hacia afuera
-     del borde con overflow:visible acá — pero terminaba topándose con
-     el overflow:hidden de ALGÚN ancestro más arriba en el árbol (la
-     sección, el layout de la home), generando un corte recto donde ese
-     ancestro lo clipeaba: un "rectángulo" duro en vez de un brillo que
-     se apaga solo. Contener el glow DENTRO de la propia tarjeta
-     (::before pasa a inset:0 + mismo border-radius) elimina esa
-     dependencia por completo — nunca se topa con nada de afuera. */
+  /* El glow de atrás (::before, más abajo) se derrama hacia afuera del
+     borde — necesita overflow:visible acá. La sección .fl-acceso (el
+     ancestro con overflow:hidden real, ahí sí hace falta para recortar
+     el video/foto de fondo) está mucho más lejos que el margen que este
+     glow necesita, así que no debería volver a toparse con ese límite;
+     el corte recto que se vio antes era en realidad el conic-gradient
+     de bordes duros + el box-shadow heredado del bisel (los dos ya
+     arreglados) — no la propia sección. */
+  overflow: visible;
 }
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
@@ -1788,12 +1789,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
    nunca rota) — estas cajas quedan sin su propio radio, y como el
    contenido (radial-gradient) ya se apaga solo en el 40-42% del radio,
    no hace falta clipearlas para que se vean redondeadas. */
+/* Glow de atrás: caja más grande que la card (inset negativo) para que
+   se derrame hacia afuera del borde — la "sombra que flota en el aire".
+   Del lado OPUESTO al reflejo de adelante (ese está arriba-izquierda,
+   este abajo-derecha) para que se sientan como dos luces acompañándose,
+   no superpuestas. El % de la posición es relativo a ESTA caja más
+   grande, no a la card — 82% cae justo en/más allá de la esquina
+   inferior-derecha visual de la card. */
 .fl-acceso-card--photo::before {
   content: '';
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  position: absolute; inset: -38%; z-index: 0; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 8% 8%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%);
-  filter: blur(18px);
+  background: radial-gradient(circle at 82% 82%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 30%);
+  filter: blur(22px);
   opacity: 1;
   animation: fl-card-orbit-back 13s linear infinite reverse;
 }
