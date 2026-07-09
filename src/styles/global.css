@@ -1792,7 +1792,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 40%);
+  background: radial-gradient(circle at 8% 8%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%);
   filter: blur(18px);
   opacity: 1;
   animation: fl-card-orbit-back 13s linear infinite reverse;
@@ -1801,7 +1801,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
+  background: radial-gradient(circle at 9% 7%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 36%);
   mix-blend-mode: screen;
   opacity: 0.95;
   animation: fl-card-orbit-front 8s linear infinite;
