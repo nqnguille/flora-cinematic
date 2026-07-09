@@ -1697,19 +1697,20 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
 /* Reflejo (el mismo brillo que en el resto de las cards sigue al mouse)
-   trazando una órbita elíptica alrededor de la tarjeta — con overshoot
-   fuera del borde (mx/my salen de 0–100%) para que se sienta como una
-   luz circulando en el aire, no un brillo que solo se mueve adentro. */
+   trazando una órbita circular DENTRO del borde de la tarjeta (5%–95%,
+   nunca sale del área visible) — un reflector girando los 360° sobre la
+   cara de la tarjeta, siempre visible, no una luz que se apaga al pasar
+   por afuera del borde. */
 @keyframes fl-acceso-card-sweep {
-  0%    { --mx: 50%;  --my: -10%; }
-  12.5% { --mx: 85%;  --my: -3%;  }
-  25%   { --mx: 110%; --my: 50%;  }
-  37.5% { --mx: 85%;  --my: 103%; }
-  50%   { --mx: 50%;  --my: 110%; }
-  62.5% { --mx: 15%;  --my: 103%; }
-  75%   { --mx: -10%; --my: 50%;  }
-  87.5% { --mx: 15%;  --my: -3%;  }
-  100%  { --mx: 50%;  --my: -10%; }
+  0%    { --mx: 50%; --my: 5%;  }
+  12.5% { --mx: 82%; --my: 18%; }
+  25%   { --mx: 95%; --my: 50%; }
+  37.5% { --mx: 82%; --my: 82%; }
+  50%   { --mx: 50%; --my: 95%; }
+  62.5% { --mx: 18%; --my: 82%; }
+  75%   { --mx: 5%;  --my: 50%; }
+  87.5% { --mx: 18%; --my: 18%; }
+  100%  { --mx: 50%; --my: 5%;  }
 }
 @keyframes fl-acceso-card-glow-orbit {
   0%    { box-shadow: 0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6), 0px -16px 70px -4px rgba(20,138,145,0.65), 0px 16px 100px -6px rgba(56,31,86,0.58); }
