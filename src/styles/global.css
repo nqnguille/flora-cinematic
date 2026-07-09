@@ -1769,9 +1769,9 @@ html.no-js .reveal { opacity: 1; transform: none; }
      estiraba sobre esta caja gigante (-55%) y se veía como un contorno
      blanco fantasma flotando al lado de la tarjeta en hover. */
   box-shadow: none; border-radius: 0;
-  background:
-    radial-gradient(circle at 22% 28%, rgba(20,138,145,0.9) 0%, rgba(20,138,145,0) 38%),
-    radial-gradient(circle at 78% 72%, rgba(56,31,86,0.9) 0%, rgba(56,31,86,0) 38%);
+  /* Un solo foco blanco "de atrás" — sin color, misma paleta que el
+     reflejo de adelante. */
+  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 40%);
   filter: blur(18px);
   opacity: 1;
   animation: fl-card-orbit-back 13s linear infinite reverse;
