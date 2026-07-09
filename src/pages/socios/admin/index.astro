@@ -112,11 +112,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <button type="submit" class="pa-btn pa-btn-primary">Agregar socio</button>
           </form>
 
-          <!-- ── Intentos de acceso: gmails que probaron entrar a la carta y no son socios ── -->
+          <!-- ── Solicitudes: formulario "ya tengo REPROCANN" + intentos de login que no son socios ── -->
           <div id="pa-intentos-block" class="pa-intentos-block" hidden>
             <div class="pa-intentos-head">
-              <h2 class="pa-subhead">Intentos de acceso <span id="pa-intentos-count" class="pa-count-badge"></span></h2>
-              <p class="pa-help">Cuentas de Google que probaron entrar a la carta y todavía no son socios — posibles leads para invitar.</p>
+              <h2 class="pa-subhead">Solicitudes <span id="pa-intentos-count" class="pa-count-badge"></span></h2>
+              <p class="pa-help">Gente que dejó sus datos diciendo que ya tiene REPROCANN, o que probó entrar a la carta con una cuenta de Google que todavía no es socia — leads para aprobar a mano.</p>
             </div>
             <div id="pa-intentos-list" class="pa-socios-list pa-intentos-list"></div>
           </div>
@@ -1233,24 +1233,35 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       loadSocios()
     })
 
-    /* ── Intentos de acceso (leads: gmails que probaron entrar y no son socios) ── */
+    /* ── Solicitudes (leads): formulario "ya tengo REPROCANN" + intentos de login ── */
+    const SOLICITUD_ENDPOINT = { formulario: '/api/socios/admin/solicitudes', intento: '/api/socios/admin/intentos' }
     let INTENTOS_LIST = []
     function intentoRow(i) {
       const ava = `<span class="pa-socio-ava"><span class="pa-socio-ini">${esc(initials(i.name || i.email))}</span>${i.picture ? `<img src="${esc(i.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
+      const badge = i.tipo === 'formulario'
+        ? `<span class="pa-socio-badge is-on">Dice tener REPROCANN</span>`
+        : `<span class="pa-socio-badge is-warn">${i.attempts} intento${i.attempts === 1 ? '' : 's'}</span>`
+      const fechaLine = i.tipo === 'formulario'
+        ? `Solicitud ${esc(fmtRel(i.creado))} · ${esc(fmtFecha(i.creado))}`
+        : `Último intento ${esc(fmtRel(i.lastAttempt))} · ${esc(fmtFecha(i.lastAttempt))}`
+      const phoneLine = i.phone
+        ? `<div class="pa-socio-meta">📱 <a href="https://wa.me/${esc(i.phone.replace(/\D/g, ''))}" target="_blank" rel="noopener noreferrer">${esc(i.phone)}</a></div>`
+        : ''
       return `
         <article class="pa-socio pa-intento">
           ${ava}
           <div class="pa-socio-main">
             <div class="pa-socio-top">
               <strong class="pa-socio-name">${esc(i.name || '(sin nombre)')}</strong>
-              <span class="pa-socio-badge is-warn">${i.attempts} intento${i.attempts === 1 ? '' : 's'}</span>
+              ${badge}
             </div>
             <div class="pa-socio-email">${esc(i.email)}</div>
-            <div class="pa-socio-meta">Último intento ${esc(fmtRel(i.lastAttempt))} · ${esc(fmtFecha(i.lastAttempt))}</div>
+            ${phoneLine}
+            <div class="pa-socio-meta">${fechaLine}</div>
           </div>
           <div class="pa-intento-actions">
             <button type="button" class="pa-btn pa-btn-primary pa-btn-slim pa-intento-add" data-email="${esc(i.email)}">+ Agregar como socio</button>
-            <button type="button" class="pa-socio-del pa-intento-del" data-email="${esc(i.email)}" aria-label="Descartar intento">×</button>
+            <button type="button" class="pa-socio-del pa-intento-del" data-email="${esc(i.email)}" data-tipo="${esc(i.tipo)}" aria-label="Descartar">×</button>
           </div>
         </article>`
     }
@@ -1264,10 +1275,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     async function loadIntentos() {
       try {
-        const res = await fetch('/api/socios/admin/intentos', { credentials: 'include' })
-        const data = await res.json()
-        if (!res.ok || !data.ok) return
-        INTENTOS_LIST = data.intentos
+        const [resInt, resSol] = await Promise.all([
+          fetch('/api/socios/admin/intentos', { credentials: 'include' }),
+          fetch('/api/socios/admin/solicitudes', { credentials: 'include' }),
+        ])
+        const [dataInt, dataSol] = await Promise.all([resInt.json(), resSol.json()])
+        const intentos = (resInt.ok && dataInt.ok) ? dataInt.intentos.map((i) => ({ ...i, tipo: 'intento' })) : []
+        const solicitudes = (resSol.ok && dataSol.ok) ? dataSol.solicitudes.map((s) => ({ ...s, tipo: 'formulario' })) : []
+        INTENTOS_LIST = [...solicitudes, ...intentos].sort((a, b) => {
+          const fa = a.tipo === 'formulario' ? a.creado : a.lastAttempt
+          const fb = b.tipo === 'formulario' ? b.creado : b.lastAttempt
+          return String(fb).localeCompare(String(fa))
+        })
         renderIntentos()
       } catch {
         // silencioso: no es contenido crítico de la pestaña
@@ -1277,11 +1296,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const add = e.target.closest && e.target.closest('.pa-intento-add')
       if (!add) return
       const email = add.getAttribute('data-email')
+      const item = INTENTOS_LIST.find((i) => i.email === email)
+      const endpoint = item?.tipo === 'formulario' ? SOLICITUD_ENDPOINT.formulario : SOLICITUD_ENDPOINT.intento
+      const nota = item?.tipo === 'formulario' ? `Solicitud web${item.phone ? ' · ' + item.phone : ''}` : 'Vía intento de acceso'
       add.disabled = true
       add.textContent = 'Agregando…'
-      const { ok, error } = await saveSocio(email, '')
+      const { ok, error } = await saveSocio(email, nota)
       if (ok) {
-        await fetch('/api/socios/admin/intentos', {
+        await fetch(endpoint, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -1303,8 +1325,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const del = e.target.closest && e.target.closest('.pa-intento-del')
       if (!del) return
       const email = del.getAttribute('data-email')
-      if (!(await paConfirm(`¿Descartar el intento de ${email}?`))) return
-      await fetch('/api/socios/admin/intentos', {
+      const tipo = del.getAttribute('data-tipo')
+      const endpoint = tipo === 'formulario' ? SOLICITUD_ENDPOINT.formulario : SOLICITUD_ENDPOINT.intento
+      if (!(await paConfirm(`¿Descartar la solicitud de ${email}?`))) return
+      await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
