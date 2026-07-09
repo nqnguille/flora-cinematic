@@ -1788,6 +1788,13 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 @keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes fl-card-orbit-back  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* Al hover/focus (la card ya se levanta y el reflejo de estudio de la
+   base entra en juego) el giro de las luces se pausa — quieto mientras
+   se interactúa, sigue girando solo en reposo. */
+.fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
+.fl-acceso-card--photo:focus-visible::before, .fl-acceso-card--photo:focus-visible::after {
+  animation-play-state: paused;
+}
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
 }
