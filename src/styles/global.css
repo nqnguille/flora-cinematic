@@ -1681,6 +1681,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
   --fl-radius: 18px;
   --fl-mx: 22%; --fl-my: 8%; /* posición del brillo de estudio; fallback sin JS */
 
+  /* En mobile (Safari iOS / Chrome Android) un "hover" en la práctica es
+     un TOQUE — sin esto, WebKit/Blink pintan su propio rectángulo gris
+     semitransparente nativo sobre el link al tocarlo, sin pasar por
+     ninguna regla :hover/:focus-visible de acá (por eso ningún fix de
+     cascada CSS lo tapaba, y por eso mi testing con mouse-hover
+     automatizado en Chromium desktop nunca lo reproducía). Es
+     exactamente el "cuadrado" que se reportó viendo en mobile. */
+  -webkit-tap-highlight-color: transparent;
+
   position: relative; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px;
   text-align: center;
@@ -1800,12 +1809,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 @keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes fl-card-orbit-back  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-/* Al hover/focus (la card ya se levanta y el reflejo de estudio de la
-   base entra en juego) el giro de las luces se pausa — quieto mientras
-   se interactúa, sigue girando solo en reposo. */
+/* Al hover/focus, el giro de las luces se pausa — quieto mientras se
+   interactúa, sigue girando solo en reposo. */
 .fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
 .fl-acceso-card--photo:focus-visible::before, .fl-acceso-card--photo:focus-visible::after {
   animation-play-state: paused;
+}
+/* .fl-acceso-card:hover::after (base, más abajo) sube opacity a 1 sobre
+   este MISMO ::after — mi valor de reposo ya es 0.95, así que la
+   diferencia real es mínima (no es la causa del "cuadrado" reportado,
+   ver -webkit-tap-highlight-color más abajo), pero se fija igual para
+   que el hover no cambie NADA del reflejo, ni siquiera un 5%. */
+.fl-acceso-card--photo:hover::after, .fl-acceso-card--photo:focus-visible::after {
+  opacity: 0.95;
 }
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
