@@ -4,7 +4,10 @@ interface Env {
 }
 
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Tiene que ser Gmail sí o sí: el login del portal es con Google, y así se
+// evita el caso de alguien vinculando un email que después no coincide con
+// la cuenta con la que realmente entra.
+const EMAIL_RE = /^[^\s@]+@gmail\.com$/i;
 const INTENTS = ['acceso', 'entrevista'] as const;
 type Intent = (typeof INTENTS)[number];
 
@@ -64,7 +67,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const intent: Intent = (INTENTS as readonly string[]).includes(intentRaw) ? (intentRaw as Intent) : 'acceso';
 
   if (!name) return Response.json({ ok: false, error: 'falta el nombre' }, { status: 400 });
-  if (!EMAIL_RE.test(email)) return Response.json({ ok: false, error: 'email inválido' }, { status: 400 });
+  if (!EMAIL_RE.test(email)) return Response.json({ ok: false, error: 'tiene que ser un email de Gmail (terminado en @gmail.com)' }, { status: 400 });
   if (!phone) return Response.json({ ok: false, error: 'falta el celular' }, { status: 400 });
 
   const now = new Date().toISOString();
