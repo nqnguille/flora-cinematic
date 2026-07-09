@@ -1756,31 +1756,26 @@ html.no-js .reveal { opacity: 1; transform: none; }
    visible, exactamente el síntoma reportado: "para mí gira, para Guille
    está fija"). rotate() sobre un conic-gradient corre en el compositor
    desde el día uno, con soporte universal incluso en Android viejo. */
+/* radial-gradient en vez de conic-gradient: un conic tiene bordes DUROS
+   entre color y transparente (cortan en un grado exacto) — con blur
+   grande pero el elemento mucho más grande todavía, el blur no alcanza a
+   ablandar esos cortes y se ve como un bloque semi-transparente, no como
+   luz. radial-gradient ya se desvanece solo, sin depender del blur. */
 .fl-acceso-card--photo::before {
   content: '';
-  position: absolute; inset: -42% -36%; z-index: 0; pointer-events: none;
-  border-radius: 50%;
-  /* Dos bandas de color (teal + violeta de marca) a 180° una de otra —
-     se leen como dos focos, no uno solo — bien anchas y opacas para que
-     se noten incluso contra el fondo fotográfico del módulo (no es un
-     fondo liso oscuro donde un glow tenue ya se destaca solo). */
-  background: conic-gradient(from 0deg at 50% 50%,
-    rgba(20,138,145,0.95) 0deg, transparent 70deg,
-    transparent 160deg,
-    rgba(56,31,86,0.95) 180deg, transparent 250deg,
-    transparent 360deg);
-  filter: blur(38px);
-  opacity: 0.95;
+  position: absolute; inset: -55%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 22% 28%, rgba(20,138,145,0.9) 0%, rgba(20,138,145,0) 38%),
+    radial-gradient(circle at 78% 72%, rgba(56,31,86,0.9) 0%, rgba(56,31,86,0) 38%);
+  filter: blur(18px);
+  opacity: 1;
   animation: fl-card-orbit-back 13s linear infinite reverse;
 }
 .fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   border-radius: var(--fl-radius);
-  background: conic-gradient(from 0deg at 50% 50%,
-    transparent 0deg, transparent 40deg,
-    rgba(255,255,255,0.95) 90deg,
-    transparent 140deg, transparent 360deg);
+  background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
   mix-blend-mode: screen;
   opacity: 0.95;
   animation: fl-card-orbit-front 8s linear infinite;
