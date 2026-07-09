@@ -38,38 +38,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <div id="pa-stats" class="pa-stats"></div>
 
         <div class="pa-tabs" role="tablist">
-          <button class="pa-tab" data-tab="pedidos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1.2 13a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1L6 7Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>Reservas<span id="pa-ped-dot" class="pa-ped-dot" hidden></span></button>
-          <button class="pa-tab" data-tab="geneticas" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.8 2.4 4.8 5.4 4.8 8.8A4.8 4.8 0 0 1 7.2 11.8C7.2 8.4 9.2 5.4 12 3Z"/><path d="M12 16.6V21"/></svg>Genéticas</button>
-          <button class="pa-tab" data-tab="productos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v7L12 20l-8.5-4.5v-7Z"/><path d="M12 12v8M3.5 8.5 12 12l8.5-3.5"/></svg>Productos<span id="pa-prod-dot" class="pa-ped-dot is-warn" hidden></span></button>
           <button class="pa-tab" data-tab="socios" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M16 14.6c2.4.1 4 1.6 4.5 4.1"/></svg>Socios</button>
-        </div>
-
-        <!-- ── Pestaña Genéticas ── -->
-        <div id="tab-geneticas" class="pa-tab-panel">
-          <div class="pa-toolbar">
-            <div class="pa-availfilter" role="group" aria-label="Filtrar por disponibilidad">
-              <button class="pa-avail is-active" data-avail="" type="button">Todas</button>
-              <button class="pa-avail" data-avail="on" type="button">Disponibles</button>
-              <button class="pa-avail" data-avail="off" type="button">No disponibles</button>
-            </div>
-            <input id="pa-search" class="pa-input pa-search" type="search" placeholder="Buscar por nombre…" autocomplete="off" />
-            <span id="pa-count" class="pa-count"></span>
-          </div>
-
-          <div class="pa-genscroll">
-            <div class="pa-rows-head">
-              <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
-              <span>Predominancia</span><span>THC</span><span>CBD</span>
-              <span>Formato</span><span>Sabores</span><span>Efectos</span><span>Foto</span><span></span>
-            </div>
-            <div id="pa-list" class="pa-rows"></div>
-          </div>
-          <button id="pa-add" type="button" class="pa-btn pa-btn-ghost">+ Agregar genética</button>
-
-          <div class="pa-savebar">
-            <span id="pa-save-status" class="pa-save-status"></span>
-            <button id="pa-save" type="button" class="pa-btn pa-btn-primary">Guardar cambios</button>
-          </div>
+          <button class="pa-tab" data-tab="pedidos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1.2 13a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1L6 7Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>Reservas<span id="pa-ped-dot" class="pa-ped-dot" hidden></span></button>
+          <button class="pa-tab" data-tab="productos" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v7L12 20l-8.5-4.5v-7Z"/><path d="M12 12v8M3.5 8.5 12 12l8.5-3.5"/></svg>Productos<span id="pa-prod-dot" class="pa-ped-dot is-warn" hidden></span></button>
         </div>
 
         <!-- ── Pestaña Reservas ── -->
@@ -87,16 +58,55 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="pa-pedidos-list" class="pa-socios-list"></div>
         </div>
 
-        <!-- ── Pestaña Productos ── -->
+        <!-- ── Pestaña Productos: 4 categorías del front, se edita una por vez ── -->
         <div id="tab-productos" class="pa-tab-panel" hidden>
-          <p class="pa-help">
-            Precios y fotos de los productos que ven los socios (aceites, cremas, cartuchos y baterías).
-            Los cambios se aplican al tocar <strong>Guardar productos</strong>.
-          </p>
-          <div id="pa-prods-wrap"></div>
-          <div class="pa-savebar">
-            <span id="pa-prod-status" class="pa-save-status"></span>
-            <button id="pa-prod-save" type="button" class="pa-btn pa-btn-primary">Guardar productos</button>
+          <div class="pa-toolbar">
+            <div id="pa-prodcat" class="pa-availfilter" role="group" aria-label="Categoría de producto">
+              <button class="pa-avail is-active pa-prodcat-btn" data-prodcat="aceites" type="button">Aceites</button>
+              <button class="pa-avail pa-prodcat-btn" data-prodcat="cremas" type="button">Cremas</button>
+              <button class="pa-avail pa-prodcat-btn" data-prodcat="extracciones" type="button">Extracciones</button>
+              <button class="pa-avail pa-prodcat-btn" data-prodcat="flores" type="button">Flores</button>
+            </div>
+          </div>
+
+          <!-- Aceites / Cremas / Extracciones: precio + foto, una categoría a la vez -->
+          <div id="pa-prodcat-simple">
+            <p class="pa-help">
+              Precio y foto del producto que ven los socios. Los cambios se aplican al tocar <strong>Guardar productos</strong>.
+            </p>
+            <div id="pa-prods-wrap"></div>
+            <div class="pa-savebar">
+              <span id="pa-prod-status" class="pa-save-status"></span>
+              <button id="pa-prod-save" type="button" class="pa-btn pa-btn-primary">Guardar productos</button>
+            </div>
+          </div>
+
+          <!-- Flores: el editor de genéticas de siempre, ahora como categoría de Productos -->
+          <div id="tab-geneticas" hidden>
+            <div class="pa-toolbar">
+              <div class="pa-availfilter" role="group" aria-label="Filtrar por disponibilidad">
+                <button class="pa-avail is-active" data-avail="" type="button">Todas</button>
+                <button class="pa-avail" data-avail="on" type="button">Disponibles</button>
+                <button class="pa-avail" data-avail="off" type="button">No disponibles</button>
+              </div>
+              <input id="pa-search" class="pa-input pa-search" type="search" placeholder="Buscar por nombre…" autocomplete="off" />
+              <span id="pa-count" class="pa-count"></span>
+            </div>
+
+            <div class="pa-genscroll">
+              <div class="pa-rows-head">
+                <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
+                <span>Predominancia</span><span>THC</span><span>CBD</span>
+                <span>Formato</span><span>Sabores</span><span>Efectos</span><span>Foto</span><span></span>
+              </div>
+              <div id="pa-list" class="pa-rows"></div>
+            </div>
+            <button id="pa-add" type="button" class="pa-btn pa-btn-ghost">+ Agregar genética</button>
+
+            <div class="pa-savebar">
+              <span id="pa-save-status" class="pa-save-status"></span>
+              <button id="pa-save" type="button" class="pa-btn pa-btn-primary">Guardar cambios</button>
+            </div>
           </div>
         </div>
 
@@ -530,23 +540,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>`
     }
 
+    // Categoría activa dentro de Productos: aceites | cremas | extracciones | flores
+    let prodCatActual = 'aceites'
+
+    // Solo la categoría activa (Aceites/Cremas/Extracciones) — se edita una
+    // por vez, como las otras 3 categorías del front (Flores es el editor
+    // de genéticas de siempre, ver irProdCat).
     function renderProductos() {
       const wrap = document.getElementById('pa-prods-wrap')
-      wrap.innerHTML = Object.keys(CAT_LABEL).map((cat) => {
-        const items = PRECIOS[cat] || []
-        const cards = items.map((it, i) => prodCard(cat, it, i)).join('')
-        return `
-          <section class="pa-cat">
-            <div class="pa-cat-head">
-              <h2 class="pa-cat-title">${CAT_LABEL[cat]}</h2>
-              <span class="pa-count">${items.length} producto(s)</span>
-              <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-prod-add" data-cat="${cat}">+ Agregar</button>
-            </div>
-            ${cards
-              ? `<div class="pa-prods">${cards}</div>`
-              : `<p class="pa-empty">Sin productos en esta categoría todavía.</p>`}
-          </section>`
-      }).join('')
+      const cat = prodCatActual
+      if (!CAT_LABEL[cat]) return // 'flores' u otro valor no simple: nada que pintar acá
+      const items = PRECIOS[cat] || []
+      const cards = items.map((it, i) => prodCard(cat, it, i)).join('')
+      wrap.innerHTML = `
+        <section class="pa-cat">
+          <div class="pa-cat-head">
+            <h2 class="pa-cat-title">${CAT_LABEL[cat]}</h2>
+            <span class="pa-count">${items.length} producto(s)</span>
+            <button type="button" class="pa-btn pa-btn-ghost pa-btn-slim pa-prod-add" data-cat="${cat}">+ Agregar</button>
+          </div>
+          ${cards
+            ? `<div class="pa-prods">${cards}</div>`
+            : `<p class="pa-empty">Sin productos en esta categoría todavía.</p>`}
+        </section>`
       pintarProdDot()
     }
 
@@ -703,32 +719,52 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const prods = Object.values(PRECIOS).flat().length
       const chips = [
         ['pedidos', `<strong class="is-green">${activas}</strong> reserva(s) activa(s)`],
-        ['geneticas', `<strong class="is-violet">${disp}</strong> en carta`],
+        ['productos', `<strong class="is-violet">${disp}</strong> en carta`, 'flores'],
         ['productos', `<strong>${prods}</strong> producto(s)`],
       ]
       if (SOCIOS_COUNT !== null) chips.push(['socios', `<strong>${SOCIOS_COUNT}</strong> socio(s)`])
-      el.innerHTML = chips.map(([tab, html]) => `<button type="button" class="pa-stat" data-goto="${tab}">${html}</button>`).join('')
+      el.innerHTML = chips.map(([tab, html, prodcat]) => `<button type="button" class="pa-stat" data-goto="${tab}"${prodcat ? ` data-prodcat="${prodcat}"` : ''}>${html}</button>`).join('')
     }
     document.getElementById('pa-stats').addEventListener('click', (e) => {
       const chip = e.target.closest('.pa-stat')
-      if (chip) irATab(chip.getAttribute('data-goto'))
+      if (chip) irATab(chip.getAttribute('data-goto'), chip.getAttribute('data-prodcat') || undefined)
     })
     let SOCIOS_COUNT = null
 
     /* ── Pestañas ── */
-    let tabActual = 'pedidos'
-    function irATab(name) {
+    let tabActual = 'socios'
+    function irATab(name, prodcat) {
+      // Compat: algún link/aviso viejo puede seguir apuntando a "geneticas"
+      // como si fuera una pestaña propia — ahora vive dentro de Productos.
+      if (name === 'geneticas') { name = 'productos'; prodcat = prodcat || 'flores' }
       tabActual = name
       document.querySelectorAll('.pa-tab').forEach((t) => t.classList.toggle('is-active', t.dataset.tab === name))
-      ;['geneticas', 'pedidos', 'productos', 'socios'].forEach((n) => {
+      ;['pedidos', 'productos', 'socios'].forEach((n) => {
         const panel = document.getElementById('tab-' + n)
         if (panel) panel.hidden = n !== name
       })
       if (name === 'socios') { loadSocios(); loadIntentos(); setTimeout(() => document.getElementById('pa-socio-email')?.focus(), 100) }
       if (name === 'pedidos') loadPedidos()
-      if (name === 'productos') renderProductos()
+      if (name === 'productos') irProdCat(prodcat || prodCatActual)
     }
     document.querySelectorAll('.pa-tab').forEach((tab) => tab.addEventListener('click', () => irATab(tab.dataset.tab)))
+
+    // Sub-navegación de Productos: las 4 categorías del front, una visible
+    // por vez. Aceites/Cremas/Extracciones comparten el editor simple
+    // (precio + foto); Flores muestra el editor de genéticas de siempre.
+    function irProdCat(cat) {
+      prodCatActual = cat
+      document.querySelectorAll('.pa-prodcat-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.prodcat === cat))
+      const esFlores = cat === 'flores'
+      document.getElementById('pa-prodcat-simple').hidden = esFlores
+      document.getElementById('tab-geneticas').hidden = !esFlores
+      if (!esFlores) renderProductos()
+    }
+    document.getElementById('pa-prodcat').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pa-prodcat-btn')
+      if (!btn) return
+      irProdCat(btn.dataset.prodcat)
+    })
 
     // Reservas frescas sin tocar nada: refresh cada 60s con la pestaña visible
     setInterval(() => {
@@ -1438,17 +1474,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       render()
       loadPrecios()
-      // Aterrizar donde está el trabajo del día: Reservas si hay activas —
-      // salvo que se llegue con ?ir=socios (link directo del aviso de
-      // WhatsApp de una solicitud nueva), que siempre manda.
       await loadPedidos()
-      const irDirecto = new URLSearchParams(location.search).get('ir')
-      if (irDirecto === 'socios' && data.isSuperAdmin) {
-        irATab('socios')
-      } else {
-        const activas = PEDIDOS.filter((p) => p.estado === 'pendiente' || p.estado === 'listo').length
-        irATab(activas > 0 ? 'pedidos' : 'geneticas')
-      }
+      // Socios es la pestaña por defecto (Reservas es la secundaria) — salvo
+      // que este admin no sea super admin, que no ve Socios y cae a Reservas.
+      irATab(data.isSuperAdmin ? 'socios' : 'pedidos')
       return true
     }
 
@@ -1696,6 +1725,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-tab.is-active { color: var(--pa-cream); border-bottom-color: var(--pa-violet); }
   .pa-tab[hidden] { display: none; }
   .pa-tab-panel[hidden] { display: none; }
+  #pa-prodcat-simple[hidden], #tab-geneticas[hidden] { display: none; }
 
   /* ── Genéticas: toolbar (filtros + buscador) ── */
   .pa-toolbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
