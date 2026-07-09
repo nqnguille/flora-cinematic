@@ -77,7 +77,6 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
       <div class="sl-solicitud-card" role="dialog" aria-modal="true" aria-labelledby="sl-solicitud-title">
         <button type="button" id="sl-solicitud-close" class="sl-solicitud-x" aria-label="Cerrar">✕</button>
         <h2 id="sl-solicitud-title" class="sl-solicitud-title">Solicitar acceso</h2>
-        <p class="sl-solicitud-sub">Dejanos tus datos y te contactamos para coordinar tu ingreso al club.</p>
         <form id="sl-solicitud-form" class="sl-solicitud-form">
           <label class="sl-solicitud-field">
             <span>Nombre y apellido</span>
@@ -288,8 +287,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
     color: var(--sl-muted); font-size: 1.1rem; line-height: 1; padding: 6px; cursor: pointer;
   }
   .sl-solicitud-x:hover { color: var(--sl-cream); }
-  .sl-solicitud-title { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--sl-cream); margin: 0 0 0.3rem; }
-  .sl-solicitud-sub { font-size: 0.85rem; color: var(--sl-muted); margin: 0 0 1.3rem; }
+  .sl-solicitud-title { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--sl-cream); margin: 0 0 1.3rem; }
   .sl-solicitud-form { display: flex; flex-direction: column; gap: 0.9rem; }
   .sl-solicitud-form[hidden] { display: none; }
   .sl-solicitud-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; color: var(--sl-muted); }
