@@ -1766,10 +1766,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
    (la card con foto) NO depende de hover: barre solo, en loop, para que
    el efecto de "luz moviéndose sobre metal" se vea sin que nadie toque
    la tarjeta. Va después de la regla base para ganarle en la cascada
-   (misma especificidad, orden de aparición decide). */
-.fl-acceso-card--photo::after { opacity: 1; animation: fl-acceso-card-sweep 6s linear infinite; }
+   (misma especificidad, orden de aparición decide). El soft-light +
+   40% blanco de la versión base es casi invisible sobre una foto de
+   metal oscuro — acá lo reemplazamos por un glint más chico y opaco en
+   screen, que sí se nota como brillo continuo cruzando la superficie. */
+.fl-acceso-card--photo::after {
+  background: radial-gradient(190px 190px at var(--mx, 22%) var(--my, 8%), rgba(255,255,255,0.9), rgba(255,255,255,0.2) 45%, transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: fl-acceso-card-sweep 6s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo::after { animation: none; opacity: 0.6; }
+  .fl-acceso-card--photo::after { animation: none; opacity: 0.4; }
 }
 
 /* Anillo de foco en capas (más visible que un outline simple, sigue siendo
