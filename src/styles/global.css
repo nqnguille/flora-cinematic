@@ -1773,58 +1773,37 @@ html.no-js .reveal { opacity: 1; transform: none; }
    visible, exactamente el síntoma reportado: "para mí gira, para Guille
    está fija"). rotate() sobre un conic-gradient corre en el compositor
    desde el día uno, con soporte universal incluso en Android viejo. */
-/* radial-gradient en vez de conic-gradient: un conic tiene bordes DUROS
-   entre color y transparente (cortan en un grado exacto) — con blur
-   grande pero el elemento mucho más grande todavía, el blur no alcanza a
-   ablandar esos cortes y se ve como un bloque semi-transparente, no como
-   luz. radial-gradient ya se desvanece solo, sin depender del blur. */
-.fl-acceso-card--photo::before {
-  content: '';
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  /* .fl-acceso-card::before (el bisel grabado, base) trae su propio
-     box-shadow pensado para un recuadro de 8px — sin resetearlo acá se
-     estiraba y se veía como un contorno blanco fantasma flotando al
-     lado de la tarjeta en hover. */
-  box-shadow: none;
-  /* Contenido DENTRO de la tarjeta (mismo inset:0 + radio que ::after) —
-     ver comentario arriba, en la regla base, sobre por qué ya no se
-     derrama hacia afuera. */
-  border-radius: var(--fl-radius);
-  /* Un solo foco blanco "de atrás" — sin color, misma paleta que el
-     reflejo de adelante. */
-  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 40%);
-  filter: blur(18px);
-  opacity: 1;
-  animation: fl-card-orbit-back 13s linear infinite reverse;
-}
+/* Nuevo intento, más simple: un solo rayo lineal (no un blob), con el
+   eje pasando por el centro exacto de la tarjeta — la banda del
+   linear-gradient está centrada en el propio ::after (inset:0, mismo
+   tamaño que la card), así que "rotate()" gira ese eje central sin
+   necesidad de compensar ninguna posición descentrada. Sin
+   conic-gradient (bordes duros) ni radial-gradient offset (quedaba como
+   blob, no como rayo) — un linear-gradient ya se desvanece solo a los
+   costados de la banda. */
+.fl-acceso-card--photo::before { content: none; }
 .fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
   border-radius: var(--fl-radius);
-  background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
+  background: linear-gradient(90deg,
+    transparent 0%, transparent 44%,
+    rgba(255,255,255,0.95) 50%,
+    transparent 56%, transparent 100%);
   mix-blend-mode: screen;
-  opacity: 0.95;
-  animation: fl-card-orbit-front 8s linear infinite;
+  opacity: 1;
+  transform-origin: center center;
+  animation: fl-card-beam-rotate 8s linear infinite;
 }
-@keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes fl-card-orbit-back  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-/* Al hover/focus, el giro de las luces se pausa — quieto mientras se
-   interactúa, sigue girando solo en reposo. */
-.fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
-.fl-acceso-card--photo:focus-visible::before, .fl-acceso-card--photo:focus-visible::after {
+@keyframes fl-card-beam-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* Al hover/focus, el giro se pausa — quieto mientras se interactúa,
+   sigue girando solo en reposo. */
+.fl-acceso-card--photo:hover::after, .fl-acceso-card--photo:focus-visible::after {
   animation-play-state: paused;
 }
-/* .fl-acceso-card:hover::after (base, más abajo) sube opacity a 1 sobre
-   este MISMO ::after — mi valor de reposo ya es 0.95, así que la
-   diferencia real es mínima (no es la causa del "cuadrado" reportado,
-   ver -webkit-tap-highlight-color más abajo), pero se fija igual para
-   que el hover no cambie NADA del reflejo, ni siquiera un 5%. */
-.fl-acceso-card--photo:hover::after, .fl-acceso-card--photo:focus-visible::after {
-  opacity: 0.95;
-}
 @media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
+  .fl-acceso-card--photo::after { animation: none; }
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
