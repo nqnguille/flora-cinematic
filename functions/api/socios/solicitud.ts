@@ -28,7 +28,7 @@ async function notificar(env: Env, sol: { name: string; email: string; phone: st
       `📧 ${sol.email}\n` +
       `📱 ${sol.phone}\n` +
       `${copy.detalle}\n` +
-      `Panel: https://floraong.ar/socios/admin/`;
+      `Aprobar acá: https://floraong.ar/socios/admin/?ir=socios`;
     await fetch(NOTIFY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
