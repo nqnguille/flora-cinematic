@@ -1199,7 +1199,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const data = await res.json().catch(() => ({}))
         // ok real de negocio, no solo el status HTTP: el server ahora confirma
         // con un read-back que el alta pegó de verdad antes de decir que sí.
-        return { ok: res.ok && data.ok !== false, error: data.error || '' }
+        return { ok: res.ok && data.ok !== false, error: data.error || '', mailEnviado: data.mailEnviado, mailError: data.mailError }
       } catch {
         return { ok: false, error: 'sin conexión' } // sin red: que el caller muestre el error, nunca silencio
       }
@@ -1347,7 +1347,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       temp.disabled = true
       temp.textContent = 'Aprobando…'
       const nota = 'Acceso temporal (24h desde el primer login)'
-      const { ok, error } = await saveSocio(email, nota, { name, temporal: true })
+      const { ok, error, mailEnviado, mailError } = await saveSocio(email, nota, { name, temporal: true })
       if (ok) {
         await fetch(endpoint, {
           method: 'DELETE',
@@ -1357,6 +1357,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         })
         loadSocios()
         loadIntentos()
+        const status = document.getElementById('pa-socio-status')
+        status.classList.remove('is-ok', 'is-err')
+        if (mailEnviado === false) {
+          // El alta funcionó, pero el mail no salió — avisamos fuerte porque
+          // si no, Sofi cree que ya le llegó y nadie hace nada.
+          status.classList.add('is-err')
+          status.textContent = `Se aprobó, pero el mail NO salió (${mailError || 'error desconocido'}) — avisale vos por WhatsApp.`
+          setTimeout(() => { status.textContent = ''; status.classList.remove('is-err') }, 12000)
+        } else {
+          status.classList.add('is-ok')
+          status.textContent = 'Acceso temporal aprobado y mail enviado ✓'
+          setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok') }, 6000)
+        }
       } else {
         temp.disabled = false
         temp.textContent = 'Aprobar temporal (24h)'

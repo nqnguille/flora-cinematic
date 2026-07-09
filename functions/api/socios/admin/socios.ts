@@ -33,10 +33,12 @@ async function guard(request: Request, env: Env) {
 
 // Mail de bienvenida al acceso de prueba: avisa que YA puede entrar y que es
 // temporal, sin decir cuántas horas dura (la cuenta atrás arranca recién con
-// el primer login, no con este mail — ver login.ts). Sin dominio verificado
-// en Resend, el envío falla silencioso: nunca bloquea el alta del socio.
-async function enviarMailTemporal(env: Env, { email, name }: { email: string; name: string }) {
-  if (!env.RESEND_API_KEY) return;
+// el primer login, no con este mail — ver login.ts). El envío nunca bloquea
+// el alta del socio, pero SÍ devolvemos si salió o no — así el panel puede
+// avisar "se aprobó pero el mail no salió" en vez de fallar en silencio
+// (el riesgo real: un dominio sin verificar en Resend y nadie se entera).
+async function enviarMailTemporal(env: Env, { email, name }: { email: string; name: string }): Promise<{ enviado: boolean; error?: string }> {
+  if (!env.RESEND_API_KEY) return { enviado: false, error: 'RESEND_API_KEY no configurado' };
   const saludo = name ? name.split(/\s+/)[0] : '';
   const html = `
     <div style="font-family:-apple-system,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#1C1626">
@@ -48,7 +50,7 @@ async function enviarMailTemporal(env: Env, { email, name }: { email: string; na
       <p style="font-size:14px;line-height:1.6;color:#666">— Equipo Flora</p>
     </div>`;
   try {
-    await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -58,8 +60,13 @@ async function enviarMailTemporal(env: Env, { email, name }: { email: string; na
         html,
       }),
     });
-  } catch {
-    /* el mail nunca bloquea el alta */
+    if (!res.ok) {
+      const detalle = await res.text().catch(() => '');
+      return { enviado: false, error: `Resend ${res.status}: ${detalle.slice(0, 200)}` };
+    }
+    return { enviado: true };
+  } catch (err: any) {
+    return { enviado: false, error: String(err?.message || err) };
   }
 }
 
@@ -136,9 +143,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ ok: false, error: 'el guardado no se pudo confirmar, probá de nuevo' }, { status: 500 });
   }
 
-  if (marcarTemporal) await enviarMailTemporal(env, { email, name: rec.name || nombre });
+  let mail: { enviado: boolean; error?: string } | null = null;
+  if (marcarTemporal) mail = await enviarMailTemporal(env, { email, name: rec.name || nombre });
 
-  return Response.json({ ok: true, email });
+  return Response.json({ ok: true, email, mailEnviado: mail?.enviado ?? null, mailError: mail?.error });
 };
 
 // Baja
