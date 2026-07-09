@@ -2147,6 +2147,14 @@ html.no-js .reveal { opacity: 1; transform: none; }
   .fl-panel-desc { margin: 10px 0 0; }
   .fl-panel-cta { margin-top: 14px; }
 }
+/* El scrim de .fl-panel::after solo oscurece la base de la foto (pensado
+   para texto anclado abajo, como en desktop). En mobile/touch el texto pasa
+   a ocupar la card de arriba a abajo (ver bloques de arriba), así que ahí
+   necesita oscurecer la foto pareja — si no, el título queda sobre la parte
+   superior de la foto sin oscurecer y se ve blanco sobre claro, ilegible. */
+@media (max-width: 760px), (hover: none) {
+  .fl-panel::after { background: rgba(20, 14, 28, 0.6); }
+}
 
 
 /* ═══ Modo socio en la landing: la página se transforma con la sesión ═══ */
