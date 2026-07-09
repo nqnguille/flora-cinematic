@@ -28,12 +28,10 @@ const {
 
 // Imán para curiosos que todavía no son socios: la entrada por Google de
 // arriba es para quien YA está en el padrón — esto es la puerta de al lado,
-// para quien recién está averiguando. "Sí, tengo REPROCANN" abre un
-// formulario corto (más fácil de convertir que un link a WhatsApp — ver
-// #sl-solicitud-modal más abajo); "Todavía no" sigue yendo directo a
-// WhatsApp con el mensaje ya armado.
-const waNumero = '5492996375723'
-const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, todavía no tengo mi REPROCANN, pero quiero ver la carta y asociarme al club 🌿')}`
+// para quien recién está averiguando. Los dos botones abren el MISMO modal
+// (mismos 3 campos), con copy distinto según la intención — "Sí, tengo
+// REPROCANN" pide acceso a la carta; "Todavía no" coordina la entrevista
+// médica, el primer paso para tramitarlo (ver #sl-solicitud-modal).
 ---
 
 <div id="socios-login" class="sl-login">
@@ -60,8 +58,8 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
           <div class="sl-join-divider" aria-hidden="true"></div>
           <p class="sl-join-q">¿Tenés REPROCANN y querés ver nuestra carta?</p>
           <div class="sl-join-btns">
-            <button type="button" id="sl-solicitud-open" class="sl-join-btn">Sí, tengo REPROCANN</button>
-            <a class="sl-join-btn sl-join-btn-ghost" href={waNo} target="_blank" rel="noopener noreferrer">Todavía no</a>
+            <button type="button" id="sl-solicitud-open" data-intent="acceso" class="sl-join-btn">Sí, tengo REPROCANN</button>
+            <button type="button" id="sl-entrevista-open" data-intent="entrevista" class="sl-join-btn sl-join-btn-ghost">Todavía no</button>
           </div>
         </div>
       )}
@@ -69,10 +67,10 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
   </div>
 
   {joinPrompt && (
-    <!-- Modal "Ya tengo REPROCANN": reemplaza el link directo a WhatsApp por
-         un formulario corto — el equipo lo revisa y aprueba a mano desde
-         /socios/admin (pestaña Solicitudes). Menos fricción que "escribinos
-         y esperá respuesta" y más fácil de convertir. -->
+    <!-- Un solo modal (mismos 3 campos), reusado por los dos botones de
+         arriba con copy distinto según la intención — reemplaza los links
+         directos a WhatsApp por un formulario corto que el equipo revisa y
+         aprueba a mano desde /socios/admin (pestaña Solicitudes). -->
     <div id="sl-solicitud-modal" class="sl-solicitud-modal" hidden data-lenis-prevent>
       <div class="sl-solicitud-card" role="dialog" aria-modal="true" aria-labelledby="sl-solicitud-title">
         <button type="button" id="sl-solicitud-close" class="sl-solicitud-x" aria-label="Cerrar">✕</button>
@@ -95,24 +93,46 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
           <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Solicitar acceso</button>
         </form>
         <div id="sl-solicitud-ok" class="sl-solicitud-ok" hidden>
-          <p>¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.</p>
+          <p id="sl-solicitud-ok-msg">¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.</p>
           <button type="button" id="sl-solicitud-ok-close" class="sl-solicitud-submit">Cerrar</button>
         </div>
       </div>
     </div>
 
     <script>
+      // Copy por intención: mismo modal, mismos campos, mensaje distinto.
+      const SL_COPY = {
+        acceso: {
+          title: 'Solicitar acceso',
+          submit: 'Solicitar acceso',
+          ok: '¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.',
+        },
+        entrevista: {
+          title: 'Coordinar entrevista médica',
+          submit: 'Coordinar entrevista',
+          ok: '¡Listo! Recibimos tu pedido — te contactamos por WhatsApp para coordinar tu entrevista médica.',
+        },
+      } as const
+      type SlIntent = keyof typeof SL_COPY
+
       const slModal = document.getElementById('sl-solicitud-modal')
       if (slModal) {
-        const openBtn = document.getElementById('sl-solicitud-open')
+        const openBtns = document.querySelectorAll<HTMLButtonElement>('[data-intent]')
         const closeBtn = document.getElementById('sl-solicitud-close')
         const okCloseBtn = document.getElementById('sl-solicitud-ok-close')
         const form = document.getElementById('sl-solicitud-form') as HTMLFormElement
         const okBlock = document.getElementById('sl-solicitud-ok') as HTMLElement
+        const okMsg = document.getElementById('sl-solicitud-ok-msg') as HTMLElement
         const msg = document.getElementById('sl-solicitud-msg') as HTMLElement
         const submitBtn = document.getElementById('sl-solicitud-submit') as HTMLButtonElement
+        const titleEl = document.getElementById('sl-solicitud-title') as HTMLElement
+        let intent: SlIntent = 'acceso'
 
-        function open() {
+        function open(next: SlIntent) {
+          intent = next
+          const copy = SL_COPY[intent]
+          titleEl.textContent = copy.title
+          submitBtn.textContent = copy.submit
           slModal!.hidden = false
           form.hidden = false
           okBlock.hidden = true
@@ -122,7 +142,10 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
         function close() {
           slModal!.hidden = true
         }
-        openBtn?.addEventListener('click', open)
+        openBtns.forEach((btn) => {
+          const btnIntent = (btn.dataset.intent as SlIntent) || 'acceso'
+          btn.addEventListener('click', () => open(btnIntent))
+        })
         closeBtn?.addEventListener('click', close)
         okCloseBtn?.addEventListener('click', close)
         slModal.addEventListener('click', (e) => { if (e.target === slModal) close() })
@@ -143,10 +166,12 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
                 email: String(data.get('email') || ''),
                 phone: String(data.get('phone') || ''),
                 website: String(data.get('website') || ''),
+                intent,
               }),
             })
             const result = await res.json().catch(() => ({}))
             if (res.ok && result.ok) {
+              okMsg.textContent = SL_COPY[intent].ok
               form.hidden = true
               okBlock.hidden = false
             } else {
@@ -158,7 +183,7 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
             msg.hidden = false
           } finally {
             submitBtn.disabled = false
-            submitBtn.textContent = 'Solicitar acceso'
+            submitBtn.textContent = SL_COPY[intent].submit
           }
         })
       }
@@ -269,7 +294,6 @@ const waNo = `https://wa.me/${waNumero}?text=${encodeURIComponent('Hola Flora, t
   .sl-join-btn:hover { background: rgba(60, 180, 146, 0.24); transform: translateY(-1px); }
   .sl-join-btn-ghost { background: none; border-color: rgba(244, 241, 247, 0.2); color: var(--sl-muted); }
   .sl-join-btn-ghost:hover { border-color: rgba(244, 241, 247, 0.4); background: rgba(244, 241, 247, 0.06); color: var(--sl-cream); }
-  button.sl-join-btn { font: inherit; }
 
   /* Modal "Ya tengo REPROCANN" */
   .sl-solicitud-modal {

@@ -116,7 +116,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="pa-intentos-block" class="pa-intentos-block" hidden>
             <div class="pa-intentos-head">
               <h2 class="pa-subhead">Solicitudes <span id="pa-intentos-count" class="pa-count-badge"></span></h2>
-              <p class="pa-help">Gente que dejó sus datos diciendo que ya tiene REPROCANN, o que probó entrar a la carta con una cuenta de Google que todavía no es socia — leads para aprobar a mano.</p>
+              <p class="pa-help">Gente que dejó sus datos pidiendo acceso a la carta o coordinar su entrevista médica, o que probó entrar con una cuenta de Google que todavía no es socia — leads para aprobar a mano.</p>
             </div>
             <div id="pa-intentos-list" class="pa-socios-list pa-intentos-list"></div>
           </div>
@@ -1239,7 +1239,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function intentoRow(i) {
       const ava = `<span class="pa-socio-ava"><span class="pa-socio-ini">${esc(initials(i.name || i.email))}</span>${i.picture ? `<img src="${esc(i.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()" />` : ''}</span>`
       const badge = i.tipo === 'formulario'
-        ? `<span class="pa-socio-badge is-on">Dice tener REPROCANN</span>`
+        ? (i.intent === 'entrevista'
+            ? `<span class="pa-socio-badge is-warn">Quiere entrevista médica</span>`
+            : `<span class="pa-socio-badge is-on">Dice tener REPROCANN</span>`)
         : `<span class="pa-socio-badge is-warn">${i.attempts} intento${i.attempts === 1 ? '' : 's'}</span>`
       const fechaLine = i.tipo === 'formulario'
         ? `Solicitud ${esc(fmtRel(i.creado))} · ${esc(fmtFecha(i.creado))}`
@@ -1298,7 +1300,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const email = add.getAttribute('data-email')
       const item = INTENTOS_LIST.find((i) => i.email === email)
       const endpoint = item?.tipo === 'formulario' ? SOLICITUD_ENDPOINT.formulario : SOLICITUD_ENDPOINT.intento
-      const nota = item?.tipo === 'formulario' ? `Solicitud web${item.phone ? ' · ' + item.phone : ''}` : 'Vía intento de acceso'
+      const notaFormulario = item?.intent === 'entrevista' ? 'Solicitud web · entrevista médica' : 'Solicitud web · ya tiene REPROCANN'
+      const nota = item?.tipo === 'formulario' ? `${notaFormulario}${item.phone ? ' · ' + item.phone : ''}` : 'Vía intento de acceso'
       add.disabled = true
       add.textContent = 'Agregando…'
       const { ok, error } = await saveSocio(email, nota)

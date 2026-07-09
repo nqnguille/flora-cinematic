@@ -35,6 +35,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         email: k.name,
         name: rec.name || '',
         phone: rec.phone || '',
+        intent: rec.intent === 'entrevista' ? 'entrevista' : 'acceso',
         creado: rec.creado || null,
         actualizado: rec.actualizado || null,
       };
