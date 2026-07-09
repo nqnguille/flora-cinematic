@@ -1686,32 +1686,20 @@ html.no-js .reveal { opacity: 1; transform: none; }
      reemplazado" — mismo resultado visual, ruta de render más simple. */
   background: url('/img/flora-carta-tarjeta-metal-v4.png') center / cover no-repeat;
   padding: 0; border: none;
-  /* Glow permanente (no solo al hover) para que la card negra se destaque
-     del fondo oscuro del módulo — teal + violeta de marca, bien visible
-     en reposo; el hover (más abajo) lo intensifica todavía más. Late en
-     loop despacio (4s) — a pedido explícito, aun sabiendo que la versión
-     estática fue la que ganó una comparación de diseño anterior. */
+  /* Glow permanente, ya a la intensidad de hover (no el valor tenue de
+     reposo) — a pedido explícito: "quiero el efecto de iluminación
+     similar al que tiene cuando le pasás el mouse", sin depender del
+     hover. Reemplaza el loop que respira (probado antes, no era esto). */
   box-shadow:
     0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
-    0 0 50px -6px rgba(20,138,145,0.45), 0 0 80px -10px rgba(56,31,86,0.4);
-  animation: fl-acceso-card-breathe 4s ease-in-out infinite;
+    0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
 }
-.fl-acceso-card--photo::before, .fl-acceso-card--photo::after { content: none; }
-.fl-acceso-card--photo:hover, .fl-acceso-card--photo:focus-visible { animation-play-state: paused; }
-@keyframes fl-acceso-card-breathe {
-  0%, 100% {
-    box-shadow:
-      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
-      0 0 50px -6px rgba(20,138,145,0.45), 0 0 80px -10px rgba(56,31,86,0.4);
-  }
-  50% {
-    box-shadow:
-      0 26px 54px -18px rgba(0,0,0,0.88), 0 4px 0 rgba(0,0,0,0.6),
-      0 0 68px -4px rgba(20,138,145,0.65), 0 0 100px -6px rgba(56,31,86,0.58);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fl-acceso-card--photo { animation: none; }
+.fl-acceso-card--photo::before { content: none; }
+@property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
+@property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
+@keyframes fl-acceso-card-sweep {
+  0%, 100% { --mx: 10%; --my: 0%; }
+  50% { --mx: 90%; --my: 60%; }
 }
 
 /* Bisel grabado (el canto de la tarjeta) */
@@ -1744,6 +1732,16 @@ html.no-js .reveal { opacity: 1; transform: none; }
     inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
 }
 .fl-acceso-card:hover::after, .fl-acceso-card:focus-visible::after { opacity: 1; }
+
+/* El reflejo que en el resto de las cards solo aparece al hover, acá
+   (la card con foto) NO depende de hover: barre solo, en loop, para que
+   el efecto de "luz moviéndose sobre metal" se vea sin que nadie toque
+   la tarjeta. Va después de la regla base para ganarle en la cascada
+   (misma especificidad, orden de aparición decide). */
+.fl-acceso-card--photo::after { opacity: 1; animation: fl-acceso-card-sweep 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .fl-acceso-card--photo::after { animation: none; opacity: 0.6; }
+}
 
 /* Anillo de foco en capas (más visible que un outline simple, sigue siendo
    100% accesible con teclado) */
