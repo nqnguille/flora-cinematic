@@ -1113,14 +1113,23 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   .welcome-cue-line { display: none; }
 }
 
-/* Omitir introducción — centrado arriba, debajo del nav fijo (60px) y de
-   los dots de progreso, en desktop y mobile por igual */
-.welcome-skip {
+/* Progreso del relato (dots + omitir), agrupados y centrados abajo, arriba
+   del cue "deslizá" — se esfuman antes de que aparezcan los CTAs finales
+   (welcome-outro), ver finishIntro() en main.ts */
+.welcome-progress {
   position: absolute;
   left: 50%;
-  top: calc(60px + 2.15rem + env(safe-area-inset-top, 0px));
+  bottom: calc(7.2rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+html.no-js .welcome-progress { display: none; }
+
+.welcome-skip {
   font-family: var(--font-ui);
   font-size: 0.72rem;
   font-weight: 600;
@@ -1140,19 +1149,8 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   background: rgba(10,18,12,0.55);
   outline: none;
 }
-html.no-js .welcome-skip { display: none; }
 
-/* Puntos de progreso del relato — debajo del nav fijo (60px), si no quedan
-   ilegibles contra los links del nav (mismo problema que tenía welcome-skip) */
-.welcome-dots {
-  position: absolute;
-  left: 50%;
-  top: calc(60px + 1rem + env(safe-area-inset-top, 0px));
-  transform: translateX(-50%);
-  z-index: 4;
-  display: flex;
-  gap: 8px;
-}
+.welcome-dots { display: flex; gap: 8px; }
 .welcome-dot {
   width: 6px;
   height: 6px;
@@ -1161,7 +1159,6 @@ html.no-js .welcome-skip { display: none; }
   transition: background 0.35s ease, transform 0.35s ease;
 }
 .welcome-dot.is-on { background: var(--bone); transform: scale(1.35); }
-html.no-js .welcome-dots { display: none; }
 
 /* Fallback sin JS: mostramos el cierre del relato */
 html.no-js .welcome-img[data-bg="0"] { opacity: 0; }

@@ -809,8 +809,9 @@ function initWelcome() {
   const lines   = gsap.utils.toArray<HTMLElement>('.welcome-line')
   const outro   = section.querySelector<HTMLElement>('.welcome-outro')
   const cue     = section.querySelector<HTMLElement>('.welcome-cue')
-  const dots    = gsap.utils.toArray<HTMLElement>('.welcome-dot')
-  const skipBtn = section.querySelector<HTMLButtonElement>('.welcome-skip')
+  const dots     = gsap.utils.toArray<HTMLElement>('.welcome-dot')
+  const skipBtn  = section.querySelector<HTMLButtonElement>('.welcome-skip')
+  const progress = section.querySelector<HTMLElement>('.welcome-progress')
   if (!stage || imgs.length === 0 || lines.length === 0) return
 
   const steps = lines.length
@@ -832,7 +833,7 @@ function initWelcome() {
     gsap.set(lines[steps - 1], { opacity: 1 })
     if (outro) gsap.set(outro, { opacity: 1, y: 0 })
     if (cue) gsap.set(cue, { opacity: 0 })
-    if (skipBtn) skipBtn.hidden = true
+    if (progress) gsap.set(progress, { opacity: 0 })
     dots.forEach((d, i) => d.classList.toggle('is-on', i === steps - 1))
     return
   }
@@ -906,9 +907,16 @@ function initWelcome() {
     if (finished) return
     finished = true
     showCue(false)
-    if (dots.length) gsap.to(dots, { opacity: 0, duration: 0.3 })
-    if (skipBtn) gsap.to(skipBtn, { opacity: 0, duration: 0.3, onComplete: () => { skipBtn.hidden = true } })
-    if (outro) gsap.to(outro, { opacity: 1, y: 0, duration: 0.5 })
+    // El grupo de progreso (dots + omitir) se esfuma primero — recién cuando
+    // ya casi terminó de irse arrancan los CTAs finales, para que no se
+    // sientan como que aparecen "todos juntos".
+    if (progress) {
+      gsap.to(progress, {
+        opacity: 0, duration: 0.3, ease: 'power1.out',
+        onComplete: () => { progress.style.visibility = 'hidden' },
+      })
+    }
+    if (outro) gsap.to(outro, { opacity: 1, y: 0, duration: 0.5, delay: 0.2 })
     stopListening()
     unlockScroll()
   }
