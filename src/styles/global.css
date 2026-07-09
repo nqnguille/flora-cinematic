@@ -1764,6 +1764,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-card--photo::before {
   content: '';
   position: absolute; inset: -55%; z-index: 0; pointer-events: none;
+  /* .fl-acceso-card::before (el bisel grabado, base) trae su propio
+     box-shadow pensado para un recuadro de 8px — sin resetearlo acá se
+     estiraba sobre esta caja gigante (-55%) y se veía como un contorno
+     blanco fantasma flotando al lado de la tarjeta en hover. */
+  box-shadow: none; border-radius: 0;
   background:
     radial-gradient(circle at 22% 28%, rgba(20,138,145,0.9) 0%, rgba(20,138,145,0) 38%),
     radial-gradient(circle at 78% 72%, rgba(56,31,86,0.9) 0%, rgba(56,31,86,0) 38%);
@@ -1774,6 +1779,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  box-shadow: none;
   border-radius: var(--fl-radius);
   background: radial-gradient(circle at 26% 24%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 42%);
   mix-blend-mode: screen;
