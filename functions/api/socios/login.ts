@@ -79,6 +79,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try { rec = JSON.parse(isSocio); } catch { rec = {}; } // valor legado "ok" → {}
   if (typeof rec !== 'object' || rec === null) rec = {};
 
+  // Acceso de prueba (24h desde el PRIMER login, no desde el alta — ver
+  // admin/socios.ts). Vencido, se lo trata como si nunca hubiera sido socio.
+  if (rec.temporal && rec.tempExpiraEn && Date.now() > new Date(rec.tempExpiraEn).getTime()) {
+    return Response.json(
+      { ok: false, error: 'Tu acceso de prueba expiró — escribinos por WhatsApp si querés asociarte.' },
+      { status: 403 }
+    );
+  }
+
   // El staff del club (ADMIN/SUPER_ADMIN) usa este mismo login para entrar al
   // panel: el consentimiento de "paciente reservando" no le aplica AHÍ. Pero
   // si esa misma persona entra por la CARTA (appContext !== 'admin') está
@@ -115,6 +124,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     rec.googleId = payload.sub || rec.googleId || '';
     rec.emailVerified = payload.email_verified;
     if (!rec.firstLogin) rec.firstLogin = now;
+    // Arranca la cuenta atrás de 24h del acceso de prueba, justo en este
+    // primer login (no antes) — para que "temporal" signifique 24h de uso
+    // real, no 24h desde que Sofi lo aprobó y quizás tardó en entrar.
+    if (rec.temporal && !rec.tempExpiraEn) {
+      rec.tempExpiraEn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    }
     rec.lastLogin = now;
     rec.logins = (rec.logins || 0) + 1;
     await env.SOCIOS.put(email, JSON.stringify(rec));
