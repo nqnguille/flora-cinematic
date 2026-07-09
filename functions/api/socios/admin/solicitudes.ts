@@ -26,20 +26,25 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (denied) return denied;
 
   const list = await env.SOLICITUDES.list();
+  // Los adjuntos (foto/PDF del REPROCANN) viven en el mismo namespace bajo
+  // "archivo:<email>" — no son solicitudes, hay que excluirlos del listado.
   const solicitudes = await Promise.all(
-    list.keys.map(async (k) => {
-      const raw = await env.SOLICITUDES.get(k.name);
-      let rec: any = {};
-      try { rec = raw ? JSON.parse(raw) : {}; } catch { rec = {}; }
-      return {
-        email: k.name,
-        name: rec.name || '',
-        phone: rec.phone || '',
-        intent: rec.intent === 'entrevista' ? 'entrevista' : 'acceso',
-        creado: rec.creado || null,
-        actualizado: rec.actualizado || null,
-      };
-    })
+    list.keys
+      .filter((k) => !k.name.startsWith('archivo:'))
+      .map(async (k) => {
+        const raw = await env.SOLICITUDES.get(k.name);
+        let rec: any = {};
+        try { rec = raw ? JSON.parse(raw) : {}; } catch { rec = {}; }
+        return {
+          email: k.name,
+          name: rec.name || '',
+          phone: rec.phone || '',
+          intent: rec.intent === 'entrevista' ? 'entrevista' : 'acceso',
+          tieneAdjunto: rec.tieneAdjunto === true,
+          creado: rec.creado || null,
+          actualizado: rec.actualizado || null,
+        };
+      })
   );
   solicitudes.sort((a, b) => String(b.creado).localeCompare(String(a.creado)));
   return Response.json({ ok: true, solicitudes });
@@ -61,5 +66,6 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   if (!email) return Response.json({ ok: false, error: 'falta email' }, { status: 400 });
 
   await env.SOLICITUDES.delete(email);
+  await env.SOLICITUDES.delete(`archivo:${email}`).catch(() => {});
   return Response.json({ ok: true });
 };
