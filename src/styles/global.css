@@ -1772,42 +1772,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
      comentario en ::before, más abajo, sobre por qué se volvió atrás de
      "derramar hacia afuera". */
 }
-@property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
-@property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
+@property --beam-angle { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
 
-/* Dos luces girando — SOLO transform (rotate) + opacity, nada de
-   box-shadow animado ni @property acá. La primera versión de este
-   efecto animaba box-shadow (fuerza repaint en cada frame; varios
-   navegadores lo throttlean o directamente lo saltean en modo ahorro de
-   batería / pestaña sin foco) y dependía de --mx/--my vía @property
-   para mover un radial-gradient (soporte parejo recién desde 2023-24;
-   si el motor no lo registra, no interpola el custom property y la
-   animación queda congelada en el valor inicial — sin ningún error
-   visible, exactamente el síntoma reportado: "para mí gira, para Guille
-   está fija"). rotate() sobre un conic-gradient corre en el compositor
-   desde el día uno, con soporte universal incluso en Android viejo. */
-/* Vuelta al "foco de luz" (dos blobs radiales) — el rayo lineal se
-   probó a pedido pero se vio peor, así que se revierte a la última
-   versión buena: un foco blanco "de atrás" (::before, blur, contenido
-   dentro del borde) + un reflejo blanco "de adelante" (::after, screen
-   blend), cada uno girando en su propio eje. */
-/* SIN border-radius acá a propósito: estos pseudo-elementos son cajas
-   rectangulares del mismo tamaño que la card (inset:0) que ROTAN. Si
-   además tienen su PROPIO border-radius, al girar sus esquinas/bordes
-   rectos se asoman por fuera de las esquinas redondeadas (que no
-   rotan) de la card padre — eso es lo que se veía como "una versión
-   girada del contorno del rectángulo" fantasma. El único recorte que
-   tiene que existir es el de la card padre (overflow:hidden, estático,
-   nunca rota) — estas cajas quedan sin su propio radio, y como el
-   contenido (radial-gradient) ya se apaga solo en el 40-42% del radio,
-   no hace falta clipearlas para que se vean redondeadas. */
-/* Glow de atrás: caja más grande que la card (inset negativo) para que
-   se derrame hacia afuera del borde — la "sombra que flota en el aire".
-   Del lado OPUESTO al reflejo de adelante (ese está arriba-izquierda,
-   este abajo-derecha) para que se sientan como dos luces acompañándose,
-   no superpuestas. El % de la posición es relativo a ESTA caja más
-   grande, no a la card — 82% cae justo en/más allá de la esquina
-   inferior-derecha visual de la card. */
+/* Un "rayo de faro" pivotando desde el centro de la card — a pedido, en
+   vez del punto de luz redondo (radial-gradient con --mx/--my
+   orbitando) ahora es una franja/cuña angular (conic-gradient) que
+   barre los 360° sin parar. Como la cuña nace en el centro y apunta
+   siempre hacia afuera, "girar sobre sí misma" y "recorrer la tarjeta"
+   son el mismo movimiento — no hace falta animar una posición aparte.
+   Sigue sin rotar la CAJA (inset:0, fija, mismas esquinas que la card):
+   lo único que se anima es el ángulo de arranque del gradiente
+   (--beam-angle vía @property), así que el mismo argumento del comentario
+   viejo sigue valiendo — nunca hay un borde propio de la caja que se
+   pueda asomar por fuera del recorte redondeado de la card. */
 /* Selector DOBLE (.fl-acceso-card--photo.fl-acceso-card--photo, misma
    clase repetida) a propósito: .fl-acceso-card::before/::after (más
    abajo, el bisel grabado + el brillo de estudio que sigue al mouse)
@@ -1822,41 +1799,37 @@ html.no-js .reveal { opacity: 1; transform: none; }
    siguen necesitando tal cual). */
 .fl-acceso-card--photo.fl-acceso-card--photo::before {
   content: '';
-  /* VUELTA a inset:0 (contenido dentro de la card, como ::after) — con
-     inset negativo (-38%, "derrame hacia afuera") + la especificidad ya
-     arreglada, esta caja pasó a ser MUCHO más grande sin ningún recorte
-     (ni border-radius propio, ni overflow:hidden del padre, que ahora
-     también está en :visible) — al girar, su propio borde recto de
-     verdad se veía a través del blur (el blur no alcanza a disimular el
-     canto de una caja tan grande), un "coso" triangular/rombo bien feo.
-     Se sacrifica el efecto de derrame por uno confiable: contenido dentro
-     del borde de la card, igual que ::after. */
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 92% 92%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%);
-  filter: blur(18px);
+  /* Halo ancho y difuminado detrás del núcleo — mismo --beam-angle que
+     ::after (no desfasado), así se leen como UNA sola fuente de luz
+     (el brillo suave alrededor de un rayo), no dos luces distintas. */
+  background: conic-gradient(from var(--beam-angle) at 50% 50%,
+    transparent 0deg, transparent 156deg,
+    rgba(255,255,255,0.55) 180deg,
+    transparent 204deg, transparent 360deg);
+  filter: blur(20px);
   opacity: 1;
-  /* Mismo período y sentido que el reflejo de adelante (::after, más
-     abajo) + animation-delay negativo de MEDIO ciclo — eso arranca esta
-     animación ya a mitad de vuelta, así los dos giran pegados en fase
-     opuesta (180°) SIEMPRE, no solo al principio. Con duraciones o
-     sentidos de giro distintos (como antes: 13s reverse vs 8s normal)
-     la diferencia de fase entre los dos cambia todo el tiempo — por eso
-     a veces coincidían del mismo lado, no quedaban opuestos de forma
-     estable. */
-  animation: fl-card-orbit-front 10s linear infinite;
-  animation-delay: -5s;
+  animation: fl-card-beam 7s linear infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 9% 7%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 36%);
+  /* Núcleo fino y nítido del rayo, bien angosto (16°) para que lea como
+     línea/reflejo y no como otro blob. */
+  background: conic-gradient(from var(--beam-angle) at 50% 50%,
+    transparent 0deg, transparent 172deg,
+    rgba(255,255,255,0.95) 180deg,
+    transparent 188deg, transparent 360deg);
   mix-blend-mode: screen;
   opacity: 0.95;
-  animation: fl-card-orbit-front 10s linear infinite;
+  animation: fl-card-beam 7s linear infinite;
 }
-@keyframes fl-card-orbit-front { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fl-card-beam {
+  from { --beam-angle: 0deg; }
+  to   { --beam-angle: 360deg; }
+}
 /* Al hover/focus, el giro de las luces se pausa — quieto mientras se
    interactúa, sigue girando solo en reposo. */
 .fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
