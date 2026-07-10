@@ -360,18 +360,13 @@ const {
   .sl-solicitud-submit:disabled { opacity: 0.6; cursor: default; }
   .sl-solicitud-ok p { font-size: 0.92rem; color: var(--sl-cream); line-height: 1.5; margin: 0 0 1.1rem; }
 
-  /* Mobile: el panel único ocupa la mitad superior (ancho completo), y el
-     video se rota 90° para que el recorte que antes quedaba centro-izquierda
-     (donde está la etiqueta en inglés) caiga bajo el panel, no en la mitad
-     inferior despejada */
+  /* Mobile: el panel ocupa toda la pantalla (ancho y alto completos), igual
+     que en desktop — antes dejaba el 41% inferior libre para asomar el video
+     sin el overlay oscuro encima, y esa costura se veía como un corte crudo,
+     sin blur, rompiendo el look premium de la tarjeta */
   @media (max-width: 860px) {
-    .sl-video {
-      inset: auto; top: 50%; left: 50%; right: auto; bottom: auto;
-      width: 100vh; height: 100vw;
-      transform: translate(-50%, -50%) rotate(90deg);
-    }
     .sl-panel {
-      left: 0; right: 0; top: 0; bottom: 41%; width: auto; height: auto;
+      left: 0; right: 0; top: 0; bottom: 0; width: auto; height: auto;
       justify-content: center;
       gap: 0.85rem;
       padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
