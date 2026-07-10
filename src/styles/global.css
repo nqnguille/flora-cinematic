@@ -1796,7 +1796,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
    no superpuestas. El % de la posición es relativo a ESTA caja más
    grande, no a la card — 82% cae justo en/más allá de la esquina
    inferior-derecha visual de la card. */
-.fl-acceso-card--photo::before {
+/* Selector DOBLE (.fl-acceso-card--photo.fl-acceso-card--photo, misma
+   clase repetida) a propósito: .fl-acceso-card::before/::after (más
+   abajo, el bisel grabado + el brillo de estudio que sigue al mouse)
+   caía DESPUÉS en el archivo y con la MISMA especificidad (0,1,1) que
+   estas reglas — en un empate así gana quien está más abajo, así que
+   la base le pisaba inset/z-index/box-shadow a ::before y
+   background/mix-blend-mode/OPACITY a ::after (¡opacity:0 en reposo!
+   — por eso nunca se veía, solo aparecía un instante en :hover vía
+   .fl-acceso-card:hover::after{opacity:1}, y ni con el gradiente
+   correcto). Repetir la clase sube la especificidad a (0,2,1) sin
+   !important y sin tocar la regla base (que otras cards sin --photo
+   siguen necesitando tal cual). */
+.fl-acceso-card--photo.fl-acceso-card--photo::before {
   content: '';
   position: absolute; inset: -38%; z-index: 0; pointer-events: none;
   box-shadow: none;
@@ -1814,7 +1826,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   animation: fl-card-orbit-front 10s linear infinite;
   animation-delay: -5s;
 }
-.fl-acceso-card--photo::after {
+.fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
