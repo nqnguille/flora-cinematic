@@ -1803,10 +1803,12 @@ html.no-js .reveal { opacity: 1; transform: none; }
   box-shadow: none;
   /* Halo ancho y difuminado detrás del núcleo — mismo --beam-angle que
      ::after (no desfasado), así se leen como UNA sola fuente de luz
-     (el brillo suave alrededor de un rayo), no dos luces distintas. */
+     (el brillo suave alrededor de un rayo), no dos luces distintas.
+     Bajado de 0.55 a 0.3 de opacidad — a pedido, quedaba muy fuerte /
+     poco realista. */
   background: conic-gradient(from var(--beam-angle) at 50% 50%,
     transparent 0deg, transparent 156deg,
-    rgba(255,255,255,0.55) 180deg,
+    rgba(255,255,255,0.3) 180deg,
     transparent 204deg, transparent 360deg);
   filter: blur(20px);
   opacity: 1;
@@ -1817,10 +1819,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
   /* Núcleo fino y nítido del rayo, bien angosto (16°) para que lea como
-     línea/reflejo y no como otro blob. */
+     línea/reflejo y no como otro blob. Bajado de 0.95 a 0.55 — mismo
+     pedido de intensidad más realista. */
   background: conic-gradient(from var(--beam-angle) at 50% 50%,
     transparent 0deg, transparent 172deg,
-    rgba(255,255,255,0.95) 180deg,
+    rgba(255,255,255,0.55) 180deg,
     transparent 188deg, transparent 360deg);
   mix-blend-mode: screen;
   opacity: 0.95;
@@ -1839,6 +1842,45 @@ html.no-js .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .fl-acceso-card--photo::before, .fl-acceso-card--photo::after { animation: none; }
 }
+
+/* Glow trasero: luz que se asoma SOLO por afuera del borde de la card,
+   como si viniera de atrás — a propósito NO es un pseudo-elemento de la
+   card (::before/::after ya están usados por el rayo, arriba, y de
+   cualquier forma quedarían recortados: overflow:hidden en .fl-acceso-card
+   recorta todo su contenido generado, sin importar z-index ni inset
+   negativo). Por eso es un <span> hermano real, .fl-card-glow, que vive
+   AL LADO de la card (nunca adentro) dentro de un wrapper .fl-card-shell
+   sin overflow:hidden — el spill de inset negativo no tiene nada que lo
+   recorte. Para que no "pegue de frente" contra la card, va ANTES en el
+   DOM (pinta primero) y la card se pone encima (z-index mayor) con fondo
+   opaco: la parte del glow que cae debajo de la card queda tapada, solo
+   se ve el aro que sobresale por fuera del borde. Mismo --beam-angle/
+   animación que el rayo (misma duración, arrancan juntas) para que gire
+   sincronizado con él, como si fuera la misma fuente de luz vista desde
+   atrás. */
+.fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
+.fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
+.fl-card-glow {
+  content: ''; display: block;
+  position: absolute; inset: -15%; z-index: 0; pointer-events: none;
+  border-radius: 999px;
+  background: conic-gradient(from var(--beam-angle) at 50% 50%,
+    transparent 0deg, transparent 148deg,
+    rgba(255,255,255,0.5) 180deg,
+    transparent 212deg, transparent 360deg);
+  filter: blur(28px);
+  opacity: 0.55;
+  animation: fl-card-beam 7s linear infinite;
+}
+.fl-card-shell:hover .fl-card-glow, .fl-card-shell:focus-within .fl-card-glow {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-card-glow { animation: none; }
+}
+.fl-card-shell--socio { display: none; }
+body.is-socio .fl-card-shell--publico { display: none; }
+body.is-socio .fl-card-shell--socio { display: block; }
 
 /* Bisel grabado (el canto de la tarjeta) */
 .fl-acceso-card::before {

@@ -663,10 +663,16 @@ const igFallback = [
 
       <div class="fl-acceso-side">
         <span class="fl-acceso-badge fl-acceso-badge--publico">Exclusivo socios</span>
-        <a class="fl-acceso-ctas fl-acceso-ctas--publico fl-acceso-card fl-acceso-card--photo" href="/socios/" aria-label="Ingresar a la carta">
-        </a>
-        <a class="fl-acceso-ctas fl-acceso-ctas--socio fl-acceso-card fl-acceso-card--photo" href="/socios/carta/" aria-label="Acceder al catálogo">
-        </a>
+        <span class="fl-card-shell fl-card-shell--publico">
+          <span class="fl-card-glow" aria-hidden="true"></span>
+          <a class="fl-acceso-ctas fl-acceso-ctas--publico fl-acceso-card fl-acceso-card--photo" href="/socios/" aria-label="Ingresar a la carta">
+          </a>
+        </span>
+        <span class="fl-card-shell fl-card-shell--socio">
+          <span class="fl-card-glow" aria-hidden="true"></span>
+          <a class="fl-acceso-ctas fl-acceso-ctas--socio fl-acceso-card fl-acceso-card--photo" href="/socios/carta/" aria-label="Acceder al catálogo">
+          </a>
+        </span>
         <div id="td-activo" class="td-activo fl-acceso-reserva"></div>
       </div>
     </div>
