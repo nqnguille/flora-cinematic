@@ -679,6 +679,16 @@ function initWhatsAppFloat() {
     onEnter: () => float.classList.add('is-visible'),
     onLeaveBack: () => float.classList.remove('is-visible'),
   })
+
+  // Se achica y se corre de encima del contenido MIENTRAS se scrollea (en
+  // mobile tapaba botones y recortaba texto de pasada); apenas el scroll se
+  // frena, vuelve a su tamaño y posición normales.
+  let scrollTimer: ReturnType<typeof setTimeout> | undefined
+  window.addEventListener('scroll', () => {
+    float.classList.add('is-scrolling')
+    clearTimeout(scrollTimer)
+    scrollTimer = setTimeout(() => float.classList.remove('is-scrolling'), 500)
+  }, { passive: true })
 }
 
 // ── Instagram: slider en vivo (feed JSON servido por Behold) ──

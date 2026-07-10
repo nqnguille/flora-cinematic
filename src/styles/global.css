@@ -899,9 +899,22 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 }
 .wa-float svg { display: block; }
 
+/* En mobile, mientras se scrollea, se achica y se corre hacia el borde
+   (no desaparece del todo: sigue anunciando que está ahí) para no tapar
+   botones ni recortar texto de pasada. Solo mobile: en desktop el botón
+   nunca queda pisando contenido, así que se deja quieto. */
+@media (max-width: 760px) {
+  .wa-float.is-scrolling {
+    opacity: 0.5;
+    transform: scale(0.72) translate(6px, 6px);
+    pointer-events: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wa-float { transition: opacity 0.2s ease, visibility 0.2s ease; transform: none; }
   .wa-float.is-visible { transform: none; }
+  .wa-float.is-scrolling { opacity: 1; transform: none; pointer-events: auto; }
 }
 
 /* ══════════════════════════════════════════ */
@@ -1618,6 +1631,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-footer-col a { color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-ui); font-size: 15px; }
 .fl-footer-col a:hover { color: #fff; }
 .fl-footer-bottom { display: flex; flex-direction: column; gap: 6px; margin-top: clamp(40px, 5vw, 56px); padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.16); font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.6); }
+/* Al final del scroll no hay más página para "escapar" el botón flotante
+   de WhatsApp — sin este aire extra, la última línea queda tapada para
+   siempre en vez de solo de pasada. */
+@media (max-width: 760px) { .fl-footer-bottom { padding-bottom: 76px; } }
 @media (min-width: 760px) { .fl-footer-cta { flex-direction: row; justify-content: space-between; align-items: center; } .fl-footer-grid { grid-template-columns: 2fr 1fr 1fr; } .fl-footer-bottom { flex-direction: row; justify-content: space-between; } }
 
 /* ── Acceso a material vegetal + socios: una sola composición, con el
