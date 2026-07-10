@@ -1659,7 +1659,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   /* Más aire entre el bloque de texto y el badge+tarjeta que sigue —
      antes quedaban casi pegados, apilados sin respiro */
   .fl-acceso-side { margin-top: 40px; }
-  .fl-acceso-badge { margin-bottom: 18px; }
+  .fl-acceso-badge { margin-bottom: 28px; }
 }
 .fl-acceso-content { position: relative; z-index: 2; max-width: 1200px; width: 100%; }
 .fl-acceso-head { text-align: center; }
@@ -1675,7 +1675,12 @@ html.no-js .reveal { opacity: 1; transform: none; }
    tratamiento VIP: vidrio oscuro + borde metálico, no el pill blanco
    genérico del eyebrow original. */
 .fl-acceso-badge {
-  box-sizing: border-box; display: block; margin: 0 auto 14px;
+  /* margin-bottom subido de 14px a 28px: el brillo del contorno pasa
+     bien pegado por la esquina superior de la card, y con solo 14px el
+     badge (opaco, encima en el DOM) le tapaba un pedazo justo ahí — se
+     veía como un recorte recto en la esquina. Con más aire de sobra no
+     llega a tocarlo en ningún punto del recorrido. */
+  box-sizing: border-box; display: block; margin: 0 auto 28px;
   width: clamp(230px, 22vw, 305px); text-align: center; white-space: nowrap;
   padding: clamp(7px, 1.6vw, 9px) clamp(10px, 2.4vw, 18px); border-radius: 999px;
   font-family: var(--font-ui); font-weight: 700; font-size: clamp(9px, 2.3vw, 11.5px);
