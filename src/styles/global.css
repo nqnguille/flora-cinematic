@@ -1861,10 +1861,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
    (que a diferencia de la card NO tiene overflow:hidden, así que acá sí
    pueden orbitar sin recortarse) con el mismo mecanismo de --glow-mx/
    --glow-my vía @property que se usaba antes en la card. */
-/* Card más grande (a pedido, para que el pequeño brillo del contorno
-   tenga más margen real sin tener que agrandar el brillo en sí):
-   clamp(230,22vw,305) -> clamp(270,27vw,370). */
-.fl-card-shell { position: relative; display: block; width: clamp(270px, 27vw, 370px); margin: 0 auto; }
+.fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
 /* Ya no es un blob grande orbitando lejos de la card (eso fue lo que
    causaba el recorte: necesitaba mucho lugar de sobra alrededor para
@@ -2001,6 +1998,12 @@ body.is-socio .fl-card-shell--socio { display: block; }
   .fl-acceso-side {
     display: flex; flex-direction: column; align-items: flex-end;
     flex-shrink: 0; text-align: right; margin-top: 14px;
+    /* Buffer para el brillo del contorno de la card, NO para agrandar
+       la card en sí (eso ya se probó y no era lo pedido) — el lado
+       derecho es el más ajustado (.fl-wrap no tiene padding lateral y
+       la card queda pegada a él), así que se corre la card un poco
+       hacia la izquierda del borde de la sección. */
+    padding-right: clamp(16px, 3vw, 32px);
   }
   .fl-acceso-ctas { margin-top: 0; flex-wrap: nowrap; justify-content: flex-end; }
   /* Los auto-margins de .fl-acceso-badge/-card centran en mobile (donde
