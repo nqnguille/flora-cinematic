@@ -1850,11 +1850,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
 .fl-card-glow {
   content: ''; display: block;
-  position: absolute; inset: -15%; z-index: 0; pointer-events: none;
+  /* Centrado (antes 30%/30%, pensado para acompañar el rayo que
+     orbitaba) y bastante más presente — a pedido, casi no se notaba,
+     tiene que estar vivo/visible todo el rato, parejo en los cuatro
+     lados de la card, no solo asomando de una esquina. */
+  position: absolute; inset: -18%; z-index: 0; pointer-events: none;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%);
-  filter: blur(30px);
-  opacity: 0.4;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 68%);
+  filter: blur(24px);
+  opacity: 0.8;
 }
 .fl-card-shell--socio { display: none; }
 body.is-socio .fl-card-shell--publico { display: none; }
