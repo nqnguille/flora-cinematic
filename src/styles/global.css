@@ -1873,14 +1873,25 @@ html.no-js .reveal { opacity: 1; transform: none; }
    apagarse antes de tocar su propia caja). A pedido, ahora es una luz
    fina que recorre el CONTORNO mismo de la tarjeta — caja casi pegada
    a la card (spill chico, -6px) y el punto de luz bien chico (8% de
-   radio en vez de 26-28%), menos brillante. Como necesita mucho menos
-   espacio, de paso se resuelve el recorte sin más ajustes. */
-.fl-card-glow { position: absolute; inset: -6px; z-index: 0; pointer-events: none; }
+   radio en vez de 26-28%), menos brillante.
+
+   La causa REAL del "parche cuadrado" en las esquinas (la última
+   captura): .fl-card-glow es un rectángulo SIN border-radius, pero la
+   card tiene 18px (--fl-radius) — en la esquina, el rectángulo del
+   glow sobresale más allá de donde la card ya se redondeó hacia
+   adentro, y si la luz pasa justo ahí, ese pedacito cuadrado (sin
+   nada que lo recorte, la card no llega) queda visible y suelto,
+   flotando afuera del contorno curvo. Se le pone border-radius (18px
+   + los 6px de inset, 24px) a la caja Y a sus dos pseudo-elementos,
+   para que seleccion tenga la misma forma redondeada que la card y la
+   luz se apague siguiendo esa curva, no un corte recto. */
+.fl-card-glow { position: absolute; inset: -6px; z-index: 0; pointer-events: none; border-radius: 24px; overflow: hidden; }
 @property --glow-mx { syntax: '<percentage>'; inherits: true; initial-value: 100%; }
 @property --glow-my { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 .fl-card-glow::before {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: inherit;
   background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 9%);
   filter: blur(6px);
   opacity: 1;
@@ -1890,6 +1901,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-card-glow::after {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: inherit;
   background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 7%);
   mix-blend-mode: screen;
   opacity: 0.8;
