@@ -1794,7 +1794,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-size: 320% 320%;
   filter: blur(3px);
   opacity: 1;
-  animation: fl-card-sweep 6.5s ease-in-out infinite;
+  animation: fl-card-sweep 16s ease-in-out infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
@@ -1808,13 +1808,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-size: 320% 320%;
   mix-blend-mode: screen;
   opacity: 0.85;
-  animation: fl-card-sweep 6.5s ease-in-out infinite;
+  animation: fl-card-sweep 16s ease-in-out infinite;
 }
 /* 0-100% en background-position recorre la diagonal completa del plano
-   320%×320% — el tramo 0%→22% es donde la franja realmente cruza la
-   tarjeta (visible), el resto (22%→100%) la deja ya afuera del otro
-   lado, quieta y sin verse, así que se lee como un destello que pasa
-   una vez y después hace una pausa larga antes de repetirse. */
+   320%×320% — a pedido, el cruce se hace mucho más lento (6.5s -> 16s
+   de ciclo total) para que dé tiempo a distinguirlo bien. El tramo
+   0%→22% de ese ciclo (~3.5s) es donde la franja realmente cruza la
+   tarjeta a cámara lenta, el resto (22%→100%, ~12.5s) la deja ya afuera
+   del otro lado, quieta y sin verse, así que se lee como un destello
+   que pasa despacio y después hace una pausa larga antes de repetirse. */
 @keyframes fl-card-sweep {
   0%   { background-position: 145% -45%; }
   22%  { background-position: -45% 145%; }
@@ -1842,10 +1844,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
    DOM (pinta primero) y la card se pone encima (z-index mayor) con fondo
    opaco: la parte del glow que cae debajo de la card queda tapada, solo
    se ve el aro que sobresale por fuera del borde. Ya no gira (el reflejo
-   ahora es una franja diagonal, no algo que orbita) — en vez de eso
-   respira en brillo, con un pico justo cuando el reflejo cruza la
-   tarjeta (mismos 6.5s, mismo 22% de "paso"), como si fuera la luz de
-   ese mismo destello rebotando detrás. */
+   ahora es una franja diagonal, no algo que orbita) ni pulsa — a pedido
+   queda como un glow fijo, visible todo el tiempo, sin animación. */
 .fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
 .fl-card-glow {
@@ -1854,20 +1854,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   border-radius: 999px;
   background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%);
   filter: blur(30px);
-  opacity: 0.12;
-  animation: fl-card-glow-pulse 6.5s ease-in-out infinite;
-}
-@keyframes fl-card-glow-pulse {
-  0%   { opacity: 0.12; }
-  14%  { opacity: 0.5; }
-  28%  { opacity: 0.12; }
-  100% { opacity: 0.12; }
-}
-.fl-card-shell:hover .fl-card-glow, .fl-card-shell:focus-within .fl-card-glow {
-  animation-play-state: paused;
-}
-@media (prefers-reduced-motion: reduce) {
-  .fl-card-glow { animation: none; opacity: 0.18; }
+  opacity: 0.4;
 }
 .fl-card-shell--socio { display: none; }
 body.is-socio .fl-card-shell--publico { display: none; }
