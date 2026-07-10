@@ -401,9 +401,15 @@ const {
     }
     .sl-panel {
       left: 0; right: 0; top: 0; bottom: 42%; width: auto; height: auto;
-      justify-content: center;
+      overflow-y: auto;
+      /* "safe center": centra igual que antes cuando el contenido entra
+         en pantallas altas, pero en pantallas bajas (iPhone SE y
+         similares) donde antes el contenido se desbordaba hacia arriba
+         y tapaba el link "Volver al sitio", cae a flex-start en vez de
+         seguir centrando fuera de los límites del panel */
+      justify-content: safe center;
       gap: 1.15rem;
-      padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
+      padding: clamp(52px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
     }
     .sl-logo { width: clamp(190px, 52vw, 260px); }
     .sl-title { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
@@ -421,5 +427,17 @@ const {
     .sl-note {
       width: min(360px, 88%); margin-left: auto; margin-right: auto;
     }
+  }
+
+  /* Pantallas bajas (iPhone SE y similares, ~667px de alto o menos): el
+     contenido completo (logo + título + botón + nota + REPROCANN) no
+     entra parado a tamaño normal. Se achica un poco todo para que se
+     vea entero sin necesidad de scroll dentro del panel. */
+  @media (max-width: 860px) and (max-height: 720px) {
+    .sl-panel { gap: 0.7rem; padding-top: clamp(48px, 9vw, 52px); }
+    .sl-logo { width: clamp(150px, 40vw, 190px); }
+    .sl-title { font-size: clamp(1.25rem, 5.6vw, 1.7rem); }
+    .sl-tagline, .sl-sub { font-size: 0.85rem; }
+    .sl-note { font-size: 0.72rem; }
   }
 </style>
