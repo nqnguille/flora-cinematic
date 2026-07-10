@@ -1800,7 +1800,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-repeat: no-repeat;
   filter: blur(3px);
   opacity: 1;
-  animation: fl-card-sweep 14s ease-in-out infinite;
+  animation: fl-card-sweep 8s ease-in-out infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
@@ -1815,7 +1815,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-repeat: no-repeat;
   mix-blend-mode: screen;
   opacity: 0.85;
-  animation: fl-card-sweep 14s ease-in-out infinite;
+  animation: fl-card-sweep 8s ease-in-out infinite;
 }
 /* 0-100% en background-position recorre la diagonal completa del plano
    320%×320% — pasó por 16s, 3s y 6s; a pedido, considerablemente más
@@ -1834,9 +1834,14 @@ html.no-js .reveal { opacity: 1; transform: none; }
    que el background-position la corre lo suficientemente lejos, no
    queda nada pintado en la caja: recién ahí "estacionado" significa
    estacionado de verdad. */
+/* A pedido: mucho más lento (el cruce en sí, no solo el ciclo) Y más
+   seguido (menos pausa entre pasada y pasada) — ambos a la vez, subiendo
+   la proporción del ciclo que ocupa el cruce (22% -> 70%) y bajando el
+   ciclo total (14s -> 8s). El cruce pasa de ~3s a ~5.6s (mucho más
+   lento) y la pausa entre pasadas de ~11s a ~2.4s (mucho más seguido). */
 @keyframes fl-card-sweep {
   0%   { background-position: 160% -60%; }
-  22%  { background-position: -60% 160%; }
+  70%  { background-position: -60% 160%; }
   100% { background-position: -60% 160%; }
 }
 /* Al hover/focus, el barrido se pausa — quieto mientras se interactúa,
