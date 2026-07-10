@@ -293,7 +293,31 @@ const {
 
   .sl-auth-title { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0; color: var(--sl-cream); }
   .sl-sub { line-height: 1.55; color: var(--sl-muted); font-size: 0.92rem; margin: 0 auto; }
-  .sl-gbtn { margin-top: 0.3rem; display: flex; justify-content: center; }
+  /* Halo pulsante detrás del botón nativo de Google para que resalte como
+     la acción principal — no se puede tocar el estilo del botón en sí
+     (vive dentro de un iframe de Google), así que el énfasis se agrega
+     alrededor, en el wrapper */
+  .sl-gbtn {
+    position: relative;
+    margin-top: 0.3rem;
+    padding: 10px;
+    display: flex; justify-content: center;
+  }
+  .sl-gbtn::before {
+    content: '';
+    position: absolute; inset: 2px; z-index: -1;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(60, 180, 146, 0.45) 0%, rgba(60, 180, 146, 0) 72%);
+    filter: blur(10px);
+    animation: sl-gbtn-glow 2.6s ease-in-out infinite;
+  }
+  @keyframes sl-gbtn-glow {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sl-gbtn::before { animation: none; opacity: 0.8; }
+  }
   .sl-msg { color: var(--sl-violet); font-size: 0.85rem; margin: 0; }
   .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0 auto; }
   .sl-note button { background: none; border: none; padding: 0; color: var(--sl-violet); text-decoration: underline; font-size: inherit; font-family: inherit; cursor: pointer; }
@@ -371,7 +395,7 @@ const {
       transform: translate(-50%, -50%) rotate(90deg);
     }
     .sl-panel {
-      left: 0; right: 0; top: 0; bottom: 41%; width: auto; height: auto;
+      left: 0; right: 0; top: 0; bottom: 44%; width: auto; height: auto;
       justify-content: center;
       gap: 0.85rem;
       padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
