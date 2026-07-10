@@ -1795,7 +1795,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-repeat: no-repeat;
   filter: blur(3px);
   opacity: 1;
-  animation: fl-card-sweep 6s ease-in-out infinite;
+  animation: fl-card-sweep 14s ease-in-out infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
@@ -1810,14 +1810,13 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background-repeat: no-repeat;
   mix-blend-mode: screen;
   opacity: 0.85;
-  animation: fl-card-sweep 6s ease-in-out infinite;
+  animation: fl-card-sweep 14s ease-in-out infinite;
 }
 /* 0-100% en background-position recorre la diagonal completa del plano
-   320%×320% — pasó por 16s (muy lento) y 3s (pidieron que se repita
-   cada 3s, pero después se sintió muy rápido de nuevo); 6s de
-   compromiso entre ambos. El tramo 0%→22% de ese ciclo es donde la
-   franja cruza la tarjeta, el resto (22%→100%) la deja afuera del otro
-   lado antes de repetirse.
+   320%×320% — pasó por 16s, 3s y 6s; a pedido, considerablemente más
+   lento que eso: 14s. El tramo 0%→22% de ese ciclo es donde la franja
+   cruza la tarjeta, el resto (22%→100%) la deja afuera del otro lado
+   antes de repetirse.
 
    La causa real de los "brillos en las esquinas" que quedaban al
    terminar: faltaba background-repeat:no-repeat. Por default el
@@ -1862,26 +1861,26 @@ html.no-js .reveal { opacity: 1; transform: none; }
    (que a diferencia de la card NO tiene overflow:hidden, así que acá sí
    pueden orbitar sin recortarse) con el mismo mecanismo de --glow-mx/
    --glow-my vía @property que se usaba antes en la card. */
-.fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
+/* Card más grande (a pedido, para que el pequeño brillo del contorno
+   tenga más margen real sin tener que agrandar el brillo en sí):
+   clamp(230,22vw,305) -> clamp(270,27vw,370). */
+.fl-card-shell { position: relative; display: block; width: clamp(270px, 27vw, 370px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
-/* La corrección anterior (achicar solo el spill de arriba, contra el
-   badge) no era la causa real: el recorte se veía parejo en los CUATRO
-   lados, no solo arriba. La causa real es que .fl-card-glow (la caja
-   que contiene el brillo) era chica — apenas -18% de spill — así que
-   el borde de su propia caja quedaba visible como un recuadro antes de
-   que el gradiente circular llegara a apagarse del todo. Se agranda
-   la caja bastante (-34% en los tres lados libres) para que el brillo
-   tenga lugar de sobra para desvanecerse solo, sin tocar su propio
-   borde; arriba se mantiene achicado (-10px) porque ahí sí hay algo
-   cerca de verdad (el badge "Exclusivo socios", a 14px). */
-.fl-card-glow { position: absolute; inset: -10px -22% -34% -34%; z-index: 0; pointer-events: none; }
-@property --glow-mx { syntax: '<percentage>'; inherits: true; initial-value: 92%; }
-@property --glow-my { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
+/* Ya no es un blob grande orbitando lejos de la card (eso fue lo que
+   causaba el recorte: necesitaba mucho lugar de sobra alrededor para
+   apagarse antes de tocar su propia caja). A pedido, ahora es una luz
+   fina que recorre el CONTORNO mismo de la tarjeta — caja casi pegada
+   a la card (spill chico, -6px) y el punto de luz bien chico (8% de
+   radio en vez de 26-28%), menos brillante. Como necesita mucho menos
+   espacio, de paso se resuelve el recorte sin más ajustes. */
+.fl-card-glow { position: absolute; inset: -6px; z-index: 0; pointer-events: none; }
+@property --glow-mx { syntax: '<percentage>'; inherits: true; initial-value: 100%; }
+@property --glow-my { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 .fl-card-glow::before {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 26%);
-  filter: blur(18px);
+  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 9%);
+  filter: blur(6px);
   opacity: 1;
   animation: fl-glow-orbit 10s linear infinite;
   animation-delay: -5s;
@@ -1889,29 +1888,23 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-card-glow::after {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 28%);
+  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 7%);
   mix-blend-mode: screen;
-  opacity: 0.95;
+  opacity: 0.8;
   animation: fl-glow-orbit 10s linear infinite;
 }
-/* Mismo recorrido circular que la versión original de la card: 12
-   pasos alrededor del centro, radio ~42% en cada eje. animation-delay
-   negativo de medio ciclo en ::before arranca esa luz ya a mitad de
-   vuelta, así las dos quedan siempre opuestas (180°) entre sí. */
+/* Recorrido RECTANGULAR (no circular): --glow-mx/--glow-my van de
+   0%/100% en línea recta por cada lado, así el punto de luz recorre
+   el contorno real de la tarjeta (los cuatro cantos, esquina por
+   esquina) en vez de una órbita circular que se aleja del borde en el
+   medio de cada lado. Mismo animation-delay de medio ciclo en
+   ::before, así las dos luces quedan siempre en lados opuestos. */
 @keyframes fl-glow-orbit {
-  0%     { --glow-mx: 92%; --glow-my: 50%; }
-  8.33%  { --glow-mx: 86%; --glow-my: 71%; }
-  16.67% { --glow-mx: 71%; --glow-my: 86%; }
-  25%    { --glow-mx: 50%; --glow-my: 92%; }
-  33.33% { --glow-mx: 29%; --glow-my: 86%; }
-  41.67% { --glow-mx: 14%; --glow-my: 71%; }
-  50%    { --glow-mx: 8%;  --glow-my: 50%; }
-  58.33% { --glow-mx: 14%; --glow-my: 29%; }
-  66.67% { --glow-mx: 29%; --glow-my: 14%; }
-  75%    { --glow-mx: 50%; --glow-my: 8%;  }
-  83.33% { --glow-mx: 71%; --glow-my: 14%; }
-  91.67% { --glow-mx: 86%; --glow-my: 29%; }
-  100%   { --glow-mx: 92%; --glow-my: 50%; }
+  0%   { --glow-mx: 100%; --glow-my: 0%;   }
+  25%  { --glow-mx: 100%; --glow-my: 100%; }
+  50%  { --glow-mx: 0%;   --glow-my: 100%; }
+  75%  { --glow-mx: 0%;   --glow-my: 0%;   }
+  100% { --glow-mx: 100%; --glow-my: 0%;   }
 }
 .fl-card-shell:hover .fl-card-glow::before, .fl-card-shell:hover .fl-card-glow::after,
 .fl-card-shell:focus-within .fl-card-glow::before, .fl-card-shell:focus-within .fl-card-glow::after {
