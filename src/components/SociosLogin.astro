@@ -360,16 +360,24 @@ const {
   .sl-solicitud-submit:disabled { opacity: 0.6; cursor: default; }
   .sl-solicitud-ok p { font-size: 0.92rem; color: var(--sl-cream); line-height: 1.5; margin: 0 0 1.1rem; }
 
-  /* Mobile: el panel ocupa toda la pantalla (ancho y alto completos), igual
-     que en desktop — antes dejaba el 41% inferior libre para asomar el video
-     sin el overlay oscuro encima, y esa costura se veía como un corte crudo,
-     sin blur, rompiendo el look premium de la tarjeta */
+  /* Mobile: el panel ocupa la parte superior y deja un margen inferior para
+     que el video asome como fondo (ese era el objetivo original). Para que
+     no se vea como un corte crudo, el panel termina en un degradé que se
+     funde con el video en vez de un borde duro, y el video se recorta
+     mostrando una zona neutra del frame (tapa negra), no la etiqueta */
   @media (max-width: 860px) {
+    .sl-video { object-position: 78% 45%; }
     .sl-panel {
-      left: 0; right: 0; top: 0; bottom: 0; width: auto; height: auto;
+      left: 0; right: 0; top: 0; bottom: 34%; width: auto; height: auto;
       justify-content: center;
       gap: 0.85rem;
       padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
+    }
+    .sl-panel::after {
+      content: '';
+      position: absolute; left: 0; right: 0; bottom: -14vh; height: 14vh;
+      background: linear-gradient(180deg, rgba(19, 13, 28, 0.9) 0%, rgba(19, 13, 28, 0) 100%);
+      pointer-events: none;
     }
     .sl-logo { width: clamp(190px, 52vw, 260px); }
     .sl-title { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
