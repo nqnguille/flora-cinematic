@@ -1792,9 +1792,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
     transparent 42%, rgba(255,255,255,0.16) 49%, rgba(255,255,255,0.2) 50%,
     rgba(255,255,255,0.16) 51%, transparent 58%);
   background-size: 320% 320%;
+  background-repeat: no-repeat;
   filter: blur(3px);
   opacity: 1;
-  animation: fl-card-sweep 16s ease-in-out infinite;
+  animation: fl-card-sweep 3s ease-in-out infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
@@ -1806,21 +1807,31 @@ html.no-js .reveal { opacity: 1; transform: none; }
   background: linear-gradient(122deg,
     transparent 47%, rgba(255,255,255,0.4) 50%, transparent 53%);
   background-size: 320% 320%;
+  background-repeat: no-repeat;
   mix-blend-mode: screen;
   opacity: 0.85;
-  animation: fl-card-sweep 16s ease-in-out infinite;
+  animation: fl-card-sweep 3s ease-in-out infinite;
 }
 /* 0-100% en background-position recorre la diagonal completa del plano
-   320%×320% — a pedido, el cruce se hace mucho más lento (6.5s -> 16s
-   de ciclo total) para que dé tiempo a distinguirlo bien. El tramo
-   0%→22% de ese ciclo (~3.5s) es donde la franja realmente cruza la
-   tarjeta a cámara lenta, el resto (22%→100%, ~12.5s) la deja ya afuera
-   del otro lado, quieta y sin verse, así que se lee como un destello
-   que pasa despacio y después hace una pausa larga antes de repetirse. */
+   320%×320% — a pedido, ahora repite cada 3s (antes 16s). El tramo
+   0%→22% de ese ciclo es donde la franja cruza la tarjeta, el resto
+   (22%→100%) la deja afuera del otro lado antes de repetirse.
+
+   La causa real de los "brillos en las esquinas" que quedaban al
+   terminar: faltaba background-repeat:no-repeat. Por default el
+   background se REPITE en mosaico — correr el background-position no
+   "esconde" el gradiente en ningún punto, solo desliza CUÁL copia del
+   mosaico infinito cae sobre la caja, así que siempre hay algo de la
+   franja pintado en algún lado (por eso el intento de alejar más la
+   posición de reposo no arreglaba nada, aparecía otra copia del
+   patrón). Con no-repeat existe una sola copia del gradiente — una vez
+   que el background-position la corre lo suficientemente lejos, no
+   queda nada pintado en la caja: recién ahí "estacionado" significa
+   estacionado de verdad. */
 @keyframes fl-card-sweep {
-  0%   { background-position: 145% -45%; }
-  22%  { background-position: -45% 145%; }
-  100% { background-position: -45% 145%; }
+  0%   { background-position: 160% -60%; }
+  22%  { background-position: -60% 160%; }
+  100% { background-position: -60% 160%; }
 }
 /* Al hover/focus, el barrido se pausa — quieto mientras se interactúa,
    sigue solo en reposo. */
@@ -1843,22 +1854,59 @@ html.no-js .reveal { opacity: 1; transform: none; }
    recorte. Para que no "pegue de frente" contra la card, va ANTES en el
    DOM (pinta primero) y la card se pone encima (z-index mayor) con fondo
    opaco: la parte del glow que cae debajo de la card queda tapada, solo
-   se ve el aro que sobresale por fuera del borde. Ya no gira (el reflejo
-   ahora es una franja diagonal, no algo que orbita) ni pulsa — a pedido
-   queda como un glow fijo, visible todo el tiempo, sin animación. */
+   se ve el aro que sobresale por fuera del borde. A pedido vuelve a
+   girar como la versión original (dos focos de luz orbitando, siempre
+   encendidos) — usa ::before/::after del propio <span>.fl-card-glow
+   (que a diferencia de la card NO tiene overflow:hidden, así que acá sí
+   pueden orbitar sin recortarse) con el mismo mecanismo de --glow-mx/
+   --glow-my vía @property que se usaba antes en la card. */
 .fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
-.fl-card-glow {
-  content: ''; display: block;
-  /* Centrado (antes 30%/30%, pensado para acompañar el rayo que
-     orbitaba) y bastante más presente — a pedido, casi no se notaba,
-     tiene que estar vivo/visible todo el rato, parejo en los cuatro
-     lados de la card, no solo asomando de una esquina. */
-  position: absolute; inset: -18%; z-index: 0; pointer-events: none;
-  border-radius: 999px;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 68%);
-  filter: blur(24px);
-  opacity: 0.8;
+.fl-card-glow { position: absolute; inset: -18%; z-index: 0; pointer-events: none; }
+@property --glow-mx { syntax: '<percentage>'; inherits: true; initial-value: 92%; }
+@property --glow-my { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
+.fl-card-glow::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 26%);
+  filter: blur(18px);
+  opacity: 1;
+  animation: fl-glow-orbit 10s linear infinite;
+  animation-delay: -5s;
+}
+.fl-card-glow::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at var(--glow-mx) var(--glow-my), rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 28%);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+  animation: fl-glow-orbit 10s linear infinite;
+}
+/* Mismo recorrido circular que la versión original de la card: 12
+   pasos alrededor del centro, radio ~42% en cada eje. animation-delay
+   negativo de medio ciclo en ::before arranca esa luz ya a mitad de
+   vuelta, así las dos quedan siempre opuestas (180°) entre sí. */
+@keyframes fl-glow-orbit {
+  0%     { --glow-mx: 92%; --glow-my: 50%; }
+  8.33%  { --glow-mx: 86%; --glow-my: 71%; }
+  16.67% { --glow-mx: 71%; --glow-my: 86%; }
+  25%    { --glow-mx: 50%; --glow-my: 92%; }
+  33.33% { --glow-mx: 29%; --glow-my: 86%; }
+  41.67% { --glow-mx: 14%; --glow-my: 71%; }
+  50%    { --glow-mx: 8%;  --glow-my: 50%; }
+  58.33% { --glow-mx: 14%; --glow-my: 29%; }
+  66.67% { --glow-mx: 29%; --glow-my: 14%; }
+  75%    { --glow-mx: 50%; --glow-my: 8%;  }
+  83.33% { --glow-mx: 71%; --glow-my: 14%; }
+  91.67% { --glow-mx: 86%; --glow-my: 29%; }
+  100%   { --glow-mx: 92%; --glow-my: 50%; }
+}
+.fl-card-shell:hover .fl-card-glow::before, .fl-card-shell:hover .fl-card-glow::after,
+.fl-card-shell:focus-within .fl-card-glow::before, .fl-card-shell:focus-within .fl-card-glow::after {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-card-glow::before, .fl-card-glow::after { animation: none; }
 }
 .fl-card-shell--socio { display: none; }
 body.is-socio .fl-card-shell--publico { display: none; }
