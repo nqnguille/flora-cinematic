@@ -1864,15 +1864,17 @@ html.no-js .reveal { opacity: 1; transform: none; }
    --glow-my vía @property que se usaba antes en la card. */
 .fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
-/* Inset asimétrico: arriba de la card vive el badge "Exclusivo socios"
-   pegado con solo 14px de margen (.fl-acceso-badge, margin-bottom:14px)
-   — con el spill parejo de -18% en los cuatro lados, el derrame de
-   arriba (~32px) se pasaba de esos 14px y quedaba chocando contra el
-   badge, con un borde recto justo ahí (se leía como "se recorta").
-   Se achica el spill solo arriba (-10px fijos, no %, para no depender
-   del tamaño de la card) y se deja el resto (costados/abajo, donde no
-   hay nada cerca) con el spill grande de siempre. */
-.fl-card-glow { position: absolute; inset: -10px -18% -18% -18%; z-index: 0; pointer-events: none; }
+/* La corrección anterior (achicar solo el spill de arriba, contra el
+   badge) no era la causa real: el recorte se veía parejo en los CUATRO
+   lados, no solo arriba. La causa real es que .fl-card-glow (la caja
+   que contiene el brillo) era chica — apenas -18% de spill — así que
+   el borde de su propia caja quedaba visible como un recuadro antes de
+   que el gradiente circular llegara a apagarse del todo. Se agranda
+   la caja bastante (-34% en los tres lados libres) para que el brillo
+   tenga lugar de sobra para desvanecerse solo, sin tocar su propio
+   borde; arriba se mantiene achicado (-10px) porque ahí sí hay algo
+   cerca de verdad (el badge "Exclusivo socios", a 14px). */
+.fl-card-glow { position: absolute; inset: -10px -22% -34% -34%; z-index: 0; pointer-events: none; }
 @property --glow-mx { syntax: '<percentage>'; inherits: true; initial-value: 92%; }
 @property --glow-my { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
 .fl-card-glow::before {
