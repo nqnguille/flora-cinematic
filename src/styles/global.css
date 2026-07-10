@@ -1772,69 +1772,56 @@ html.no-js .reveal { opacity: 1; transform: none; }
      comentario en ::before, más abajo, sobre por qué se volvió atrás de
      "derramar hacia afuera". */
 }
-@property --beam-angle { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
-
-/* Un "rayo de faro" pivotando desde el centro de la card — a pedido, en
-   vez del punto de luz redondo (radial-gradient con --mx/--my
-   orbitando) ahora es una franja/cuña angular (conic-gradient) que
-   barre los 360° sin parar. Como la cuña nace en el centro y apunta
-   siempre hacia afuera, "girar sobre sí misma" y "recorrer la tarjeta"
-   son el mismo movimiento — no hace falta animar una posición aparte.
-   Sigue sin rotar la CAJA (inset:0, fija, mismas esquinas que la card):
-   lo único que se anima es el ángulo de arranque del gradiente
-   (--beam-angle vía @property), así que el mismo argumento del comentario
-   viejo sigue valiendo — nunca hay un borde propio de la caja que se
-   pueda asomar por fuera del recorte redondeado de la card. */
-/* Selector DOBLE (.fl-acceso-card--photo.fl-acceso-card--photo, misma
-   clase repetida) a propósito: .fl-acceso-card::before/::after (más
-   abajo, el bisel grabado + el brillo de estudio que sigue al mouse)
-   caía DESPUÉS en el archivo y con la MISMA especificidad (0,1,1) que
-   estas reglas — en un empate así gana quien está más abajo, así que
-   la base le pisaba inset/z-index/box-shadow a ::before y
-   background/mix-blend-mode/OPACITY a ::after (¡opacity:0 en reposo!
-   — por eso nunca se veía, solo aparecía un instante en :hover vía
-   .fl-acceso-card:hover::after{opacity:1}, y ni con el gradiente
-   correcto). Repetir la clase sube la especificidad a (0,2,1) sin
-   !important y sin tocar la regla base (que otras cards sin --photo
-   siguen necesitando tal cual). */
+/* Reflejo diagonal cruzando TODA la tarjeta — a pedido, el rayo que
+   pivoteaba desde el centro (conic-gradient girando 360°) seguía
+   sintiéndose muy intenso/artificial incluso ya atenuado. Se reemplaza
+   por el gesto clásico de "glossy card": una franja diagonal (mismo
+   ángulo ~122° que el brillo ESTÁTICO de .fl-acceso-card base, líneas
+   1717-1729, para que se sienta como la misma familia visual) que
+   entra por una esquina y sale por la opuesta, con un hueco largo sin
+   brillo entre pasada y pasada — un glint ocasional, no un movimiento
+   constante, que es lo que lo hacía leer como "efecto de CSS" y no
+   como luz real. Técnica: gradiente diagonal fijo + background-size
+   ancho + animación de background-position (nunca se toca el ángulo,
+   solo se desliza el plano del gradiente). */
 .fl-acceso-card--photo.fl-acceso-card--photo::before {
   content: '';
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   box-shadow: none;
-  /* Halo ancho y difuminado detrás del núcleo — mismo --beam-angle que
-     ::after (no desfasado), así se leen como UNA sola fuente de luz
-     (el brillo suave alrededor de un rayo), no dos luces distintas.
-     Bajado de 0.55 a 0.3 de opacidad — a pedido, quedaba muy fuerte /
-     poco realista. */
-  background: conic-gradient(from var(--beam-angle) at 50% 50%,
-    transparent 0deg, transparent 156deg,
-    rgba(255,255,255,0.3) 180deg,
-    transparent 204deg, transparent 360deg);
-  filter: blur(20px);
+  background: linear-gradient(122deg,
+    transparent 42%, rgba(255,255,255,0.16) 49%, rgba(255,255,255,0.2) 50%,
+    rgba(255,255,255,0.16) 51%, transparent 58%);
+  background-size: 320% 320%;
+  filter: blur(3px);
   opacity: 1;
-  animation: fl-card-beam 7s linear infinite;
+  animation: fl-card-sweep 6.5s ease-in-out infinite;
 }
 .fl-acceso-card--photo.fl-acceso-card--photo::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   box-shadow: none;
-  /* Núcleo fino y nítido del rayo, bien angosto (16°) para que lea como
-     línea/reflejo y no como otro blob. Bajado de 0.95 a 0.55 — mismo
-     pedido de intensidad más realista. */
-  background: conic-gradient(from var(--beam-angle) at 50% 50%,
-    transparent 0deg, transparent 172deg,
-    rgba(255,255,255,0.55) 180deg,
-    transparent 188deg, transparent 360deg);
+  /* Núcleo más angosto y nítido superpuesto al halo de ::before, misma
+     franja pero sin blur — le da el filo fino de un reflejo real en
+     vez de solo un manchón difuso. */
+  background: linear-gradient(122deg,
+    transparent 47%, rgba(255,255,255,0.4) 50%, transparent 53%);
+  background-size: 320% 320%;
   mix-blend-mode: screen;
-  opacity: 0.95;
-  animation: fl-card-beam 7s linear infinite;
+  opacity: 0.85;
+  animation: fl-card-sweep 6.5s ease-in-out infinite;
 }
-@keyframes fl-card-beam {
-  from { --beam-angle: 0deg; }
-  to   { --beam-angle: 360deg; }
+/* 0-100% en background-position recorre la diagonal completa del plano
+   320%×320% — el tramo 0%→22% es donde la franja realmente cruza la
+   tarjeta (visible), el resto (22%→100%) la deja ya afuera del otro
+   lado, quieta y sin verse, así que se lee como un destello que pasa
+   una vez y después hace una pausa larga antes de repetirse. */
+@keyframes fl-card-sweep {
+  0%   { background-position: 145% -45%; }
+  22%  { background-position: -45% 145%; }
+  100% { background-position: -45% 145%; }
 }
-/* Al hover/focus, el giro de las luces se pausa — quieto mientras se
-   interactúa, sigue girando solo en reposo. */
+/* Al hover/focus, el barrido se pausa — quieto mientras se interactúa,
+   sigue solo en reposo. */
 .fl-acceso-card--photo:hover::before, .fl-acceso-card--photo:hover::after,
 .fl-acceso-card--photo:focus-visible::before, .fl-acceso-card--photo:focus-visible::after {
   animation-play-state: paused;
@@ -1845,7 +1832,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 
 /* Glow trasero: luz que se asoma SOLO por afuera del borde de la card,
    como si viniera de atrás — a propósito NO es un pseudo-elemento de la
-   card (::before/::after ya están usados por el rayo, arriba, y de
+   card (::before/::after ya están usados por el reflejo, arriba, y de
    cualquier forma quedarían recortados: overflow:hidden en .fl-acceso-card
    recorta todo su contenido generado, sin importar z-index ni inset
    negativo). Por eso es un <span> hermano real, .fl-card-glow, que vive
@@ -1854,29 +1841,33 @@ html.no-js .reveal { opacity: 1; transform: none; }
    recorte. Para que no "pegue de frente" contra la card, va ANTES en el
    DOM (pinta primero) y la card se pone encima (z-index mayor) con fondo
    opaco: la parte del glow que cae debajo de la card queda tapada, solo
-   se ve el aro que sobresale por fuera del borde. Mismo --beam-angle/
-   animación que el rayo (misma duración, arrancan juntas) para que gire
-   sincronizado con él, como si fuera la misma fuente de luz vista desde
-   atrás. */
+   se ve el aro que sobresale por fuera del borde. Ya no gira (el reflejo
+   ahora es una franja diagonal, no algo que orbita) — en vez de eso
+   respira en brillo, con un pico justo cuando el reflejo cruza la
+   tarjeta (mismos 6.5s, mismo 22% de "paso"), como si fuera la luz de
+   ese mismo destello rebotando detrás. */
 .fl-card-shell { position: relative; display: block; width: clamp(230px, 22vw, 305px); margin: 0 auto; }
 .fl-card-shell .fl-acceso-card--photo { width: 100%; margin: 0; position: relative; z-index: 1; }
 .fl-card-glow {
   content: ''; display: block;
   position: absolute; inset: -15%; z-index: 0; pointer-events: none;
   border-radius: 999px;
-  background: conic-gradient(from var(--beam-angle) at 50% 50%,
-    transparent 0deg, transparent 148deg,
-    rgba(255,255,255,0.5) 180deg,
-    transparent 212deg, transparent 360deg);
-  filter: blur(28px);
-  opacity: 0.55;
-  animation: fl-card-beam 7s linear infinite;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%);
+  filter: blur(30px);
+  opacity: 0.12;
+  animation: fl-card-glow-pulse 6.5s ease-in-out infinite;
+}
+@keyframes fl-card-glow-pulse {
+  0%   { opacity: 0.12; }
+  14%  { opacity: 0.5; }
+  28%  { opacity: 0.12; }
+  100% { opacity: 0.12; }
 }
 .fl-card-shell:hover .fl-card-glow, .fl-card-shell:focus-within .fl-card-glow {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
-  .fl-card-glow { animation: none; }
+  .fl-card-glow { animation: none; opacity: 0.18; }
 }
 .fl-card-shell--socio { display: none; }
 body.is-socio .fl-card-shell--publico { display: none; }
