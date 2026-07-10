@@ -1750,15 +1750,10 @@ html.no-js .reveal { opacity: 1; transform: none; }
     0 34px 64px -18px rgba(0,0,0,0.9), 0 4px 0 rgba(0,0,0,0.6),
     inset 1.5px 0 0 rgba(200,220,255,0.24), inset -1px 0 0 rgba(0,0,0,0.6),
     inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 5px rgba(0,0,0,0.7);
-  /* El glow de atrás (::before, más abajo) se derrama hacia afuera del
-     borde — necesita overflow:visible acá. La sección .fl-acceso (el
-     ancestro con overflow:hidden real, ahí sí hace falta para recortar
-     el video/foto de fondo) está mucho más lejos que el margen que este
-     glow necesita, así que no debería volver a toparse con ese límite;
-     el corte recto que se vio antes era en realidad el conic-gradient
-     de bordes duros + el box-shadow heredado del bisel (los dos ya
-     arreglados) — no la propia sección. */
-  overflow: visible;
+  /* overflow:hidden (heredado de .fl-acceso-card, no se pisa acá): las
+     dos luces quedan contenidas dentro del borde de la card — ver
+     comentario en ::before, más abajo, sobre por qué se volvió atrás de
+     "derramar hacia afuera". */
 }
 @property --mx { syntax: '<percentage>'; inherits: true; initial-value: 22%; }
 @property --my { syntax: '<percentage>'; inherits: true; initial-value: 8%; }
@@ -1810,10 +1805,19 @@ html.no-js .reveal { opacity: 1; transform: none; }
    siguen necesitando tal cual). */
 .fl-acceso-card--photo.fl-acceso-card--photo::before {
   content: '';
-  position: absolute; inset: -38%; z-index: 0; pointer-events: none;
+  /* VUELTA a inset:0 (contenido dentro de la card, como ::after) — con
+     inset negativo (-38%, "derrame hacia afuera") + la especificidad ya
+     arreglada, esta caja pasó a ser MUCHO más grande sin ningún recorte
+     (ni border-radius propio, ni overflow:hidden del padre, que ahora
+     también está en :visible) — al girar, su propio borde recto de
+     verdad se veía a través del blur (el blur no alcanza a disimular el
+     canto de una caja tan grande), un "coso" triangular/rombo bien feo.
+     Se sacrifica el efecto de derrame por uno confiable: contenido dentro
+     del borde de la card, igual que ::after. */
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
   box-shadow: none;
-  background: radial-gradient(circle at 82% 82%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 30%);
-  filter: blur(22px);
+  background: radial-gradient(circle at 92% 92%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%);
+  filter: blur(18px);
   opacity: 1;
   /* Mismo período y sentido que el reflejo de adelante (::after, más
      abajo) + animation-delay negativo de MEDIO ciclo — eso arranca esta
