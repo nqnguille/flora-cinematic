@@ -302,21 +302,26 @@ const {
     margin-top: 0.3rem;
     padding: 10px;
     display: flex; justify-content: center;
+    width: fit-content; margin-left: auto; margin-right: auto;
   }
+  /* box-shadow (no radial-gradient) a propósito: un gradiente circular
+     centrado en una caja rectangular ancha (el botón es una píldora, no
+     un cuadrado) queda más intenso a los costados que arriba/abajo — se
+     nota como un halo parejo. box-shadow con blur+spread sigue el
+     border-radius de la caja, así que crece igual de grueso en todo el
+     contorno, sea cual sea su forma. */
   .sl-gbtn::before {
     content: '';
     position: absolute; inset: 2px; z-index: -1;
     border-radius: 999px;
-    background: radial-gradient(circle, rgba(60, 180, 146, 0.45) 0%, rgba(60, 180, 146, 0) 72%);
-    filter: blur(10px);
     animation: sl-gbtn-glow 2.6s ease-in-out infinite;
   }
   @keyframes sl-gbtn-glow {
-    0%, 100% { opacity: 0.55; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.08); }
+    0%, 100% { box-shadow: 0 0 10px 1px rgba(60, 180, 146, 0.4); }
+    50% { box-shadow: 0 0 16px 4px rgba(60, 180, 146, 0.65); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .sl-gbtn::before { animation: none; opacity: 0.8; }
+    .sl-gbtn::before { animation: none; box-shadow: 0 0 13px 2px rgba(60, 180, 146, 0.5); }
   }
   .sl-msg { color: var(--sl-violet); font-size: 0.85rem; margin: 0; }
   .sl-note { font-size: 0.78rem; color: rgba(244, 241, 247, 0.4); line-height: 1.5; margin: 0 auto; }
@@ -395,19 +400,22 @@ const {
       transform: translate(-50%, -50%) rotate(90deg);
     }
     .sl-panel {
-      left: 0; right: 0; top: 0; bottom: 44%; width: auto; height: auto;
+      left: 0; right: 0; top: 0; bottom: 42%; width: auto; height: auto;
       justify-content: center;
-      gap: 0.85rem;
+      gap: 1.15rem;
       padding: clamp(44px, 10vw, 56px) clamp(20px, 6vw, 28px) clamp(18px, 4vw, 26px);
     }
     .sl-logo { width: clamp(190px, 52vw, 260px); }
     .sl-title { font-size: clamp(1.5rem, 6.6vw, 2.1rem); }
 
-    /* Título, tagline, nota y botón comparten un ancho de columna parecido
+    /* Título, tagline y nota comparten un ancho de columna parecido
        (centrados) para que el bloque se vea simétrico — solo en mobile,
        donde el panel es angosto; en desktop el título necesita su ancho
-       natural para no romper el salto de línea a la altura de "para" */
-    .sl-title, .sl-tagline, .sl-sub, .sl-gbtn {
+       natural para no romper el salto de línea a la altura de "para".
+       .sl-gbtn queda afuera: si comparte este ancho forzado, el botón de
+       Google (más angosto) queda descentrado dentro de esa caja y el halo
+       alrededor se ve parejo solo a los costados, no arriba/abajo. */
+    .sl-title, .sl-tagline, .sl-sub {
       width: min(320px, 78%); margin-left: auto; margin-right: auto;
     }
     .sl-note {
