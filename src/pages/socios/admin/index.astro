@@ -141,8 +141,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               <span></span>
               <button type="button" class="pa-scol" data-sort="name">Nombre</button>
               <button type="button" class="pa-scol" data-sort="email">Email</button>
-              <button type="button" class="pa-scol" data-sort="sin">Estado</button>
-              <button type="button" class="pa-scol" data-sort="lastLogin">Último ingreso</button>
+              <button type="button" class="pa-scol" data-sort="lastLogin">Estado</button>
               <button type="button" class="pa-scol" data-sort="alta">Alta</button>
               <button type="button" class="pa-scol" data-sort="logins">Ingresos</button>
               <button type="button" class="pa-scol" data-sort="reservas">Reservas</button>
@@ -1152,7 +1151,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           </div>
           <div class="pa-socio-email" title="${esc(s.email)}">${esc(s.email)}</div>
           <div class="pa-socio-estadocell">${estado}${tempBadge(s)}</div>
-          <div class="pa-socio-fecha">${s.lastLogin ? esc(fmtRel(s.lastLogin)) : '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-fecha" title="${s.firstLogin ? 'Primer ingreso: ' + esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? esc(fmtFecha(s.alta).split(' ')[0]) : '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-num">${s.logins || '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-rescell">${chipRes}</div>
@@ -1200,7 +1198,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       name: (a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email), 'es'),
       logins: (a, b) => (b.logins || 0) - (a.logins || 0),
       alta: (a, b) => (Date.parse(b.alta || b.firstLogin || 0) || 0) - (Date.parse(a.alta || a.firstLogin || 0) || 0),
-      sin: (a, b) => Number(!!a.lastLogin) - Number(!!b.lastLogin), // sin ingresar primero
       email: (a, b) => String(a.email || '').localeCompare(String(b.email || ''), 'es'),
       reservas: (a, b) => reservasDe(b.email).total - reservasDe(a.email).total,
     }
@@ -1977,10 +1974,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-stable-scroll { overflow: visible; margin-top: 0.6rem; }
   .pa-stable-head, .pa-socio-line {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 225px) minmax(160px, 250px) 190px 110px 90px 64px 130px minmax(120px, 250px) 70px;
+    grid-template-columns: 44px minmax(150px, 240px) minmax(160px, 235px) 230px 90px 64px 130px minmax(120px, 235px) 70px;
     gap: 0.5rem;
     align-items: center;
-    min-width: 1200px;
+    min-width: 1130px;
   }
   .pa-stable-head {
     padding: 0 0.2rem 0.5rem;
