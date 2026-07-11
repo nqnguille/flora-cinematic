@@ -268,14 +268,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Formato: solo 2 opciones posibles, así que van como botones tipo
     // "segmentado" (mismo lenguaje visual que el selector Ver: de la carta
     // pública), no como checkboxes ni escondidos atrás de un desplegable.
+    // Solo ícono (sin texto) para no gastar ancho — ese ancho se lo lleva
+    // Sabores/Efectos, donde sí hace falta ver qué quedó tildado.
     function formatoCheckHtml(idx, selected) {
       const sel = selected || []
       const opts = ddOptions('formato').map(([val, lab, icon]) => {
         const on = sel.includes(val)
-        const corta = val === 'flor' ? 'Flor' : 'Preroll'
-        return `<button type="button" class="pa-fbtn pa-fbtn-${val} ${on ? 'is-on' : ''}" data-dd="formato" data-idx="${idx}" data-val="${val}" aria-pressed="${on}" title="${esc(lab)}"><span class="pa-fbtn-ic">${icon}</span>${esc(corta)}</button>`
+        return `<button type="button" class="pa-fbtn pa-fbtn-${val} ${on ? 'is-on' : ''}" data-dd="formato" data-idx="${idx}" data-val="${val}" aria-pressed="${on}" title="${esc(lab)}" aria-label="${esc(lab)}"><span class="pa-fbtn-ic">${icon}</span></button>`
       }).join('')
       return `<div class="pa-formato-seg">${opts}</div>`
+    }
+    // Preview del toggle: en vez de "Sabores · 2", muestra directamente
+    // los ítems tildados (ícono + nombre corto) para verlos sin abrir el panel.
+    function ddPreviewHtml(dim, sel) {
+      if (!sel.length) return `<span class="pa-dd-txt">${DD_LABEL[dim]}</span>`
+      return ddOptions(dim)
+        .filter(([val]) => sel.includes(val))
+        .map(([, lab, icon]) => `<span class="pa-dd-chip">${icon ? `<span class="pa-ddicon">${icon}</span>` : ''}<span class="pa-dd-chip-txt">${esc(lab)}</span></span>`)
+        .join('')
     }
     function ddHtml(dim, idx, selected) {
       const sel = selected || []
@@ -285,7 +295,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }).join('')
       const n = sel.length
       return `<div class="pa-dd" data-ddwrap="${dim}-${idx}">
-        <button type="button" class="pa-dd-toggle ${n ? 'has' : ''}"><span class="pa-dd-txt">${DD_LABEL[dim]}${n ? ` · ${n}` : ''}</span><svg class="pa-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <button type="button" class="pa-dd-toggle ${n ? 'has' : ''}"><span class="pa-dd-preview">${ddPreviewHtml(dim, sel)}</span><svg class="pa-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="pa-dd-panel" hidden>${opts}</div>
       </div>`
     }
@@ -294,7 +304,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (!wrap) return
       const key = dim === 'formato' ? 'formatos' : dim === 'sabor' ? 'sabores' : 'efectos'
       const sel = CATALOG[i][key] || []
-      wrap.querySelector('.pa-dd-txt').textContent = DD_LABEL[dim] + (sel.length ? ` · ${sel.length}` : '')
+      wrap.querySelector('.pa-dd-preview').innerHTML = ddPreviewHtml(dim, sel)
       wrap.querySelector('.pa-dd-toggle').classList.toggle('has', sel.length > 0)
       wrap.querySelectorAll('.pa-ddopt').forEach((opt) => opt.classList.toggle('is-on', opt.querySelector('input').checked))
     }
@@ -1787,10 +1797,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-genscroll { overflow: visible; }
   .pa-rows-head, .pa-row {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px 60px 60px 92px 104px 104px 76px 32px;
+    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px 60px 60px 76px 200px 200px 76px 32px;
     gap: 0.4rem;
     align-items: center;
-    min-width: 960px;
+    min-width: 1130px;
   }
   .pa-rows-head {
     padding: 0 0.2rem 0.5rem;
@@ -1816,10 +1826,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-dd-toggle {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;
     background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 8px;
-    padding: 0.42rem 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--pa-cream); cursor: pointer;
+    padding: 0.32rem 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; color: var(--pa-cream); cursor: pointer;
+    min-height: 2.1rem;
   }
   .pa-dd-toggle.has { border-color: var(--pa-violet); }
-  .pa-dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pa-dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--pa-muted); }
+  .pa-dd-preview { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; min-width: 0; overflow: hidden; }
+  .pa-dd-chip {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    background: rgba(183, 157, 230, 0.14); border-radius: 999px; padding: 0.14rem 0.5rem 0.14rem 0.14rem;
+    max-width: 100%; overflow: hidden;
+  }
+  .pa-dd-chip .pa-ddicon { width: 14px; height: 14px; }
+  .pa-dd-chip-txt { font-size: 0.72rem; font-weight: 600; color: var(--pa-cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pa-dd-chev { width: 12px; height: 12px; color: var(--pa-violet); flex-shrink: 0; transition: transform 0.15s ease; }
   .pa-dd-toggle.open .pa-dd-chev { transform: rotate(180deg); }
   .pa-dd-panel {
@@ -1839,21 +1858,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--pa-violet); flex-shrink: 0; }
   .pa-ddicon svg { width: 100%; height: 100%; }
 
-  /* ── Formato: botones tipo segmentado (mismo lenguaje que "Ver:" en la carta) ── */
-  .pa-formato-seg { display: flex; flex-direction: column; gap: 0.2rem; }
+  /* ── Formato: mismo sello circular de la carta pública, solo ícono (sin
+     texto) para no gastar ancho — ese ancho se lo llevan Sabores/Efectos ── */
+  .pa-formato-seg {
+    display: flex; align-items: center; gap: 4px; padding: 3px; width: fit-content;
+    background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 999px;
+  }
   .pa-fbtn {
-    display: flex; align-items: center; gap: 0.3rem;
-    border: 1px solid var(--pa-line); background: var(--pa-card-2); color: var(--pa-muted);
-    font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700;
-    padding: 0.18rem 0.5rem; border-radius: 999px; cursor: pointer; white-space: nowrap;
-    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: none; color: var(--pa-muted);
+    width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
   }
   .pa-fbtn:hover { color: var(--pa-cream); }
-  .pa-fbtn-ic { width: 13px; height: 13px; display: inline-flex; flex-shrink: 0; }
-  .pa-fbtn-ic svg { width: 100%; height: 100%; }
-  .pa-fbtn.is-on { color: var(--pa-cream); border-color: transparent; }
-  .pa-fbtn-flor.is-on { background: rgba(60, 180, 146, 0.18); box-shadow: inset 0 0 0 1.3px #3cb492; }
-  .pa-fbtn-preroll.is-on { background: rgba(183, 157, 230, 0.18); box-shadow: inset 0 0 0 1.3px var(--pa-violet); }
+  .pa-fbtn-ic {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: inset 0 0 0 1.2px rgba(255, 255, 255, 0.28);
+  }
+  .pa-fbtn-ic svg { width: 14px; height: 14px; }
+  .pa-fbtn-flor .pa-fbtn-ic { background: #3cb492; color: #08160f; }
+  .pa-fbtn-preroll .pa-fbtn-ic { background: var(--pa-violet); color: #170c2b; }
+  .pa-fbtn-flor.is-on { box-shadow: inset 0 0 0 1.5px #3cb492; border-radius: 50%; }
+  .pa-fbtn-preroll.is-on { box-shadow: inset 0 0 0 1.5px var(--pa-violet); border-radius: 50%; }
   .pa-fbtn:focus-visible { outline: 2px solid var(--pa-violet); outline-offset: 2px; }
 
   /* ── Subida de foto ── */
