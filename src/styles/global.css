@@ -1630,7 +1630,8 @@ html.no-js .reveal { opacity: 1; transform: none; }
    (blanco apagado, se enciende en hover), en círculos chicos para que
    se lean como "botones" y no como texto de más. */
 .fl-footer-brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.fl-footer-social { list-style: none; display: flex; justify-content: center; gap: 14px; padding: 0; margin: 22px 0 0; }
+.fl-footer-brand-inner { display: flex; flex-direction: column; align-items: stretch; }
+.fl-footer-social { list-style: none; display: flex; justify-content: space-between; gap: 14px; padding: 0; margin: 22px 0 0; }
 .fl-footer-social a {
   display: flex; align-items: center; justify-content: center;
   width: 52px; height: 52px; border-radius: 50%;
