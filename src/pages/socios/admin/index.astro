@@ -248,6 +248,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       (list || []).forEach((g) => { g.thc = numOnly(g.thc); g.cbd = numOnly(g.cbd) })
     }
 
+    // Orden alfabético por nombre — mismo criterio que la carta pública.
+    function sortByNombre(list) {
+      (list || []).sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' }))
+    }
+
     function bancoOptionsHtml(current) {
       const bancos = window.FLORA_BANCOS
       return Object.entries(bancos)
@@ -545,6 +550,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           // (mejor eso que perder las del otro admin sin que nadie se entere).
           CATALOG = data.geneticas || CATALOG
           normalizeThcCbd(CATALOG)
+          sortByNombre(CATALOG)
           CATALOG_VERSION = data.version || CATALOG_VERSION
           render()
           status.classList.add('is-err')
@@ -1510,6 +1516,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const data = await res.json()
       CATALOG = data.geneticas || []
       normalizeThcCbd(CATALOG)
+      sortByNombre(CATALOG)
       CATALOG_VERSION = data.version || 0
       // La pestaña Socios solo la ve el super admin.
       if (!data.isSuperAdmin) {

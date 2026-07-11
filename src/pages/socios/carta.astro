@@ -876,7 +876,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* ── Sesión ── */
 
     function showContent(list) {
-      allGeneticas = list
+      // Mismo criterio de orden que el panel admin: alfabético por nombre.
+      allGeneticas = [...list].sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' }))
       document.getElementById('socios-login').hidden = true
       document.getElementById('gn-content').hidden = false
       buildFilters()
