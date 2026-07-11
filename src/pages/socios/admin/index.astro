@@ -316,7 +316,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <label class="pa-avail-toggle" title="Disponible en la carta">
           <input type="checkbox" data-field="activo" data-idx="${idx}" ${g.activo ? 'checked' : ''} />
         </label>
-        <input class="pa-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" />
+        <input class="pa-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" title="${esc(g.nombre)}" />
         <select class="pa-input" data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
         <select class="pa-input" data-field="tipo" data-idx="${idx}">${['sativa', 'indica', 'hibrida', 'cbd'].map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${tipoLabel(t)}</option>`).join('')}</select>
         <input class="pa-input pa-cell-num" type="number" step="0.1" min="0" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="0" />
@@ -425,6 +425,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (availFilter) render()
       } else if (field) {
         CATALOG[i][field] = t.value
+        if (field === 'nombre') t.title = t.value
         marcarDirty('gen')
       }
     })
@@ -1797,10 +1798,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-genscroll { overflow: visible; }
   .pa-rows-head, .pa-row {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px 60px 60px 76px 200px 200px 76px 32px;
+    grid-template-columns: 44px minmax(110px, 160px) 116px 96px 60px 60px 100px 200px 200px 76px 32px;
     gap: 0.4rem;
     align-items: center;
-    min-width: 1130px;
+    min-width: 1204px;
   }
   .pa-rows-head {
     padding: 0 0.2rem 0.5rem;
@@ -1859,28 +1860,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-ddicon svg { width: 100%; height: 100%; }
 
   /* ── Formato: mismo sello circular de la carta pública, solo ícono (sin
-     texto) para no gastar ancho — ese ancho se lo llevan Sabores/Efectos ── */
-  .pa-formato-seg {
-    display: flex; align-items: center; gap: 4px; padding: 3px; width: fit-content;
-    background: var(--pa-card-2); border: 1px solid var(--pa-line); border-radius: 999px;
-  }
+     texto) para no gastar ancho — ese ancho se lo llevan Sabores/Efectos.
+     Sin burbuja contenedora: los botones quedan sueltos y grandes. ── */
+  .pa-formato-seg { display: flex; align-items: center; gap: 10px; width: fit-content; }
   .pa-fbtn {
     display: inline-flex; align-items: center; justify-content: center;
     border: none; background: none; color: var(--pa-muted);
-    width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer;
+    width: 42px; height: 42px; padding: 0; border-radius: 50%; cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
   .pa-fbtn:hover { color: var(--pa-cream); }
   .pa-fbtn-ic {
-    width: 22px; height: 22px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    box-shadow: inset 0 0 0 1.2px rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 0 0 1.4px rgba(255, 255, 255, 0.28);
   }
-  .pa-fbtn-ic svg { width: 14px; height: 14px; }
+  .pa-fbtn-ic svg { width: 18px; height: 18px; }
   .pa-fbtn-flor .pa-fbtn-ic { background: #3cb492; color: #08160f; }
   .pa-fbtn-preroll .pa-fbtn-ic { background: var(--pa-violet); color: #170c2b; }
-  .pa-fbtn-flor.is-on { box-shadow: inset 0 0 0 1.5px #3cb492; border-radius: 50%; }
-  .pa-fbtn-preroll.is-on { box-shadow: inset 0 0 0 1.5px var(--pa-violet); border-radius: 50%; }
+  .pa-fbtn-flor.is-on { box-shadow: inset 0 0 0 2px #3cb492; border-radius: 50%; }
+  .pa-fbtn-preroll.is-on { box-shadow: inset 0 0 0 2px var(--pa-violet); border-radius: 50%; }
   .pa-fbtn:focus-visible { outline: 2px solid var(--pa-violet); outline-offset: 2px; }
 
   /* ── Subida de foto ── */
