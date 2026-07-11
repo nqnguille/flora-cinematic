@@ -1630,15 +1630,16 @@ html.no-js .reveal { opacity: 1; transform: none; }
    (blanco apagado, se enciende en hover), en círculos chicos para que
    se lean como "botones" y no como texto de más. */
 .fl-footer-brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.fl-footer-social { list-style: none; display: flex; justify-content: center; gap: 10px; padding: 0; margin: 18px 0 0; }
+.fl-footer-social { list-style: none; display: flex; justify-content: center; gap: 14px; padding: 0; margin: 22px 0 0; }
 .fl-footer-social a {
   display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 52px; height: 52px; border-radius: 50%;
   background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85);
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 .fl-footer-social a:hover { background: #fff; color: var(--fl-violet); transform: translateY(-2px); }
-.fl-footer-social svg { width: 17px; height: 17px; }
+.fl-footer-social svg { width: 23px; height: 23px; }
+.fl-footer-social-label { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin: 12px 0 0; }
 .fl-footer-col h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
 .fl-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .fl-footer-col a { color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-ui); font-size: 15px; }
