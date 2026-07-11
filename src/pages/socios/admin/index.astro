@@ -133,17 +133,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
           <div id="pa-socio-stats" class="pa-stats pa-stats-sub"></div>
           <div class="pa-toolbar">
-            <div id="pa-socio-sort" class="pa-availfilter" role="group" aria-label="Ordenar socios">
-              <button class="pa-avail is-active" data-sort="lastLogin" type="button">Último ingreso</button>
-              <button class="pa-avail" data-sort="name" type="button">Nombre</button>
-              <button class="pa-avail" data-sort="logins" type="button">Ingresos</button>
-              <button class="pa-avail" data-sort="alta" type="button">Alta</button>
-              <button class="pa-avail" data-sort="sin" type="button">Sin ingresar</button>
-            </div>
             <input id="pa-socio-buscar" class="pa-input pa-search" type="search" placeholder="Buscar socio…" autocomplete="off" />
           </div>
           <p id="pa-socio-status" class="pa-save-status"></p>
-          <div id="pa-socios-list" class="pa-socios-list"></div>
+          <div class="pa-stable-scroll">
+            <div class="pa-stable-head" id="pa-socio-thead">
+              <span></span>
+              <button type="button" class="pa-scol" data-sort="name">Nombre</button>
+              <button type="button" class="pa-scol" data-sort="email">Email</button>
+              <button type="button" class="pa-scol" data-sort="sin">Estado</button>
+              <button type="button" class="pa-scol" data-sort="lastLogin">Último ingreso</button>
+              <button type="button" class="pa-scol" data-sort="alta">Alta</button>
+              <button type="button" class="pa-scol" data-sort="logins">Ingresos</button>
+              <button type="button" class="pa-scol" data-sort="reservas">Reservas</button>
+              <span>Nota</span>
+              <span></span>
+            </div>
+            <div id="pa-socios-list" class="pa-stable-rows"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1128,44 +1135,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const verif = s.emailVerified ? '<span class="pa-socio-verif" title="Cuenta de Google verificada">✓</span>' : ''
       const res = reservasDe(s.email)
       const chipActiva = res.activa
-        ? `<span class="pa-socio-badge is-res" title="Tiene una reserva ${res.activa.estado === 'listo' ? 'lista para retirar' : 'pendiente'}">Reserva ${res.activa.estado === 'listo' ? 'lista' : 'pendiente'}</span>`
+        ? `<span class="pa-socio-badge is-res" title="Tiene una reserva ${res.activa.estado === 'listo' ? 'lista para retirar' : 'pendiente'}">${res.activa.estado === 'listo' ? 'Lista' : 'Pendiente'}</span>`
         : ''
       const chipRes = res.total
-        ? `${chipActiva}<button type="button" class="pa-socio-badge pa-socio-hist-btn" data-email="${esc(s.email)}" title="Ver historial de reservas">${res.total} reserva(s) <span class="pa-hist-chev">▸</span></button>`
-        : chipActiva
+        ? `${chipActiva}<button type="button" class="pa-socio-badge pa-socio-hist-btn" data-email="${esc(s.email)}" title="Ver historial de reservas">${res.total} <span class="pa-hist-chev">▸</span></button>`
+        : '<span class="pa-socio-line-dash">—</span>'
       // Sin ingresar → invitación lista para mandar por WhatsApp
-      const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">Invitar por WhatsApp</a>`
+      const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" title="Invitar por WhatsApp" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">💬</a>`
       // Ficha Google: nombre y apellido reales + idioma de la cuenta
       const nombreCompleto = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
-      const fichaGoogle = [
-        s.givenName && s.familyName ? `${s.givenName} ${s.familyName}` : '',
-        s.locale ? `idioma ${s.locale}` : '',
-      ].filter(Boolean).join(' · ')
-      const metaPartes = [
-        s.alta ? `Alta ${fmtFecha(s.alta).split(' ')[0]}` : '',
-        s.firstLogin ? `Primer ingreso ${fmtFecha(s.firstLogin).split(' ')[0]}` : '',
-        s.lastLogin ? `Último ${fmtFecha(s.lastLogin)}` : 'Todavía no ingresó con esta cuenta',
-        s.logins ? `<strong>${s.logins}</strong> ingreso(s)` : '',
-        fichaGoogle,
-      ].filter(Boolean)
       return `
-        <article class="pa-socio" data-buscable="${esc(`${nombreCompleto} ${s.email} ${s.nota || ''}`.toLowerCase())}">
+        <div class="pa-socio-line" data-buscable="${esc(`${nombreCompleto} ${s.email} ${s.nota || ''}`.toLowerCase())}">
           ${ava}
-          <div class="pa-socio-main">
-            <div class="pa-socio-top">
-              <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
-              ${estado}
-              ${tempBadge(s)}
-              ${chipRes}
-              ${invitar}
-            </div>
-            <div class="pa-socio-email">${esc(s.email)}</div>
-            <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
-            <div class="pa-socio-meta">${metaPartes.join(' · ')}</div>
-            <div class="pa-socio-hist" data-hist="${esc(s.email)}" hidden></div>
+          <div class="pa-socio-namecell">
+            <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
           </div>
-          <button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button>
-        </article>`
+          <div class="pa-socio-email" title="${esc(s.email)}">${esc(s.email)}</div>
+          <div class="pa-socio-estadocell">${estado}${tempBadge(s)}</div>
+          <div class="pa-socio-fecha">${s.lastLogin ? esc(fmtRel(s.lastLogin)) : '<span class="pa-socio-line-dash">—</span>'}</div>
+          <div class="pa-socio-fecha">${s.alta ? esc(fmtFecha(s.alta).split(' ')[0]) : '<span class="pa-socio-line-dash">—</span>'}</div>
+          <div class="pa-socio-num">${s.logins || '<span class="pa-socio-line-dash">—</span>'}</div>
+          <div class="pa-socio-rescell">${chipRes}</div>
+          <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
+          <div class="pa-socio-actions">${invitar}<button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button></div>
+          <div class="pa-socio-hist" data-hist="${esc(s.email)}" hidden></div>
+        </div>`
     }
 
     // Historial de reservas del socio (se arma al abrir; vive lo que el KV: ~90 días)
@@ -1207,6 +1201,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       logins: (a, b) => (b.logins || 0) - (a.logins || 0),
       alta: (a, b) => (Date.parse(b.alta || b.firstLogin || 0) || 0) - (Date.parse(a.alta || a.firstLogin || 0) || 0),
       sin: (a, b) => Number(!!a.lastLogin) - Number(!!b.lastLogin), // sin ingresar primero
+      email: (a, b) => String(a.email || '').localeCompare(String(b.email || ''), 'es'),
+      reservas: (a, b) => reservasDe(b.email).total - reservasDe(a.email).total,
     }
 
     // Filtros del padrón: las burbujas de stats filtran al tocarlas
@@ -1238,8 +1234,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         chip('ingresaron', `<strong class="is-violet">${conIngreso}</strong> ingresaron alguna vez`, 'Solo los que ya usaron la carta'),
         chip('sin', `<strong>${SOCIOS_LIST.length - conIngreso}</strong> sin ingresar`, 'Solo los que nunca entraron'),
       ].join('')
-      // Flecha de dirección en el criterio activo
-      document.querySelectorAll('#pa-socio-sort .pa-avail').forEach((b) => {
+      // Flecha de dirección en la columna activa
+      document.querySelectorAll('#pa-socio-thead .pa-scol').forEach((b) => {
         const on = b.dataset.sort === socioSort.key
         b.classList.toggle('is-active', on)
         b.textContent = b.textContent.replace(/ [↓↑]$/, '') + (on ? (socioSort.dir === -1 ? ' ↓' : ' ↑') : '')
@@ -1275,8 +1271,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       socioQ = e.target.value.trim().toLowerCase()
       renderSocios()
     })
-    document.getElementById('pa-socio-sort').addEventListener('click', (e) => {
-      const b = e.target.closest('.pa-avail')
+    document.getElementById('pa-socio-thead').addEventListener('click', (e) => {
+      const b = e.target.closest('.pa-scol')
       if (!b) return
       const key = b.dataset.sort
       if (socioSort.key === key) socioSort.dir *= -1 // segundo click invierte
@@ -1977,6 +1973,51 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .pa-socio-del:hover { border-color: var(--pa-danger); }
 
+  /* ── Padrón de socios: tabla de renglones, columnas ordenables ── */
+  .pa-stable-scroll { overflow: visible; margin-top: 0.6rem; }
+  .pa-stable-head, .pa-socio-line {
+    display: grid;
+    grid-template-columns: 44px minmax(140px, 220px) minmax(160px, 280px) 120px 110px 90px 64px 90px minmax(120px, 280px) 70px;
+    gap: 0.5rem;
+    align-items: center;
+    min-width: 1080px;
+  }
+  .pa-stable-head {
+    padding: 0 0.2rem 0.5rem;
+    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--pa-muted); border-bottom: 1px solid var(--pa-line);
+  }
+  .pa-scol {
+    background: none; border: none; padding: 0; margin: 0; text-align: left;
+    font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; cursor: pointer;
+  }
+  .pa-scol:hover { color: var(--pa-cream); }
+  .pa-scol.is-active { color: var(--pa-violet); }
+  .pa-stable-rows { display: flex; flex-direction: column; }
+  .pa-stable-rows .pa-empty { min-width: auto; padding: 1.4rem 0.3rem; }
+  .pa-socio-line { padding: 0.5rem 0.2rem; border-bottom: 1px solid var(--pa-line); font-size: 0.86rem; }
+  .pa-socio-line:hover { background: rgba(244, 241, 247, 0.02); }
+  .pa-socio-line .pa-socio-ava { width: 32px; height: 32px; }
+  .pa-socio-line .pa-socio-ini { font-size: 0.72rem; }
+  .pa-socio-namecell { display: flex; align-items: center; gap: 0.3rem; min-width: 0; }
+  .pa-socio-namecell .pa-socio-name { font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pa-socio-line .pa-socio-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pa-socio-estadocell { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+  .pa-socio-fecha { font-size: 0.8rem; color: var(--pa-muted); white-space: nowrap; }
+  .pa-socio-num { font-weight: 700; color: var(--pa-cream); }
+  .pa-socio-rescell { display: flex; align-items: center; }
+  .pa-socio-rescell .pa-socio-badge { white-space: nowrap; }
+  .pa-socio-line-dash { color: var(--pa-muted); opacity: 0.5; }
+  .pa-socio-line .pa-socio-nota { max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
+  .pa-socio-actions { display: flex; align-items: center; gap: 0.4rem; justify-self: end; }
+  .pa-socio-invitar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--pa-line);
+    text-decoration: none; font-size: 1rem; flex-shrink: 0;
+  }
+  .pa-socio-invitar:hover { border-color: var(--pa-green); }
+  .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; margin: 0.2rem 0 0; }
+
   /* ── Pedidos ── */
   .pa-ped-dot {
     display: inline-flex; align-items: center; justify-content: center;
@@ -2124,14 +2165,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-hist-items { color: var(--pa-cream); font-weight: 600; }
   .pa-hist-nota { color: var(--pa-muted); font-style: italic; }
   .pa-hist-pie { font-size: 0.68rem; color: var(--pa-muted); opacity: 0.7; margin: 0.2rem 0 0; }
-
-  /* ── Socios: invitación ── */
-  .pa-socio-invitar {
-    font-size: 0.72rem; font-weight: 700; color: var(--pa-green);
-    text-decoration: none; border: 1px solid rgba(60, 180, 146, 0.35);
-    border-radius: 999px; padding: 0.18rem 0.6rem;
-  }
-  .pa-socio-invitar:hover { border-color: var(--pa-green); background: rgba(60, 180, 146, 0.08); }
 
   /* ── Microestados ── */
   .pa-save-status.is-ok { color: var(--pa-green); }
