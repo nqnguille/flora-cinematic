@@ -96,7 +96,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <div class="pa-genscroll">
               <div class="pa-rows-head">
                 <span>Disp.</span><span>Nombre</span><span>Banco</span><span>Tipo</span>
-                <span>Predominancia</span><span>THC</span><span>CBD</span>
+                <span>THC</span><span>CBD</span>
                 <span>Formato</span><span>Sabores</span><span>Efectos</span><span>Foto</span><span></span>
               </div>
               <div id="pa-list" class="pa-rows"></div>
@@ -249,6 +249,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const cat = window.FLORA_TAG_ICONS[dim] || {}
       return Object.entries(cat).map(([k, def]) => [k, def.label, def.svg])
     }
+    // Formato: solo 2 opciones posibles, así que van como checkboxes
+    // directos en la fila (no tiene sentido esconderlas atrás de un desplegable).
+    function formatoCheckHtml(idx, selected) {
+      const sel = selected || []
+      const opts = ddOptions('formato').map(([val, lab]) => {
+        const on = sel.includes(val)
+        const corta = val === 'flor' ? 'Flor' : 'Preroll'
+        return `<label class="pa-formato-opt" title="${esc(lab)}"><input type="checkbox" data-dd="formato" data-idx="${idx}" value="${esc(val)}" ${on ? 'checked' : ''} />${esc(corta)}</label>`
+      }).join('')
+      return `<div class="pa-formato-check">${opts}</div>`
+    }
     function ddHtml(dim, idx, selected) {
       const sel = selected || []
       const opts = ddOptions(dim).map(([val, lab, icon]) => {
@@ -281,10 +292,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <input class="pa-input" data-field="nombre" data-idx="${idx}" value="${esc(g.nombre)}" placeholder="Nombre" />
         <select class="pa-input" data-field="bancoSlug" data-idx="${idx}">${bancoOptionsHtml(g.bancoSlug)}</select>
         <select class="pa-input" data-field="tipo" data-idx="${idx}">${['sativa', 'indica', 'hibrida', 'cbd'].map((t) => `<option value="${t}" ${g.tipo === t ? 'selected' : ''}>${tipoLabel(t)}</option>`).join('')}</select>
-        <input class="pa-input" data-field="predominancia" data-idx="${idx}" value="${esc(g.predominancia)}" placeholder="70% S | 30% I" />
-        <input class="pa-input pa-cell-num" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="THC" />
-        <input class="pa-input pa-cell-num" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="CBD" />
-        ${ddHtml('formato', idx, g.formatos && g.formatos.length ? g.formatos : ['flor'])}
+        <input class="pa-input pa-cell-num" type="number" step="0.1" min="0" data-field="thc" data-idx="${idx}" value="${esc(g.thc)}" placeholder="0" />
+        <input class="pa-input pa-cell-num" type="number" step="0.1" min="0" data-field="cbd" data-idx="${idx}" value="${esc(g.cbd)}" placeholder="0" />
+        ${formatoCheckHtml(idx, g.formatos && g.formatos.length ? g.formatos : ['flor'])}
         ${ddHtml('sabor', idx, g.sabores || [])}
         ${ddHtml('efecto', idx, g.efectos || [])}
         <div class="pa-foto">
@@ -452,7 +462,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         nombre: '',
         banco: '',
         bancoSlug: '',
-        predominancia: '',
         tipo: 'hibrida',
         thc: '',
         cbd: '',
@@ -1744,10 +1753,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-genscroll { overflow: visible; }
   .pa-rows-head, .pa-row {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px minmax(120px, 1.2fr) 60px 60px 104px 104px 104px 76px 32px;
+    grid-template-columns: 44px minmax(150px, 1.6fr) 116px 96px 60px 60px 92px 104px 104px 76px 32px;
     gap: 0.4rem;
     align-items: center;
-    min-width: 1080px;
+    min-width: 960px;
   }
   .pa-rows-head {
     padding: 0 0.2rem 0.5rem;
@@ -1795,6 +1804,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-ddopt input { accent-color: var(--pa-violet); flex-shrink: 0; }
   .pa-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--pa-violet); flex-shrink: 0; }
   .pa-ddicon svg { width: 100%; height: 100%; }
+
+  /* ── Formato: 2 checkboxes directos, sin desplegable ── */
+  .pa-formato-check { display: flex; flex-direction: column; gap: 0.15rem; }
+  .pa-formato-opt {
+    display: flex; align-items: center; gap: 0.3rem;
+    font-family: var(--font-ui); font-size: 0.72rem; color: var(--pa-muted); cursor: pointer; white-space: nowrap;
+  }
+  .pa-formato-opt input { accent-color: var(--pa-violet); flex-shrink: 0; width: 13px; height: 13px; cursor: pointer; }
+  .pa-formato-opt:has(input:checked) { color: var(--pa-cream); }
 
   /* ── Subida de foto ── */
   .pa-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
