@@ -1631,7 +1631,11 @@ html.no-js .reveal { opacity: 1; transform: none; }
    se lean como "botones" y no como texto de más. */
 .fl-footer-brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .fl-footer-brand-inner { display: flex; flex-direction: column; align-items: stretch; }
-.fl-footer-social { list-style: none; display: flex; justify-content: space-between; gap: 14px; padding: 0; margin: 22px 0 0; }
+/* El círculo de la hoja (la "O" de FLORA) no cae en el centro geométrico
+   del logo, sino ~2.4% a la izquierda (medido sobre el PNG fuente).
+   Se corre la fila de íconos con margin-left para que YouTube (el del
+   medio) quede exactamente debajo de esa hoja, no del centro del bloque. */
+.fl-footer-social { list-style: none; display: flex; width: fit-content; margin: 22px 0 0 22.9px; gap: 14px; padding: 0; }
 .fl-footer-social a {
   display: flex; align-items: center; justify-content: center;
   width: 52px; height: 52px; border-radius: 50%;
@@ -1640,7 +1644,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 }
 .fl-footer-social a:hover { background: #fff; color: var(--fl-violet); transform: translateY(-2px); }
 .fl-footer-social svg { width: 23px; height: 23px; }
-.fl-footer-social-label { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin: 12px 0 0; }
+.fl-footer-social-label { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); width: 184px; margin: 12px 0 0 22.9px; text-align: center; }
 .fl-footer-col h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
 .fl-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .fl-footer-col a { color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-ui); font-size: 15px; }
