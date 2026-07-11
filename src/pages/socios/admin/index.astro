@@ -141,6 +141,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               <span></span>
               <button type="button" class="pa-scol" data-sort="name">Nombre</button>
               <button type="button" class="pa-scol" data-sort="email">Email</button>
+              <span>Teléfono</span>
               <button type="button" class="pa-scol" data-sort="lastLogin">Estado</button>
               <button type="button" class="pa-scol" data-sort="alta">Alta</button>
               <button type="button" class="pa-scol" data-sort="logins">Ingresos</button>
@@ -1093,6 +1094,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const p = t.split(/\s+/)
       return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'
     }
+    // "+54 9 299 456-7890" → "5492994567890" — wa.me solo acepta dígitos
+    function digitsOnly(v) { return String(v || '').replace(/\D/g, '') }
     // "hace 3 días" — el dato operativo es la distancia, no la fecha exacta
     function fmtRel(iso) {
       if (!iso) return null
@@ -1139,23 +1142,33 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const chipRes = res.total
         ? `${chipActiva}<button type="button" class="pa-socio-badge pa-socio-hist-btn" data-email="${esc(s.email)}" title="Ver historial de reservas">${res.total} <span class="pa-hist-chev">▸</span></button>`
         : '<span class="pa-socio-line-dash">—</span>'
-      // Sin ingresar → invitación lista para mandar por WhatsApp
-      const invitar = s.lastLogin ? '' : `<a class="pa-socio-invitar" target="_blank" rel="noopener" title="Invitar por WhatsApp" href="https://wa.me/?text=${encodeURIComponent(`Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`)}">💬</a>`
+      // WhatsApp: si hay teléfono cargado, va directo a esa persona; si no
+      // ingresó nunca y no hay teléfono, cae al link genérico de invitación
+      // (abre WhatsApp para elegir el contacto a mano).
+      const waMsg = `Hola! Ya sos socio de Flora 🌿 Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`
+      const waDigits = digitsOnly(s.telefono)
+      const waHref = waDigits
+        ? `https://wa.me/${waDigits}${s.lastLogin ? '' : `?text=${encodeURIComponent(waMsg)}`}`
+        : (s.lastLogin ? '' : `https://wa.me/?text=${encodeURIComponent(waMsg)}`)
+      const waBtn = waHref
+        ? `<a class="pa-socio-wa" target="_blank" rel="noopener" title="${waDigits ? 'Enviar WhatsApp' : 'Invitar por WhatsApp'}" href="${waHref}">💬</a>`
+        : ''
       // Ficha Google: nombre y apellido reales + idioma de la cuenta
       const nombreCompleto = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
       return `
-        <div class="pa-socio-line" data-buscable="${esc(`${nombreCompleto} ${s.email} ${s.nota || ''}`.toLowerCase())}">
+        <div class="pa-socio-line" data-buscable="${esc(`${nombreCompleto} ${s.email} ${s.nota || ''} ${s.telefono || ''}`.toLowerCase())}">
           ${ava}
           <div class="pa-socio-namecell">
             <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
           </div>
           <div class="pa-socio-email" title="${esc(s.email)}">${esc(s.email)}</div>
+          <input class="pa-input pa-socio-telefono" data-email="${esc(s.email)}" value="${esc(s.telefono)}" placeholder="+54 9 ..." />
           <div class="pa-socio-estadocell">${estado}${tempBadge(s)}</div>
           <div class="pa-socio-fecha" title="${s.firstLogin ? 'Primer ingreso: ' + esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? esc(fmtFecha(s.alta).split(' ')[0]) : '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-num">${s.logins || '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-rescell">${chipRes}</div>
           <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
-          <div class="pa-socio-actions">${invitar}<button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button></div>
+          <div class="pa-socio-actions">${waBtn}<button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button></div>
           <div class="pa-socio-hist" data-hist="${esc(s.email)}" hidden></div>
         </div>`
     }
@@ -1316,6 +1329,27 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const { ok } = await saveSocio(nota.getAttribute('data-email'), nota.value)
       status.textContent = ok ? 'Nota guardada ✓' : 'Error al guardar la nota — probá de nuevo'
       status.classList.add(ok ? 'is-ok' : 'is-err')
+      setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err') }, 6000)
+    })
+    document.addEventListener('change', async (e) => {
+      const tel = e.target.closest && e.target.closest('.pa-socio-telefono')
+      if (!tel) return
+      const status = document.getElementById('pa-socio-status')
+      status.classList.remove('is-ok', 'is-err')
+      status.textContent = 'Guardando teléfono…'
+      const email = tel.getAttribute('data-email')
+      const nuevo = tel.value.trim()
+      const { ok } = await saveSocio(email, undefined, { telefono: nuevo })
+      status.textContent = ok ? 'Teléfono guardado ✓' : 'Error al guardar el teléfono — probá de nuevo'
+      status.classList.add(ok ? 'is-ok' : 'is-err')
+      if (ok) {
+        // Actualiza en memoria (no solo el server) para que el botón de
+        // WhatsApp de esta fila se refresque con el número nuevo sin
+        // pisar lo que el usuario acaba de tipear con un valor viejo.
+        const socio = SOCIOS_LIST.find((x) => x.email === email)
+        if (socio) socio.telefono = nuevo
+        renderSocios()
+      }
       setTimeout(() => { status.textContent = ''; status.classList.remove('is-ok', 'is-err') }, 6000)
     })
     document.addEventListener('click', async (e) => {
@@ -1974,10 +2008,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-stable-scroll { overflow: visible; margin-top: 0.6rem; }
   .pa-stable-head, .pa-socio-line {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 240px) minmax(160px, 235px) 230px 90px 64px 130px minmax(120px, 235px) 70px;
+    grid-template-columns: 44px minmax(150px, 210px) minmax(160px, 210px) 150px 230px 90px 64px 130px minmax(120px, 210px) 80px;
     gap: 0.5rem;
     align-items: center;
-    min-width: 1130px;
+    min-width: 1290px;
   }
   .pa-stable-head {
     padding: 0 0.2rem 0.5rem;
@@ -2005,13 +2039,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-socio-rescell { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
   .pa-socio-line-dash { color: var(--pa-muted); opacity: 0.5; }
   .pa-socio-line .pa-socio-nota { max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
+  .pa-socio-line .pa-socio-telefono { max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
   .pa-socio-actions { display: flex; align-items: center; gap: 0.4rem; justify-self: end; }
-  .pa-socio-invitar {
+  .pa-socio-wa {
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--pa-line);
     text-decoration: none; font-size: 1rem; flex-shrink: 0;
   }
-  .pa-socio-invitar:hover { border-color: var(--pa-green); }
+  .pa-socio-wa:hover { border-color: var(--pa-green); }
   .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; margin: 0.2rem 0 0; }
 
   /* ── Pedidos ── */
@@ -2241,7 +2276,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .pa-socio-line .pa-socio-ava { justify-self: start; }
     .pa-socio-namecell, .pa-socio-line .pa-socio-email,
-    .pa-socio-line .pa-socio-nota, .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; }
+    .pa-socio-line .pa-socio-nota, .pa-socio-line .pa-socio-telefono, .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; }
     .pa-socio-actions { justify-self: end; }
   }
   @media (max-width: 640px) {

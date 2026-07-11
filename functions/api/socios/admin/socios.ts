@@ -122,6 +122,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       return {
         email: k.name,
         nota: rec.nota || '',
+        telefono: rec.telefono || '',
         name: rec.name || '',
         givenName: rec.givenName || '',
         familyName: rec.familyName || '',
@@ -165,6 +166,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const esAltaNueva = existente === null;
   const rec = parseRec(existente);
   rec.nota = String(body?.nota ?? rec.nota ?? '');
+  rec.telefono = String(body?.telefono ?? rec.telefono ?? '').trim().slice(0, 40);
   const nombre = String(body?.name || '').trim().slice(0, 120);
   if (nombre && !rec.name) rec.name = nombre;
   if (esAltaNueva) rec.alta = new Date().toISOString(); // fecha real de alta en el club
