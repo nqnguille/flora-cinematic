@@ -235,6 +235,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     function tipoLabel(t) { return t === 'hibrida' ? 'Híbrida' : t === 'cbd' ? 'Full CBD' : t[0].toUpperCase() + t.slice(1) }
 
+    // Datos viejos traían THC/CBD como texto libre ("27% THC", "<1% CBD").
+    // Un <input type="number"> no puede mostrar eso — queda vacío. Se recupera
+    // el número apenas se puede leer uno (se descartan ratios tipo "1:1").
+    function numOnly(v) {
+      const s = String(v ?? '').trim()
+      if (!s || /\d\s*:\s*\d/.test(s)) return ''
+      const m = /([\d.]+)/.exec(s)
+      return m ? m[1] : ''
+    }
+    function normalizeThcCbd(list) {
+      (list || []).forEach((g) => { g.thc = numOnly(g.thc); g.cbd = numOnly(g.cbd) })
+    }
+
     function bancoOptionsHtml(current) {
       const bancos = window.FLORA_BANCOS
       return Object.entries(bancos)
@@ -244,21 +257,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // ── Desplegable tildable (formato / sabor / efecto) ──
     const DD_LABEL = { formato: 'Formato', sabor: 'Sabores', efecto: 'Efectos' }
+    // Mismos íconos que usa la carta pública para Flores/Prerolls (gn-seg-btn).
+    const ICON_FLOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5A2.4 2.4 0 0 1 16 7A2.4 2.4 0 0 1 17.5 11A2.4 2.4 0 0 1 16.3 15.2A2.5 2.5 0 0 1 13.2 17.8A2.2 2.2 0 0 1 9.6 17.4A2.3 2.3 0 0 1 6.8 14.6A2.4 2.4 0 0 1 6.4 10.4A2.5 2.5 0 0 1 8.6 6.6A2.2 2.2 0 0 1 12 5Z"/><path d="M8.4 17.6Q6.4 19 4.2 18.3Q5.2 16.2 7.4 15.9"/><path d="M15.6 17.6Q17.6 19 19.8 18.3Q18.8 16.2 16.6 15.9"/><path d="M12 18.6V21.2"/><circle cx="10.4" cy="9" r="0.95" fill="currentColor" stroke="none"/><circle cx="13.8" cy="8.6" r="0.95" fill="currentColor" stroke="none"/><circle cx="11.6" cy="12.2" r="0.95" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13" r="0.95" fill="currentColor" stroke="none"/></svg>'
+    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.4 21.4 9.1 7Q9 5.9 9.9 5.5L14.1 5.5Q15 5.9 14.9 7L13.6 21.4Q13.5 22.3 12 22.3Q10.5 22.3 10.4 21.4Z"/><path d="M10.6 18.5Q12 17.8 13.4 18.5"/><path d="M9.9 5.5Q12 3.2 14.1 5.5" fill="currentColor"/></svg>'
     function ddOptions(dim) {
-      if (dim === 'formato') return [['flor', 'Flor a granel', ''], ['preroll', 'Preroll 1g', '']]
+      if (dim === 'formato') return [['flor', 'Flor a granel', ICON_FLOR], ['preroll', 'Preroll 1g', ICON_PREROLL]]
       const cat = window.FLORA_TAG_ICONS[dim] || {}
       return Object.entries(cat).map(([k, def]) => [k, def.label, def.svg])
     }
-    // Formato: solo 2 opciones posibles, así que van como checkboxes
-    // directos en la fila (no tiene sentido esconderlas atrás de un desplegable).
+    // Formato: solo 2 opciones posibles, así que van como botones tipo
+    // "segmentado" (mismo lenguaje visual que el selector Ver: de la carta
+    // pública), no como checkboxes ni escondidos atrás de un desplegable.
     function formatoCheckHtml(idx, selected) {
       const sel = selected || []
-      const opts = ddOptions('formato').map(([val, lab]) => {
+      const opts = ddOptions('formato').map(([val, lab, icon]) => {
         const on = sel.includes(val)
         const corta = val === 'flor' ? 'Flor' : 'Preroll'
-        return `<label class="pa-formato-opt" title="${esc(lab)}"><input type="checkbox" data-dd="formato" data-idx="${idx}" value="${esc(val)}" ${on ? 'checked' : ''} />${esc(corta)}</label>`
+        return `<button type="button" class="pa-fbtn pa-fbtn-${val} ${on ? 'is-on' : ''}" data-dd="formato" data-idx="${idx}" data-val="${val}" aria-pressed="${on}" title="${esc(lab)}"><span class="pa-fbtn-ic">${icon}</span>${esc(corta)}</button>`
       }).join('')
-      return `<div class="pa-formato-check">${opts}</div>`
+      return `<div class="pa-formato-seg">${opts}</div>`
     }
     function ddHtml(dim, idx, selected) {
       const sel = selected || []
@@ -402,6 +419,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     })
 
+    // Botones de Formato (Flor/Preroll): toggle directo, sin desplegable.
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.pa-fbtn')
+      if (!btn) return
+      const i = Number(btn.getAttribute('data-idx'))
+      const val = btn.getAttribute('data-val')
+      let arr = Array.isArray(CATALOG[i].formatos) ? [...CATALOG[i].formatos] : []
+      const on = arr.includes(val)
+      arr = on ? arr.filter((v) => v !== val) : [...arr, val]
+      CATALOG[i].formatos = arr
+      btn.classList.toggle('is-on', !on)
+      btn.setAttribute('aria-pressed', String(!on))
+      marcarDirty('gen')
+    })
+
     // Abrir/cerrar los desplegables tildables
     document.addEventListener('click', (e) => {
       const tgl = e.target.closest('.pa-dd-toggle')
@@ -501,6 +533,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           // en silencio. Las ediciones sin guardar de esta pantalla se pierden
           // (mejor eso que perder las del otro admin sin que nadie se entere).
           CATALOG = data.geneticas || CATALOG
+          normalizeThcCbd(CATALOG)
           CATALOG_VERSION = data.version || CATALOG_VERSION
           render()
           status.classList.add('is-err')
@@ -1465,6 +1498,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
       const data = await res.json()
       CATALOG = data.geneticas || []
+      normalizeThcCbd(CATALOG)
       CATALOG_VERSION = data.version || 0
       // La pestaña Socios solo la ve el super admin.
       if (!data.isSuperAdmin) {
@@ -1805,14 +1839,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-ddicon { width: 16px; height: 16px; display: inline-flex; color: var(--pa-violet); flex-shrink: 0; }
   .pa-ddicon svg { width: 100%; height: 100%; }
 
-  /* ── Formato: 2 checkboxes directos, sin desplegable ── */
-  .pa-formato-check { display: flex; flex-direction: column; gap: 0.15rem; }
-  .pa-formato-opt {
+  /* ── Formato: botones tipo segmentado (mismo lenguaje que "Ver:" en la carta) ── */
+  .pa-formato-seg { display: flex; flex-direction: column; gap: 0.2rem; }
+  .pa-fbtn {
     display: flex; align-items: center; gap: 0.3rem;
-    font-family: var(--font-ui); font-size: 0.72rem; color: var(--pa-muted); cursor: pointer; white-space: nowrap;
+    border: 1px solid var(--pa-line); background: var(--pa-card-2); color: var(--pa-muted);
+    font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700;
+    padding: 0.18rem 0.5rem; border-radius: 999px; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   }
-  .pa-formato-opt input { accent-color: var(--pa-violet); flex-shrink: 0; width: 13px; height: 13px; cursor: pointer; }
-  .pa-formato-opt:has(input:checked) { color: var(--pa-cream); }
+  .pa-fbtn:hover { color: var(--pa-cream); }
+  .pa-fbtn-ic { width: 13px; height: 13px; display: inline-flex; flex-shrink: 0; }
+  .pa-fbtn-ic svg { width: 100%; height: 100%; }
+  .pa-fbtn.is-on { color: var(--pa-cream); border-color: transparent; }
+  .pa-fbtn-flor.is-on { background: rgba(60, 180, 146, 0.18); box-shadow: inset 0 0 0 1.3px #3cb492; }
+  .pa-fbtn-preroll.is-on { background: rgba(183, 157, 230, 0.18); box-shadow: inset 0 0 0 1.3px var(--pa-violet); }
+  .pa-fbtn:focus-visible { outline: 2px solid var(--pa-violet); outline-offset: 2px; }
 
   /* ── Subida de foto ── */
   .pa-foto { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
