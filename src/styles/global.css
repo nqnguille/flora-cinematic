@@ -1626,6 +1626,18 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-footer-btn:hover { transform: translateY(-2px); }
 .fl-footer-grid { display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 40px); }
 .fl-footer-brand p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7); max-width: 42ch; margin-top: 12px; }
+/* Íconos de redes — mismo trato visual que el resto de links del footer
+   (blanco apagado, se enciende en hover), en círculos chicos para que
+   se lean como "botones" y no como texto de más. */
+.fl-footer-social { list-style: none; display: flex; gap: 10px; padding: 0; margin: 18px 0 0; }
+.fl-footer-social a {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.fl-footer-social a:hover { background: #fff; color: var(--fl-violet); transform: translateY(-2px); }
+.fl-footer-social svg { width: 17px; height: 17px; }
 .fl-footer-col h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
 .fl-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .fl-footer-col a { color: rgba(255,255,255,0.85); text-decoration: none; font-family: var(--font-ui); font-size: 15px; }
@@ -1633,9 +1645,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
 .fl-footer-bottom { display: flex; flex-direction: column; gap: 6px; margin-top: clamp(40px, 5vw, 56px); padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.16); font-family: var(--font-ui); font-size: 13px; color: rgba(255,255,255,0.6); }
 /* Al final del scroll no hay más página para "escapar" el botón flotante
    de WhatsApp — sin este aire extra, la última línea queda tapada para
-   siempre en vez de solo de pasada. */
+   siempre en vez de solo de pasada. Antes esto solo se resolvía en
+   mobile; en desktop el texto de la derecha ("Cultivamos conciencia")
+   quedaba exactamente detrás del botón fijo — mismo padding acá. */
 @media (max-width: 760px) { .fl-footer-bottom { padding-bottom: 76px; } }
-@media (min-width: 760px) { .fl-footer-cta { flex-direction: row; justify-content: space-between; align-items: center; } .fl-footer-grid { grid-template-columns: 2fr 1fr 1fr; } .fl-footer-bottom { flex-direction: row; justify-content: space-between; } }
+@media (min-width: 760px) {
+  .fl-footer-cta { flex-direction: row; justify-content: space-between; align-items: center; }
+  .fl-footer-grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
+  .fl-footer-bottom { flex-direction: row; justify-content: space-between; padding-right: 96px; }
+}
 
 /* ── Acceso a material vegetal + socios: una sola composición, con el
    video de fondo cubriendo toda la sección (no un card separado) ── */
