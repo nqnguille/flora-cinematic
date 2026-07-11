@@ -134,23 +134,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="pa-socio-stats" class="pa-stats pa-stats-sub"></div>
           <div class="pa-toolbar">
             <input id="pa-socio-buscar" class="pa-input pa-search" type="search" placeholder="Buscar socio…" autocomplete="off" />
-            <button type="button" id="pa-import-toggle" class="pa-btn pa-btn-ghost pa-btn-slim">📇 Importar teléfonos (CSV)</button>
           </div>
-
-          <!-- ── Importar teléfonos desde un CSV de contactos (Google Contacts) ── -->
-          <div id="pa-import-block" class="pa-intentos-block" hidden>
-            <div class="pa-intentos-head">
-              <h2 class="pa-subhead">Importar teléfonos desde CSV</h2>
-              <p class="pa-help">
-                Subí el CSV exportado de Google Contacts (Contactos → Exportar). Buscamos, por cada socio, un
-                contacto con el mismo email o el mismo nombre, y te mostramos los matches antes de guardar nada.
-              </p>
-            </div>
-            <input id="pa-import-file" type="file" accept=".csv,text/csv" class="pa-input" />
-            <p id="pa-import-status" class="pa-save-status"></p>
-            <div id="pa-import-preview"></div>
-          </div>
-
           <p id="pa-socio-status" class="pa-save-status"></p>
           <div class="pa-stable-scroll">
             <div class="pa-stable-head" id="pa-socio-thead">
@@ -1382,171 +1366,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       loadSocios()
     })
 
-    /* ── Importar teléfonos desde un CSV de Google Contacts ──
-       Todo corre acá (cliente), nunca en el server: parsea el CSV,
-       matchea contra SOCIOS_LIST (ya cargado en memoria tras el login) y
-       muestra una vista previa — no se guarda nada hasta que el admin
-       confirma fila por fila. */
-    document.getElementById('pa-import-toggle').addEventListener('click', () => {
-      const block = document.getElementById('pa-import-block')
-      block.hidden = !block.hidden
-    })
-
-    // Parser CSV simple pero correcto con comillas (Google Contacts trae
-    // campos con comas adentro, ej. direcciones: "Neuquén, Confluencia").
-    function parseCsv(text) {
-      const rows = []
-      let row = [], field = '', inQuotes = false
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i]
-        if (inQuotes) {
-          if (c === '"') {
-            if (text[i + 1] === '"') { field += '"'; i++ }
-            else inQuotes = false
-          } else field += c
-        } else if (c === '"') inQuotes = true
-        else if (c === ',') { row.push(field); field = '' }
-        else if (c === '\n' || c === '\r') {
-          if (c === '\r' && text[i + 1] === '\n') i++
-          row.push(field); field = ''
-          if (row.length > 1 || row[0]) rows.push(row)
-          row = []
-        } else field += c
-      }
-      if (field || row.length) { row.push(field); rows.push(row) }
-      return rows
-    }
-
-    // "María JOSÉ  Pérez" → "maria jose perez" — para comparar sin que
-    // acentos, mayúsculas o espacios de más generen falsos negativos.
-    function normNombre(s) {
-      return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
-    }
-
-    function contactosDeCsv(text) {
-      const rows = parseCsv(text)
-      if (!rows.length) return []
-      const header = rows[0]
-      const idx = (label) => header.indexOf(label)
-      const iFirst = idx('First Name'), iMiddle = idx('Middle Name'), iLast = idx('Last Name')
-      const iEmail1 = idx('E-mail 1 - Value'), iEmail2 = idx('E-mail 2 - Value'), iEmail3 = idx('E-mail 3 - Value')
-      const phoneCols = ['Phone 1 - Value', 'Phone 2 - Value', 'Phone 3 - Value', 'Phone 4 - Value']
-        .map((l) => idx(l)).filter((i) => i >= 0)
-      return rows.slice(1).map((r) => {
-        const first = iFirst >= 0 ? r[iFirst] : '', middle = iMiddle >= 0 ? r[iMiddle] : '', last = iLast >= 0 ? r[iLast] : ''
-        const nombre = [first, last].filter(Boolean).join(' ').trim()
-        // Guille a veces guarda contactos como "Categoría, NombreReal, Apellido"
-        // (ej. "AD, Andrea, Cornejo") — el nombre real queda en Middle Name.
-        const nombreAlt = middle && middle !== first ? [middle, last].filter(Boolean).join(' ').trim() : ''
-        const telefono = phoneCols.map((i) => r[i]).find((v) => v && v.trim())
-        const emails = [iEmail1, iEmail2, iEmail3].map((i) => (i >= 0 ? r[i] : '')).filter(Boolean).map((e) => e.toLowerCase().trim())
-        return { nombre, nombreAlt, telefono: telefono ? telefono.trim() : '', emails }
-      }).filter((c) => (c.nombre || c.nombreAlt) && c.telefono)
-    }
-
-    // Por cada socio busca un contacto: primero por email exacto (el más
-    // confiable), si no por nombre completo normalizado (probando también
-    // el nombre alternativo de "Categoría, Nombre, Apellido"). Si hay más
-    // de un contacto con el mismo nombre, lo marca "ambiguo" en vez de adivinar.
-    function matchearContactos(contactos) {
-      const porNombre = new Map()
-      const registrar = (key, c) => {
-        if (!key) return
-        if (!porNombre.has(key)) porNombre.set(key, [])
-        porNombre.get(key).push(c)
-      }
-      for (const c of contactos) {
-        registrar(normNombre(c.nombre), c)
-        if (c.nombreAlt) registrar(normNombre(c.nombreAlt), c)
-      }
-      return SOCIOS_LIST.map((s) => {
-        const nombreCompleto = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
-        if (!nombreCompleto) return { socio: s, match: null, motivo: 'sin nombre' }
-        const porEmail = contactos.find((c) => c.emails.includes(String(s.email).toLowerCase()))
-        if (porEmail) return { socio: s, match: porEmail, motivo: 'email' }
-        const candidatos = porNombre.get(normNombre(nombreCompleto)) || []
-        if (candidatos.length === 1) return { socio: s, match: candidatos[0], motivo: 'nombre' }
-        if (candidatos.length > 1) return { socio: s, match: null, motivo: 'ambiguo' }
-        return { socio: s, match: null, motivo: 'sin match' }
-      })
-    }
-
-    let IMPORT_MATCHES = []
-    function renderImportPreview() {
-      const el = document.getElementById('pa-import-preview')
-      const conMatch = IMPORT_MATCHES.filter((r) => r.match)
-      if (!IMPORT_MATCHES.length) {
-        el.innerHTML = '<p class="pa-empty">Ningún socio matcheó con un contacto del CSV.</p>'
-        return
-      }
-      el.innerHTML = `
-        <div class="pa-import-rows">
-          ${IMPORT_MATCHES.map((r, i) => {
-            const nombreCompleto = r.socio.name || [r.socio.givenName, r.socio.familyName].filter(Boolean).join(' ')
-            if (!r.match) {
-              return `<div class="pa-import-row is-ambiguo">
-                <span>${esc(nombreCompleto || r.socio.email)}</span>
-                <span class="pa-socio-line-dash">Varios contactos con ese nombre — cargalo a mano</span>
-              </div>`
-            }
-            return `<label class="pa-import-row">
-              <input type="checkbox" data-idx="${i}" checked />
-              <span>${esc(nombreCompleto || r.socio.email)}</span>
-              <span class="pa-socio-line-dash">${esc(r.match.nombreAlt || r.match.nombre)}</span>
-              <input type="text" class="pa-input pa-import-tel" data-idx="${i}" value="${esc(r.match.telefono)}" />
-              <span class="pa-socio-badge ${r.motivo === 'email' ? 'is-on' : ''}" title="${r.motivo === 'email' ? 'Matcheado por email (confiable)' : 'Matcheado por nombre'}">${r.motivo === 'email' ? 'email' : 'nombre'}</span>
-            </label>`
-          }).join('')}
-        </div>
-        <button type="button" id="pa-import-confirm" class="pa-btn pa-btn-primary">Importar ${conMatch.length} teléfono(s)</button>
-      `
-    }
-
-    document.getElementById('pa-import-file').addEventListener('change', async (e) => {
-      const file = e.target.files[0]
-      const status = document.getElementById('pa-import-status')
-      const preview = document.getElementById('pa-import-preview')
-      if (!file) return
-      status.textContent = 'Leyendo CSV…'
-      preview.innerHTML = ''
-      try {
-        const text = await file.text()
-        const contactos = contactosDeCsv(text)
-        const todos = matchearContactos(contactos)
-        const conMatch = todos.filter((r) => r.match).length
-        const ambiguos = todos.filter((r) => r.motivo === 'ambiguo').length
-        const sinMatch = todos.length - conMatch - ambiguos
-        IMPORT_MATCHES = todos.filter((r) => r.match || r.motivo === 'ambiguo')
-        status.textContent = `${SOCIOS_LIST.length} socio(s) · ${conMatch} matcheados con un contacto · ${ambiguos} ambiguo(s) (nombre repetido) · ${sinMatch} sin coincidencia en el CSV`
-        renderImportPreview()
-      } catch {
-        status.textContent = 'No se pudo leer el archivo — ¿es un CSV válido?'
-      }
-    })
-
-    document.getElementById('pa-import-preview').addEventListener('click', async (e) => {
-      if (e.target.id !== 'pa-import-confirm') return
-      const btn = e.target
-      const status = document.getElementById('pa-import-status')
-      const rows = Array.from(document.querySelectorAll('.pa-import-row input[type="checkbox"]:checked'))
-      btn.disabled = true
-      let ok = 0, fail = 0
-      for (const chk of rows) {
-        const i = Number(chk.getAttribute('data-idx'))
-        const r = IMPORT_MATCHES[i]
-        const telInput = document.querySelector(`.pa-import-tel[data-idx="${i}"]`)
-        const telefono = telInput ? telInput.value.trim() : r.match.telefono
-        status.textContent = `Guardando ${ok + fail + 1}/${rows.length}…`
-        const res = await saveSocio(r.socio.email, undefined, { telefono })
-        if (res.ok) { ok++; r.socio.telefono = telefono } else fail++
-      }
-      status.textContent = `Listo: ${ok} teléfono(s) importado(s)${fail ? `, ${fail} con error` : ''}.`
-      renderSocios()
-      btn.disabled = false
-      btn.textContent = 'Ya importado ✓'
-    })
-
     /* ── Solicitudes (leads): formulario "ya tengo REPROCANN" + intentos de login ── */
     const SOLICITUD_ENDPOINT = { formulario: '/api/socios/admin/solicitudes', intento: '/api/socios/admin/intentos' }
     let INTENTOS_LIST = []
@@ -2154,18 +1973,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-intento-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; flex-shrink: 0; }
   .pa-intento-actions .pa-btn-slim { white-space: nowrap; }
 
-  /* ── Importar teléfonos desde CSV ── */
-  #pa-import-file { margin-top: 0.6rem; max-width: 360px; }
-  .pa-import-rows { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.9rem 0; }
-  .pa-import-row {
-    display: grid; grid-template-columns: 24px 1fr 1fr 160px 90px 70px;
-    align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer;
-    background: var(--pa-card); border: 1px solid var(--pa-line); border-radius: 10px; font-size: 0.84rem;
-  }
-  .pa-import-row.is-ambiguo { grid-template-columns: 1fr 1fr; cursor: default; opacity: 0.7; border-style: dashed; }
-  .pa-import-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--pa-violet); cursor: pointer; }
-  .pa-import-row:has(input:not(:checked)) { opacity: 0.45; }
-  .pa-import-tel { font-size: 0.82rem; padding: 0.3rem 0.5rem; }
   .pa-socio {
     display: flex; align-items: flex-start; gap: 0.9rem;
     background: var(--pa-card); border: 1px solid var(--pa-line);
