@@ -1341,6 +1341,15 @@ html.no-js .reveal { opacity: 1; transform: none; }
   transition: max-height 0.5s ease, opacity 0.4s ease, margin 0.4s ease;
 }
 .fl-panel-wa { width: 14px; height: 14px; flex-shrink: 0; margin-right: 2px; }
+/* Badge de vía de administración — esquina superior izquierda de cada foto */
+.fl-panel .fl-panel-route {
+  position: absolute; top: 18px; left: 18px; z-index: 3;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.92); color: var(--fl-violet);
+  font-family: var(--font-ui); font-weight: 700; font-size: 12px; letter-spacing: 0.01em;
+  padding: 6px 12px 6px 8px; border-radius: 999px;
+}
+.fl-panel-route svg { width: 14px; height: 14px; flex-shrink: 0; }
 .fl-panel-cta {
   display: inline-block; font-family: var(--font-ui); font-weight: 700; font-size: 13px; letter-spacing: 0.02em;
   margin-top: 16px; opacity: 0; transform: translateY(6px);
