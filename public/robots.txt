@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /socios/admin/
+Disallow: /socios/carta/
+Disallow: /socios/cuenta/
 
 Sitemap: https://floraong.ar/sitemap.xml

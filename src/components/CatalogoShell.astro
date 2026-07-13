@@ -13,9 +13,10 @@ interface Props {
 }
 const { title, description, categoria } = Astro.props
 const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero asociarme 🌿')
+const canonical = `https://floraong.ar/${categoria}/`
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} canonical={canonical}>
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-public">
     <!-- ── Nav = el mismo topbar del resto del sitio (global.css .site-nav),
