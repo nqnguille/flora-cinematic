@@ -9,7 +9,15 @@ const faqs = [
   },
   {
     q: '¿Cuánto tarda la aprobación?',
-    a: 'En general, la entrevista médica y la inscripción se resuelven en pocas semanas. Desde 2026 existe además una vía de aprobación automática para los trámites de menor riesgo, que agiliza los tiempos.',
+    a: 'Depende de la vía. Si te inscribís como autocultivador, sos mayor de 21 años y tu diagnóstico no incluye patologías psiquiátricas complejas, desde 2026 tu certificado puede aprobarse en 24 horas. Si designás un cultivador —como Flora—, tu trámite pasa siempre por revisión manual del REPROCANN, que en general se resuelve en pocas semanas.',
+  },
+  {
+    q: '¿Qué es el código de vinculación?',
+    a: 'Es el código que generás en tu cuenta REPROCANN de Mi Argentina para vincularte con tu médico y, si corresponde, con tu cultivador designado. Es temporal —vence a los 7 días si no lo usás—, así que lo generás recién cuando estés por coordinar la entrevista.',
+  },
+  {
+    q: '¿Puedo ser autocultivador y tener un cultivador designado a la vez?',
+    a: 'No: son dos caminos distintos. Si designás a Flora como tu cultivador, tenés que renunciar a autocultivar por tu cuenta para esa misma inscripción.',
   },
   {
     q: '¿Necesito vivir en Neuquén para tramitarlo con Flora?',
@@ -23,8 +31,8 @@ const faqs = [
 ---
 
 <CatalogoShell
-  title="REPROCANN en Neuquén: cómo tramitarlo paso a paso | Flora ONG"
-  description="Guía para tramitar el REPROCANN en Neuquén y el Alto Valle: requisitos, pasos, qué cambió con la aprobación automática 2026 y cómo te acompaña Flora, asociación civil de cannabis medicinal."
+  title="REPROCANN en Neuquén: Ley 27.350, código de vinculación y trámite paso a paso | Flora ONG"
+  description="Guía completa del REPROCANN en Neuquén: qué dice la Ley 27.350, cómo generás tu código de vinculación, si conviene autocultivar o designar un cultivador, y cómo te acompaña Flora."
   categoria="reprocann-neuquen"
 >
   <section class="fl-section fl-reprocann" aria-label="Cómo tramitar el REPROCANN en Neuquén">
@@ -36,8 +44,9 @@ const faqs = [
           <p class="fl-reprocann-lead">
             El Registro del Programa Cannabis (REPROCANN) es el paso legal que
             habilita a cultivar o acceder a cannabis medicinal bajo la Ley
-            27.350. Acá te contamos cómo se tramita, qué autoriza y cómo te
-            acompañamos desde Neuquén.
+            27.350. Acá te contamos qué dice la ley, cómo se genera el código
+            de vinculación, si te conviene autocultivar o designar un
+            cultivador, y cómo te acompañamos desde Neuquén.
           </p>
         </div>
       </div>
@@ -80,6 +89,94 @@ const faqs = [
         </a>
       </div>
       <p class="fl-reprocann-note">La entrevista se coordina por WhatsApp y te orientamos en cada paso del trámite, sin costo por el registro en sí.</p>
+    </div>
+  </section>
+
+  <section class="fl-section fl-legal" id="ley-27350" aria-label="Qué dice la Ley 27.350">
+    <div class="fl-wrap fl-rp-prose">
+      <span class="fl-eyebrow">Marco legal</span>
+      <h2 class="fl-title">Lo que dice <em>la ley.</em></h2>
+      <p class="fl-lead">
+        La Ley 27.350, sancionada en 2017, regula la investigación médica y
+        científica del cannabis y habilita su uso medicinal, terapéutico y
+        paliativo en Argentina. El Decreto 883/2020 la reglamenta y creó el
+        REPROCANN (Registro del Programa Cannabis): el registro que, con
+        indicación médica, te habilita a acceder a cannabis medicinal y a
+        cultivarlo vos mismo o a través de un cultivador designado.
+      </p>
+      <p class="fl-lead">
+        Para inscribirte necesitás una indicación médica y firmar un
+        consentimiento informado. A partir de ahí elegís el camino:
+        autocultivar o designar a un tercero —como Flora— para que cultive en
+        tu nombre.
+      </p>
+    </div>
+  </section>
+
+  <section class="fl-section" id="codigo-vinculacion" aria-label="Cómo generar el código de vinculación">
+    <div class="fl-wrap fl-rp-prose">
+      <span class="fl-eyebrow">Paso 1 del trámite</span>
+      <h2 class="fl-title">Tu código de <em>vinculación.</em></h2>
+      <p class="fl-lead">
+        Antes de la entrevista médica, generás desde tu cuenta REPROCANN en
+        Mi Argentina un código de vinculación: un código único y temporal
+        —vence a los 7 días si no lo usás— que le das a tu médico para que se
+        vincule con vos, cargue tu prescripción y certifique tu indicación
+        médica ante el REPROCANN.
+      </p>
+      <p class="fl-lead">
+        Si además vas a designar un cultivador —como Flora—, necesitás un
+        segundo código de vinculación, exclusivo para esa relación. Te
+        ayudamos a generar ambos cuando coordinamos tu entrevista; para los
+        pasos exactos dentro del portal podés consultar el
+        <a class="fl-rp-inline-link" href="https://reprocann.msal.gob.ar/assets/descargas/Instructivo_Reprocann.pdf" target="_blank" rel="noopener noreferrer">instructivo oficial del REPROCANN</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="fl-section fl-legal" id="autocultivo-o-designado" aria-label="Autocultivador o cultivador designado">
+    <div class="fl-wrap fl-rp-compare-wrap">
+      <span class="fl-eyebrow">¿Quién cultiva?</span>
+      <h2 class="fl-title fl-title--wide">¿Vos cultivás o <em>designás a alguien?</em></h2>
+      <p class="fl-lead">
+        El REPROCANN te da a elegir entre dos caminos. Son excluyentes: si
+        designás un cultivador, renunciás a autocultivar por tu cuenta para
+        esa misma inscripción.
+      </p>
+
+      <div class="fl-rp-compare">
+        <div class="fl-rp-compare-card">
+          <span class="fl-rp-compare-tag">Autocultivador</span>
+          <h3>Cultivás vos, con tu indicación médica.</h3>
+          <ul class="fl-rp-compare-list">
+            <li>Hasta 9 plantas en floración en tu domicilio.</li>
+            <li>Permiso válido por 3 años.</li>
+            <li>Podés designar a un familiar directo, tutor o curador para representarte si no podés cultivar personalmente.</li>
+            <li>Es la única vía elegible para la aprobación automática en 24 horas, si sos mayor de 21 años y tu diagnóstico no incluye patologías psiquiátricas complejas.</li>
+          </ul>
+        </div>
+        <div class="fl-rp-compare-card fl-rp-compare-card--flora">
+          <span class="fl-rp-compare-tag">Cultivador designado</span>
+          <h3>Un tercero cultiva en tu nombre —Flora, por ejemplo.</h3>
+          <ul class="fl-rp-compare-list">
+            <li>Hasta 18 plantas en floración en total para el cultivador —el doble del rango individual—, si además de vos cultiva para sí mismo. Vos seguís autorizado por las mismas 9 plantas que un autocultivador.</li>
+            <li>Requiere tu conformidad expresa y que renuncies a autocultivar por tu cuenta.</li>
+            <li>El cultivador presenta cromatografía por lote y una declaración jurada semestral con la genética y cantidad de plantas.</li>
+            <li>Pasa siempre por revisión manual del REPROCANN: no aplica la vía automática de 24 horas.</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="fl-rp-compare-note">
+        Si preferís no ocuparte del cultivo, Flora puede ser tu cultivador
+        designado: nos encargamos de todo el proceso, con trazabilidad y
+        cromatografía en cada lote.
+      </p>
+      <div class="fl-rp-ctas fl-rp-ctas--compare">
+        <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero que sean mi cultivador designado en el REPROCANN 🌿')} target="_blank" rel="noopener noreferrer">
+          Quiero que Flora sea mi cultivador designado <span aria-hidden="true">→</span>
+        </a>
+      </div>
     </div>
   </section>
 
