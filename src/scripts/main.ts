@@ -17,9 +17,14 @@ const lenis = new Lenis({
   smoothWheel: true,
 })
 
+// Callback opcional que initNav() engancha acá — se corre en cada frame
+// (ver comentario en initNav sobre por qué un simple listener no alcanza).
+let onFrame: (() => void) | null = null
+
 function raf(time: number) {
   lenis.raf(time)
   ScrollTrigger.update()
+  onFrame?.()
   requestAnimationFrame(raf)
 }
 requestAnimationFrame(raf)
@@ -118,7 +123,18 @@ function initNav() {
     if (!firstLight) return
     nav.classList.toggle('scrolled', firstLight.getBoundingClientRect().top <= 64)
   }
-  window.addEventListener('scroll', gate, { passive: true })
+  // El scroll nativo del navegador no es confiable acá: con smoothWheel de
+  // Lenis + la sección "welcome" pineada por GSAP, hay tramos donde el
+  // evento 'scroll' nativo no se dispara al ritmo del movimiento visual real
+  // (bug reportado: la barra se quedaba transparente aunque la página ya
+  // estuviera scrolleada sobre fondo blanco). Tampoco alcanza con re-medir
+  // solo en eventos: si la página carga ya scrolleada (ej. usuario logueado
+  // que vuelve) la primera medición puede correr antes de que el layout del
+  // pin de GSAP termine de asentarse, y sin un scroll nuevo ese error nunca
+  // se corrige. La única fuente de verdad confiable es medir en cada frame,
+  // enganchado al mismo loop que ya corre Lenis/ScrollTrigger — costo
+  // insignificante (un getBoundingClientRect + un toggle) y sin carreras.
+  onFrame = gate
   gate()
 }
 
