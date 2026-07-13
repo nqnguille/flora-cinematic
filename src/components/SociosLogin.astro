@@ -5,6 +5,8 @@
 // SU lógica de auth (distinto payload/POST-login), pero todas apuntan a los
 // mismos ids (#socios-login, #g_id_button, #socios-login-msg) para que este
 // componente sea el único lugar donde vive el diseño del login.
+import SolicitudModal from './SolicitudModal.astro'
+
 interface Props {
   eyebrow?: string
   title: string
@@ -67,148 +69,10 @@ const {
   </div>
 
   {joinPrompt && (
-    <!-- Un solo modal (mismos 3 campos), reusado por los dos botones de
-         arriba con copy distinto según la intención — reemplaza los links
-         directos a WhatsApp por un formulario corto que el equipo revisa y
-         aprueba a mano desde /socios/admin (pestaña Solicitudes). -->
-    <div id="sl-solicitud-modal" class="sl-solicitud-modal" hidden data-lenis-prevent>
-      <div class="sl-solicitud-card" role="dialog" aria-modal="true" aria-labelledby="sl-solicitud-title">
-        <button type="button" id="sl-solicitud-close" class="sl-solicitud-x" aria-label="Cerrar">✕</button>
-        <h2 id="sl-solicitud-title" class="sl-solicitud-title">Solicitar acceso</h2>
-        <form id="sl-solicitud-form" class="sl-solicitud-form">
-          <label class="sl-solicitud-field">
-            <span>Nombre y apellido</span>
-            <input type="text" id="sl-sol-name" name="name" autocomplete="name" required />
-          </label>
-          <label class="sl-solicitud-field">
-            <span>Email</span>
-            <input type="email" id="sl-sol-email" name="email" autocomplete="email" placeholder="tu@gmail.com" pattern="[^\s@]+@gmail\.com" title="Tiene que ser un email de Gmail (terminado en @gmail.com)" required />
-          </label>
-          <label class="sl-solicitud-field">
-            <span>Celular (WhatsApp)</span>
-            <input type="tel" id="sl-sol-phone" name="phone" autocomplete="tel" placeholder="Tu número de WhatsApp" required />
-          </label>
-          <label class="sl-solicitud-field" id="sl-sol-file-field" hidden>
-            <span>Foto o PDF de tu REPROCANN vigente <em>(opcional, agiliza la aprobación)</em></span>
-            <input type="file" id="sl-sol-file" name="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
-          </label>
-          <input type="text" id="sl-sol-website" name="website" class="sl-solicitud-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <p id="sl-solicitud-msg" class="sl-solicitud-msg" hidden></p>
-          <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Solicitar acceso</button>
-        </form>
-        <div id="sl-solicitud-ok" class="sl-solicitud-ok" hidden>
-          <p id="sl-solicitud-ok-msg">¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.</p>
-          <button type="button" id="sl-solicitud-ok-close" class="sl-solicitud-submit">Cerrar</button>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // Copy por intención: mismo modal, mismos campos, mensaje distinto.
-      const SL_COPY = {
-        acceso: {
-          title: 'Solicitar acceso',
-          submit: 'Solicitar acceso',
-          ok: '¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.',
-        },
-        entrevista: {
-          title: 'Coordinar entrevista médica',
-          submit: 'Coordinar entrevista',
-          ok: '¡Listo! Recibimos tu pedido — te contactamos por WhatsApp para coordinar tu entrevista médica.',
-        },
-      } as const
-      type SlIntent = keyof typeof SL_COPY
-
-      const slModal = document.getElementById('sl-solicitud-modal')
-      if (slModal) {
-        const openBtns = document.querySelectorAll<HTMLButtonElement>('[data-intent]')
-        const closeBtn = document.getElementById('sl-solicitud-close')
-        const okCloseBtn = document.getElementById('sl-solicitud-ok-close')
-        const form = document.getElementById('sl-solicitud-form') as HTMLFormElement
-        const okBlock = document.getElementById('sl-solicitud-ok') as HTMLElement
-        const okMsg = document.getElementById('sl-solicitud-ok-msg') as HTMLElement
-        const msg = document.getElementById('sl-solicitud-msg') as HTMLElement
-        const submitBtn = document.getElementById('sl-solicitud-submit') as HTMLButtonElement
-        const titleEl = document.getElementById('sl-solicitud-title') as HTMLElement
-        const fileField = document.getElementById('sl-sol-file-field') as HTMLElement
-        const fileInput = document.getElementById('sl-sol-file') as HTMLInputElement
-        let intent: SlIntent = 'acceso'
-
-        function open(next: SlIntent) {
-          intent = next
-          const copy = SL_COPY[intent]
-          titleEl.textContent = copy.title
-          submitBtn.textContent = copy.submit
-          // El adjunto de REPROCANN solo tiene sentido si ya dice tenerlo —
-          // quien pide la entrevista todavía no tramitó nada que adjuntar.
-          fileField.hidden = intent !== 'acceso'
-          fileInput.value = ''
-          slModal!.hidden = false
-          form.hidden = false
-          okBlock.hidden = true
-          msg.hidden = true
-          ;(document.getElementById('sl-sol-name') as HTMLInputElement)?.focus()
-        }
-        function close() {
-          slModal!.hidden = true
-        }
-        openBtns.forEach((btn) => {
-          const btnIntent = (btn.dataset.intent as SlIntent) || 'acceso'
-          btn.addEventListener('click', () => open(btnIntent))
-        })
-        closeBtn?.addEventListener('click', close)
-        okCloseBtn?.addEventListener('click', close)
-        slModal.addEventListener('click', (e) => { if (e.target === slModal) close() })
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !slModal!.hidden) close() })
-
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault()
-          msg.hidden = true
-          submitBtn.disabled = true
-          submitBtn.textContent = 'Enviando…'
-          const data = new FormData(form)
-          try {
-            const res = await fetch('/api/socios/solicitud', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: String(data.get('name') || ''),
-                email: String(data.get('email') || ''),
-                phone: String(data.get('phone') || ''),
-                website: String(data.get('website') || ''),
-                intent,
-              }),
-            })
-            const result = await res.json().catch(() => ({}))
-            if (res.ok && result.ok) {
-              // Paso 2, best-effort: si adjuntó archivo, subirlo aparte no
-              // bloquea el "listo" — la solicitud ya quedó guardada igual.
-              const file = fileInput.files?.[0]
-              if (file) {
-                try {
-                  const fd = new FormData()
-                  fd.append('email', String(data.get('email') || ''))
-                  fd.append('file', file)
-                  await fetch('/api/socios/solicitud-adjunto', { method: 'POST', body: fd })
-                } catch { /* no afecta el éxito de la solicitud */ }
-              }
-              okMsg.textContent = SL_COPY[intent].ok
-              form.hidden = true
-              okBlock.hidden = false
-            } else {
-              msg.textContent = result.error || 'No se pudo enviar — probá de nuevo.'
-              msg.hidden = false
-            }
-          } catch {
-            msg.textContent = 'Error de red — probá de nuevo.'
-            msg.hidden = false
-          } finally {
-            submitBtn.disabled = false
-            submitBtn.textContent = SL_COPY[intent].submit
-          }
-        })
-      }
-    </script>
+    // Reemplaza los links directos a WhatsApp por un formulario corto
+    // (mismo componente que usa la home) que el equipo revisa y aprueba
+    // a mano desde /socios/admin (pestaña Solicitudes).
+    <SolicitudModal />
   )}
 </div>
 
@@ -345,49 +209,7 @@ const {
   .sl-join-btn-ghost { background: none; border-color: rgba(244, 241, 247, 0.2); color: var(--sl-muted); }
   .sl-join-btn-ghost:hover { border-color: rgba(244, 241, 247, 0.4); background: rgba(244, 241, 247, 0.06); color: var(--sl-cream); }
 
-  /* Modal "Ya tengo REPROCANN" */
-  .sl-solicitud-modal {
-    position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
-    padding: 1rem; background: rgba(10, 6, 16, 0.72); backdrop-filter: blur(2px);
-  }
-  .sl-solicitud-modal[hidden] { display: none; }
-  .sl-solicitud-card {
-    position: relative; width: 100%; max-width: 380px;
-    background: #1b1326; border: 1px solid rgba(183, 157, 230, 0.18); border-radius: 20px;
-    padding: clamp(24px, 4vw, 32px); box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9);
-  }
-  .sl-solicitud-x {
-    position: absolute; top: 14px; right: 14px; background: none; border: none;
-    color: var(--sl-muted); font-size: 1.1rem; line-height: 1; padding: 6px; cursor: pointer;
-  }
-  .sl-solicitud-x:hover { color: var(--sl-cream); }
-  .sl-solicitud-title { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--sl-cream); margin: 0 0 1.3rem; }
-  .sl-solicitud-form { display: flex; flex-direction: column; gap: 0.9rem; }
-  .sl-solicitud-form[hidden] { display: none; }
-  .sl-solicitud-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; color: var(--sl-muted); }
-  .sl-solicitud-field[hidden] { display: none; }
-  .sl-solicitud-field em { font-style: normal; opacity: 0.75; }
-  .sl-solicitud-field input[type="file"] {
-    font-size: 0.78rem; color: var(--sl-muted);
-    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(244, 241, 247, 0.18);
-    border-radius: 10px; padding: 0.55em 0.7em;
-  }
-  .sl-solicitud-field input:not([type="file"]) {
-    font: inherit; font-size: 0.92rem; color: var(--sl-cream); background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(244, 241, 247, 0.18); border-radius: 10px; padding: 0.65em 0.8em;
-  }
-  .sl-solicitud-field input:focus-visible { outline: 2px solid var(--sl-violet); outline-offset: 1px; border-color: transparent; }
-  .sl-solicitud-hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
-  .sl-solicitud-msg { color: #ff9d9d; font-size: 0.82rem; margin: 0; }
-  .sl-solicitud-submit {
-    font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; cursor: pointer;
-    padding: 0.75em 1em; border-radius: 999px; border: none;
-    background: var(--sl-green); color: #08160f;
-    transition: opacity 0.2s ease, transform 0.15s ease;
-  }
-  .sl-solicitud-submit:hover:not(:disabled) { transform: translateY(-1px); }
-  .sl-solicitud-submit:disabled { opacity: 0.6; cursor: default; }
-  .sl-solicitud-ok p { font-size: 0.92rem; color: var(--sl-cream); line-height: 1.5; margin: 0 0 1.1rem; }
+  /* Modal "Ya tengo REPROCANN" — estilos en components/SolicitudModal.astro */
 
   /* Mobile: el panel único ocupa la mitad superior (ancho completo), y el
      video se rota 90° para que el recorte que antes quedaba centro-izquierda
