@@ -5,7 +5,7 @@ import { wa } from '../lib/productos'
 const faqs = [
   {
     q: '¿El REPROCANN tiene costo?',
-    a: 'La inscripción ante el Estado es gratuita. Lo que sí tiene costo es la consulta médica que certifica tu indicación: si coordinás la entrevista con el profesional que trabaja con Flora, hoy vale $65.000. También podés elegir tu propio médico, siempre que esté registrado en REFEPS y acredite formación en cannabis medicinal —requisito del art. 7° de la normativa REPROCANN.',
+    a: 'No. La inscripción ante el Estado es gratuita. Lo que sí tiene costo es la consulta con el profesional de la salud que hace tu evaluación médica: si la coordinás con el que trabaja con Flora, hoy vale $65.000. También podés elegir tu propio médico, siempre que esté registrado en REFEPS y acredite formación en cannabis medicinal —requisito del art. 7° de la normativa REPROCANN.',
   },
   {
     q: '¿Cuánto tarda la aprobación?',
@@ -13,11 +13,11 @@ const faqs = [
   },
   {
     q: '¿Qué es el código de vinculación?',
-    a: 'Es el código que te asigna el sistema REPROCANN al terminar tu inscripción como paciente en Mi Argentina (lo encontrás en "mis datos"). Se lo das a tu médico para que inicie tu trámite y, si designás un cultivador solidario, también se lo das a esa persona: es un solo código para los dos, no dos códigos distintos.',
+    a: 'Es un identificador único que genera automáticamente el sistema REPROCANN al completar tu inscripción como paciente en Mi Argentina —lo encontrás en "mis datos". Permite que las personas que participan en tu trámite, tu médico y, si corresponde, tu cultivador designado, se vinculen a tu solicitud: es un único código para ambas gestiones, no dos códigos distintos.',
   },
   {
     q: '¿Puedo ser autocultivador y tener un cultivador designado a la vez?',
-    a: 'No: son dos caminos distintos. Si designás a Flora como tu cultivador, tenés que renunciar a autocultivar por tu cuenta para esa misma inscripción.',
+    a: 'No. Cada inscripción en REPROCANN contempla una única modalidad de cultivo: podés optar por el autocultivo o designar un cultivador autorizado, como Flora, según lo que mejor se adapte a tu caso.',
   },
   {
     q: '¿Necesito vivir en Neuquén para tramitarlo con Flora?',
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: '¿Qué autoriza la credencial?',
-    a: 'Habilita hasta 9 plantas en floración por paciente —cultivadas por vos o por un cultivador designado, como Flora— y el transporte de hasta 40 gramos de flores o 6 goteros de aceite por todo el país.',
+    a: 'Habilita el cultivo de cannabis medicinal y el transporte de los productos amparados por el programa. Cultivo: hasta 9 plantas en floración por paciente, mediante autocultivo o a través de un cultivador designado, como Flora. Transporte: hasta 40 gramos de flores secas o 6 goteros de hasta 30 ml de aceite, en todo el país.',
   },
 ]
 ---
@@ -64,8 +64,8 @@ const faqs = [
           <h3>Asesoramiento y formularios</h3>
           <p>
             Te asesoramos por WhatsApp, completás los formularios en tu
-            cuenta de Mi Argentina y el sistema te asigna el código que te
-            vincula con tu médico.
+            cuenta de Mi Argentina y el sistema te asigna un código de
+            vinculación que le das a tu médico.
           </p>
         </li>
         <li class="fl-rp-step">
@@ -125,19 +125,21 @@ const faqs = [
       <span class="fl-eyebrow">Paso 1 del trámite</span>
       <h2 class="fl-title">Tu código de <em>vinculación.</em></h2>
       <p class="fl-lead">
-        Cuando terminás de inscribirte como paciente en tu cuenta REPROCANN
-        de Mi Argentina, el sistema te asigna un código de vinculación —lo
-        encontrás en "mis datos". Se lo das a tu médico: con ese código
-        inicia tu trámite en el REPROCANN, carga tu prescripción y certifica
-        tu indicación médica.
+        Una vez que completás tu inscripción como paciente en REPROCANN, a
+        través de tu cuenta de Mi Argentina, el sistema genera un código de
+        vinculación, disponible en la sección "mis datos". Este código lo
+        compartís con el profesional de la salud que hace tu evaluación
+        médica, para que pueda vincularse a tu solicitud, cargar la
+        prescripción y certificar la indicación médica ante el REPROCANN.
       </p>
       <p class="fl-lead">
-        Si además vas a designar un cultivador —como Flora—, le das ese mismo
-        código también a tu cultivador, para que inicie su parte del
-        trámite: es un solo código para las dos personas, no dos códigos
-        distintos. Te acompañamos en todo el proceso cuando coordinamos tu
-        entrevista; para los pasos exactos dentro del portal podés consultar
-        el
+        Si además designás a un cultivador —como Flora—, compartís el mismo
+        código para completar una segunda vinculación: se usa un único
+        código para vincular tanto al médico como al cultivador, no se
+        generan códigos diferentes para cada uno. Durante el proceso de
+        admisión en Flora te acompañamos y asesoramos en cada etapa; si
+        querés consultar el procedimiento detallado dentro de la plataforma,
+        podés acceder al
         <a class="fl-rp-inline-link" href="https://reprocann.msal.gob.ar/assets/descargas/Instructivo_Reprocann.pdf" target="_blank" rel="noopener noreferrer">instructivo oficial del REPROCANN</a>.
       </p>
     </div>
@@ -148,40 +150,43 @@ const faqs = [
       <span class="fl-eyebrow">¿Quién cultiva?</span>
       <h2 class="fl-title fl-title--wide">¿Vos cultivás o <em>designás a alguien?</em></h2>
       <p class="fl-lead">
-        El REPROCANN te da a elegir entre dos caminos. Son excluyentes: si
-        designás un cultivador, renunciás a autocultivar por tu cuenta para
-        esa misma inscripción.
+        REPROCANN permite elegir la modalidad de cultivo que mejor se adapte
+        a vos. Al completar la inscripción, podés optar por el autocultivo o
+        designar un cultivador autorizado, como Flora: la modalidad que
+        elijas queda registrada para esa inscripción.
       </p>
 
       <div class="fl-rp-compare">
         <div class="fl-rp-compare-card">
-          <span class="fl-rp-compare-tag">Autocultivador</span>
-          <h3>Cultivás vos, con tu indicación médica.</h3>
+          <span class="fl-rp-compare-tag">Autocultivo</span>
+          <h3>Cultivás tus propias plantas.</h3>
           <ul class="fl-rp-compare-list">
-            <li>Hasta 9 plantas en floración en tu domicilio.</li>
-            <li>Permiso válido por 3 años.</li>
-            <li>Podés designar a un familiar directo, tutor o curador para representarte si no podés cultivar personalmente.</li>
-            <li>Es la única vía elegible para la aprobación automática en 24 horas, si sos mayor de 21 años y tu diagnóstico no incluye patologías psiquiátricas complejas.</li>
+            <li>Con la indicación médica correspondiente.</li>
+            <li>Hasta 9 plantas en floración en el domicilio declarado.</li>
+            <li>Autorización con vigencia de 3 años.</li>
+            <li>Si no podés cultivar personalmente, podés designar a un familiar directo, tutor o curador para que actúe en tu representación.</li>
+            <li>Si sos mayor de 21 años y tu diagnóstico no incluye patologías psiquiátricas complejas, podés acceder a la aprobación automática en hasta 24 horas.</li>
           </ul>
         </div>
         <div class="fl-rp-compare-card fl-rp-compare-card--flora">
-          <span class="fl-rp-compare-tag">Cultivador designado</span>
+          <span class="fl-rp-compare-tag">Cultivo designado</span>
           <h3>Un tercero cultiva en tu nombre —Flora, por ejemplo.</h3>
           <ul class="fl-rp-compare-list">
-            <li>Mantenés tu derecho a portar hasta 40 gramos de flores o 6 goteros de aceite por todo el país: solo cambia el origen del cultivo.</li>
-            <li>Tu permiso sigue siendo válido por 3 años.</li>
-            <li>Con Flora, nos ocupamos de todo el proceso: cuidado fitosanitario, control de calidad, cromatografía por lote y la declaración jurada semestral ante el REPROCANN — vos solo te enfocás en tu tratamiento.</li>
-            <li>Pasa siempre por revisión manual del REPROCANN: no aplica la vía automática de 24 horas.</li>
+            <li>Conservás tu autorización para transportar hasta 40 gramos de flores secas o 6 goteros de hasta 30 ml de aceite en todo el país: la modalidad de cultivo no modifica este derecho.</li>
+            <li>Autorización con vigencia de 3 años.</li>
+            <li>Al designar a Flora, nos encargamos del cultivo, el seguimiento fitosanitario, el control de calidad, la cromatografía por lote y la declaración jurada semestral ante el REPROCANN.</li>
+            <li>Esta modalidad requiere evaluación del REPROCANN: no está alcanzada por la aprobación automática.</li>
           </ul>
         </div>
       </div>
 
       <p class="fl-rp-compare-note">
-        Cultivar cannabis medicinal bien —con genética estable, cuidado
-        fitosanitario constante y control de calidad por lote— lleva tiempo y
-        conocimiento técnico. Como tu cultivador designado, Flora se ocupa de
-        todo eso por vos: recibís un producto consistente y trazable, sin
-        tener que aprender a cultivar.
+        El cultivo de cannabis medicinal requiere tiempo, conocimientos
+        técnicos y un seguimiento constante para garantizar la calidad y la
+        trazabilidad de cada producción. Como tu cultivador designado, Flora
+        se ocupa de todo el proceso para que accedas a un producto elaborado
+        bajo estándares de calidad y puedas enfocar tu atención en tu
+        tratamiento.
       </p>
       <div class="fl-rp-ctas fl-rp-ctas--compare">
         <a class="fl-reprocann-cta" href={wa('Hola Flora, quiero que sean mi cultivador designado en el REPROCANN 🌿')} target="_blank" rel="noopener noreferrer">
