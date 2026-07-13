@@ -1162,13 +1162,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <strong class="pa-socio-name">${esc(nombreCompleto || '(sin nombre aún)')}</strong>${verif}
           </div>
           <div class="pa-socio-email" title="${esc(s.email)}">${esc(s.email)}</div>
-          <input class="pa-input pa-socio-telefono" data-email="${esc(s.email)}" value="${esc(s.telefono)}" placeholder="+54 9 ..." />
+          <div class="pa-socio-telcell">
+            <input class="pa-input pa-socio-telefono" data-email="${esc(s.email)}" value="${esc(s.telefono)}" placeholder="+54 9 ..." />
+            ${waBtn}
+          </div>
           <div class="pa-socio-estadocell">${estado}${tempBadge(s)}</div>
           <div class="pa-socio-fecha" title="${s.firstLogin ? 'Primer ingreso: ' + esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? esc(fmtFecha(s.alta).split(' ')[0]) : '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-num">${s.logins || '<span class="pa-socio-line-dash">—</span>'}</div>
           <div class="pa-socio-rescell">${chipRes}</div>
           <input class="pa-input pa-socio-nota" data-email="${esc(s.email)}" value="${esc(s.nota)}" placeholder="Nota…" />
-          <div class="pa-socio-actions">${waBtn}<button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button></div>
+          <div class="pa-socio-actions"><button type="button" class="pa-socio-del" data-email="${esc(s.email)}" aria-label="Eliminar socio">×</button></div>
           <div class="pa-socio-hist" data-hist="${esc(s.email)}" hidden></div>
         </div>`
     }
@@ -2009,7 +2012,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-stable-scroll { overflow: visible; margin-top: 0.6rem; }
   .pa-stable-head, .pa-socio-line {
     display: grid;
-    grid-template-columns: 44px minmax(150px, 210px) minmax(160px, 210px) 150px 230px 90px 64px 130px minmax(120px, 210px) 80px;
+    grid-template-columns: 44px minmax(150px, 210px) minmax(160px, 210px) 190px 230px 90px 64px 130px minmax(120px, 210px) 44px;
     gap: 0.5rem;
     align-items: center;
     min-width: 1290px;
@@ -2040,7 +2043,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pa-socio-rescell { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
   .pa-socio-line-dash { color: var(--pa-muted); opacity: 0.5; }
   .pa-socio-line .pa-socio-nota { max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
-  .pa-socio-line .pa-socio-telefono { max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
+  .pa-socio-telcell { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+  .pa-socio-line .pa-socio-telefono { flex: 1; min-width: 0; max-width: none; margin-top: 0; font-size: 0.82rem; padding: 0.32rem 0.5rem; }
   .pa-socio-actions { display: flex; align-items: center; gap: 0.4rem; justify-self: end; }
   .pa-socio-wa {
     display: inline-flex; align-items: center; justify-content: center;
@@ -2277,7 +2281,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .pa-socio-line .pa-socio-ava { justify-self: start; }
     .pa-socio-namecell, .pa-socio-line .pa-socio-email,
-    .pa-socio-line .pa-socio-nota, .pa-socio-line .pa-socio-telefono, .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; }
+    .pa-socio-line .pa-socio-nota, .pa-socio-telcell, .pa-socio-line .pa-socio-hist { grid-column: 1 / -1; }
     .pa-socio-actions { justify-self: end; }
   }
   @media (max-width: 640px) {
