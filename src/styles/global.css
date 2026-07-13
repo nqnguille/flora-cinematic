@@ -1599,7 +1599,7 @@ html.no-js .reveal { opacity: 1; transform: none; }
 /* Gateway mobile — override bulletproof (todo visible, sin clipping) */
 @media (max-width: 760px) {
   .fl-gateway { display: block !important; height: auto !important; }
-  .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding: 24px 22px 26px !important; margin-bottom: 12px; }
+  .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding: 62px 22px 26px !important; margin-bottom: 12px; }
   .fl-panel::before, .fl-panel::after { border-radius: inherit; }
   .fl-panel-body { display: block !important; }
   .fl-panel-title, .fl-panel-desc, .fl-panel-cta { position: static !important; display: block !important; max-height: none !important; opacity: 1 !important; transform: none !important; overflow: visible !important; }
@@ -2423,7 +2423,7 @@ body.is-socio .fl-card-shell--socio { display: block; }
 /* En cualquier dispositivo táctil (sin hover) los paneles se apilan con todo visible */
 @media (hover: none) {
   .fl-gateway { display: block !important; height: auto !important; }
-  .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: hidden !important; padding: 24px 22px 26px !important; margin-bottom: 12px; }
+  .fl-panel { display: block !important; height: auto !important; min-height: 0 !important; overflow: hidden !important; padding: 62px 22px 26px !important; margin-bottom: 12px; }
   .fl-panel-body { display: block !important; }
   .fl-panel-title, .fl-panel-desc, .fl-panel-cta { position: static !important; display: block !important; max-height: none !important; opacity: 1 !important; transform: none !important; overflow: visible !important; }
   .fl-panel-title { margin: 6px 0; font-size: 21px; }
