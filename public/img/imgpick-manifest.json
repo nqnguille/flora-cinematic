@@ -1,17 +1,32 @@
 {
- "cremas-legal-topica": {
-  "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/cremas-legal-topica.jpg",
-  "type": "image",
-  "photographer": "Thirdman",
-  "pexels_id": 7219915,
-  "source_url": "https://www.pexels.com/photo/close-up-photo-of-hands-with-lotion-7219915/",
-  "alt": "Hands applying moisturizing cream for healthy skin care treatment.",
-  "keyword_final": "applying hand cream moisturizer skin closeup",
-  "width": 1400,
-  "height": 1176,
-  "filesize": 202515,
-  "aspect_real": 1.19,
-  "ok": true,
-  "snippet": "<img src=\"/cremas-legal-topica.jpg\" width=\"1400\" height=\"1176\" alt=\"Hands applying moisturizing cream for healthy skin care treatment.\">"
- }
+  "cremas-legal-topica": {
+    "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/cremas-legal-topica.jpg",
+    "type": "image",
+    "photographer": "Thirdman",
+    "pexels_id": 7219915,
+    "source_url": "https://www.pexels.com/photo/close-up-photo-of-hands-with-lotion-7219915/",
+    "alt": "Hands applying moisturizing cream for healthy skin care treatment.",
+    "keyword_final": "applying hand cream moisturizer skin closeup",
+    "width": 1400,
+    "height": 1176,
+    "filesize": 202515,
+    "aspect_real": 1.19,
+    "ok": true,
+    "snippet": "<img src=\"/cremas-legal-topica.jpg\" width=\"1400\" height=\"1176\" alt=\"Hands applying moisturizing cream for healthy skin care treatment.\">"
+  },
+  "perfil-parkinson": {
+    "out": "/home/guillenqn/proyectos/flora-cinematic/public/img/perfil-parkinson.jpg",
+    "type": "image",
+    "photographer": "Kindel Media",
+    "pexels_id": 8172601,
+    "source_url": "https://www.pexels.com/photo/a-close-up-shot-of-people-holding-hands-8172601/",
+    "alt": "Close-up of hands symbolizing support and compassion.",
+    "keyword_final": "older adult hands support parkinson",
+    "width": 1400,
+    "height": 1750,
+    "filesize": 234228,
+    "aspect_real": 0.8,
+    "ok": true,
+    "snippet": "<img src=\"/perfil-parkinson.jpg\" width=\"1400\" height=\"1750\" alt=\"Close-up of hands symbolizing support and compassion.\">"
+  }
 }

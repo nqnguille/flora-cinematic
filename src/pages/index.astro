@@ -19,7 +19,6 @@ const perfiles = [
     img: '/img/perfil-dolor.jpg',
     busca: 'Alternativas para el dolor crónico persistente cuando otros tratamientos no alcanzaron el alivio buscado.',
     estudia: 'Combinaciones de THC y CBD por vía sublingual, y CBD tópico para dolor localizado. El perfil y la vía dependen del caso.',
-    evidencia: { nivel: 'Moderada', texto: 'Revisiones clínicas respaldan un rol del cannabis medicinal en algunos tipos de dolor crónico, con resultados variables según la persona.' },
     evalua: ['Origen y tipo de dolor', 'Tratamientos previos y actuales', 'Medicación de base e interacciones', 'Objetivos realistas de tratamiento'],
     noPromete: 'No garantizamos alivio ni reemplazamos analgésicos o tratamientos indicados por tu médico.',
   },
@@ -33,7 +32,6 @@ const perfiles = [
     img: '/img/perfil-sueno.jpg',
     busca: 'Mejorar el descanso en casos de insomnio o dificultad para desconectar, cuando afecta la vida diaria.',
     estudia: 'THC en dosis bajas y perfiles con CBD, generalmente por vía sublingual, según indicación profesional.',
-    evidencia: { nivel: 'Emergente', texto: 'La evidencia es preliminar y muchas veces el efecto sobre el sueño está ligado al alivio de otra condición (dolor, ansiedad).' },
     evalua: ['Causa del trastorno del sueño', 'Higiene del sueño y hábitos', 'Otras condiciones asociadas', 'Medicación para dormir en uso'],
     noPromete: 'No es un somnífero ni reemplaza el tratamiento de un trastorno del sueño diagnosticado.',
   },
@@ -47,7 +45,6 @@ const perfiles = [
     img: '/img/perfil-ansiedad.jpg',
     busca: 'Acompañar la ansiedad y el estrés de la rutina, cuando impactan en el bienestar diario.',
     estudia: 'CBD como cannabinoide principal; el THC en exceso puede aumentar la ansiedad, por eso el perfil importa.',
-    evidencia: { nivel: 'Emergente', texto: 'Hay estudios preliminares prometedores sobre el CBD y la ansiedad, pero se necesita más investigación clínica.' },
     evalua: ['Tipo e intensidad de la ansiedad', 'Tratamiento psicológico o psiquiátrico en curso', 'Medicación ansiolítica o antidepresiva', 'Antecedentes de salud mental'],
     noPromete: 'No reemplaza la psicoterapia ni el tratamiento psiquiátrico, y no es apto para toda persona.',
   },
@@ -61,7 +58,6 @@ const perfiles = [
     img: '/img/perfil-epilepsia.jpg',
     busca: 'Reducir la frecuencia de crisis en epilepsias que no responden a los fármacos habituales.',
     estudia: 'CBD purificado en dosis definidas por el equipo tratante, especialmente en síndromes como Dravet y Lennox-Gastaut.',
-    evidencia: { nivel: 'Consolidada', texto: 'Es una de las indicaciones con mayor respaldo clínico; el CBD demostró reducir crisis en ensayos controlados y motivó gran parte de la Ley 27.350.' },
     evalua: ['Tipo y síndrome epiléptico', 'Anticonvulsivantes en uso e interacciones', 'Seguimiento neurológico', 'Controles de laboratorio'],
     noPromete: 'No suspende ni reemplaza la medicación anticonvulsivante; todo cambio lo define tu neurólogo/a.',
   },
@@ -75,24 +71,10 @@ const perfiles = [
     img: '/img/perfil-nauseas.jpg',
     busca: 'Acompañar náuseas, vómitos y pérdida de apetito durante la quimioterapia, junto al equipo oncológico.',
     estudia: 'Perfiles con THC para náuseas y estímulo del apetito, siempre coordinado con el tratamiento de base.',
-    evidencia: { nivel: 'Moderada', texto: 'Existe respaldo para el uso de cannabinoides en náuseas y vómitos por quimioterapia que no responden a antieméticos convencionales.' },
     evalua: ['Esquema oncológico en curso', 'Antieméticos ya indicados', 'Estado general y tolerancia', 'Coordinación con el equipo tratante'],
     noPromete: 'No es un tratamiento oncológico ni cura el cáncer; acompaña síntomas junto a tu equipo médico.',
   },
-  {
-    id: 'paliativos',
-    tag: 'Cuidados paliativos',
-    title: 'Para quienes buscan confort en enfermedades avanzadas.',
-    desc: 'Se estudia como parte del confort integral en cuidados paliativos.',
-    cta: 'Hablar sobre cuidados paliativos',
-    href: wa('Hola Flora, me interesa asociarme a Flora para acompañamiento en cuidados paliativos 🌿'),
-    img: '/img/perfil-nauseas.jpg',
-    busca: 'Mejorar el confort y la calidad de vida en enfermedades avanzadas: dolor, apetito, descanso y bienestar general.',
-    estudia: 'Combinaciones de THC y CBD ajustadas al confort de la persona, dentro de un plan de cuidados integral.',
-    evidencia: { nivel: 'Moderada', texto: 'El cannabis medicinal se contempla en cuidados paliativos para varios síntomas simultáneos, siempre dentro de un abordaje interdisciplinario.' },
-    evalua: ['Síntomas prioritarios', 'Medicación paliativa en uso', 'Objetivos de confort de la persona y su familia', 'Coordinación con el equipo tratante'],
-    noPromete: 'No modifica el curso de la enfermedad; se orienta al confort dentro del plan de cuidados.',
-  },
+
   {
     id: 'migranas',
     tag: 'Migrañas',
@@ -103,7 +85,6 @@ const perfiles = [
     img: '/img/perfil-migranas.jpg',
     busca: 'Reducir la frecuencia o la intensidad de las migrañas, según cada caso.',
     estudia: 'Perfiles con CBD y THC por distintas vías; el enfoque preventivo y el de crisis se abordan diferente.',
-    evidencia: { nivel: 'Emergente', texto: 'La evidencia es preliminar; algunos estudios observan reducción de la frecuencia, pero faltan ensayos controlados de calidad.' },
     evalua: ['Frecuencia y tipo de migraña', 'Tratamientos preventivos y de rescate', 'Posibles desencadenantes', 'Uso excesivo de analgésicos'],
     noPromete: 'No es un tratamiento de rescate garantizado ni reemplaza el seguimiento neurológico.',
   },
@@ -117,7 +98,6 @@ const perfiles = [
     img: '/img/perfil-espasticidad.jpg',
     busca: 'Reducir la rigidez y los espasmos musculares que limitan el movimiento y la vida diaria.',
     estudia: 'Combinaciones equilibradas de THC y CBD, con respaldo especialmente en esclerosis múltiple.',
-    evidencia: { nivel: 'Consolidada', texto: 'La espasticidad por esclerosis múltiple es una de las indicaciones con mayor evidencia y con formulaciones aprobadas en varios países.' },
     evalua: ['Condición neurológica de base', 'Grado de espasticidad y su impacto', 'Relajantes musculares en uso', 'Seguimiento kinésico y neurológico'],
     noPromete: 'No frena la enfermedad de base; se orienta a los síntomas de espasticidad.',
   },
@@ -128,10 +108,9 @@ const perfiles = [
     desc: 'Se estudia en relación con algunos síntomas de la enfermedad de Parkinson.',
     cta: 'Hablar sobre Parkinson',
     href: wa('Hola Flora, me interesa asociarme a Flora por enfermedad de Parkinson 🌿'),
-    img: '/img/perfil-espasticidad.jpg',
+    img: '/img/perfil-parkinson.jpg',
     busca: 'Acompañar síntomas como rigidez, dolor, alteraciones del sueño o malestar general en la enfermedad de Parkinson.',
     estudia: 'Perfiles de CBD y THC ajustados con cautela, por la sensibilidad de esta población a los efectos del THC.',
-    evidencia: { nivel: 'Limitada', texto: 'La evidencia es mixta y preliminar: se observan posibles beneficios en algunos síntomas, pero se necesita más investigación.' },
     evalua: ['Etapa y síntomas predominantes', 'Medicación antiparkinsoniana', 'Riesgo de efectos cognitivos', 'Seguimiento neurológico estricto'],
     noPromete: 'No detiene la progresión de la enfermedad ni reemplaza el tratamiento neurológico.',
   },
@@ -145,7 +124,6 @@ const perfiles = [
     img: '/img/perfil-fibromialgia.jpg',
     busca: 'Acompañar el dolor difuso, la fatiga y las alteraciones del sueño cuando otros tratamientos no alcanzaron el alivio esperado.',
     estudia: 'Combinaciones de THC y CBD por vía sublingual, con enfoque en dolor y descanso.',
-    evidencia: { nivel: 'Emergente', texto: 'La evidencia es preliminar y heterogénea; algunos estudios reportan mejoras en dolor y sueño, con respuesta muy variable.' },
     evalua: ['Perfil de síntomas y su impacto', 'Tratamientos previos', 'Descanso y estado anímico', 'Medicación en uso'],
     noPromete: 'No cura la fibromialgia; se orienta a acompañar síntomas dentro de un plan integral.',
   },
@@ -159,7 +137,6 @@ const perfiles = [
     img: '/img/perfil-neuropatico.jpg',
     busca: 'Acompañar el dolor de origen nervioso —ardor, hormigueo, punzadas— que responde distinto al dolor común.',
     estudia: 'Combinaciones de THC y CBD; el dolor neuropático es una de las formas más estudiadas para cannabinoides.',
-    evidencia: { nivel: 'Moderada', texto: 'Varias revisiones sitúan al dolor neuropático entre las indicaciones con evidencia más consistente, aunque el efecto suele ser parcial.' },
     evalua: ['Causa del daño nervioso', 'Tratamientos previos (anticonvulsivantes, antidepresivos)', 'Intensidad y localización', 'Interacciones medicamentosas'],
     noPromete: 'No garantiza la desaparición del dolor ni reemplaza los tratamientos indicados.',
   },
@@ -173,38 +150,11 @@ const perfiles = [
     img: '/img/perfil-menstrual.jpg',
     busca: 'Acompañar el dolor menstrual y el malestar asociado al ciclo, cuando afectan la vida diaria.',
     estudia: 'CBD y perfiles con THC por vía sublingual o tópica, según el tipo de molestia.',
-    evidencia: { nivel: 'Limitada', texto: 'La evidencia científica específica es preliminar; gran parte del uso se apoya en la experiencia clínica y en el manejo del dolor en general.' },
     evalua: ['Tipo e intensidad del dolor', 'Diagnósticos ginecológicos (ej. endometriosis)', 'Tratamientos hormonales o analgésicos', 'Objetivos de la persona'],
     noPromete: 'No reemplaza la evaluación ginecológica ni el tratamiento de causas específicas.',
   },
-  {
-    id: 'tept',
-    tag: 'Estrés postraumático',
-    title: 'Para quienes conviven con las secuelas de un trauma.',
-    desc: 'Se estudia en relación con algunos síntomas del estrés postraumático.',
-    cta: 'Hablar sobre estrés postraumático',
-    href: wa('Hola Flora, me interesa asociarme a Flora por estrés postraumático 🌿'),
-    img: '/img/perfil-ansiedad.jpg',
-    busca: 'Acompañar síntomas como pesadillas, hipervigilancia y alteraciones del sueño asociados al trauma.',
-    estudia: 'Perfiles con CBD y THC en dosis cuidadas, siempre dentro de un tratamiento de salud mental.',
-    evidencia: { nivel: 'Emergente', texto: 'La evidencia es preliminar; se investiga su rol en el sueño y la ansiedad asociados al trauma, con resultados aún no concluyentes.' },
-    evalua: ['Tratamiento psicológico o psiquiátrico en curso', 'Síntomas predominantes', 'Antecedentes de salud mental', 'Medicación en uso'],
-    noPromete: 'No reemplaza la psicoterapia ni el tratamiento psiquiátrico del estrés postraumático.',
-  },
-  {
-    id: 'intestinal',
-    tag: 'Enfermedad inflamatoria intestinal',
-    title: 'Para quienes conviven con Crohn o colitis.',
-    desc: 'Se estudia como acompañamiento sintomático en enfermedad inflamatoria intestinal.',
-    cta: 'Hablar sobre enfermedad intestinal',
-    href: wa('Hola Flora, me interesa asociarme a Flora por enfermedad inflamatoria intestinal 🌿'),
-    img: '/img/perfil-fibromialgia.jpg',
-    busca: 'Acompañar dolor abdominal, apetito y bienestar general en enfermedad de Crohn o colitis ulcerosa.',
-    estudia: 'Perfiles de THC y CBD orientados a síntomas; el efecto sobre la inflamación de base es objeto de estudio.',
-    evidencia: { nivel: 'Emergente', texto: 'Algunos estudios muestran mejoría de síntomas y calidad de vida, pero la evidencia sobre la inflamación en sí es inconsistente.' },
-    evalua: ['Diagnóstico y actividad de la enfermedad', 'Tratamiento gastroenterológico en curso', 'Estado nutricional', 'Seguimiento especializado'],
-    noPromete: 'No reemplaza el tratamiento de la enfermedad ni sus controles; acompaña síntomas.',
-  },
+
+
 ]
 
 // 3 copias seguidas para el loop infinito del carrusel autodeslizante
@@ -567,7 +517,7 @@ const igFallback = [
                 <div class="fl-perfil-card-more-inner">
                   <span class="fl-perfil-card-title">{p.title}</span>
                   <span class="fl-perfil-card-desc">{p.desc}</span>
-                  <button type="button" class="fl-perfil-card-cta fl-perfil-card-info" data-perfil-open={p.id} data-cta={`Perfil · ${p.tag} · ver info`}>Ver evidencia y opciones <span aria-hidden="true">→</span></button>
+                  <button type="button" class="fl-perfil-card-cta fl-perfil-card-info" data-perfil-open={p.id} data-cta={`Perfil · ${p.tag} · ver info`}>Ampliar información <span aria-hidden="true">→</span></button>
                 </div>
               </div>
             </div>
@@ -580,7 +530,7 @@ const igFallback = [
       </button>
     </div>
 
-    <p class="fl-perfiles-note">Tocá cualquier situación para ver qué se estudia, el nivel de evidencia y cómo se define un tratamiento. Información general; no constituye consejo médico.</p>
+    <p class="fl-perfiles-note">Tocá cualquier situación para ver qué se estudia y cómo se define un tratamiento. Información general; no constituye consejo médico.</p>
 
     <!-- ── Modal clínico/educativo por situación ── -->
     <div class="fl-perfil-modal" id="fl-perfil-modal" hidden data-lenis-prevent>
@@ -590,12 +540,6 @@ const igFallback = [
 
         <span class="fl-perfil-modal-tag" id="fl-perfil-modal-tag"></span>
         <h3 class="fl-perfil-modal-title" id="fl-perfil-modal-title"></h3>
-
-        <div class="fl-perfil-modal-evidencia">
-          <span class="fl-perfil-modal-evidencia-label">Nivel de evidencia</span>
-          <span class="fl-perfil-modal-badge" id="fl-perfil-modal-badge"></span>
-          <p class="fl-perfil-modal-evidencia-txt" id="fl-perfil-modal-evidencia-txt"></p>
-        </div>
 
         <div class="fl-perfil-modal-grid">
           <div class="fl-perfil-modal-block">
@@ -610,10 +554,6 @@ const igFallback = [
             <h4>Qué evalúa un profesional</h4>
             <ul id="fl-perfil-modal-evalua"></ul>
           </div>
-          <div class="fl-perfil-modal-block fl-perfil-modal-block--warn">
-            <h4>Lo que Flora no promete</h4>
-            <p id="fl-perfil-modal-nopromete"></p>
-          </div>
         </div>
 
         <div class="fl-perfil-modal-cta-wrap">
@@ -624,7 +564,10 @@ const igFallback = [
           <a class="fl-perfil-modal-cta fl-perfil-modal-cta--ghost" href="/reprocann-neuquen/" data-cta="Perfil modal · guia REPROCANN">Cómo empieza el proceso</a>
         </div>
 
-        <p class="fl-perfil-modal-legal">La información de este panel es general y educativa. No reemplaza la consulta con un profesional de la salud, que es quien evalúa cada caso y define si corresponde un tratamiento, su perfil y su seguimiento.</p>
+        <div class="fl-perfil-modal-legal">
+          <p class="fl-perfil-modal-legal-note" id="fl-perfil-modal-nopromete"></p>
+          <p>La información de este panel es general y educativa. No reemplaza la consulta con un profesional de la salud, que es quien evalúa cada caso y define si corresponde un tratamiento, su perfil y su seguimiento.</p>
+        </div>
       </div>
     </div>
 
@@ -1188,13 +1131,6 @@ const igFallback = [
       const byId = new Map(perfiles.map((p) => [p.id, p]))
 
       const el = (id) => document.getElementById(id)
-      const badge = el('fl-perfil-modal-badge')
-      const nivelClass = {
-        'Consolidada': 'is-alta',
-        'Moderada': 'is-media',
-        'Emergente': 'is-emergente',
-        'Limitada': 'is-limitada',
-      }
       let lastFocus = null
 
       function open(id) {
@@ -1203,9 +1139,6 @@ const igFallback = [
         lastFocus = document.activeElement
         el('fl-perfil-modal-tag').textContent = p.tag
         el('fl-perfil-modal-title').textContent = p.title
-        badge.textContent = p.evidencia.nivel
-        badge.className = 'fl-perfil-modal-badge ' + (nivelClass[p.evidencia.nivel] || '')
-        el('fl-perfil-modal-evidencia-txt').textContent = p.evidencia.texto
         el('fl-perfil-modal-busca').textContent = p.busca
         el('fl-perfil-modal-estudia').textContent = p.estudia
         el('fl-perfil-modal-nopromete').textContent = p.noPromete
