@@ -14,9 +14,43 @@ interface Props {
 const { title, description, categoria } = Astro.props
 const waAsociarse = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero asociarme 🌿')
 const canonical = `https://floraong.ar/${categoria}/`
+const categoryLabels: Record<string, string> = {
+  aceites: 'Aceites de cannabis medicinal',
+  cremas: 'Cremas de CBD de uso tópico',
+  extracciones: 'Extracciones y vaporizadores de cannabis medicinal',
+  'reprocann-neuquen': 'Acompañamiento para tramitar REPROCANN en Neuquén',
+}
+const serviceSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: categoryLabels[categoria] ?? title,
+  description,
+  url: canonical,
+  provider: {
+    '@type': 'NGO',
+    name: 'Flora ONG',
+    url: 'https://floraong.ar/',
+  },
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: 'Neuquén y Alto Valle, Argentina',
+  },
+  audience: {
+    '@type': 'Audience',
+    audienceType: 'Pacientes y socios con indicación médica / REPROCANN',
+  },
+}
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://floraong.ar/' },
+    { '@type': 'ListItem', position: 2, name: categoryLabels[categoria] ?? title, item: canonical },
+  ],
+}
 ---
 
-<Layout title={title} description={description} canonical={canonical}>
+<Layout title={title} description={description} canonical={canonical} schema={[serviceSchema, breadcrumbSchema]}>
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-public">
     <!-- ── Nav = el mismo topbar del resto del sitio (global.css .site-nav),

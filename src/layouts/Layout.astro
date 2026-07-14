@@ -5,17 +5,19 @@ interface Props {
   ogImage?: string
   canonical?: string
   noindex?: boolean
+  schema?: Record<string, unknown> | Record<string, unknown>[]
 }
 
 const {
   title = 'Flora ONG — Cannabis medicinal en Neuquén, Patagonia',
   description = 'Club de cultivo de cannabis medicinal bajo Ley 27.350 y marco REPROCANN. Cultivo propio, aceites con cromatografía y acompañamiento real. Neuquén, Patagonia.',
   ogImage = 'https://floraong.ar/og-image.jpg',
-  canonical = 'https://floraong.ar',
+  canonical = 'https://floraong.ar/',
   noindex = false,
+  schema = [],
 } = Astro.props
 
-const jsonLd = {
+const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "NGO",
   "name": "Flora ONG",
@@ -48,6 +50,9 @@ const jsonLd = {
     "REPROCANN"
   ]
 }
+
+const extraSchemas = Array.isArray(schema) ? schema : [schema]
+const jsonLd = [organizationJsonLd, ...extraSchemas]
 ---
 
 <!doctype html>
@@ -103,7 +108,9 @@ const jsonLd = {
     />
 
     <!-- Schema.org JSON-LD -->
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    {jsonLd.map((item) => (
+      <script type="application/ld+json" set:html={JSON.stringify(item)} />
+    ))}
   </head>
   <body>
     <slot />

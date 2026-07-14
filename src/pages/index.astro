@@ -172,6 +172,26 @@ const faqs = [
 const igHandle = '@flora.cultivamosconciencia'
 const igProfile = 'https://www.instagram.com/flora.cultivamosconciencia/'
 const igFeedUrl = 'https://feeds.behold.so/BdL7J34neXVcfDDQ3Qe2'
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Flora ONG',
+  alternateName: 'Asociación Civil Cann de Cannabis Medicinal',
+  url: 'https://floraong.ar/',
+  inLanguage: 'es-AR',
+  publisher: {
+    '@type': 'NGO',
+    name: 'Flora ONG',
+    url: 'https://floraong.ar/',
+  },
+  potentialAction: {
+    '@type': 'CommunicateAction',
+    target: 'https://wa.me/5492996375723',
+    name: 'Consultar por WhatsApp',
+  },
+}
+
 const igFallback = [
   { caption: 'Efecto séquito: por qué se estudia la planta entera frente a un cannabinoide aislado.' },
   { caption: 'Cómo elegir tu aceite: quimiotipo, relación CBD:THC y para qué sirve cada uno.' },
@@ -184,6 +204,8 @@ const igFallback = [
 <Layout
   title="Flora — Tramitá tu REPROCANN y accedé a cannabis medicinal | Neuquén"
   description="¿Cómo se tramita el REPROCANN? El primer paso es una entrevista médica. Asociación civil de cultivo de cannabis medicinal en Neuquén, bajo Ley 27.350. Material vegetal y aceites con análisis de laboratorio."
+  canonical="https://floraong.ar/"
+  schema={websiteSchema}
 >
 
   <!-- Skip to content para navegación por teclado -->
