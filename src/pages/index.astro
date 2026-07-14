@@ -517,7 +517,10 @@ const igFallback = [
                 <div class="fl-perfil-card-more-inner">
                   <span class="fl-perfil-card-title">{p.title}</span>
                   <span class="fl-perfil-card-desc">{p.desc}</span>
-                  <button type="button" class="fl-perfil-card-cta fl-perfil-card-info" data-perfil-open={p.id} data-cta={`Perfil · ${p.tag} · ver info`}>Ampliar información <span aria-hidden="true">→</span></button>
+                  <button type="button" class="fl-perfil-card-info" data-perfil-open={p.id} data-cta={`Perfil · ${p.tag} · ver info`}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    Ver más información
+                  </button>
                 </div>
               </div>
             </div>

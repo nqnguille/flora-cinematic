@@ -2646,15 +2646,38 @@ body.is-socio .drawer-socio-only { display: block; }
   color: rgba(28, 22, 38, 0.55);
 }
 
-/* El botón de info reemplaza al viejo <a>; hereda estilo del CTA de card */
+/* Botón "Ver más información": chip de vidrio sobre la foto de la card */
 .fl-perfil-card-info {
   appearance: none;
-  border: none;
-  background: none;
   cursor: pointer;
-  font: inherit;
-  text-align: left;
+  align-self: flex-start;
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px 9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.13);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
+.fl-perfil-card-info svg { width: 15px; height: 15px; flex-shrink: 0; }
+.fl-perfil-card-info:hover {
+  background: var(--fl-green, #0a503c);
+  border-color: var(--fl-green, #0a503c);
+  transform: translateY(-1px);
+}
+.fl-perfil-card-info:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .fl-perfil-card-info { transition: none; } }
 
 /* Overlay */
 .fl-perfil-modal {
