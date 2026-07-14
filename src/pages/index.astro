@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import SiteFooter from '../components/SiteFooter.astro'
-import SolicitudModal from '../components/SolicitudModal.astro'
 import { aceites } from '../lib/productos'
 import '../styles/global.css'
 
@@ -495,17 +494,15 @@ const igFallback = [
             En menos de 30 días tenés tu credencial y empezás a retirar tu cultivo:
             podés transportar 40 gramos de flores o 6 goteros de aceite por todo el país.
           </p>
-          <button type="button" data-intent="acceso" class="fl-reprocann-cta fl-reprocann-cta--ghost fl-rp-step-cta">
+          <a class="fl-reprocann-cta fl-reprocann-cta--ghost fl-rp-step-cta" href={wa('Hola Flora, ya tengo mi REPROCANN y quiero asociarme 🌿')} target="_blank" rel="noopener noreferrer">
             Ya tengo REPROCANN: asociarme
-          </button>
+          </a>
         </li>
       </ol>
 
       <p class="fl-reprocann-note">La entrevista se coordina por WhatsApp y te orientamos en cada paso del trámite.</p>
     </div>
   </section>
-
-  <SolicitudModal />
 
   <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->
