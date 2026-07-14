@@ -2631,3 +2631,242 @@ body.is-socio .drawer-socio-only { display: block; }
   .fl-evergreen-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fl-evergreen-card { min-height: 100%; }
 }
+
+/* ══════════════════════════════════════════ */
+/* MÓDULO "Estamos para acompañarte" — modal clínico por situación */
+/* ══════════════════════════════════════════ */
+.fl-perfiles-note {
+  max-width: 760px;
+  margin: clamp(22px, 3vw, 32px) auto 0;
+  padding: 0 20px;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(28, 22, 38, 0.55);
+}
+
+/* El botón de info reemplaza al viejo <a>; hereda estilo del CTA de card */
+.fl-perfil-card-info {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+/* Overlay */
+.fl-perfil-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 3vw, 28px);
+}
+.fl-perfil-modal[hidden] { display: none; }
+.fl-perfil-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 6, 16, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.fl-perfil-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88svh;
+  overflow-y: auto;
+  background: var(--fl-paper, #fff);
+  border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+  border-radius: 24px;
+  padding: clamp(26px, 4vw, 42px);
+  box-shadow: 0 40px 90px -40px rgba(10, 6, 16, 0.7);
+  animation: fl-perfil-modal-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fl-perfil-modal-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.fl-perfil-modal-x {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+  background: var(--fl-paper-2, #f6f4f2);
+  color: var(--fl-ink, #1c1626);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.fl-perfil-modal-x:hover { background: #ece8f2; transform: rotate(90deg); }
+
+.fl-perfil-modal-tag {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fl-green, #0a503c);
+  margin-bottom: 10px;
+}
+.fl-perfil-modal-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.16;
+  color: var(--fl-ink, #1c1626);
+  margin: 0 0 clamp(18px, 2.6vw, 24px);
+  padding-right: 40px;
+}
+
+/* Evidencia destacada */
+.fl-perfil-modal-evidencia {
+  background: var(--fl-paper-2, #f6f4f2);
+  border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.12));
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: clamp(18px, 2.6vw, 24px);
+}
+.fl-perfil-modal-evidencia-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(28, 22, 38, 0.45);
+  margin-bottom: 8px;
+}
+.fl-perfil-modal-badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  background: #e6e2ee;
+  color: var(--fl-violet, #381f56);
+}
+.fl-perfil-modal-badge.is-alta { background: rgba(10, 80, 60, 0.14); color: #0a503c; }
+.fl-perfil-modal-badge.is-media { background: rgba(56, 31, 86, 0.12); color: #381f56; }
+.fl-perfil-modal-badge.is-emergente { background: rgba(196, 138, 30, 0.16); color: #8a5e12; }
+.fl-perfil-modal-badge.is-limitada { background: rgba(120, 120, 130, 0.16); color: #555; }
+.fl-perfil-modal-evidencia-txt {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(28, 22, 38, 0.72);
+  margin: 0;
+}
+
+/* Grid de bloques */
+.fl-perfil-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.fl-perfil-modal-block h4 {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fl-violet, #381f56);
+  margin: 0 0 6px;
+}
+.fl-perfil-modal-block p {
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: rgba(28, 22, 38, 0.72);
+  margin: 0;
+}
+.fl-perfil-modal-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.fl-perfil-modal-block li {
+  position: relative;
+  padding-left: 18px;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: rgba(28, 22, 38, 0.72);
+}
+.fl-perfil-modal-block li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fl-green, #0a503c);
+}
+.fl-perfil-modal-block--warn {
+  background: rgba(196, 138, 30, 0.08);
+  border: 1px solid rgba(196, 138, 30, 0.22);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.fl-perfil-modal-block--warn h4 { color: #8a5e12; }
+
+/* CTAs de conversión */
+.fl-perfil-modal-cta-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(22px, 3vw, 28px);
+}
+.fl-perfil-modal-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: var(--fl-green, #0a503c);
+  color: #fff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.fl-perfil-modal-cta:hover { transform: translateY(-2px); opacity: 0.94; }
+.fl-perfil-modal-cta--ghost {
+  background: transparent;
+  color: var(--fl-violet, #381f56);
+  border: 1.5px solid var(--fl-line, rgba(56, 31, 86, 0.2));
+}
+.fl-perfil-modal-cta--ghost:hover { background: rgba(56, 31, 86, 0.06); }
+
+.fl-perfil-modal-legal {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(28, 22, 38, 0.5);
+  border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.12));
+  padding-top: 16px;
+  margin: clamp(20px, 3vw, 26px) 0 0;
+}
+
+@media (min-width: 640px) {
+  .fl-perfil-modal-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-perfil-modal-card { animation: none; }
+  .fl-perfil-modal-x:hover { transform: none; }
+}
