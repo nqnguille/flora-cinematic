@@ -707,20 +707,9 @@ function initWhatsAppFloat() {
   }, { passive: true })
 }
 
-// ── Instagram: slider en vivo (feed JSON servido por Behold) ──
-interface IgSize { mediaUrl?: string }
-interface IgPost {
-  id: string
-  caption?: string
-  prunedCaption?: string
-  mediaType?: string
-  mediaUrl?: string
-  thumbnailUrl?: string
-  permalink: string
-  timestamp?: string
-  sizes?: { small?: IgSize; medium?: IgSize; large?: IgSize; full?: IgSize }
-}
-
+// ── Instagram: carrusel local evergreen ──
+// El contenido se renderiza desde Astro con datos locales. No hay feed externo,
+// token, plugin ni límite mensual: este JS solo mueve el carrusel.
 function initInstagramFeed() {
   const slider = document.querySelector<HTMLElement>('.ig-slider')
   if (!slider) return
@@ -729,7 +718,6 @@ function initInstagramFeed() {
   const next = slider.querySelector<HTMLButtonElement>('.ig-next')
   if (!track) return
 
-  // Navegación por flechas: desplaza ~una tarjeta + gap
   const step = () => {
     const card = track.querySelector<HTMLElement>('.ig-card')
     return card ? card.offsetWidth + 20 : 300
@@ -740,62 +728,11 @@ function initInstagramFeed() {
     prev.disabled = track.scrollLeft <= 2
     next.disabled = track.scrollLeft >= max
   }
+
   prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }))
   next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }))
   track.addEventListener('scroll', updateNav, { passive: true })
-
-  // Trae los posteos reales; si falla, quedan las tarjetas de respaldo
-  const feed = slider.dataset.feed
-  if (feed) {
-    fetch(feed, { headers: { Accept: 'application/json' } })
-      .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((data: { posts?: IgPost[] }) => {
-        const posts = (data.posts || []).filter(p => p.permalink)
-        if (!posts.length) return
-        renderInstagramPosts(track, posts)
-        updateNav()
-        ScrollTrigger.refresh()
-      })
-      .catch(() => {/* se mantiene el fallback */})
-  }
   updateNav()
-}
-
-function renderInstagramPosts(track: HTMLElement, posts: IgPost[]) {
-  const fmt = (ts?: string) => {
-    if (!ts) return ''
-    const d = new Date(ts)
-    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-  }
-  const esc = (s: string) =>
-    s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
-  const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' : s)
-
-  // Behold sirve imágenes estables (hop.behold.pictures) en `sizes`; se
-  // prefieren a la mediaUrl cruda de Instagram, que caduca.
-  const pickImg = (p: IgPost) =>
-    p.sizes?.medium?.mediaUrl || p.sizes?.large?.mediaUrl || p.sizes?.small?.mediaUrl ||
-    (p.mediaType === 'VIDEO' ? p.thumbnailUrl : p.mediaUrl) || p.thumbnailUrl || p.mediaUrl
-
-  track.innerHTML = posts
-    .map(p => {
-      const img = pickImg(p)
-      const rawCap = p.prunedCaption || p.caption
-      const cap = rawCap ? esc(clip(rawCap)) : 'Ver este posteo en Instagram.'
-      const media = img
-        ? `<span class="ig-card-media"><img src="${esc(img)}" alt="" loading="lazy" /></span>`
-        : `<span class="ig-card-media" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>`
-      return `<li class="ig-card" role="listitem">
-        <a class="ig-card-link" href="${esc(p.permalink)}" target="_blank" rel="noopener noreferrer">
-          ${media}
-          <span class="ig-card-body">
-            <span class="ig-card-caption">${cap}</span>
-            <span class="ig-card-date">${fmt(p.timestamp)}</span>
-          </span>
-        </a>
-      </li>`
-    })
-    .join('')
 }
 
 // ── Welcome: relato de bienvenida con fondos que evolucionan ──
