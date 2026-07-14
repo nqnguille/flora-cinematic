@@ -2548,3 +2548,86 @@ body.is-socio .drawer-socio-only { display: block; }
   .nav-cta--mobile, .nav-hola--mobile, .nav-cta--carta.nav-cta--mobile { height: 38px; margin: 0; }
   body.is-socio .nav-hola.nav-hola--mobile:not([hidden]) { margin-left: auto; margin-right: 0; }
 }
+
+/* ── Evergreen SEO: información médica/legal + fuentes oficiales ── */
+.fl-evergreen {
+  background:
+    radial-gradient(90% 120% at 85% 0%, rgba(56, 31, 86, 0.08), transparent 52%),
+    var(--fl-paper);
+  border-top: 1px solid var(--fl-line);
+  border-bottom: 1px solid var(--fl-line);
+}
+.fl-evergreen-wrap { max-width: 1180px; }
+.fl-evergreen-head .fl-lead { max-width: 68ch; }
+.fl-evergreen-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(14px, 2vw, 20px);
+  margin-top: clamp(30px, 4vw, 48px);
+}
+.fl-evergreen-card {
+  background: #fff;
+  border: 1px solid var(--fl-line);
+  border-radius: 22px;
+  padding: clamp(22px, 3vw, 32px);
+  box-shadow: 0 18px 44px -34px rgba(56, 31, 86, 0.32);
+}
+.fl-evergreen-card--source { background: var(--fl-paper-2); }
+.fl-evergreen-k {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--fl-green);
+  margin-bottom: 12px;
+}
+.fl-evergreen-card h3 {
+  font-family: var(--font-ui);
+  font-size: clamp(18px, 2vw, 23px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--fl-ink);
+  margin: 0 0 12px;
+}
+.fl-evergreen-card p {
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: rgba(28, 22, 38, 0.68);
+  margin: 0;
+}
+.fl-evergreen-card > a,
+.fl-evergreen-links a {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 18px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--fl-violet);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.fl-evergreen-card > a:hover,
+.fl-evergreen-links a:hover { color: var(--fl-green); }
+.fl-evergreen-links { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.fl-evergreen-links a { margin-top: 10px; }
+.fl-evergreen-disclaimer {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: rgba(28, 22, 38, 0.58);
+  max-width: 78ch;
+  margin: clamp(22px, 3vw, 32px) 0 0;
+  padding: 16px 18px;
+  border-left: 3px solid var(--fl-green);
+  border-radius: 12px;
+  background: rgba(10, 80, 60, 0.06);
+}
+@media (min-width: 860px) {
+  .fl-evergreen-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fl-evergreen-card { min-height: 100%; }
+}
