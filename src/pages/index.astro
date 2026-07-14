@@ -233,12 +233,13 @@ const faqs = [
   },
 ]
 
-// Instagram — slider en vivo. El feed lo sirve Behold (behold.so): JSON con
-// imágenes hosteadas estables + CORS, refresco automático del token. Si no
-// responde, se muestran estas tarjetas de respaldo y el botón al perfil.
+// Instagram — fallback estable. El feed en vivo de Behold quedó en pausa
+// por límite mensual (402 pausedByOverage), así que no dependemos de terceros:
+// mostramos cards editoriales con assets propios y CTA al perfil. Si se reactiva
+// Behold más adelante, volver a completar igFeedUrl.
 const igHandle = '@flora.cultivamosconciencia'
 const igProfile = 'https://www.instagram.com/flora.cultivamosconciencia/'
-const igFeedUrl = 'https://feeds.behold.so/BdL7J34neXVcfDDQ3Qe2'
+const igFeedUrl = ''
 
 const websiteSchema = {
   '@context': 'https://schema.org',
@@ -260,11 +261,26 @@ const websiteSchema = {
 }
 
 const igFallback = [
-  { caption: 'Efecto séquito: por qué se estudia la planta entera frente a un cannabinoide aislado.' },
-  { caption: 'Cómo elegir tu aceite: quimiotipo, relación CBD:THC y para qué sirve cada uno.' },
-  { caption: 'Punto de corte: cuándo se cosecha y por qué cambia el efecto final.' },
-  { caption: 'REPROCANN al día: qué cambió en la última resolución y cómo te afecta.' },
-  { caption: 'Derribando mitos: lo que se dice del THC y lo que dice la evidencia.' },
+  {
+    caption: 'Efecto séquito: por qué se estudia la planta entera frente a un cannabinoide aislado.',
+    img: '/img/cbd-thc-flor-v2.webp',
+  },
+  {
+    caption: 'Cómo elegir tu aceite: quimiotipo, relación CBD:THC y para qué sirve cada uno.',
+    img: '/img/prod-aceites.jpg',
+  },
+  {
+    caption: 'REPROCANN al día: qué cambió en la normativa y cómo te afecta.',
+    img: '/img/reprocann-credencial-v7.webp',
+  },
+  {
+    caption: 'El club por dentro: cómo se organiza el acceso de socios y la trazabilidad.',
+    img: '/img/flora-carta-tarjeta-metal-v4.png',
+  },
+  {
+    caption: 'Vías de administración: sublingual, tópica e inhalatoria, siempre con indicación médica.',
+    img: '/img/prod-cremas.jpg',
+  },
 ]
 ---
 
@@ -889,67 +905,7 @@ const igFallback = [
 
 
 
-  <!-- ══════════════════════════════════════════ -->
-  <!-- INFORMACIÓN MÉDICA Y LEGAL — evergreen SEO -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-evergreen" id="informacion-medica-legal" aria-label="Información médica y legal sobre cannabis medicinal">
-    <div class="fl-wrap fl-evergreen-wrap">
-      <header class="fl-head fl-evergreen-head">
-        <span class="fl-eyebrow">Información responsable</span>
-        <h2 class="fl-title">Cannabis medicinal:<br><em>marco legal, criterio médico y seguimiento.</em></h2>
-        <p class="fl-lead">
-          El acceso al cannabis medicinal en Argentina se organiza alrededor de la Ley 27.350,
-          el REPROCANN y la indicación de un profesional de la salud. En Flora acompañamos ese
-          recorrido con información clara, documentación y seguimiento, sin reemplazar nunca la
-          evaluación médica individual.
-        </p>
-      </header>
 
-      <div class="fl-evergreen-grid">
-        <article class="fl-evergreen-card">
-          <span class="fl-evergreen-k">01 · Marco legal</span>
-          <h3>La Ley 27.350 reconoce el cannabis medicinal dentro del sistema de salud.</h3>
-          <p>
-            La normativa nacional creó el programa de investigación y acceso al cannabis con fines
-            medicinales. Para los pacientes, el REPROCANN es la herramienta que documenta la
-            indicación, el cultivo —propio o a través de un cultivador autorizado— y el transporte
-            dentro de los límites habilitados.
-          </p>
-          <a href="/reprocann-neuquen/">Leer la guía REPROCANN en Neuquén <span aria-hidden="true">→</span></a>
-        </article>
-
-        <article class="fl-evergreen-card">
-          <span class="fl-evergreen-k">02 · Criterio médico</span>
-          <h3>No existe una dosis universal: el tratamiento se define caso por caso.</h3>
-          <p>
-            La vía de administración, la relación CBD:THC, la frecuencia y el seguimiento dependen
-            de la condición de salud, la medicación de base y la respuesta de cada persona. Por eso
-            Flora trabaja con entrevista médica y orientación antes de iniciar el vínculo asociativo.
-          </p>
-          <a href="/#entrevista">Ver cómo empieza el proceso <span aria-hidden="true">→</span></a>
-        </article>
-
-        <article class="fl-evergreen-card fl-evergreen-card--source">
-          <span class="fl-evergreen-k">03 · Fuentes oficiales</span>
-          <h3>Verificá siempre la información en organismos oficiales.</h3>
-          <p>
-            La información legal puede cambiar. Por eso conviene contrastar cualquier dato con el
-            Ministerio de Salud, la normativa vigente y la documentación propia de cada trámite.
-          </p>
-          <div class="fl-evergreen-links">
-            <a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN — Argentina.gob.ar</a>
-            <a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350 — Infoleg</a>
-          </div>
-        </article>
-      </div>
-
-      <p class="fl-evergreen-disclaimer">
-        Este sitio brinda información general y orientación institucional. No ofrece diagnóstico,
-        prescripción ni reemplaza la consulta con un profesional de la salud habilitado. El uso de
-        cannabis medicinal debe estar indicado y supervisado según cada caso.
-      </p>
-    </div>
-  </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- PROGRAMA — Espacio libre de prejuicios     -->
@@ -1025,8 +981,8 @@ const igFallback = [
           <span class="fl-eyebrow">Comunidad</span>
           <h2 class="fl-title">Lo último <em>en Instagram.</em></h2>
           <p class="fl-lead">
-            Lo que aprendemos, cultivamos y compartimos con la comunidad, día a día
-            —seguinos de cerca.
+            Lo que aprendemos, cultivamos y compartimos con la comunidad.
+            Seguinos de cerca en Instagram.
           </p>
         </div>
         <a class="ig-cta" href={igProfile} target="_blank" rel="noopener noreferrer">
@@ -1049,11 +1005,7 @@ const igFallback = [
             <li class="ig-card is-fallback" role="listitem">
               <a class="ig-card-link" href={igProfile} target="_blank" rel="noopener noreferrer">
                 <span class="ig-card-media" aria-hidden="true">
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                  </svg>
+                  <img src={p.img} alt="" loading="lazy" width="900" height="1100" />
                 </span>
                 <span class="ig-card-body">
                   <span class="ig-card-caption">{p.caption}</span>
@@ -1068,6 +1020,68 @@ const igFallback = [
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- INFORMACIÓN MÉDICA Y LEGAL — evergreen SEO -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-evergreen" id="informacion-medica-legal" aria-label="Información médica y legal sobre cannabis medicinal">
+    <div class="fl-wrap fl-evergreen-wrap">
+      <header class="fl-head fl-evergreen-head">
+        <span class="fl-eyebrow">Información responsable</span>
+        <h2 class="fl-title">Cannabis medicinal:<br><em>marco legal, criterio médico y seguimiento.</em></h2>
+        <p class="fl-lead">
+          El acceso al cannabis medicinal en Argentina se organiza alrededor de la Ley 27.350,
+          el REPROCANN y la indicación de un profesional de la salud. En Flora acompañamos ese
+          recorrido con información clara, documentación y seguimiento, sin reemplazar nunca la
+          evaluación médica individual.
+        </p>
+      </header>
+
+      <div class="fl-evergreen-grid">
+        <article class="fl-evergreen-card">
+          <span class="fl-evergreen-k">01 · Marco legal</span>
+          <h3>La Ley 27.350 reconoce el cannabis medicinal dentro del sistema de salud.</h3>
+          <p>
+            La normativa nacional creó el programa de investigación y acceso al cannabis con fines
+            medicinales. Para los pacientes, el REPROCANN es la herramienta que documenta la
+            indicación, el cultivo —propio o a través de un cultivador autorizado— y el transporte
+            dentro de los límites habilitados.
+          </p>
+          <a href="/reprocann-neuquen/">Leer la guía REPROCANN en Neuquén <span aria-hidden="true">→</span></a>
+        </article>
+
+        <article class="fl-evergreen-card">
+          <span class="fl-evergreen-k">02 · Criterio médico</span>
+          <h3>No existe una dosis universal: el tratamiento se define caso por caso.</h3>
+          <p>
+            La vía de administración, la relación CBD:THC, la frecuencia y el seguimiento dependen
+            de la condición de salud, la medicación de base y la respuesta de cada persona. Por eso
+            Flora trabaja con entrevista médica y orientación antes de iniciar el vínculo asociativo.
+          </p>
+          <a href="/#entrevista">Ver cómo empieza el proceso <span aria-hidden="true">→</span></a>
+        </article>
+
+        <article class="fl-evergreen-card fl-evergreen-card--source">
+          <span class="fl-evergreen-k">03 · Fuentes oficiales</span>
+          <h3>Verificá siempre la información en organismos oficiales.</h3>
+          <p>
+            La información legal puede cambiar. Por eso conviene contrastar cualquier dato con el
+            Ministerio de Salud, la normativa vigente y la documentación propia de cada trámite.
+          </p>
+          <div class="fl-evergreen-links">
+            <a href="https://www.argentina.gob.ar/salud/cannabis-medicinal/reprocann" target="_blank" rel="noopener noreferrer">REPROCANN — Argentina.gob.ar</a>
+            <a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350 — Infoleg</a>
+          </div>
+        </article>
+      </div>
+
+      <p class="fl-evergreen-disclaimer">
+        Este sitio brinda información general y orientación institucional. No ofrece diagnóstico,
+        prescripción ni reemplaza la consulta con un profesional de la salud habilitado. El uso de
+        cannabis medicinal debe estar indicado y supervisado según cada caso.
+      </p>
     </div>
   </section>
 
