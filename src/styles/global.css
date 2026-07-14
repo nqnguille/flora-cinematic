@@ -2677,13 +2677,13 @@ body.is-socio .drawer-socio-only { display: block; }
 .fl-perfil-modal-card {
   position: relative;
   width: 100%;
-  max-width: 680px;
+  max-width: 480px;
   max-height: 88svh;
   overflow-y: auto;
   background: var(--fl-paper, #fff);
   border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
-  border-radius: 24px;
-  padding: clamp(26px, 4vw, 42px);
+  border-radius: 22px;
+  padding: clamp(22px, 3vw, 30px);
   box-shadow: 0 40px 90px -40px rgba(10, 6, 16, 0.7);
   animation: fl-perfil-modal-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2720,10 +2720,10 @@ body.is-socio .drawer-socio-only { display: block; }
 .fl-perfil-modal-title {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(1.5rem, 3vw, 2.1rem);
-  line-height: 1.16;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  line-height: 1.15;
   color: var(--fl-ink, #1c1626);
-  margin: 0 0 clamp(18px, 2.6vw, 24px);
+  margin: 0 0 clamp(16px, 2.2vw, 20px);
   padding-right: 40px;
 }
 
@@ -2731,7 +2731,7 @@ body.is-socio .drawer-socio-only { display: block; }
 .fl-perfil-modal-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 .fl-perfil-modal-block h4 {
   font-family: var(--font-ui);
@@ -2804,27 +2804,43 @@ body.is-socio .drawer-socio-only { display: block; }
 }
 .fl-perfil-modal-cta--ghost:hover { background: rgba(56, 31, 86, 0.06); }
 
-.fl-perfil-modal-legal {
-  border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.12));
-  padding-top: 16px;
-  margin: clamp(20px, 3vw, 26px) 0 0;
+/* Aviso destacado: lo que no garantizamos */
+.fl-perfil-modal-note {
+  margin-top: clamp(16px, 2.4vw, 20px);
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(196, 138, 30, 0.10);
+  border: 1px solid rgba(196, 138, 30, 0.30);
 }
-.fl-perfil-modal-legal p {
+.fl-perfil-modal-note-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a5e12;
+  margin-bottom: 7px;
+}
+.fl-perfil-modal-note-label svg { width: 15px; height: 15px; }
+.fl-perfil-modal-note p {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
   line-height: 1.55;
-  color: rgba(28, 22, 38, 0.5);
+  font-weight: 600;
+  color: rgba(28, 22, 38, 0.82);
   margin: 0;
 }
-.fl-perfil-modal-legal p + p { margin-top: 10px; }
-.fl-perfil-modal-legal-note {
-  font-weight: 600;
-  color: rgba(28, 22, 38, 0.72) !important;
+.fl-perfil-modal-legal {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(28, 22, 38, 0.45);
+  margin: 14px 0 0;
 }
 
-@media (min-width: 640px) {
-  .fl-perfil-modal-grid { grid-template-columns: 1fr 1fr; }
-}
 @media (prefers-reduced-motion: reduce) {
   .fl-perfil-modal-card { animation: none; }
   .fl-perfil-modal-x:hover { transform: none; }
