@@ -2636,7 +2636,7 @@ body.is-socio .drawer-socio-only { display: block; }
 /* MÓDULO "Estamos para acompañarte" — modal clínico por situación */
 /* ══════════════════════════════════════════ */
 .fl-perfiles-note {
-  max-width: 760px;
+  max-width: min(1120px, calc(100vw - 48px));
   margin: clamp(22px, 3vw, 32px) auto 0;
   padding: 0 20px;
   text-align: center;
@@ -2644,6 +2644,9 @@ body.is-socio .drawer-socio-only { display: block; }
   font-size: 13.5px;
   line-height: 1.6;
   color: rgba(28, 22, 38, 0.55);
+}
+@media (min-width: 860px) {
+  .fl-perfiles-note { white-space: nowrap; }
 }
 
 /* Botón "Ver más información": chip de vidrio sobre la foto de la card */
@@ -2655,7 +2658,7 @@ body.is-socio .drawer-socio-only { display: block; }
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 9px 15px 9px 12px;
+  padding: 8px 12px 8px 10px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.34);
   background: rgba(255, 255, 255, 0.13);
@@ -2664,13 +2667,13 @@ body.is-socio .drawer-socio-only { display: block; }
   color: #fff;
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 12px;
   letter-spacing: 0.01em;
   line-height: 1;
   text-decoration: none;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
-.fl-perfil-card-info svg { width: 15px; height: 15px; flex-shrink: 0; }
+.fl-perfil-card-info svg { width: 14px; height: 14px; flex-shrink: 0; }
 .fl-perfil-card-info:hover {
   background: var(--fl-green, #0a503c);
   border-color: var(--fl-green, #0a503c);
