@@ -2901,3 +2901,4 @@ body.is-socio .drawer-socio-only { display: block; }
   display: block !important;
 }
 .ig-card.ig-embed { width: clamp(326px, 86vw, 340px); }
+.ig-card.ig-embed-fallback { width: clamp(326px, 86vw, 340px); }
