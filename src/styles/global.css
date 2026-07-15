@@ -2889,3 +2889,15 @@ body.is-socio .drawer-socio-only { display: block; }
   margin: 0 !important;
 }
 .ig-card.ig-embed .ig-card-link { display: none; }
+
+/* Fix embeds IG: embed.js a veces deja iframes intermedios absolute y anchos enormes */
+.ig-card.ig-embed iframe.instagram-media,
+.ig-card.ig-embed iframe.instagram-media-rendered {
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 12px !important;
+  display: block !important;
+}
+.ig-card.ig-embed { width: clamp(326px, 86vw, 340px); }
