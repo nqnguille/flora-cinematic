@@ -730,7 +730,7 @@ function initInstagramFeed() {
 
   const step = () => {
     const card = track.querySelector<HTMLElement>('.ig-card')
-    return card ? card.offsetWidth + 20 : 300
+    return card ? card.offsetWidth + 20 : 340
   }
   const updateNav = () => {
     if (!prev || !next) return
@@ -744,48 +744,64 @@ function initInstagramFeed() {
   updateNav()
 
   const endpoint = slider.dataset.endpoint
-  const profile = slider.dataset.profile || 'https://www.instagram.com/flora.cultivamosconciencia/'
   if (!endpoint) return
 
   fetch(endpoint, { headers: { Accept: 'application/json' } })
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((data: { posts?: IgCard[] }) => {
-      const posts = (data.posts || []).filter((p) => p.permalink && p.img)
+      const posts = (data.posts || []).filter((p) => p.permalink).slice(0, 6)
       if (!posts.length) return // se mantiene el respaldo local
-      renderInstagramPosts(track, posts, profile)
-      updateNav()
-      try { ScrollTrigger.refresh() } catch {}
+      renderInstagramEmbeds(track, posts, updateNav)
     })
     .catch(() => {/* se mantiene el respaldo local */})
 }
 
-function renderInstagramPosts(track: HTMLElement, posts: IgCard[], profile: string) {
+// Embeds oficiales de Instagram: usamos embed.js (script de instagram.com,
+// gratuito y sin límites) para renderizar cada post real. Los permalinks salen
+// de /api/instagram. El embed trae like/comentar nativos que abren Instagram.
+function loadInstagramEmbedScript(): Promise<void> {
+  return new Promise((resolve) => {
+    const w = window as unknown as { instgrm?: { Embeds: { process: () => void } } }
+    if (w.instgrm) return resolve()
+    const existing = document.querySelector<HTMLScriptElement>('script[src*="instagram.com/embed.js"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      // por si ya cargó
+      if (w.instgrm) resolve()
+      return
+    }
+    const sc = document.createElement('script')
+    sc.src = 'https://www.instagram.com/embed.js'
+    sc.async = true
+    sc.onload = () => resolve()
+    sc.onerror = () => resolve()
+    document.body.appendChild(sc)
+  })
+}
+
+function renderInstagramEmbeds(track: HTMLElement, posts: IgCard[], updateNav: () => void) {
   const esc = (s: string) =>
     s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
-  const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' : s)
-  const fmt = (ts?: string) => {
-    if (!ts) return ''
-    const d = new Date(ts)
-    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-  }
 
   track.innerHTML = posts
     .map((p) => {
-      const cap = p.caption ? esc(clip(p.caption)) : 'Ver este posteo en Instagram.'
-      const href = esc(p.permalink || profile)
-      const img = esc(p.img || '')
-      const date = fmt(p.timestamp)
-      return `<li class="ig-card" role="listitem">
-        <a class="ig-card-link" href="${href}" target="_blank" rel="noopener noreferrer">
-          <span class="ig-card-media"><img src="${img}" alt="" loading="lazy" width="900" height="1100" /></span>
-          <span class="ig-card-body">
-            <span class="ig-card-caption">${cap}</span>
-            <span class="ig-card-date">${date || 'Ver en Instagram →'}</span>
-          </span>
-        </a>
+      const href = esc(p.permalink || '')
+      return `<li class="ig-card ig-embed" role="listitem">
+        <blockquote class="instagram-media" data-instgrm-permalink="${href}" data-instgrm-version="14" style="margin:0;width:100%;min-width:0;max-width:100%;background:#fff;border-radius:16px"></blockquote>
       </li>`
     })
     .join('')
+
+  loadInstagramEmbedScript().then(() => {
+    const w = window as unknown as { instgrm?: { Embeds: { process: () => void } } }
+    try { w.instgrm?.Embeds.process() } catch {}
+    // Los iframes de Instagram cargan async y cambian el ancho del track;
+    // recalculamos navegación y ScrollTrigger un par de veces.
+    const refresh = () => { updateNav(); try { ScrollTrigger.refresh() } catch {} }
+    setTimeout(refresh, 800)
+    setTimeout(refresh, 2000)
+    setTimeout(refresh, 4000)
+  })
 }
 
 // ── Welcome: relato de bienvenida con fondos que evolucionan ──

@@ -2871,3 +2871,21 @@ body.is-socio .drawer-socio-only { display: block; }
   .fl-perfil-modal-card { animation: none; }
   .fl-perfil-modal-x:hover { transform: none; }
 }
+
+/* ── Instagram: embeds oficiales dentro del carrusel ── */
+.ig-card.ig-embed {
+  flex: 0 0 auto;
+  width: min(340px, 86vw);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 16px;
+  overflow: visible;
+}
+.ig-card.ig-embed .instagram-media {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+.ig-card.ig-embed .ig-card-link { display: none; }
