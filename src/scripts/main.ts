@@ -707,9 +707,19 @@ function initWhatsAppFloat() {
   }, { passive: true })
 }
 
-// ── Instagram: carrusel local evergreen ──
-// El contenido se renderiza desde Astro con datos locales. No hay feed externo,
-// token, plugin ni límite mensual: este JS solo mueve el carrusel.
+// ── Instagram: últimas publicaciones reales desde NUESTRO backend ──
+// El endpoint propio /api/instagram usa la Graph API oficial + caché en KV
+// (sin plugins de terceros). Si no hay token configurado o Meta falla, el
+// endpoint devuelve posts: [] y se mantienen las cards locales de respaldo
+// que ya vienen renderizadas por Astro. El módulo nunca se ve roto.
+interface IgCard {
+  caption?: string
+  img?: string
+  permalink?: string
+  timestamp?: string
+  type?: string
+}
+
 function initInstagramFeed() {
   const slider = document.querySelector<HTMLElement>('.ig-slider')
   if (!slider) return
@@ -728,11 +738,54 @@ function initInstagramFeed() {
     prev.disabled = track.scrollLeft <= 2
     next.disabled = track.scrollLeft >= max
   }
-
   prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }))
   next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }))
   track.addEventListener('scroll', updateNav, { passive: true })
   updateNav()
+
+  const endpoint = slider.dataset.endpoint
+  const profile = slider.dataset.profile || 'https://www.instagram.com/flora.cultivamosconciencia/'
+  if (!endpoint) return
+
+  fetch(endpoint, { headers: { Accept: 'application/json' } })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data: { posts?: IgCard[] }) => {
+      const posts = (data.posts || []).filter((p) => p.permalink && p.img)
+      if (!posts.length) return // se mantiene el respaldo local
+      renderInstagramPosts(track, posts, profile)
+      updateNav()
+      try { ScrollTrigger.refresh() } catch {}
+    })
+    .catch(() => {/* se mantiene el respaldo local */})
+}
+
+function renderInstagramPosts(track: HTMLElement, posts: IgCard[], profile: string) {
+  const esc = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+  const clip = (s: string) => (s.length > 140 ? s.slice(0, 137).trimEnd() + '…' : s)
+  const fmt = (ts?: string) => {
+    if (!ts) return ''
+    const d = new Date(ts)
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+  }
+
+  track.innerHTML = posts
+    .map((p) => {
+      const cap = p.caption ? esc(clip(p.caption)) : 'Ver este posteo en Instagram.'
+      const href = esc(p.permalink || profile)
+      const img = esc(p.img || '')
+      const date = fmt(p.timestamp)
+      return `<li class="ig-card" role="listitem">
+        <a class="ig-card-link" href="${href}" target="_blank" rel="noopener noreferrer">
+          <span class="ig-card-media"><img src="${img}" alt="" loading="lazy" width="900" height="1100" /></span>
+          <span class="ig-card-body">
+            <span class="ig-card-caption">${cap}</span>
+            <span class="ig-card-date">${date || 'Ver en Instagram →'}</span>
+          </span>
+        </a>
+      </li>`
+    })
+    .join('')
 }
 
 // ── Welcome: relato de bienvenida con fondos que evolucionan ──
