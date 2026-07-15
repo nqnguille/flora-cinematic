@@ -41,6 +41,7 @@ function json(body: unknown, status = 200): Response {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'public, max-age=300',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }

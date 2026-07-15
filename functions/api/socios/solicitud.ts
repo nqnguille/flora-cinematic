@@ -1,8 +1,6 @@
 interface Env {
   SOLICITUDES: KVNamespace;
   NOTIFY_TOKEN?: string;
-  GUILLE_CALLMEBOT_PHONE?: string;
-  GUILLE_CALLMEBOT_APIKEY?: string;
 }
 
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
@@ -18,12 +16,12 @@ const INTENT_COPY: Record<Intent, { titulo: string; detalle: string }> = {
   entrevista: { titulo: 'SOLICITUD NUEVA — Entrevista médica', detalle: 'Todavía no tiene REPROCANN — pide coordinar la entrevista médica para tramitarlo.' },
 };
 
-// Avisa por WhatsApp a Sofi (vía el hub central de gates-analytics, ya
-// configurado con su CallMeBot) Y a Guille (CallMeBot directo, propio de
-// este proyecto) — los dos con el mismo texto y el link de aprobación
-// rápida. Cualquiera de los dos canales puede fallar sin romper el otro ni
-// la solicitud en sí.
+// Avisa vía el hub central de gates-analytics con el topic 'flora-solicitud'.
+// El hub rutea a los destinatarios configurados en su panel (hoy Guille por
+// Telegram; Sofi se suma ahí) — canal confiable, reemplaza a CallMeBot que no
+// entregaba. El aviso nunca bloquea la solicitud.
 async function notificar(env: Env, sol: { name: string; email: string; phone: string; intent: Intent }) {
+  if (!env.NOTIFY_TOKEN) return;
   const copy = INTENT_COPY[sol.intent];
   const text =
     `🌿 ${copy.titulo}\n` +
@@ -32,34 +30,15 @@ async function notificar(env: Env, sol: { name: string; email: string; phone: st
     `📱 ${sol.phone}\n` +
     `${copy.detalle}\n` +
     `Aprobar acá: https://floraong.ar/socios/admin/?ir=socios`;
-
-  const aSofi = (async () => {
-    if (!env.NOTIFY_TOKEN) return;
-    try {
-      await fetch(NOTIFY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, token: env.NOTIFY_TOKEN }),
-      });
-    } catch {
-      /* el aviso nunca bloquea la solicitud */
-    }
-  })();
-
-  const aGuille = (async () => {
-    if (!env.GUILLE_CALLMEBOT_PHONE || !env.GUILLE_CALLMEBOT_APIKEY) return;
-    try {
-      const url =
-        'https://api.callmebot.com/whatsapp.php?phone=' + encodeURIComponent(env.GUILLE_CALLMEBOT_PHONE) +
-        '&text=' + encodeURIComponent(text) +
-        '&apikey=' + encodeURIComponent(env.GUILLE_CALLMEBOT_APIKEY);
-      await fetch(url);
-    } catch {
-      /* el aviso nunca bloquea la solicitud */
-    }
-  })();
-
-  await Promise.all([aSofi, aGuille]);
+  try {
+    await fetch(NOTIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, token: env.NOTIFY_TOKEN, topic: 'flora-solicitud' }),
+    });
+  } catch {
+    /* el aviso nunca bloquea la solicitud */
+  }
 }
 
 // Alta de una solicitud desde el login de socios — antes eran links directos

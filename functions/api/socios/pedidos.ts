@@ -300,7 +300,7 @@ async function notificar(env: Env, pedido: any) {
     await fetch(NOTIFY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, token: env.NOTIFY_TOKEN }),
+      body: JSON.stringify({ text, token: env.NOTIFY_TOKEN, topic: 'flora-reserva' }),
     });
   } catch {
     /* el aviso nunca bloquea el pedido */

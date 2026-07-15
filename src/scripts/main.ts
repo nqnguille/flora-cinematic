@@ -721,39 +721,141 @@ interface IgCard {
 }
 
 function initInstagramFeed() {
+  const showcase = document.querySelector<HTMLElement>('.ig-showcase')
   const slider = document.querySelector<HTMLElement>('.ig-slider')
-  if (!slider) return
-  const track = slider.querySelector<HTMLElement>('.ig-track')
-  const prev = slider.querySelector<HTMLButtonElement>('.ig-prev')
-  const next = slider.querySelector<HTMLButtonElement>('.ig-next')
-  if (!track) return
+  if (!showcase && !slider) return
+
+  const track = slider?.querySelector<HTMLElement>('.ig-track') || null
+  const prev = slider?.querySelector<HTMLButtonElement>('.ig-prev') || null
+  const next = slider?.querySelector<HTMLButtonElement>('.ig-next') || null
 
   const step = () => {
+    if (!track) return 340
     const card = track.querySelector<HTMLElement>('.ig-card')
     return card ? card.offsetWidth + 20 : 340
   }
   const updateNav = () => {
-    if (!prev || !next) return
+    if (!track || !prev || !next) return
     const max = track.scrollWidth - track.clientWidth - 2
     prev.disabled = track.scrollLeft <= 2
     next.disabled = track.scrollLeft >= max
   }
-  prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }))
-  next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }))
-  track.addEventListener('scroll', updateNav, { passive: true })
-  updateNav()
+  if (track) {
+    prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }))
+    next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }))
+    track.addEventListener('scroll', updateNav, { passive: true })
+    updateNav()
+  }
 
-  const endpoint = slider.dataset.endpoint
-  if (!endpoint) return
+  const endpoints = [
+    showcase?.dataset.endpoint || slider?.dataset.endpoint || '/api/instagram',
+    showcase?.dataset.fallbackEndpoint,
+  ].filter(Boolean) as string[]
 
-  fetch(endpoint, { headers: { Accept: 'application/json' } })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((data: { posts?: IgCard[] }) => {
-      const posts = (data.posts || []).filter((p) => p.permalink).slice(0, 6)
-      if (!posts.length) return // se mantiene el respaldo local
-      renderInstagramEmbeds(track, posts, updateNav)
+  if (!endpoints.length) return
+
+  fetchInstagramPosts(endpoints)
+    .then(({ posts, source }) => {
+      if (!posts.length) return
+
+      if (showcase) hydrateInstagramShowcase(showcase, posts, source)
+
+      // El carrusel quedó oculto en esta versión del módulo. Si se vuelve a
+      // mostrar por CSS, conserva la capacidad de renderizar embeds reales.
+      const shouldRenderSlider = !!(slider && track && getComputedStyle(slider).display !== 'none')
+      if (shouldRenderSlider && track) renderInstagramEmbeds(track, posts, updateNav)
     })
-    .catch(() => {/* se mantiene el respaldo local */})
+    .catch(() => {
+      showcase?.classList.add('is-empty')
+    })
+}
+
+async function fetchInstagramPosts(endpoints: string[]): Promise<{ posts: IgCard[]; source: string }> {
+  let lastError: unknown = null
+  for (const endpoint of endpoints) {
+    try {
+      const r = await fetch(endpoint, { headers: { Accept: 'application/json' } })
+      if (!r.ok) throw new Error(`instagram_${r.status}`)
+      const data = await r.json() as { posts?: IgCard[]; source?: string }
+      const posts = (data.posts || [])
+        .filter((p) => p.permalink && p.img)
+        .slice(0, 9)
+      if (posts.length) return { posts, source: data.source || 'instagram' }
+    } catch (e) {
+      lastError = e
+    }
+  }
+  throw lastError || new Error('instagram_empty')
+}
+
+function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source: string) {
+  const clip = (str: string, n = 120) => (str.length > n ? str.slice(0, n - 1).trimEnd() + '…' : str)
+  const fmtType = (type?: string) =>
+    type === 'VIDEO' ? 'Reel / video real' :
+    type === 'CAROUSEL_ALBUM' ? 'Carrusel real' :
+    'Post real'
+  const fmtDate = (ts?: string) => {
+    if (!ts) return 'Instagram'
+    const d = new Date(ts)
+    if (Number.isNaN(d.getTime())) return 'Instagram'
+    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+  }
+  const addImg = (parent: HTMLElement, src: string, alt = '') => {
+    parent.querySelector('img')?.remove()
+    const img = document.createElement('img')
+    img.src = src
+    img.alt = alt
+    img.loading = 'lazy'
+    img.decoding = 'async'
+    img.referrerPolicy = 'no-referrer'
+    parent.prepend(img)
+  }
+
+  showcase.classList.add('is-live')
+  showcase.querySelectorAll<HTMLElement>('[data-ig-count]').forEach((el) => {
+    el.textContent = String(posts.length)
+  })
+  const sourceEl = showcase.querySelector<HTMLElement>('[data-ig-source]')
+  if (sourceEl) sourceEl.textContent = source === 'live' ? 'Live' : source === 'cache' ? 'Cache IG' : 'Instagram'
+
+  const main = posts[0]
+  const media = showcase.querySelector<HTMLElement>('.ig-ui-postmedia')
+  if (media && main.img) {
+    addImg(media, main.img, main.caption || 'Publicación real de Instagram de Flora')
+    media.querySelector<HTMLElement>('[data-ig-post-loader]')?.remove()
+    if (main.permalink) {
+      media.style.cursor = 'pointer'
+      media.addEventListener('click', () => window.open(main.permalink, '_blank', 'noopener,noreferrer'), { once: true })
+    }
+  }
+  const caption = showcase.querySelector<HTMLElement>('[data-ig-post-caption]')
+  if (caption) caption.textContent = clip(main.caption || 'Ver publicación real en Instagram.', 132)
+  const type = showcase.querySelector<HTMLElement>('[data-ig-post-type]')
+  if (type) type.textContent = fmtType(main.type)
+  const time = showcase.querySelector<HTMLElement>('[data-ig-post-time]')
+  if (time) time.textContent = fmtDate(main.timestamp)
+
+  showcase.querySelectorAll<HTMLAnchorElement>('[data-ig-grid-cell]').forEach((cell, i) => {
+    const post = posts[i]
+    if (!post) {
+      cell.classList.add('is-empty')
+      return
+    }
+    cell.href = post.permalink || cell.href
+    cell.setAttribute('aria-label', clip(post.caption || 'Ver post real en Instagram', 80))
+    addImg(cell, post.img || '', post.caption || 'Post real de Instagram')
+    cell.querySelector<HTMLElement>('.ig-ui-cell-loader')?.remove()
+    cell.classList.toggle('is-video', post.type === 'VIDEO')
+    let reel = cell.querySelector<SVGElement>('.ig-ui-cellreel')
+    if (post.type === 'VIDEO' && !reel) {
+      cell.insertAdjacentHTML(
+        'beforeend',
+        '<svg class="ig-ui-cellreel" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 8l6 4-6 4z"/></svg>'
+      )
+      reel = cell.querySelector<SVGElement>('.ig-ui-cellreel')
+    }
+    if (reel) reel.style.display = post.type === 'VIDEO' ? '' : 'none'
+  })
 }
 
 // Embeds oficiales de Instagram: usamos embed.js (script de instagram.com,

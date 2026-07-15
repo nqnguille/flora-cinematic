@@ -8,6 +8,32 @@ interface Env {
   SESSION_SECRET: string;
   ADMIN_EMAILS?: string;
   SUPER_ADMIN_EMAILS?: string;
+  NOTIFY_TOKEN?: string;
+}
+
+const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
+
+// Avisa vía el hub central con el topic 'flora-intento' cuando aparece un
+// prospecto NUEVO: alguien que se logueó con Google en la carta pero todavía
+// no es socio, así el equipo lo puede aprobar a mano. Solo el primer intento
+// de cada persona dispara aviso (los reintentos no re-avisan). Nunca bloquea.
+async function notificarIntento(env: Env, p: { name: string; email: string }) {
+  if (!env.NOTIFY_TOKEN) return;
+  const text =
+    `🚪 INTENTO DE INGRESO — todavía no es socia\n` +
+    `👤 ${p.name || '(sin nombre de Google)'}\n` +
+    `📧 ${p.email}\n` +
+    `Probó entrar a la carta con Google pero no está en la lista.\n` +
+    `Revisá/aprobá acá: https://floraong.ar/socios/admin/?ir=socios`;
+  try {
+    await fetch(NOTIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, token: env.NOTIFY_TOKEN, topic: 'flora-intento' }),
+    });
+  } catch {
+    /* el aviso nunca bloquea el rechazo del login */
+  }
 }
 
 // Bump esta fecha cuando el texto legal en carta.astro (#gn-tos-modal) cambie
@@ -62,6 +88,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           lastAttempt: now,
           attempts: (prev.attempts || 0) + 1,
         }));
+        // Solo el primer intento de cada prospecto genera aviso (un reintento
+        // del mismo email no debería re-avisar).
+        if (!prevRaw) await notificarIntento(env, { name: payload.name || '', email });
       } catch {
         // no bloquea el rechazo del login
       }
