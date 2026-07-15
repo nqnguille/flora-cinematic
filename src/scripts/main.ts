@@ -780,27 +780,57 @@ function loadInstagramEmbedScript(): Promise<void> {
 }
 
 function renderInstagramEmbeds(track: HTMLElement, posts: IgCard[], updateNav: () => void) {
-  const esc = (s: string) =>
-    s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+  const esc = (str: string) =>
+    str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+  const clip = (str: string) => (str.length > 140 ? str.slice(0, 137).trimEnd() + '…' : str)
 
   track.innerHTML = posts
-    .map((p) => {
+    .map((p, i) => {
       const href = esc(p.permalink || '')
-      return `<li class="ig-card ig-embed" role="listitem">
+      return `<li class="ig-card ig-embed" role="listitem" data-ig-index="${i}">
         <blockquote class="instagram-media" data-instgrm-permalink="${href}" data-instgrm-version="14" style="margin:0;width:100%;min-width:0;max-width:100%;background:#fff;border-radius:16px"></blockquote>
       </li>`
     })
     .join('')
 
+  const fallbackCard = (li: HTMLElement, post: IgCard) => {
+    const href = esc(post.permalink || 'https://www.instagram.com/flora.cultivamosconciencia/')
+    const img = esc(post.img || '')
+    const cap = esc(clip(post.caption || 'Ver este posteo en Instagram.'))
+    li.classList.remove('ig-embed')
+    li.classList.add('is-fallback', 'ig-embed-fallback')
+    li.innerHTML = `<a class="ig-card-link" href="${href}" target="_blank" rel="noopener noreferrer">
+      <span class="ig-card-media">${img ? `<img src="${img}" alt="" loading="lazy" width="900" height="1100" />` : ''}</span>
+      <span class="ig-card-body">
+        <span class="ig-card-caption">${cap}</span>
+        <span class="ig-card-cue">Ver en Instagram →</span>
+      </span>
+    </a>`
+  }
+
+  const replaceFailedEmbeds = () => {
+    track.querySelectorAll<HTMLElement>('.ig-card.ig-embed').forEach((li) => {
+      const idx = Number(li.dataset.igIndex || -1)
+      const iframe = li.querySelector<HTMLIFrameElement>('iframe')
+      const rendered = iframe?.classList.contains('instagram-media-rendered')
+      const h = iframe?.getBoundingClientRect().height || 0
+      if (!iframe || !rendered || h < 120) {
+        const post = posts[idx]
+        if (post) fallbackCard(li, post)
+      }
+    })
+  }
+
   loadInstagramEmbedScript().then(() => {
     const w = window as unknown as { instgrm?: { Embeds: { process: () => void } } }
     try { w.instgrm?.Embeds.process() } catch {}
     // Los iframes de Instagram cargan async y cambian el ancho del track;
-    // recalculamos navegación y ScrollTrigger un par de veces.
+    // recalculamos navegación y reemplazamos embeds que queden colgados.
     const refresh = () => { updateNav(); try { ScrollTrigger.refresh() } catch {} }
     setTimeout(refresh, 800)
     setTimeout(refresh, 2000)
-    setTimeout(refresh, 4000)
+    setTimeout(() => { replaceFailedEmbeds(); refresh() }, 4500)
+    setTimeout(() => { replaceFailedEmbeds(); refresh() }, 8000)
   })
 }
 
