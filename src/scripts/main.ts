@@ -790,15 +790,28 @@ async function fetchInstagramPosts(endpoints: string[]): Promise<{ posts: IgCard
 
 function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source: string) {
   const clip = (str: string, n = 120) => (str.length > n ? str.slice(0, n - 1).trimEnd() + '…' : str)
-  const fmtType = (type?: string) =>
-    type === 'VIDEO' ? 'Reel / video real' :
-    type === 'CAROUSEL_ALBUM' ? 'Carrusel real' :
-    'Post real'
-  const fmtDate = (ts?: string) => {
-    if (!ts) return 'Instagram'
+  // Número pseudo-aleatorio pero ESTABLE por post (mismo permalink → mismo valor).
+  const seed = (s: string) => {
+    let h = 2166136261
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
+    return (h >>> 0)
+  }
+  const nf = new Intl.NumberFormat('es-AR')
+  const fakeLikes = (p: IgCard) => 90 + (seed(p.permalink || p.img || '') % 520)      // 90–609
+  const fakeComments = (p: IgCard) => 4 + (seed((p.permalink || '') + 'c') % 44)       // 4–47
+  const relTime = (ts?: string) => {
+    if (!ts) return 'Hace poco'
     const d = new Date(ts)
-    if (Number.isNaN(d.getTime())) return 'Instagram'
-    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+    if (Number.isNaN(d.getTime())) return 'Hace poco'
+    const diff = Date.now() - d.getTime()
+    const h = Math.floor(diff / 3.6e6)
+    if (h < 1) return 'Hace instantes'
+    if (h < 24) return `Hace ${h} h`
+    const days = Math.floor(h / 24)
+    if (days < 7) return `Hace ${days} d`
+    const weeks = Math.floor(days / 7)
+    if (weeks < 5) return `Hace ${weeks} sem`
+    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
   }
   const addImg = (parent: HTMLElement, src: string, alt = '') => {
     parent.querySelector('img')?.remove()
@@ -818,43 +831,30 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
   const sourceEl = showcase.querySelector<HTMLElement>('[data-ig-source]')
   if (sourceEl) sourceEl.textContent = source === 'live' ? 'Live' : source === 'cache' ? 'Cache IG' : 'Instagram'
 
-  const main = posts[0]
-  const media = showcase.querySelector<HTMLElement>('.ig-ui-postmedia')
-  if (media && main.img) {
-    addImg(media, main.img, main.caption || 'Publicación real de Instagram de Flora')
-    media.querySelector<HTMLElement>('[data-ig-post-loader]')?.remove()
-    if (main.permalink) {
-      media.style.cursor = 'pointer'
-      media.addEventListener('click', () => window.open(main.permalink, '_blank', 'noopener,noreferrer'), { once: true })
-    }
-  }
-  const caption = showcase.querySelector<HTMLElement>('[data-ig-post-caption]')
-  if (caption) caption.textContent = clip(main.caption || 'Ver publicación real en Instagram.', 132)
-  const type = showcase.querySelector<HTMLElement>('[data-ig-post-type]')
-  if (type) type.textContent = fmtType(main.type)
-  const time = showcase.querySelector<HTMLElement>('[data-ig-post-time]')
-  if (time) time.textContent = fmtDate(main.timestamp)
+  // Cada celular = un post real distinto (posts[0] y posts[1]).
+  const phones = showcase.querySelectorAll<HTMLElement>('[data-ig-phone]')
+  phones.forEach((phone) => {
+    const idx = Number(phone.dataset.igPhone || 0)
+    const post = posts[idx] || posts[posts.length - 1]
+    if (!post) { phone.closest('.ig-phone')?.classList.add('is-empty'); return }
 
-  showcase.querySelectorAll<HTMLAnchorElement>('[data-ig-grid-cell]').forEach((cell, i) => {
-    const post = posts[i]
-    if (!post) {
-      cell.classList.add('is-empty')
-      return
+    const media = phone.querySelector<HTMLElement>('[data-ig-media]')
+    if (media && post.img) {
+      addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
+      media.querySelector<HTMLElement>('[data-ig-loader]')?.remove()
+      if (media instanceof HTMLAnchorElement && post.permalink) media.href = post.permalink
+      const dots = media.querySelector<HTMLElement>('[data-ig-carddot]')
+      if (dots) dots.hidden = post.type !== 'CAROUSEL_ALBUM'
     }
-    cell.href = post.permalink || cell.href
-    cell.setAttribute('aria-label', clip(post.caption || 'Ver post real en Instagram', 80))
-    addImg(cell, post.img || '', post.caption || 'Post real de Instagram')
-    cell.querySelector<HTMLElement>('.ig-ui-cell-loader')?.remove()
-    cell.classList.toggle('is-video', post.type === 'VIDEO')
-    let reel = cell.querySelector<SVGElement>('.ig-ui-cellreel')
-    if (post.type === 'VIDEO' && !reel) {
-      cell.insertAdjacentHTML(
-        'beforeend',
-        '<svg class="ig-ui-cellreel" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 8l6 4-6 4z"/></svg>'
-      )
-      reel = cell.querySelector<SVGElement>('.ig-ui-cellreel')
-    }
-    if (reel) reel.style.display = post.type === 'VIDEO' ? '' : 'none'
+
+    const likes = phone.querySelector<HTMLElement>('[data-ig-likes]')
+    if (likes) likes.textContent = nf.format(fakeLikes(post))
+    const caption = phone.querySelector<HTMLElement>('[data-ig-caption]')
+    if (caption) caption.textContent = clip(post.caption || 'Ver publicación real en Instagram.', 120)
+    const comments = phone.querySelector<HTMLElement>('[data-ig-comments]')
+    if (comments) comments.textContent = `Ver los ${fakeComments(post)} comentarios`
+    const time = phone.querySelector<HTMLElement>('[data-ig-time]')
+    if (time) time.textContent = relTime(post.timestamp)
   })
 }
 

@@ -1045,12 +1045,12 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   width: clamp(196px, 21vw, 272px);
   transform-origin: center;
 }
-.ig-phone--post {
-  z-index: 2;
+.ig-phone--a {
+  z-index: 3;
   transform: rotate(-5deg) translateY(14px);
 }
-.ig-phone--profile {
-  z-index: 3;
+.ig-phone--b {
+  z-index: 2;
   transform: rotate(5deg) translateY(-14px);
 }
 .ig-phone-frame {
@@ -1097,6 +1097,10 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   color: #111;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", var(--font-ui), sans-serif;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.ig-phone-screen.ig-post {
+  display: flex;
+  flex-direction: column;
 }
 .ig-phone-gloss {
   pointer-events: none;
@@ -1212,9 +1216,12 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   position: relative;
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
   aspect-ratio: 1;
   overflow: hidden;
   background: var(--ink);
+  color: inherit;
+  text-decoration: none;
 }
 .ig-ui-postmedia img {
   position: absolute;
@@ -1260,12 +1267,12 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 9px 12px 5px;
+  padding: 8px 12px 4px;
   color: #111;
 }
 .ig-ui-actions svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   display: block;
 }
 .ig-ic-like { color: #ed4956; }
@@ -1275,14 +1282,12 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .ig-ui-comments,
 .ig-ui-time {
   padding: 0 12px;
-  font-size: 8.5px;
-  line-height: 1.35;
+  font-size: 8px;
+  line-height: 1.28;
 }
 .ig-ui-likes {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  font-weight: 700;
 }
 .ig-ui-likes b,
 .ig-ui-caption b { font-weight: 800; color: #111; }
@@ -1301,16 +1306,22 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 }
 .ig-ui-likeavatars i:nth-child(2) { margin-left: -5px; background: var(--fl-violet); }
 .ig-ui-likeavatars i:nth-child(3) { margin-left: -5px; background: #f08a5d; }
-.ig-ui-caption { color: rgba(17,17,17,0.78); }
+.ig-ui-caption {
+  color: rgba(17,17,17,0.78);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .ig-ui-comments {
-  margin-top: 5px;
+  margin-top: 4px;
   color: rgba(17,17,17,0.46);
 }
 .ig-ui-time {
-  margin-top: 4px;
+  margin-top: 3px;
   text-transform: uppercase;
   color: rgba(17,17,17,0.38);
-  font-size: 7px;
+  font-size: 6.8px;
   letter-spacing: 0.04em;
 }
 .ig-ui-profile {
@@ -1447,10 +1458,7 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
 }
 .ig-ui-nav {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  margin-top: auto;
   height: 39px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -1555,10 +1563,10 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
     margin-inline: -24px;
   }
   .ig-phone { width: min(54vw, 218px); }
-  .ig-phone--post {
+  .ig-phone--a {
     transform: rotate(-5deg) translate(18px, 44px);
   }
-  .ig-phone--profile {
+  .ig-phone--b {
     transform: rotate(5deg) translate(-18px, 6px);
   }
   .ig-nav { display: none; }
