@@ -791,7 +791,13 @@ async function fetchInstagramPosts(endpoints: string[]): Promise<{ posts: IgCard
 
 // Carrusel deslizable dentro del celular: swipe con scroll-snap + flechas
 // como IG web. Los puntitos de la fila de acciones siguen la foto activa.
-function buildPhoneCarousel(media: HTMLElement, dots: HTMLElement | null, slides: string[], caption: string) {
+function buildPhoneCarousel(
+  media: HTMLElement,
+  dots: HTMLElement | null,
+  slides: string[],
+  caption: string,
+  autoplayOffset = 0
+) {
   media.querySelector('img')?.remove()
   media.querySelector('.ig-ui-slides')?.remove()
 
@@ -849,6 +855,52 @@ function buildPhoneCarousel(media: HTMLElement, dots: HTMLElement | null, slides
     },
     { passive: true }
   )
+
+  // Autoplay: avanza cada 2 s cuando el celular está a la vista y vuelve al
+  // inicio tras la última foto. Se frena con el mouse encima o al deslizar.
+  const AUTOPLAY_MS = 2000
+  let timer = 0
+  let paused = false
+  const step = () => {
+    if (paused || document.hidden) return
+    const idx = Math.round(track.scrollLeft / track.clientWidth)
+    const nextIdx = idx >= slides.length - 1 ? 0 : idx + 1
+    track.scrollTo({ left: nextIdx * track.clientWidth, behavior: 'smooth' })
+  }
+  const start = () => {
+    if (timer) return
+    timer = window.setTimeout(() => {
+      timer = window.setInterval(step, AUTOPLAY_MS)
+    }, autoplayOffset)
+  }
+  const stop = () => {
+    if (timer) {
+      clearTimeout(timer)
+      clearInterval(timer)
+      timer = 0
+    }
+  }
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    media.addEventListener('pointerenter', (e) => {
+      if (e.pointerType === 'mouse') paused = true
+    })
+    media.addEventListener('pointerleave', (e) => {
+      if (e.pointerType === 'mouse') paused = false
+    })
+    track.addEventListener('touchstart', () => { paused = true }, { passive: true })
+    track.addEventListener(
+      'touchend',
+      () => {
+        window.setTimeout(() => { paused = false }, 4000)
+      },
+      { passive: true }
+    )
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((en) => (en.isIntersecting ? start() : stop())),
+      { threshold: 0.35 }
+    )
+    io.observe(media)
+  }
 }
 
 function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source: string) {
@@ -906,7 +958,7 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
     if (media && post.img) {
       const slides = post.children && post.children.length > 1 ? post.children.slice(0, 10) : null
       if (slides) {
-        buildPhoneCarousel(media, dots, slides, post.caption || '')
+        buildPhoneCarousel(media, dots, slides, post.caption || '', idx * 1000)
       } else {
         addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
       }
