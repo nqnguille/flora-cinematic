@@ -1012,7 +1012,7 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   align-items: center;
   justify-content: center;
   gap: clamp(8px, 1.6vw, 26px);
-  min-height: clamp(440px, 44vw, 600px);
+  min-height: clamp(480px, 48vw, 660px);
   isolation: isolate;
 }
 .ig-devices::before {
@@ -1042,7 +1042,7 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .ig-phone {
   position: relative;
   flex: 0 0 auto;
-  width: clamp(196px, 21vw, 272px);
+  width: clamp(214px, 23vw, 300px);
   transform-origin: center;
   backface-visibility: hidden;
 }
@@ -1557,6 +1557,9 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
     padding: 0 clamp(20px, 7vw, 28px);
     margin-bottom: 0;
   }
+  /* Los celulares sangran a propósito: que no inflen la columna del grid
+     y empujen el texto fuera del viewport */
+  .ig-showcase > * { min-width: 0; }
   .ig-showcase-text { max-width: none; }
   .ig-showcase-actions { align-items: stretch; }
   .ig-showcase-actions .ig-cta {
@@ -1567,10 +1570,10 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   .ig-devices {
     align-items: flex-start;
     gap: 0;
-    min-height: 510px;
+    min-height: 565px;
     margin-inline: -24px;
   }
-  .ig-phone { width: min(54vw, 218px); }
+  .ig-phone { width: min(58vw, 240px); }
   .ig-phone--a {
     transform: translate(18px, 44px);
   }
