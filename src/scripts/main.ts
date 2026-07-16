@@ -843,9 +843,9 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
       addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
       media.querySelector<HTMLElement>('[data-ig-loader]')?.remove()
       if (media instanceof HTMLAnchorElement && post.permalink) media.href = post.permalink
-      const dots = media.querySelector<HTMLElement>('[data-ig-carddot]')
-      if (dots) dots.hidden = post.type !== 'CAROUSEL_ALBUM'
     }
+    const dots = phone.querySelector<HTMLElement>('[data-ig-carddot]')
+    if (dots) dots.hidden = post.type !== 'CAROUSEL_ALBUM'
 
     const likes = phone.querySelector<HTMLElement>('[data-ig-likes]')
     if (likes) likes.textContent = nf.format(fakeLikes(post))

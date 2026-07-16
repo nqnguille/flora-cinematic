@@ -1218,7 +1218,8 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  aspect-ratio: 1;
+  /* Las placas de Flora son 4:5; con 1:1 se recortaba el texto de arriba/abajo */
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   background: var(--ink);
   color: inherit;
@@ -1245,26 +1246,25 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   font-weight: 800;
   text-align: center;
 }
+/* Puntitos del carrusel: centrados en la fila de acciones (como IG real),
+   así no tapan el texto de la placa */
 .ig-ui-carddot {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  top: 50%;
   display: flex;
   gap: 4px;
-  transform: translateX(-50%);
-  padding: 4px 6px;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.22);
-  backdrop-filter: blur(8px);
+  transform: translate(-50%, -50%);
 }
 .ig-ui-carddot i {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.55);
+  background: rgba(17,17,17,0.22);
 }
-.ig-ui-carddot i.on { background: #fff; }
+.ig-ui-carddot i.on { background: #2395f3; }
 .ig-ui-actions {
+  position: relative;
   display: flex;
   gap: 10px;
   align-items: center;
@@ -1308,6 +1308,7 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
 .ig-ui-likeavatars i:nth-child(2) { margin-left: -5px; background: var(--fl-violet); }
 .ig-ui-likeavatars i:nth-child(3) { margin-left: -5px; background: #f08a5d; }
 .ig-ui-caption {
+  min-height: 0;
   color: rgba(17,17,17,0.78);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -1570,6 +1571,11 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   .ig-phone--b {
     transform: translate(-18px, 6px);
   }
+  /* Con la imagen 4:5 el alto no alcanza para todo: en pantallas chicas
+     se recorta el caption a 2 líneas y se ocultan comentarios y fecha */
+  .ig-post .ig-ui-caption { -webkit-line-clamp: 2; }
+  .ig-post .ig-ui-comments,
+  .ig-post .ig-ui-time { display: none; }
   .ig-nav { display: none; }
   .ig-card { width: 80vw; }
 }
