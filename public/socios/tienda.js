@@ -12,7 +12,41 @@
   let ACTIVO = null         // reserva activa del socio (pendiente/listo)
   let EDIT = null           // copia editable de los ítems del activo (id|formato → cantidad)
   const TOPE = { flor: 50, preroll: 20, producto: 10 }
-  const carrito = new Map() // id → cantidad (selección local de esta página)
+  const carrito = new Map() // id → cantidad (productos de ESTA categoría)
+
+  // Carrito COMPARTIDO con la carta de flores y las demás categorías vía
+  // localStorage: lo que el socio suma en cualquier página sobrevive la
+  // navegación y se envía todo junto al confirmar, desde donde sea.
+  // (Antes cada página tenía su carrito en memoria: ir de /extracciones/ a
+  // la carta de flores perdía el cartucho recién agregado, por ejemplo.)
+  const CART_LS = 'flora:carrito'
+  let STORED = []   // entradas crudas del storage, hasta clasificar
+  let foraneos = [] // ítems de OTRAS páginas: {id, formato, cantidad, nombre}
+  try { STORED = JSON.parse(localStorage.getItem(CART_LS) || '[]') } catch { STORED = [] }
+
+  // Con ITEMS ya cargado: lo de esta categoría va al stepper local (carrito),
+  // el resto (flores de la carta, productos de otras categorías) a foraneos.
+  function repartirCarrito() {
+    carrito.clear()
+    foraneos = []
+    for (const e of STORED) {
+      const n = Math.floor(Number(e.cantidad))
+      if (!(n > 0)) continue
+      if (e.formato === 'producto' && ITEMS.some((x) => x.id === e.id)) carrito.set(String(e.id), n)
+      else foraneos.push({ id: String(e.id), formato: String(e.formato || 'producto'), cantidad: n, nombre: String(e.nombre || e.id) })
+    }
+  }
+  function persistirCarrito() {
+    const entries = [...carrito.entries()]
+      .filter(([, q]) => q > 0)
+      .map(([id, cantidad]) => {
+        const it = ITEMS.find((x) => x.id === id)
+        return { id, formato: 'producto', cantidad, nombre: it ? (it.detalle ? `${it.label} (${it.detalle})` : it.label) : id }
+      })
+      .concat(foraneos.filter((f) => f.cantidad > 0))
+    STORED = entries
+    try { localStorage.setItem(CART_LS, JSON.stringify(entries)) } catch { /* memoria alcanza */ }
+  }
 
   // ── Panel de carrito (drawer): se crea una sola vez, en todas las páginas ──
   function montarCart() {
@@ -65,12 +99,12 @@
     const selSec = document.getElementById('td-cart-sel-sec')
     const actSec = document.getElementById('td-cart-activo-sec')
     const vacio = document.getElementById('td-cart-vacio')
-    // selección local
+    // selección local + lo sumado en otras páginas (carta de flores, etc.)
     const sel = [...carrito.entries()].filter(([, q]) => q > 0)
     let total = 0
-    if (sel.length) {
+    if (sel.length || foraneos.length) {
       selSec.hidden = false
-      document.getElementById('td-cart-sel').innerHTML = sel.map(([id, qty]) => {
+      const filas = sel.map(([id, qty]) => {
         const it = ITEMS.find((x) => x.id === id)
         if (!it) return ''
         total += qty * it.precio
@@ -80,8 +114,18 @@
             ${stepperHtml('id', id, qty, 10)}
             <span class="td-cart-row-precio">${fmt(qty * it.precio)}</span>
           </div>`
-      }).join('')
-      document.getElementById('td-cart-total').textContent = fmt(total)
+      })
+      const filasForaneas = foraneos.map((f, idx) => {
+        const unidad = f.formato === 'flor' ? ' g' : f.formato === 'preroll' ? ' u' : ''
+        return `
+          <div class="td-cart-row">
+            <span class="td-cart-row-nombre">${esc(f.nombre)}${f.formato === 'preroll' ? ' <i>preroll</i>' : ''}</span>
+            <span class="td-cart-row-cant">× ${f.cantidad}${unidad}</span>
+            <button type="button" class="td-cart-quitar" data-foraneo="${idx}" aria-label="Quitar ${esc(f.nombre)}">✕</button>
+          </div>`
+      })
+      document.getElementById('td-cart-sel').innerHTML = filas.concat(filasForaneas).join('')
+      document.getElementById('td-cart-total').textContent = total ? fmt(total) : '—'
     } else {
       selSec.hidden = true
     }
@@ -284,6 +328,7 @@
   function actualizarBadge() {
     let n = 0
     for (const [, qty] of carrito) n += qty
+    n += foraneos.reduce((a, f) => a + f.cantidad, 0)
     if (ACTIVO) n += ACTIVO.items.reduce((a, i) => a + i.cantidad, 0)
     document.querySelectorAll('[data-carrito-n]').forEach((el) => {
       el.textContent = n
@@ -315,13 +360,25 @@
     const next = Math.max(0, Math.min(10, (carrito.get(id) || 0) + d))
     if (next === 0) carrito.delete(id)
     else carrito.set(id, next)
+    persistirCarrito()
     render()
     if (document.getElementById('td-cart')?.classList.contains('is-open')) renderCart()
+  })
+
+  // Quitar del carrito un ítem sumado en otra página (flores de la carta, etc.)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.td-cart-quitar')
+    if (!btn) return
+    foraneos.splice(Number(btn.getAttribute('data-foraneo')), 1)
+    persistirCarrito()
+    renderCart()
+    actualizarBadge()
   })
 
   // Logout desde la topbar o el drawer
   document.addEventListener('click', async (e) => {
     if (!e.target.closest('.nav-logout, .nav-logout-action')) return
+    try { localStorage.removeItem(CART_LS) } catch { /* sin storage */ }
     await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
     location.reload()
   })
@@ -362,6 +419,7 @@
     const items = [...carrito.entries()]
       .filter(([, q]) => q > 0)
       .map(([id, cantidad]) => ({ id, formato: 'producto', cantidad }))
+      .concat(foraneos.filter((f) => f.cantidad > 0).map(({ id, formato, cantidad }) => ({ id, formato, cantidad })))
     try {
       const res = await fetch('/api/socios/pedidos', {
         method: 'POST',
@@ -375,6 +433,8 @@
         return
       }
       carrito.clear()
+      foraneos = []
+      persistirCarrito()
       ACTIVO = data.pedido
       render()
       renderCart()
@@ -405,6 +465,7 @@
     document.body.classList.add('is-socio')
     saludar()
     ITEMS = Array.isArray(precios[CFG.categoria]) ? precios[CFG.categoria] : []
+    repartirCarrito()
     const login = document.getElementById('td-login')
     if (login) login.hidden = true
     const content = document.getElementById('td-content')

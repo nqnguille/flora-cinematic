@@ -592,6 +592,32 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* ── Pedido (carrito + pedido activo) ── */
     const cart = new Map() // "id|formato" → cantidad
     let activePedido = null // pedido pendiente/listo del socio, si hay
+
+    // Carrito COMPARTIDO con la tienda (aceites/cremas/extracciones) vía
+    // localStorage: lo que el socio suma en una página sobrevive la
+    // navegación y se envía junto, sin importar desde dónde confirme.
+    // (Antes cada página tenía su carrito en memoria y se perdía al navegar.)
+    const CART_LS = 'flora:carrito'
+    const cartNames = new Map() // key → nombre de ítems ajenos a esta carta (productos)
+    function loadCartStored() {
+      try {
+        for (const e of JSON.parse(localStorage.getItem(CART_LS) || '[]')) {
+          const key = `${e.id}|${e.formato}`
+          const n = Math.floor(Number(e.cantidad))
+          if (n > 0) {
+            cart.set(key, n)
+            if (e.nombre) cartNames.set(key, String(e.nombre))
+          }
+        }
+      } catch { /* sin storage disponible: el carrito queda en memoria */ }
+    }
+    function persistCart() {
+      try {
+        localStorage.setItem(CART_LS, JSON.stringify(
+          cartItems().map(({ id, formato, cantidad, nombre }) => ({ id, formato, cantidad, nombre }))
+        ))
+      } catch { /* modo privado o storage lleno: seguimos en memoria */ }
+    }
     const QTY_MAX = { flor: 50, preroll: 20 }
     // Tope de la reserva completa (no por genética): ninguna reserva puede
     // superar 40 g de flor ni 40 prerolls en total, bajo ningún concepto.
@@ -626,11 +652,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         label = ESTADO_TXT[activePedido.estado] || 'Tenés una reserva en curso'
         count = activePedido.items.reduce((s, i) => s + (i.cantidad || 0), 0)
       } else if (cart.size) {
-        let g = 0, u = 0
-        for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : (u += c)
+        let g = 0, u = 0, p = 0
+        for (const [k, c] of cart) k.endsWith('|flor') ? (g += c) : k.endsWith('|preroll') ? (u += c) : (p += c)
         trigger.classList.remove('is-listo')
-        label = 'Tu reserva: ' + [g ? `${g} g de flores` : '', u ? `${u} preroll${u > 1 ? 's' : ''}` : ''].filter(Boolean).join(' + ')
-        count = g + u
+        label = 'Tu reserva: ' + [
+          g ? `${g} g de flores` : '',
+          u ? `${u} preroll${u > 1 ? 's' : ''}` : '',
+          p ? `${p} producto${p > 1 ? 's' : ''}` : '',
+        ].filter(Boolean).join(' + ')
+        count = g + u + p
       } else {
         // Visible desde el arranque, aunque esté vacío: así el socio sabe que
         // puede tocar + en una tarjeta para empezar a armar su reserva.
@@ -648,10 +678,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return [...cart.entries()].map(([key, cantidad]) => {
         const [id, formato] = key.split('|')
         const g = allGeneticas.find((x) => x.id === id)
-        return { id, formato, cantidad, nombre: g ? g.nombre : id }
+        return { id, formato, cantidad, nombre: g ? g.nombre : cartNames.get(key) || id }
       })
     }
     function fmtItem(i) {
+      if (i.formato === 'producto') return `${i.cantidad} × ${i.nombre}`
       return `${i.cantidad} ${i.formato === 'flor' ? 'g' : 'u'} — ${i.nombre}${i.formato === 'preroll' ? ' (preroll)' : ''}`
     }
 
@@ -672,6 +703,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const next = Math.min(maxForKey, Math.max(0, (cart.get(key) || 0) + Number(btn.getAttribute('data-q'))))
       if (next === 0) cart.delete(key)
       else cart.set(key, next)
+      persistCart()
       syncQty(key)
       // Armando la reserva el carrusel espera mucho más (que no se lleve la tarjeta)
       pauseTouchSoon(20000)
@@ -786,6 +818,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (res.ok && data.ok) {
           const keys = [...cart.keys()]
           cart.clear()
+          persistCart()
           keys.forEach(syncQty)
           activePedido = data.pedido
           setPedidoMode()
@@ -857,6 +890,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       else if (e.target.id === 'gn-pedido-cancel-no') openModal()
       else if (e.target.classList.contains('gn-modal-del')) {
         cart.delete(e.target.getAttribute('data-key'))
+        persistCart()
         syncQty(e.target.getAttribute('data-key'))
         if (cart.size) openModal()
         else closeModal()
@@ -880,9 +914,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       allGeneticas = [...list].sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' }))
       document.getElementById('socios-login').hidden = true
       document.getElementById('gn-content').hidden = false
+      loadCartStored()
       buildFilters()
       applyFilters()
       startCarousel()
+      updateCartBar()
       loadPedidos()
     }
 
@@ -2048,19 +2084,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-meter-fill, .gn-item-img { animation: none !important; transition: none !important; }
   }
 
-  @media (max-width: 760px) {
-    /* Alto DEFINIDO (no auto): con height:auto el contenedor flex no tenía
-       espacio "sobrante" que repartir y .gn-track (flex:1 1 auto) no podía
-       crecer — colapsaba al alto de su contenido (0, sin viewport de donde
-       heredar %). Con 100svh fijo, .gn-track sí llena lo que topbar+pagefoot
-       no usan. overflow:visible deja que un contenido excepcionalmente alto
-       siga empujando el scroll de la página en vez de recortarse. */
-    .gn-content {
-      height: 100svh;
-      overflow: visible;
-      gap: 10px;
-    }
-    /* Topbar en 2 renglones: logo + controles arriba, filtros abajo */
+  /* Topbar en 2 renglones (logo + controles arriba, filtros abajo) mucho
+     antes que el layout mobile: en una fila los filtros solo entran en
+     pantallas muy anchas — cuando no entraban, se deslizaban POR DEBAJO
+     del carrito y los controles (el carrito quedaba pisando "Sabores"). */
+  @media (max-width: 1680px) {
     .gn-topbar { flex-wrap: wrap; row-gap: 0.6rem; margin-bottom: 2px; }
     .gn-logo-link { order: 1; }
     .gn-topbar-right { order: 2; }
@@ -2078,6 +2106,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
     }
     .gn-filters::-webkit-scrollbar { display: none; }
+  }
+
+  @media (max-width: 760px) {
+    /* Alto DEFINIDO (no auto): con height:auto el contenedor flex no tenía
+       espacio "sobrante" que repartir y .gn-track (flex:1 1 auto) no podía
+       crecer — colapsaba al alto de su contenido (0, sin viewport de donde
+       heredar %). Con 100svh fijo, .gn-track sí llena lo que topbar+pagefoot
+       no usan. overflow:visible deja que un contenido excepcionalmente alto
+       siga empujando el scroll de la página en vez de recortarse. */
+    .gn-content {
+      height: 100svh;
+      overflow: visible;
+      gap: 10px;
+    }
     .gn-seg-label { padding-left: 0.5rem; }
     .gn-seg-btn { padding: 0.35rem 0.85rem; font-size: 0.88rem; }
     .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }

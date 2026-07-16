@@ -290,6 +290,19 @@ body.is-socio .td-pub-socios, body.is-socio .td-pub-cta { display: none; }
 .td-cart-row-nombre i { font-style: normal; font-weight: 400; color: var(--td-muted, rgba(244,241,247,0.55)); font-size: 0.8rem; }
 .td-cart-row-precio { font-size: 0.9rem; font-weight: 700; color: var(--td-green, #3cb492); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .td-cart-row-cant { font-weight: 700; color: var(--td-green, #3cb492); white-space: nowrap; }
+.td-cart-quitar {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: 1px solid var(--td-line, rgba(244,241,247,0.18));
+  border-radius: 8px;
+  color: rgba(242, 129, 138, 0.9);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.td-cart-quitar:hover { border-color: rgba(242, 129, 138, 0.6); }
 .td-cart-row .td-stepper { margin: 0; gap: 8px; }
 .td-cart-row .td-step-btn { width: 26px; height: 18px; font-size: 0.85rem; }
 .td-cart-total {
