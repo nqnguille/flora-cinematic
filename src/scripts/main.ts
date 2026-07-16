@@ -858,7 +858,7 @@ function buildPhoneCarousel(
 
   // Autoplay: avanza cada 2 s cuando el celular está a la vista y vuelve al
   // inicio tras la última foto. Se frena con el mouse encima o al deslizar.
-  const AUTOPLAY_MS = 2000
+  const AUTOPLAY_MS = 3000
   let timer = 0
   let paused = false
   const step = () => {
@@ -958,7 +958,7 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
     if (media && post.img) {
       const slides = post.children && post.children.length > 1 ? post.children.slice(0, 10) : null
       if (slides) {
-        buildPhoneCarousel(media, dots, slides, post.caption || '', idx * 1000)
+        buildPhoneCarousel(media, dots, slides, post.caption || '', idx * 1500)
       } else {
         addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
       }
