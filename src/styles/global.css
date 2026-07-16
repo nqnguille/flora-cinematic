@@ -1044,14 +1044,15 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   flex: 0 0 auto;
   width: clamp(196px, 21vw, 272px);
   transform-origin: center;
+  backface-visibility: hidden;
 }
 .ig-phone--a {
   z-index: 3;
-  transform: rotate(-5deg) translateY(14px);
+  transform: translateY(18px);
 }
 .ig-phone--b {
   z-index: 2;
-  transform: rotate(5deg) translateY(-14px);
+  transform: translateY(-18px);
 }
 .ig-phone-frame {
   position: relative;
@@ -1564,10 +1565,10 @@ a, button, [role="button"], label[for], summary{ cursor: pointer; }
   }
   .ig-phone { width: min(54vw, 218px); }
   .ig-phone--a {
-    transform: rotate(-5deg) translate(18px, 44px);
+    transform: translate(18px, 44px);
   }
   .ig-phone--b {
-    transform: rotate(5deg) translate(-18px, 6px);
+    transform: translate(-18px, 6px);
   }
   .ig-nav { display: none; }
   .ig-card { width: 80vw; }
