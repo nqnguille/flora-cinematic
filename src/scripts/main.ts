@@ -718,6 +718,7 @@ interface IgCard {
   permalink?: string
   timestamp?: string
   type?: string
+  children?: string[]
 }
 
 function initInstagramFeed() {
@@ -788,6 +789,68 @@ async function fetchInstagramPosts(endpoints: string[]): Promise<{ posts: IgCard
   throw lastError || new Error('instagram_empty')
 }
 
+// Carrusel deslizable dentro del celular: swipe con scroll-snap + flechas
+// como IG web. Los puntitos de la fila de acciones siguen la foto activa.
+function buildPhoneCarousel(media: HTMLElement, dots: HTMLElement | null, slides: string[], caption: string) {
+  media.querySelector('img')?.remove()
+  media.querySelector('.ig-ui-slides')?.remove()
+
+  const track = document.createElement('div')
+  track.className = 'ig-ui-slides'
+  slides.forEach((src, i) => {
+    const img = document.createElement('img')
+    img.src = src
+    img.alt = i === 0 ? caption || 'Publicación real de Instagram de Flora' : ''
+    img.loading = i === 0 ? 'eager' : 'lazy'
+    img.decoding = 'async'
+    img.referrerPolicy = 'no-referrer'
+    img.draggable = false
+    track.appendChild(img)
+  })
+  media.prepend(track)
+
+  const chev = (dir: number) =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="${dir < 0 ? '15 18 9 12 15 6' : '9 18 15 12 9 6'}"/></svg>`
+  const mkNav = (dir: number) => {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.className = `ig-ui-slidenav ig-ui-slidenav--${dir < 0 ? 'prev' : 'next'}`
+    b.setAttribute('aria-label', dir < 0 ? 'Foto anterior' : 'Foto siguiente')
+    b.innerHTML = chev(dir)
+    b.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      track.scrollBy({ left: dir * track.clientWidth, behavior: 'smooth' })
+    })
+    media.appendChild(b)
+    return b
+  }
+  const prev = mkNav(-1)
+  const next = mkNav(1)
+
+  if (dots) {
+    dots.innerHTML = slides.map((_, i) => (i === 0 ? '<i class="on"></i>' : '<i></i>')).join('')
+    dots.hidden = false
+  }
+
+  const sync = () => {
+    const idx = Math.min(slides.length - 1, Math.max(0, Math.round(track.scrollLeft / track.clientWidth)))
+    dots?.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === idx))
+    prev.hidden = idx <= 0
+    next.hidden = idx >= slides.length - 1
+  }
+  sync()
+  let raf = 0
+  track.addEventListener(
+    'scroll',
+    () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(sync)
+    },
+    { passive: true }
+  )
+}
+
 function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source: string) {
   const clip = (str: string, n = 120) => (str.length > n ? str.slice(0, n - 1).trimEnd() + '…' : str)
   // Número pseudo-aleatorio pero ESTABLE por post (mismo permalink → mismo valor).
@@ -839,13 +902,20 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
     if (!post) { phone.closest('.ig-phone')?.classList.add('is-empty'); return }
 
     const media = phone.querySelector<HTMLElement>('[data-ig-media]')
+    const dots = phone.querySelector<HTMLElement>('[data-ig-carddot]')
     if (media && post.img) {
-      addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
+      const slides = post.children && post.children.length > 1 ? post.children.slice(0, 10) : null
+      if (slides) {
+        buildPhoneCarousel(media, dots, slides, post.caption || '')
+      } else {
+        addImg(media, post.img, post.caption || 'Publicación real de Instagram de Flora')
+      }
       media.querySelector<HTMLElement>('[data-ig-loader]')?.remove()
       if (media instanceof HTMLAnchorElement && post.permalink) media.href = post.permalink
+      if (dots && !slides) dots.hidden = post.type !== 'CAROUSEL_ALBUM'
+    } else if (dots) {
+      dots.hidden = post.type !== 'CAROUSEL_ALBUM'
     }
-    const dots = phone.querySelector<HTMLElement>('[data-ig-carddot]')
-    if (dots) dots.hidden = post.type !== 'CAROUSEL_ALBUM'
 
     const likes = phone.querySelector<HTMLElement>('[data-ig-likes]')
     if (likes) likes.textContent = nf.format(fakeLikes(post))

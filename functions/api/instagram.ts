@@ -18,7 +18,7 @@ interface Env {
   IG_TOKEN?: string;
 }
 
-const POSTS_KEY = 'instagram:posts';
+const POSTS_KEY = 'instagram:posts_v2'; // v2: carruseles con children
 const POSTS_TS_KEY = 'instagram:posts_ts';
 const TOKEN_KEY = 'instagram:token';
 const TOKEN_TS_KEY = 'instagram:token_ts';
@@ -33,6 +33,8 @@ interface Card {
   permalink: string;
   timestamp: string;
   type: string;
+  /** Fotos internas del carrusel (solo los posts que muestran los celulares) */
+  children?: string[];
 }
 
 function json(body: unknown, status = 200): Response {
@@ -98,16 +100,37 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     if (!res.ok) throw new Error(`graph_${res.status}`);
     const data = await res.json<{ data?: Array<Record<string, string>> }>();
 
-    const posts: Card[] = (data.data || [])
-      .filter((m) => m.permalink)
-      .map((m) => ({
-        caption: (m.caption || '').replace(/\s+/g, ' ').trim().slice(0, 170),
-        img: m.media_type === 'VIDEO' ? m.thumbnail_url || m.media_url : m.media_url,
-        permalink: m.permalink,
-        timestamp: m.timestamp || '',
-        type: m.media_type || 'IMAGE',
-      }))
-      .filter((c) => !!c.img);
+    const items = (data.data || []).filter((m) => m.permalink);
+    const mapped: Card[] = items.map((m) => ({
+      caption: (m.caption || '').replace(/\s+/g, ' ').trim().slice(0, 170),
+      img: m.media_type === 'VIDEO' ? m.thumbnail_url || m.media_url : m.media_url,
+      permalink: m.permalink,
+      timestamp: m.timestamp || '',
+      type: m.media_type || 'IMAGE',
+    }));
+
+    // Los dos primeros posts se muestran en los celulares del sitio: si son
+    // carruseles, traer todas sus fotos para poder deslizarlas
+    await Promise.all(
+      items.slice(0, 2).map(async (m, i) => {
+        if (mapped[i]?.type !== 'CAROUSEL_ALBUM' || !m.id) return;
+        try {
+          const r = await fetch(
+            `https://graph.instagram.com/${m.id}/children?fields=media_url,media_type,thumbnail_url&access_token=${encodeURIComponent(token)}`
+          );
+          if (!r.ok) return;
+          const d = await r.json<{ data?: Array<Record<string, string>> }>();
+          const urls = (d.data || [])
+            .map((c) => (c.media_type === 'VIDEO' ? c.thumbnail_url || '' : c.media_url || ''))
+            .filter(Boolean);
+          if (urls.length > 1) mapped[i].children = urls.slice(0, 10);
+        } catch {
+          /* sin children queda la portada sola */
+        }
+      })
+    );
+
+    const posts: Card[] = mapped.filter((c) => !!c.img);
 
     if (!posts.length) throw new Error('sin_posts');
 
