@@ -18,7 +18,7 @@ interface Env {
   IG_TOKEN?: string;
 }
 
-const POSTS_KEY = 'instagram:posts_v2'; // v2: carruseles con children
+const POSTS_KEY = 'instagram:posts_v3'; // v3: likes/comentarios reales
 const POSTS_TS_KEY = 'instagram:posts_ts';
 const TOKEN_KEY = 'instagram:token';
 const TOKEN_TS_KEY = 'instagram:token_ts';
@@ -35,6 +35,9 @@ interface Card {
   type: string;
   /** Fotos internas del carrusel (solo los posts que muestran los celulares) */
   children?: string[];
+  /** Cantidad real de Me gusta y comentarios */
+  likes?: number;
+  comments?: number;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -94,7 +97,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
 
   // 4) Traer las últimas publicaciones reales
   try {
-    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp';
+    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,like_count,comments_count';
     const url = `https://graph.instagram.com/me/media?fields=${fields}&limit=${LIMIT}&access_token=${encodeURIComponent(token)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`graph_${res.status}`);
@@ -107,6 +110,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       permalink: m.permalink,
       timestamp: m.timestamp || '',
       type: m.media_type || 'IMAGE',
+      likes: Number(m.like_count || 0),
+      comments: Number(m.comments_count || 0),
     }));
 
     // Los dos primeros posts se muestran en los celulares del sitio: si son

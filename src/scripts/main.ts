@@ -719,6 +719,8 @@ interface IgCard {
   timestamp?: string
   type?: string
   children?: string[]
+  likes?: number
+  comments?: number
 }
 
 function initInstagramFeed() {
@@ -969,12 +971,30 @@ function hydrateInstagramShowcase(showcase: HTMLElement, posts: IgCard[], source
       dots.hidden = post.type !== 'CAROUSEL_ALBUM'
     }
 
+    // Likes y comentarios reales de la Graph API; los simulados quedan solo
+    // como respaldo si el dato no vino (cache viejo)
+    const realLikes = typeof post.likes === 'number' ? post.likes : null
+    const realComments = typeof post.comments === 'number' ? post.comments : null
     const likes = phone.querySelector<HTMLElement>('[data-ig-likes]')
-    if (likes) likes.textContent = nf.format(fakeLikes(post))
+    if (likes) {
+      const row = likes.closest<HTMLElement>('.ig-ui-likes')
+      if (realLikes === 0) {
+        if (row) row.hidden = true
+      } else {
+        likes.textContent = nf.format(realLikes ?? fakeLikes(post))
+      }
+    }
     const caption = phone.querySelector<HTMLElement>('[data-ig-caption]')
     if (caption) caption.textContent = clip(post.caption || 'Ver publicación real en Instagram.', 120)
     const comments = phone.querySelector<HTMLElement>('[data-ig-comments]')
-    if (comments) comments.textContent = `Ver los ${fakeComments(post)} comentarios`
+    if (comments) {
+      if (realComments === 0) {
+        comments.hidden = true
+      } else {
+        const n = realComments ?? fakeComments(post)
+        comments.textContent = n === 1 ? 'Ver 1 comentario' : `Ver los ${n} comentarios`
+      }
+    }
     const time = phone.querySelector<HTMLElement>('[data-ig-time]')
     if (time) time.textContent = relTime(post.timestamp)
   })
