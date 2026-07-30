@@ -157,7 +157,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
         WHERE r.socio_id NOT IN (SELECT socio_id FROM pagos_mes)
           AND r.socio_id NOT IN (SELECT socio_id FROM plan_vigente)
           AND r.socio_id NOT IN (SELECT socio_id FROM compras_mes)
-          AND s.numero != -1
+          AND (s.numero IS NULL OR s.numero != -1)
         ORDER BY up.fecha ASC NULLS FIRST`,
     ).bind(mes, mes, mes, mes, mes, mes).all();
     // También: cuántos quedaron excluidos por plan/compra (para el copy del módulo)

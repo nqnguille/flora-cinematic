@@ -4,6 +4,7 @@ import { createSessionCookie } from './_session';
 interface Env {
   SOCIOS: KVNamespace;
   INTENTOS: KVNamespace;
+  DB: D1Database;
   GOOGLE_CLIENT_ID: string;
   SESSION_SECRET: string;
   ADMIN_EMAILS?: string;
@@ -43,6 +44,53 @@ const TOS_VERSION = '2026-07-05';
 
 function emailList(v?: string): string[] {
   return (v || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+}
+
+// Normaliza un nombre para comparar: sin tildes, sin puntuación, minúsculas.
+function normNombre(s: string): string {
+  return String(s || '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Engancha la ficha del padrón financiero (D1) con la cuenta de Google que
+// acaba de entrar. Exacto → vincula; parecido → deja sugerencia.
+async function vincularFicha(env: Env, email: string, nombreGoogle: string): Promise<void> {
+  if (!env.DB || !nombreGoogle) return;
+  const ya = await env.DB.prepare(`SELECT id FROM socios WHERE email = ?`).bind(email).first();
+  if (ya) return;
+
+  const k = normNombre(nombreGoogle);
+  if (k.split(' ').length < 2) return;   // un solo token es demasiado ambiguo
+
+  const libres = await env.DB.prepare(
+    `SELECT id, nombre FROM socios WHERE email IS NULL AND (numero IS NULL OR numero != -1)`,
+  ).all();
+  const candidatos = (libres.results as { id: number; nombre: string }[])
+    .map((s) => ({ ...s, k: normNombre(s.nombre) }));
+
+  const exacto = candidatos.filter((c) => c.k === k);
+  if (exacto.length === 1) {
+    await env.DB.prepare(`UPDATE socios SET email = ?, actualizado = datetime('now') WHERE id = ? AND email IS NULL`)
+      .bind(email, exacto[0].id).run();
+    return;
+  }
+
+  // Subconjunto de palabras: "Guadalupe Lucero Svancara" ↔ "Guadalupe Svancara"
+  const toks = new Set(k.split(' '));
+  const parciales = candidatos.filter((c) => {
+    const t = new Set(c.k.split(' '));
+    if (t.size < 2) return false;
+    const contiene = [...t].every((x) => toks.has(x));
+    const contenido = [...toks].every((x) => t.has(x));
+    return contiene || contenido;
+  });
+  if (parciales.length === 1) {
+    // Coincidencia buena pero no literal: sugerencia para confirmar a mano.
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (?, ?, ?)`,
+    ).bind(parciales[0].id, email, nombreGoogle).run();
+  }
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -165,6 +213,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch {
     // si falla el guardado del perfil, no bloqueamos el login
   }
+
+  // El padrón financiero (D1) se completa solo con el uso: si este socio
+  // todavía no tiene ficha vinculada y su nombre de Google coincide con una
+  // del Excel sin email, la enganchamos acá. Si la coincidencia es dudosa,
+  // queda como sugerencia para confirmar en el panel (Socios → Fichas).
+  // Sin esto, un socio que entra a la carta seguía siendo invisible para el
+  // Mostrador. Nunca bloquea el login.
+  try {
+    await vincularFicha(env, email, payload.name || '');
+  } catch { /* la vinculación es un extra, no parte del login */ }
 
   const cookie = await createSessionCookie(email, env.SESSION_SECRET, new URL(request.url).hostname);
   return Response.json(

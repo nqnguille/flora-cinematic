@@ -18,7 +18,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!esSocio) return Response.json({ error: 'Sin acceso' }, { status: 403 });
 
   const socio = await env.DB.prepare(
-    `SELECT id, nombre FROM socios WHERE email = ? AND numero != -1`,
+    `SELECT id, nombre FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
   ).bind(email.toLowerCase()).first<{ id: number; nombre: string }>();
   if (!socio) {
     // Todavía no está enganchado al padrón financiero: sin tarjeta de saldo.

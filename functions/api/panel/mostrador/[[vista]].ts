@@ -38,7 +38,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
       `SELECT s.id, s.numero, s.nombre, s.email, s.estado,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL ORDER BY m.desde DESC LIMIT 1) AS tier
          FROM socios s
-        WHERE s.numero != -1 AND (s.nombre LIKE '%' || ?1 || '%' OR s.email LIKE '%' || ?1 || '%')
+        WHERE (s.numero IS NULL OR s.numero != -1) AND (s.nombre LIKE '%' || ?1 || '%' OR s.email LIKE '%' || ?1 || '%')
         ORDER BY s.estado = 'activo' DESC, s.nombre LIMIT 12`,
     ).bind(q).all();
     return json({ ok: true, socios: rows.results });

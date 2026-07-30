@@ -421,6 +421,211 @@
   }
 
   /* ---------- registro ---------- */
+  // ============ Alta unificada (al-): un socio, de una sola vez ============
+  // Crea acceso a la carta (KV) + ficha financiera (D1) + membresía, con
+  // precarga desde la solicitud web y cobro opcional en el mismo acto.
+  const ALTA_PASOS = ['Quién es', 'Membresía', 'Listo']
+
+  function altaAbrir() {
+    let paso = 1
+    let tarifas = []
+    let datos = { email: '', nombre: '', telefono: '', reprocann: '', nota: '', tier: 'NINGUNA' }
+
+    const ov = P.modal('Socio nuevo', '<div id="al-cuerpo"></div>')
+    const cuerpo = ov.querySelector('#al-cuerpo')
+
+    const pasosHtml = () => `<div class="al-pasos">${ALTA_PASOS.map((n, i) =>
+      `<span class="${i + 1 === paso ? 'on' : i + 1 < paso ? 'ok' : ''}">${i + 1}. ${n}</span>`).join('')}</div>`
+
+    function pintar1() {
+      cuerpo.innerHTML = `${pasosHtml()}
+        <div style="display:grid;gap:10px">
+          <div><label class="lb" for="al-email">Email de Google</label>
+            <input class="input" id="al-email" type="email" value="${P.esc(datos.email)}"
+              placeholder="socio@gmail.com" autocomplete="off" />
+            <p class="so-help" id="al-precarga" style="margin:6px 0 0"></p></div>
+          <div class="grid2">
+            <div><label class="lb" for="al-nombre">Nombre y apellido</label>
+              <input class="input" id="al-nombre" value="${P.esc(datos.nombre)}" /></div>
+            <div><label class="lb" for="al-tel">Teléfono</label>
+              <input class="input" id="al-tel" type="tel" value="${P.esc(datos.telefono)}" placeholder="+54 9 299…" /></div>
+          </div>
+          <div class="grid2">
+            <div><label class="lb" for="al-repro">REPROCANN</label>
+              <select class="sel" id="al-repro">
+                <option value="">— sin definir</option>
+                <option value="Vinculado">Vinculado</option>
+                <option value="Pendiente">En trámite</option>
+                <option value="Autocultivo">Autocultivo</option>
+              </select></div>
+            <div><label class="lb" for="al-nota">Nota</label>
+              <input class="input" id="al-nota" value="${P.esc(datos.nota)}" placeholder="Referido por…" /></div>
+          </div>
+          <div class="fila"><span class="pn-sp"></span>
+            <button class="btn btn-pri" id="al-sig1" type="button">Seguir →</button></div>
+        </div>`
+      const inputRepro = cuerpo.querySelector('#al-repro')
+      if (datos.reprocann) inputRepro.value = datos.reprocann
+      const email = cuerpo.querySelector('#al-email')
+      email.focus()
+      let t = null
+      email.addEventListener('input', () => {
+        clearTimeout(t)
+        t = setTimeout(() => altaPrecargar(email.value.trim()), 400)
+      })
+      cuerpo.querySelector('#al-sig1').addEventListener('click', () => {
+        datos.email = email.value.trim().toLowerCase()
+        datos.nombre = cuerpo.querySelector('#al-nombre').value.trim()
+        datos.telefono = cuerpo.querySelector('#al-tel').value.trim()
+        datos.reprocann = inputRepro.value
+        datos.nota = cuerpo.querySelector('#al-nota').value.trim()
+        const aviso = cuerpo.querySelector('#al-precarga')
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
+          aviso.className = 'msg err'; aviso.textContent = 'Falta un email válido.'; return
+        }
+        if (!datos.nombre) { aviso.className = 'msg err'; aviso.textContent = 'Falta el nombre.'; return }
+        paso = 2; pintar2()
+      })
+    }
+
+    async function altaPrecargar(email) {
+      const aviso = cuerpo.querySelector('#al-precarga')
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { aviso.textContent = ''; return }
+      const r = await fetch(`/api/panel/alta?email=${encodeURIComponent(email)}`, { credentials: 'include' })
+      if (!r.ok) return
+      const d = await r.json()
+      tarifas = d.tarifas || []
+      const avisos = []
+      if (d.solicitud) {
+        if (d.solicitud.nombre && !cuerpo.querySelector('#al-nombre').value) cuerpo.querySelector('#al-nombre').value = d.solicitud.nombre
+        if (d.solicitud.telefono && !cuerpo.querySelector('#al-tel').value) cuerpo.querySelector('#al-tel').value = d.solicitud.telefono
+        avisos.push(`Dejó una solicitud web${d.solicitud.intent === 'acceso' ? ' (ya tiene REPROCANN)' : ' (pidió entrevista)'}${d.solicitud.adjunto ? ' con adjunto' : ''} — datos precargados.`)
+        if (d.solicitud.intent === 'acceso' && !cuerpo.querySelector('#al-repro').value) cuerpo.querySelector('#al-repro').value = 'Vinculado'
+      }
+      if (d.yaTieneAcceso) avisos.push('Ya tiene acceso a la carta.')
+      if (d.yaTieneFicha) avisos.push(`Ya tiene ficha en el padrón (${P.esc(d.yaTieneFicha.nombre)}) — se completa, no se duplica.`)
+      aviso.className = 'so-help'
+      aviso.textContent = avisos.join(' ')
+    }
+
+    function pintar2() {
+      const opciones = tarifas.length ? tarifas : [
+        { item: 'SMALL', gramos: 10, contado: 200000, debito: 160000 },
+        { item: 'MEDIUM', gramos: 20, contado: 360000, debito: 288000 },
+        { item: 'LARGE', gramos: 30, contado: 480000, debito: 384000 },
+        { item: 'EXTRA LARGE', gramos: 40, contado: 600000, debito: 480000 },
+      ]
+      cuerpo.innerHTML = `${pasosHtml()}
+        <p class="so-help" style="margin:0 0 10px">Elegí la membresía de ${P.esc(datos.nombre.split(' ')[0])}.
+        El precio con débito automático lleva el 20% por 3 meses.</p>
+        <div class="al-tiers">${opciones.map((t) => `
+          <button class="al-tier ${datos.tier === t.item ? 'on' : ''}" data-tier="${P.esc(t.item)}"
+            data-precio="${t.contado}" type="button">
+            <b>${P.esc(t.item)}</b><span>${t.gramos} g por mes</span>
+            <span class="al-precio">${P.fmt(t.contado)}</span>
+            <span class="al-deb">débito ${P.fmt(t.debito)}</span>
+          </button>`).join('')}
+          <button class="al-tier ${datos.tier === 'NINGUNA' ? 'on' : ''}" data-tier="NINGUNA" data-precio="0" type="button">
+            <b>Sin membresía</b><span>por ahora</span></button>
+        </div>
+        <div class="fila" style="margin-top:14px">
+          <button class="btn" id="al-atras" type="button">← Atrás</button><span class="pn-sp"></span>
+          <button class="btn btn-pri" id="al-sig2" type="button">Seguir →</button></div>`
+      cuerpo.querySelectorAll('.al-tier').forEach((b) => b.addEventListener('click', () => {
+        datos.tier = b.dataset.tier
+        datos.precio = Number(b.dataset.precio)
+        cuerpo.querySelectorAll('.al-tier').forEach((x) => x.classList.toggle('on', x === b))
+      }))
+      cuerpo.querySelector('#al-atras').addEventListener('click', () => { paso = 1; pintar1() })
+      cuerpo.querySelector('#al-sig2').addEventListener('click', () => { paso = 3; pintar3() })
+    }
+
+    function pintar3() {
+      const conMemb = datos.tier !== 'NINGUNA'
+      cuerpo.innerHTML = `${pasosHtml()}
+        <div class="card" style="box-shadow:none;background:var(--card2);margin-bottom:12px">
+          <b>${P.esc(datos.nombre)}</b>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">${P.esc(datos.email)}
+          ${conMemb ? ` · ${P.esc(datos.tier)}` : ' · sin membresía'}</div>
+        </div>
+        ${conMemb ? `<p class="so-help" style="margin:0 0 10px">¿Cómo arranca?</p>
+        <div class="grid2" style="gap:10px">
+          <button class="btn al-fin" data-cobro="efectivo" type="button" style="padding:14px;text-align:left;height:auto">
+            <b style="display:block">Cobré ${P.fmt(datos.precio || 0)}</b>
+            <span style="color:var(--muted);font-weight:400;font-size:11.5px">Registra el pago y le habilita los gramos</span>
+          </button>
+          <button class="btn btn-pri al-fin" data-cobro="debito" type="button" style="padding:14px;text-align:left;height:auto">
+            <b style="display:block">Mandarle el débito −20%</b>
+            <span style="opacity:.85;font-weight:400;font-size:11.5px">Crea la suscripción y el link de WhatsApp</span>
+          </button>
+        </div>
+        <div class="fila" style="margin-top:10px"><button class="btn al-fin" data-cobro="ninguno" type="button">Después paga</button>
+        <span class="pn-sp"></span><span class="msg" id="al-msg"></span></div>`
+        : `<div class="fila"><button class="btn btn-pri al-fin" data-cobro="ninguno" type="button">Dar de alta</button>
+           <span class="msg" id="al-msg"></span></div>`}`
+      cuerpo.querySelectorAll('.al-fin').forEach((b) => b.addEventListener('click', () => altaEnviar(b.dataset.cobro)))
+    }
+
+    async function altaEnviar(cobro) {
+      const msg = cuerpo.querySelector('#al-msg')
+      cuerpo.querySelectorAll('.al-fin').forEach((b) => { b.disabled = true })
+      msg.className = 'msg'; msg.textContent = '⏳ dando de alta…'
+      const r = await fetch('/api/panel/alta', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...datos,
+          cobro: cobro === 'efectivo' ? 'efectivo' : 'ninguno',
+          monto: cobro === 'efectivo' ? datos.precio : 0,
+          medio: 'efectivo',
+        }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        cuerpo.querySelectorAll('.al-fin').forEach((b) => { b.disabled = false })
+        msg.className = 'msg err'; msg.textContent = '✗ ' + (d.error || 'error ' + r.status)
+        return
+      }
+      // Alta hecha. Si pidió débito, encadenamos la suscripción.
+      let extra = ''
+      if (cobro === 'debito') {
+        const rs = await fetch('/api/panel/mp/suscripcion', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ socio_id: d.socioId }),
+        })
+        const ds = await rs.json().catch(() => ({}))
+        if (rs.ok) {
+          const waDeb = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Te paso el link para activar el débito automático de tu membresía ${datos.tier} con el 20% de descuento: 3 cuotas de ${P.fmt(ds.monto)} por mes. Se autoriza una sola vez: ${ds.link}`)}`
+          extra = `<div style="margin-top:12px"><span class="k">Link del débito</span>
+            <input class="input" value="${P.esc(ds.link)}" readonly onclick="this.select()" style="margin-top:6px" />
+            <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`
+        } else {
+          extra = `<p class="msg err" style="margin-top:12px">La suscripción no se pudo crear: ${P.esc(ds.error || 'error')}. El socio quedó dado de alta igual.</p>`
+        }
+      }
+      const wa = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+        `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 ${d.gramos ? `Tu membresía ${datos.tier} te da ${d.gramos} g por mes. ` : ''}Entrá a la carta con tu cuenta de Google (${datos.email}): https://floraong.ar/socios/`)}`
+      cuerpo.innerHTML = `
+        <div style="text-align:center;padding:6px 0 4px">
+          <div style="font-family:var(--font-display);font-size:26px;color:var(--grn)">Listo</div>
+          <p style="color:var(--ink2);margin:6px 0 0">${P.esc(datos.nombre)} ya tiene acceso a la carta y ficha en el padrón${d.gramos ? ` con ${d.gramos} g por mes` : ''}.</p>
+          <p class="so-help" style="margin:8px 0 0">${d.mailEnviado
+            ? 'Le llegó el mail de bienvenida.'
+            : `El mail de bienvenida NO salió (${P.esc(d.mailError || 'sin detalle')}) — avisale vos.`}</p>
+        </div>
+        ${extra}
+        <div class="pn-mod-acciones">
+          ${datos.telefono ? `<a class="btn" href="${P.esc(wa)}" target="_blank" rel="noopener">Saludar por WhatsApp</a>` : ''}
+          <button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
+        </div>`
+      sfCargado = false
+      if (sfBox && !sfBox.hidden) sfCargar(true)
+      cargarSocios()
+    }
+
+    pintar1()
+  }
+
   // ============ Fichas (sf-): padrón financiero D1 ============
   const esc = P.esc
   let sfBox = null
@@ -549,15 +754,22 @@
         <div id="so-padron">
           ${editar ? `
           <div class="card" style="margin-bottom:14px">
-            <span class="k">Alta rápida</span>
-            <p class="so-help">Cargá el email de la cuenta de Google con la que el socio va a entrar. Apenas ingrese, su ficha se completa sola con el nombre de Google.</p>
+            <div class="fila"><span class="k">Socio nuevo</span><span class="pn-sp"></span>
+              <button class="btn btn-pri" id="so-alta-completa" type="button">+ Dar de alta</button></div>
+            <p class="so-help">El alta completa: acceso a la carta, ficha en el padrón, membresía y el primer cobro
+            — todo de una vez. Si dejó una solicitud web, sus datos vienen precargados.</p>
+          </div>
+          <details class="card" style="margin-bottom:14px">
+            <summary style="cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600">Alta rápida (solo acceso a la carta)</summary>
+            <p class="so-help" style="margin-top:10px">Le da acceso a la carta pero NO le crea ficha en el padrón:
+            el Mostrador no lo va a encontrar hasta que completes su ficha.</p>
             <form id="so-alta" class="fila so-alta">
               <input class="input" id="so-alta-email" type="email" required placeholder="email@gmail.com" autocomplete="off" />
               <input class="input" id="so-alta-nota" type="text" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
               <button class="btn btn-pri" type="submit">Agregar socio</button>
               <span id="so-alta-msg" class="msg"></span>
             </form>
-          </div>` : ''}
+          </details>` : ''}
           <div class="card">
             <div class="fila" style="flex-wrap:wrap">
               <input class="input" id="so-buscar" type="search" placeholder="Buscar por nombre, email o nota…" autocomplete="off" style="max-width:280px" />
@@ -609,6 +821,8 @@
       })
       const alta = el.querySelector('#so-alta')
       if (alta) alta.addEventListener('submit', onAlta)
+      const altaC = el.querySelector('#so-alta-completa')
+      if (altaC) altaC.addEventListener('click', altaAbrir)
       el.addEventListener('click', onClick)
       el.addEventListener('change', onChange)
 
