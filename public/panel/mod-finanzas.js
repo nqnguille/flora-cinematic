@@ -28,7 +28,7 @@
   function armazon() {
     const tabs = [
       ['resumen', 'Resumen'], ['cobranza', 'Cobranza'], ['movimientos', 'Movimientos'],
-      ['fijos', 'Gastos fijos'],
+      ['fijos', 'Gastos fijos'], ['debito', 'Débito automático'],
       P.puede('aportes_ver') && ['aportes', 'Aportes'],
       P.puede('personal_ver') && ['personal', 'Personal'],
     ].filter(Boolean)
@@ -70,6 +70,7 @@
       else if (tabActual === 'cobranza') await vCobranza(cuerpo)
       else if (tabActual === 'movimientos') await vMovimientos(cuerpo)
       else if (tabActual === 'fijos') await vFijos(cuerpo)
+      else if (tabActual === 'debito') await vDebito(cuerpo)
       else if (tabActual === 'aportes') await vAportes(cuerpo)
       else if (tabActual === 'personal') await vPersonal(cuerpo)
     } catch (err) {
@@ -177,7 +178,8 @@
         <td style="color:var(--ink2)">${haceCuanto(d.ultimo_pago)}</td>
         <td class="r">${d.gramos} g en ${d.visitas} visita${d.visitas > 1 ? 's' : ''}</td>
         <td class="r"><b>${d.precio ? P.fmt(d.precio) : '—'}</b></td>
-        <td class="r">${P.puede('finanzas_cargar') ? `<button class="btn fz-cobrar-btn" data-socio="${d.id}" data-nombre="${P.esc(d.nombre)}" data-precio="${d.precio || ''}" data-tier="${P.esc(d.tier || '')}" type="button">Cobrar</button>` : ''}</td>
+        <td class="r">${P.puede('finanzas_cargar') ? `<button class="btn fz-cobrar-btn" data-socio="${d.id}" data-nombre="${P.esc(d.nombre)}" data-precio="${d.precio || ''}" data-tier="${P.esc(d.tier || '')}" type="button">Cobrar</button>
+          <button class="btn fz-debito-btn" data-socio="${d.id}" data-nombre="${P.esc(d.nombre)}" type="button">Débito −20%</button>` : ''}</td>
       </tr>`).join('')}</tbody></table></div>
       <div class="card fz-cobrar" style="margin-top:12px">
         <div><span class="k">Total por cobrar</span><div class="fz-cobrar-v">${P.fmt(total)}</div>
@@ -259,6 +261,56 @@
     })
   }
 
+  // ---------- Débito automático (suscripciones MP) ----------
+  async function vDebito(cuerpo) {
+    const r = await fetch('/api/panel/mp/suscripciones', { credentials: 'include' })
+    if (!r.ok) { cuerpo.innerHTML = `<div class="vacio">El servidor respondió ${r.status}.</div>`; return }
+    const d = await r.json()
+    const EST = { activa: 'tag-ok', pendiente: 'tag-deb', pausada: 'tag-deb', cancelada: 'tag-off' }
+    cuerpo.innerHTML = `
+      ${!d.configurado ? `<div class="card" style="border-left:3px solid var(--amb);margin-bottom:12px">
+        <span class="k">Falta el token de Mercado Pago</span>
+        <div class="kpi-d" style="margin-top:6px">Cuando esté cargado el secret MP_ACCESS_TOKEN, desde acá se crean
+        las suscripciones del 20%. Los botones ya están listos.</div></div>` : ''}
+      <p style="color:var(--ink2);margin:0 0 14px;max-width:72ch">El débito corre solo todos los meses al precio
+      con 20% (renovable cada 3 débitos seguidos — si corta, lo pierde). Cada acreditación entra sola al libro
+      y habilita los gramos del mes. El alta se hace desde Cobranza, con el botón «Débito −20%» de cada socio.</p>
+      <div class="card" style="padding-bottom:6px">${d.suscripciones.length ? `<table class="tabla"><thead><tr>
+        <th>Socio</th><th>Estado</th><th class="r">Monto</th><th class="r">Racha</th><th></th><th class="r"></th>
+      </tr></thead><tbody>${d.suscripciones.map((s) => `<tr>
+        <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>${P.esc(s.nombre)}</div></td>
+        <td><span class="tag ${EST[s.estado] || 'tag-off'}">${P.esc(s.estado)}</span></td>
+        <td class="r" style="font-weight:600">${P.fmt(s.monto)}</td>
+        <td class="r">${s.racha_meses} mes${s.racha_meses === 1 ? '' : 'es'}</td>
+        <td style="color:var(--muted);font-size:11.5px">${s.racha_meses > 0 ? `el 20% se renueva en ${3 - (s.racha_meses % 3)} débito(s)` : ''}</td>
+        <td class="r"><button class="btn fz-sync" data-id="${s.id}" type="button">Sincronizar</button></td>
+      </tr>`).join('')}</tbody></table>` : '<div class="vacio">Todavía no hay suscripciones. Arrancá desde Cobranza con el botón «Débito −20%».</div>'}</div>`
+  }
+
+  async function crearSuscripcion(socioId, nombre) {
+    const ov = P.modal(`Débito automático — ${nombre}`, '<div class="vacio">⏳ Creando la suscripción en Mercado Pago…</div>')
+    const r = await fetch('/api/panel/mp/suscripcion', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ socio_id: Number(socioId) }),
+    })
+    const d = await r.json().catch(() => ({}))
+    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
+    if (!r.ok) {
+      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>
+        <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
+      return
+    }
+    const wa = `https://wa.me/?text=${encodeURIComponent(`Hola! Te paso el link para activar el débito automático de tu membresía ${d.tier} de Flora con el 20% de descuento (${P.fmt(d.monto)}/mes). Se activa una sola vez y después corre solo: ${d.link}`)}`
+    cuerpo.innerHTML = `
+      <p style="color:var(--ink2);margin:0 0 12px">Listo: ${P.esc(nombre)} paga <b>${P.fmt(d.monto)}</b> por mes
+      (${P.esc(d.tier)} con el 20%). Le falta autorizarlo una sola vez desde este link:</p>
+      <input class="input" value="${P.esc(d.link)}" readonly onclick="this.select()" />
+      <div class="pn-mod-acciones">
+        <a class="btn" href="${P.esc(d.link)}" target="_blank" rel="noopener">Abrir link</a>
+        <a class="btn btn-pri" href="${wa}" target="_blank" rel="noopener">Mandar por WhatsApp</a>
+      </div>`
+  }
+
   // ---------- Aportes ----------
   async function vAportes(cuerpo) {
     const a = await get('aportes')
@@ -325,6 +377,17 @@
     const cobrar = e.target.closest('.fz-cobrar-btn')
     if (cobrar) {
       modalAlta({ socio_id: cobrar.dataset.socio, concepto: cobrar.dataset.tier, neto: cobrar.dataset.precio, nombre: cobrar.dataset.nombre, categoria: 'membresia' })
+      return
+    }
+    const deb = e.target.closest('.fz-debito-btn')
+    if (deb) { crearSuscripcion(deb.dataset.socio, deb.dataset.nombre); return }
+    const sync = e.target.closest('.fz-sync')
+    if (sync) {
+      await fetch('/api/panel/mp/sincronizar', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(sync.dataset.id) }),
+      })
+      pintar()
       return
     }
     const ap = e.target.closest('.fz-aprobar'), an = e.target.closest('.fz-anular')
