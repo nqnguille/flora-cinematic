@@ -1,0 +1,105 @@
+---
+// Panel del club v2 — shell (ruta paralela: /socios/panel/)
+// El admin viejo (/socios/admin/) sigue operando hasta el corte.
+// Estética CLARA — no importa global.css del sitio a propósito:
+// el panel no hereda el grano cinematográfico ni sus bugs de compositor.
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Panel del club — Flora</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/panel/panel.css" />
+  </head>
+  <body>
+    <!-- login -->
+    <div id="pn-login" class="pn-login">
+      <div class="pn-login-card">
+        <div class="pn-login-mark">F</div>
+        <h1>Panel del club</h1>
+        <p>Entrá con tu cuenta de Google del club.</p>
+        <div
+          id="g_id_onload"
+          data-client_id={googleClientId}
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false"
+        >
+        </div>
+        <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="large" data-text="signin_with" data-shape="pill" data-logo_alignment="left"></div>
+        <p id="pn-login-msg" class="pn-msg" hidden></p>
+      </div>
+    </div>
+
+    <!-- sesión sin rol -->
+    <div id="pn-forbidden" class="pn-login" hidden>
+      <div class="pn-login-card">
+        <div class="pn-login-mark">F</div>
+        <h1>Sin acceso</h1>
+        <p>Tu cuenta no tiene un rol en el panel. Pedile acceso a Guillermo.</p>
+      </div>
+    </div>
+
+    <!-- app -->
+    <div id="pn-app" hidden>
+      <nav class="pn-rail" aria-label="Módulos del panel">
+        <div class="pn-mark">F</div>
+        <button type="button" data-sec="inicio" data-nom="Inicio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"></path><path d="M5 10v10h14V10"></path></svg>
+        </button>
+        <button type="button" data-sec="socios" data-nom="Socios" data-cap="padron_ver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"></path><circle cx="16.5" cy="9.5" r="2.6"></circle><path d="M16 14.6c2.4.1 4 1.6 4.5 4.1"></path></svg>
+        </button>
+        <button type="button" data-sec="reservas" data-nom="Reservas" data-cap="reservas_operar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1.2 13a1 1 0 0 1-1 1H5.8a1 1 0 0 1-1-1L6 7Z"></path><path d="M9 10V6a3 3 0 0 1 6 0v4"></path></svg>
+        </button>
+        <button type="button" data-sec="mostrador" data-nom="Mostrador" data-cap="mostrador_operar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-2.5-6.5-6-6.5-9.5A6.5 6.5 0 0 1 12 5a6.5 6.5 0 0 1 6.5 6.5C18.5 15 16 18.5 12 21Z"></path><path d="M12 21V9"></path></svg>
+        </button>
+        <button type="button" data-sec="catalogo" data-nom="Catálogo" data-cap="catalogo_editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v7L12 20l-8.5-4.5v-7Z"></path><path d="M12 12v8M3.5 8.5 12 12l8.5-3.5"></path></svg>
+        </button>
+        <button type="button" data-sec="finanzas" data-nom="Finanzas" data-cap="finanzas_ver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"></path></svg>
+        </button>
+        <div class="pn-sp"></div>
+        <button type="button" data-sec="ajustes" data-nom="Accesos" data-cap="accesos_gestionar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg>
+        </button>
+      </nav>
+
+      <div class="pn-main">
+        <header class="pn-top">
+          <h1 id="pn-titulo">Inicio</h1>
+          <div class="pn-sp"></div>
+          <div class="pn-quien">
+            <span class="pn-av" id="pn-quien-ini">·</span>
+            <span id="pn-quien-mail"></span>
+            <span class="pn-rol" id="pn-rol"></span>
+          </div>
+          <button class="pn-salir" id="pn-salir" type="button">Salir</button>
+        </header>
+
+        <main class="pn-cuerpo">
+          <section class="pn-sec" id="sec-inicio"></section>
+          <section class="pn-sec" id="sec-socios"></section>
+          <section class="pn-sec" id="sec-reservas"></section>
+          <section class="pn-sec" id="sec-mostrador"></section>
+          <section class="pn-sec" id="sec-catalogo"></section>
+          <section class="pn-sec" id="sec-finanzas"></section>
+          <section class="pn-sec" id="sec-ajustes"></section>
+        </main>
+      </div>
+    </div>
+
+    <!-- errores visibles, nunca pantalla en blanco -->
+    <div id="pn-fatal" role="alert"><span></span><button type="button" aria-label="Cerrar">×</button></div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+    <script src="/panel/shell.js" is:inline></script>
+    <script src="/panel/mod-placeholders.js" is:inline></script>
+  </body>
+</html>

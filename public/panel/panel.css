@@ -1,0 +1,306 @@
+/* ============================================================
+   Panel del club v2 — sistema de diseño CLARO
+   Tokens y componentes compartidos del shell (prefijo pn-).
+   Cada módulo suma sus clases con prefijo propio (fz- finanzas,
+   so- socios, rv- reservas, mo- mostrador, ct- catálogo, aj- ajustes)
+   para que la cascada nunca se pise entre módulos.
+   Paleta validada (CVD + contraste): violeta #6E4FA0 · verde #2E9C7E
+   · ámbar #B4761F sobre #f5f4f8. El verde es SOLO dato positivo /
+   plata que entra; el ámbar es SOLO deuda/atención; el violeta es
+   la marca y la navegación. Nunca mezclarlos de rol.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f5f4f8;
+  --card: #ffffff;
+  --card2: #f1eff7;          /* pistas de barras, fondos hundidos */
+  --line: #e6e2ee;
+  --line2: #d5cfe2;
+  --ink: #241833;
+  --ink2: #5b4f6b;
+  --muted: #857a93;
+  --vio: #6e4fa0;
+  --vio-soft: rgba(110, 79, 160, .10);
+  --grn: #2e9c7e;
+  --grn-soft: rgba(46, 156, 126, .11);
+  --amb: #b4761f;
+  --amb-soft: rgba(180, 118, 31, .12);
+  --dan: #a33a3a;
+  --dan-soft: rgba(163, 58, 58, .10);
+  --rail: #ffffff;
+  --sombra: 0 1px 3px rgba(36, 24, 51, .06);
+  --sombra-hover: 0 4px 14px rgba(36, 24, 51, .10);
+  --ease: cubic-bezier(.22, .9, .26, 1);
+  --font-display: 'Cormorant', Georgia, serif;
+  --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box }
+/* el atributo hidden SIEMPRE gana — sin esto, cualquier display:grid/flex
+   de una clase lo pisa y aparecen pantallas superpuestas */
+[hidden] { display: none !important }
+html, body { margin: 0; min-height: 100% }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+/* Los números nunca bailan al refrescar */
+body { font-variant-numeric: tabular-nums }
+
+/* ---------- login ---------- */
+.pn-login {
+  min-height: 100vh; display: grid; place-items: center; padding: 24px;
+}
+.pn-login-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--sombra); padding: 40px 44px; text-align: center; max-width: 380px;
+}
+.pn-login-card h1 { font-family: var(--font-display); font-weight: 600; font-size: 30px; margin: 14px 0 6px }
+.pn-login-card p { color: var(--ink2); margin: 0 0 22px }
+.pn-login-mark {
+  width: 46px; height: 46px; border-radius: 12px; margin: 0 auto;
+  background: var(--vio-soft); color: var(--vio); display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 28px; font-weight: 600;
+}
+.pn-msg { color: var(--dan); font-size: 13px; margin-top: 14px }
+
+/* ---------- layout ---------- */
+#pn-app {
+  display: grid; grid-template-columns: 66px minmax(0, 1fr); min-height: 100vh;
+}
+
+/* rail de iconos */
+.pn-rail {
+  background: var(--rail); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0; gap: 2px; position: sticky; top: 0; height: 100vh;
+}
+.pn-rail .pn-mark {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--vio-soft); color: var(--vio);
+  display: grid; place-items: center; font-family: var(--font-display);
+  font-size: 21px; font-weight: 600; margin-bottom: 14px; flex-shrink: 0;
+}
+.pn-rail button {
+  width: 46px; height: 44px; border: 0; background: none; color: var(--muted);
+  border-radius: 9px; display: grid; place-items: center; cursor: pointer; position: relative;
+  transition: color .18s var(--ease), background .18s var(--ease);
+}
+.pn-rail button svg { width: 19px; height: 19px }
+.pn-rail button:hover { color: var(--ink2); background: var(--card2) }
+.pn-rail button.on { color: var(--vio); background: var(--vio-soft) }
+.pn-rail button.on::before {
+  content: ""; position: absolute; left: -10px; top: 11px; bottom: 11px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--vio);
+}
+.pn-rail button:focus-visible { outline: 2px solid var(--vio); outline-offset: 2px }
+.pn-rail .pn-sp { flex: 1 }
+/* tooltip instantáneo (sin delay del title nativo) */
+.pn-rail button::after {
+  content: attr(data-nom); position: absolute; left: 54px; top: 50%; transform: translateY(-50%);
+  white-space: nowrap; background: var(--ink); color: #fff; font-size: 11.5px; font-weight: 600;
+  padding: 5px 10px; border-radius: 6px; opacity: 0; pointer-events: none;
+  transition: opacity .12s; z-index: 40;
+}
+.pn-rail button:hover::after { opacity: 1 }
+
+/* topbar */
+.pn-main { display: flex; flex-direction: column; min-width: 0 }
+.pn-top {
+  height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 20px;
+  border-bottom: 1px solid var(--line); background: var(--card);
+  position: sticky; top: 0; z-index: 30;
+}
+.pn-top h1 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0; letter-spacing: .01em }
+.pn-top .pn-sp { flex: 1 }
+.pn-quien { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink2) }
+.pn-quien .pn-av {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--vio-soft); color: var(--vio);
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+}
+.pn-rol {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--card2); color: var(--muted); border-radius: 20px; padding: 3px 10px;
+}
+.pn-salir {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
+  border: 0; background: none; cursor: pointer; padding: 6px 8px; border-radius: 6px;
+}
+.pn-salir:hover { color: var(--dan); background: var(--dan-soft) }
+
+/* secciones */
+.pn-cuerpo { padding: 20px; flex: 1 }
+.pn-sec { display: none; animation: pnIn .22s var(--ease) }
+.pn-sec.on { display: block }
+@keyframes pnIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
+/* banner de error global — nunca pantalla en blanco silenciosa */
+#pn-fatal {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 90;
+  background: var(--dan); color: #fff; border-radius: 10px; padding: 12px 44px 12px 16px;
+  font-size: 13px; box-shadow: var(--sombra-hover); display: none;
+}
+#pn-fatal.on { display: block }
+#pn-fatal button {
+  position: absolute; right: 8px; top: 8px; border: 0; background: rgba(255,255,255,.2);
+  color: #fff; width: 24px; height: 24px; border-radius: 6px; cursor: pointer;
+}
+
+/* ============================================================
+   Componentes compartidos (los usan todos los módulos)
+   ============================================================ */
+
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px; box-shadow: var(--sombra);
+}
+.card-hover { transition: transform .18s var(--ease), box-shadow .18s var(--ease) }
+.card-hover:hover { transform: translateY(-2px); box-shadow: var(--sombra-hover) }
+
+/* etiqueta de sección de tarjeta */
+.k {
+  font-size: 10.5px; letter-spacing: .11em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+
+/* KPI grande */
+.kpi-v { font-family: var(--font-display); font-size: 34px; line-height: 1.05; margin: 8px 0 5px; font-weight: 600 }
+.kpi-d { font-size: 12px; color: var(--muted) }
+.up { color: var(--grn); font-weight: 600 }
+.dn { color: var(--dan); font-weight: 600 }
+
+/* botones */
+.btn {
+  font: inherit; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line2);
+  background: var(--card); color: var(--ink); padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; white-space: nowrap;
+  transition: transform .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease);
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--vio) }
+.btn:disabled { opacity: .5; cursor: default; transform: none }
+.btn:focus-visible { outline: 2px solid var(--vio); outline-offset: 2px }
+.btn-pri { background: var(--vio); border-color: var(--vio); color: #fff }
+.btn-pri:hover { filter: brightness(1.08) }
+.btn-peligro { color: var(--dan); border-color: var(--dan-soft) }
+.btn-peligro:hover { background: var(--dan-soft); border-color: var(--dan) }
+
+/* chips de filtro */
+.chip {
+  font: inherit; font-size: 12px; font-weight: 600; border: 1px solid var(--line);
+  background: var(--card); color: var(--muted); padding: 6px 12px; border-radius: 20px; cursor: pointer;
+}
+.chip:hover { color: var(--ink2) }
+.chip.on { background: var(--vio-soft); border-color: var(--vio); color: var(--vio) }
+
+/* tags de estado */
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+}
+.tag-ok  { background: var(--grn-soft); color: var(--grn) }
+.tag-deb { background: var(--amb-soft); color: var(--amb) }
+.tag-auto{ background: var(--vio-soft); color: var(--vio) }
+.tag-off { background: var(--card2); color: var(--muted) }
+.tag-mal { background: var(--dan-soft); color: var(--dan) }
+
+/* tabla */
+.tabla { width: 100%; border-collapse: collapse; font-size: 12.5px }
+.tabla th {
+  text-align: left; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; padding: 0 10px 9px; border-bottom: 1px solid var(--line2);
+}
+.tabla td { padding: 10px; border-bottom: 1px solid var(--line) }
+.tabla tr:last-child td { border-bottom: 0 }
+.tabla .r { text-align: right }
+.tabla tbody tr:hover td { background: var(--card2) }
+
+/* inputs */
+.input, .ta, .sel {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--card);
+  border: 1px solid var(--line2); border-radius: 8px; padding: 8px 11px; width: 100%;
+}
+.input:focus, .ta:focus, .sel:focus { outline: 2px solid var(--vio); outline-offset: -1px; border-color: var(--vio) }
+.ta { resize: vertical; min-height: 68px }
+label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink2); margin: 0 0 4px }
+
+/* switch */
+.sw {
+  width: 38px; height: 21px; border-radius: 11px; background: var(--line2);
+  position: relative; border: 0; cursor: pointer; flex-shrink: 0; padding: 0;
+}
+.sw::after {
+  content: ""; position: absolute; top: 2.5px; left: 3px; width: 16px; height: 16px;
+  border-radius: 50%; background: #fff; transition: left .15s var(--ease);
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.sw.on { background: var(--grn) }
+.sw.on::after { left: 19px }
+
+/* feedback inline al lado del botón (sin toasts flotantes) */
+.msg { font-size: 12.5px; color: var(--muted) }
+.msg.ok { color: var(--grn) }
+.msg.err { color: var(--dan) }
+
+/* estado vacío / cargando */
+.vacio { text-align: center; color: var(--muted); padding: 34px 12px; font-size: 13px }
+
+/* barra de progreso chica */
+.bar { height: 7px; border-radius: 4px; background: var(--card2); overflow: hidden }
+.bar i { display: block; height: 100%; border-radius: 4px; background: var(--grn) }
+
+/* avatar con iniciales */
+.av {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--vio-soft); color: var(--vio);
+  display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 700; flex-shrink: 0;
+}
+
+/* modal (uno solo a la vez, gestionado por el shell) */
+.pn-mod-overlay {
+  position: fixed; inset: 0; background: rgba(36, 24, 51, .45); z-index: 60;
+  display: grid; place-items: center; padding: 20px;
+}
+.pn-mod-card {
+  background: var(--card); border-radius: 14px; box-shadow: var(--sombra-hover);
+  max-width: 480px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 22px 24px;
+  animation: pnModIn .18s var(--ease);
+}
+@keyframes pnModIn { from { opacity: 0; transform: translateY(10px) scale(.97) } to { opacity: 1; transform: none } }
+.pn-mod-card h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 0 0 12px }
+.pn-mod-acciones { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px }
+
+/* sub-tabs dentro de un módulo */
+.subs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none }
+.subs::-webkit-scrollbar { display: none }
+.subs button {
+  font: inherit; font-size: 12.5px; font-weight: 600; border: 0; background: none; color: var(--muted);
+  padding: 10px 13px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+  transition: color .18s var(--ease), border-color .18s var(--ease);
+}
+.subs button:hover { color: var(--ink2) }
+.subs button.on { color: var(--ink); border-bottom-color: var(--vio) }
+.subs .cnt {
+  display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 20px;
+  font-size: 10.5px; background: var(--amb-soft); color: var(--amb);
+}
+
+/* utilitarias de grilla */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
+.fila { display: flex; align-items: center; gap: 10px }
+.fila .pn-sp, .fila .sp { flex: 1 }
+
+@media (max-width: 980px) {
+  .grid3 { grid-template-columns: 1fr }
+  .grid2 { grid-template-columns: 1fr }
+}
+@media (max-width: 640px) {
+  .pn-cuerpo { padding: 12px }
+  .pn-top { padding: 0 12px }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important }
+}

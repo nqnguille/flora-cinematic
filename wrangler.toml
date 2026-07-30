@@ -25,3 +25,8 @@ id = "2d141ca74029483f81490cc81c1490e9"
 [[kv_namespaces]]
 binding = "SOLICITUDES"
 id = "e8dfc462239049eb9ce4e2e93425ebe5"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flora-finanzas"
+database_id = "37fd2f01-dad0-488b-9ad5-646b18aba8cf"
