@@ -192,7 +192,10 @@
     const esPresi = P.puede('finanzas_aprobar')
     cuerpo.innerHTML = `
       <div class="fila" style="margin-bottom:10px">${chips.map(([v, n]) =>
-        `<button class="chip ${filtroTipo === v ? 'on' : ''}" data-f="${v}" type="button">${n}</button>`).join('')}</div>
+        `<button class="chip ${filtroTipo === v ? 'on' : ''}" data-f="${v}" type="button">${n}</button>`).join('')}
+        <span class="sp"></span>
+        <a class="btn" href="/api/panel/finanzas/export?mes=${mes}" download>CSV del mes</a>
+        <a class="btn" href="/api/panel/finanzas/export?anio=${mes.slice(0, 4)}" download>CSV del año</a></div>
       <div class="card" style="padding-bottom:6px">${m.movimientos.length ? `<table class="tabla"><thead><tr>
         <th>Fecha</th><th>Quién</th><th>Concepto</th><th>Medio</th><th class="r">Importe</th><th class="r"></th>
       </tr></thead><tbody>${m.movimientos.map((x) => `<tr>

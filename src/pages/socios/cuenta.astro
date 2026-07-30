@@ -37,6 +37,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
       </div>
 
+      <!-- Saldo de gramos: lo único de finanzas que ve el socio (sin plata) -->
+      <section class="cu-sec" id="cu-saldo-sec" hidden>
+        <h2 class="cu-sec-title">Tus gramos</h2>
+        <div class="cu-saldo-card">
+          <div class="cu-saldo-num"><b id="cu-saldo-g">—</b><span id="cu-saldo-det"></span></div>
+          <div class="cu-saldo-bar"><i id="cu-saldo-fill"></i></div>
+          <p class="cu-saldo-sub" id="cu-saldo-sub"></p>
+          <div class="cu-saldo-retiros" id="cu-saldo-retiros"></div>
+        </div>
+      </section>
+
       <section class="cu-sec">
         <h2 class="cu-sec-title">Reserva en curso</h2>
         <div id="cu-activo" class="cu-lista"></div>
@@ -117,7 +128,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       document.getElementById('socios-login').hidden = true
       document.getElementById('cu-content').hidden = false
+      cargarSaldo()
       return true
+    }
+
+    // Saldo de gramos (solo gramos — la plata no viaja hasta acá)
+    async function cargarSaldo() {
+      try {
+        const res = await fetch('/api/socios/saldo', { credentials: 'include' })
+        if (!res.ok) return
+        const d = await res.json()
+        if (!d.vinculado || !d.saldo) return
+        const s = d.saldo
+        document.getElementById('cu-saldo-g').textContent = `${s.saldo} g`
+        document.getElementById('cu-saldo-det').textContent = s.base
+          ? (s.tipo === 'plan' ? ` de ${s.base} g de tu plan` : ` de ${s.base} g de este mes`)
+          : ''
+        const fill = document.getElementById('cu-saldo-fill')
+        if (s.base > 0) fill.style.width = Math.min(100, ((s.base - s.saldo) / s.base) * 100).toFixed(1) + '%'
+        document.getElementById('cu-saldo-sub').textContent = s.visitasMes
+          ? `Retiraste ${s.retiradoMes} g en ${s.visitasMes} visita${s.visitasMes === 1 ? '' : 's'} este mes.`
+          : (s.tipo === 'plan' && s.hasta ? `Tu plan vence en ${s.hasta.slice(0, 7)}.` : 'Todavía no retiraste este mes.')
+        document.getElementById('cu-saldo-retiros').innerHTML = (d.retiros || []).slice(0, 4).map((r) =>
+          `<div><span>${esc(r.fecha.slice(8))}/${esc(r.fecha.slice(5, 7))}</span><span>${esc(r.producto || '')}</span><b>${r.gramos} g</b></div>`).join('')
+        document.getElementById('cu-saldo-sec').hidden = false
+      } catch { /* sin saldo no pasa nada: la sección queda oculta */ }
     }
 
     async function submitLogin(credential, tosAccept) {
@@ -202,5 +237,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-vacio a { color: #b79de6; }
     .cu-vacio[hidden] { display: none; }
     .cu-gw { margin-top: 4px; }
+
+    /* saldo de gramos — nocturno de marca, verde solo para el dato */
+    .cu-saldo-card {
+      background: rgba(244, 241, 247, 0.04); border: 1px solid rgba(244, 241, 247, 0.12);
+      border-radius: 16px; padding: 20px 22px;
+    }
+    .cu-saldo-num { display: flex; align-items: baseline; gap: 8px; }
+    .cu-saldo-num b { font-family: var(--font-display); font-weight: 500; font-size: 2.6rem; line-height: 1; color: #3cb492; }
+    .cu-saldo-num span { color: rgba(244, 241, 247, 0.55); font-size: 0.9rem; }
+    .cu-saldo-bar { height: 8px; border-radius: 5px; background: rgba(244, 241, 247, 0.1); overflow: hidden; margin: 14px 0 8px; }
+    .cu-saldo-bar i { display: block; height: 100%; width: 0; background: #3cb492; border-radius: 5px; }
+    .cu-saldo-sub { color: rgba(244, 241, 247, 0.55); font-size: 0.85rem; margin: 0 0 6px; }
+    .cu-saldo-retiros > div {
+      display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px;
+      padding: 8px 0; border-top: 1px solid rgba(244, 241, 247, 0.08); font-size: 0.85rem;
+    }
+    .cu-saldo-retiros span:first-child { color: rgba(244, 241, 247, 0.45); }
+    .cu-saldo-retiros b { color: #3cb492; font-weight: 600; }
+    #cu-saldo-sec[hidden] { display: none; }
   </style>
 </Layout>

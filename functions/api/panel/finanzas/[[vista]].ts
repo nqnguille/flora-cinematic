@@ -212,6 +212,37 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     return json({ ok: true, personal: fichas.results, pagos: pagos.results });
   }
 
+  if (vista === 'export') {
+    // CSV para la contadora: un año entero o un mes. Respeta el tapado de
+    // sueldos para quien no tiene personal_ver.
+    const anio = url.searchParams.get('anio');
+    const mes = url.searchParams.get('mes');
+    const periodo = mes && MES_RE.test(mes) ? mes : anio && /^\d{4}$/.test(anio) ? anio : null;
+    if (!periodo) return json({ error: 'Falta ?anio=YYYY o ?mes=YYYY-MM' }, 400);
+    const rows = await env.DB.prepare(
+      `SELECT m.fecha, m.tipo, m.categoria, m.concepto, s.nombre AS socio, m.persona,
+              m.bruto, m.comision, m.neto, m.medio, m.estado, m.gramos, m.origen
+         FROM movimientos m LEFT JOIN socios s ON s.id = m.socio_id
+        WHERE substr(m.fecha, 1, ${periodo.length}) = ? AND m.estado != 'anulado'
+        ORDER BY m.fecha, m.id`,
+    ).bind(periodo).all();
+    const lista = taparSueldos(rows.results as Record<string, string | number | null>[], rol);
+    const cab = ['fecha', 'tipo', 'categoria', 'concepto', 'socio', 'persona', 'bruto', 'comision', 'neto', 'medio', 'estado', 'gramos', 'origen'];
+    const celda = (v: unknown) => {
+      if (v == null) return '';
+      const s = String(v);
+      return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const csv = '﻿' + cab.join(';') + '\n' +
+      lista.map((r) => cab.map((c) => celda((r as Record<string, unknown>)[c])).join(';')).join('\n');
+    return new Response(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="flora-movimientos-${periodo}.csv"`,
+      },
+    });
+  }
+
   return json({ error: 'Vista desconocida' }, 404);
 };
 

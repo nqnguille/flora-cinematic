@@ -27,3 +27,6 @@ pnpm-debug.log*
 # wrangler local cache
 .wrangler/
 .dev.vars
+
+# respaldos de la base (datos de socios — nunca a git)
+backups/*.sql
