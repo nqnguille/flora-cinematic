@@ -1,0 +1,487 @@
+/* Módulo Socios (prefijo so-): padrón del club + solicitudes de acceso.
+   Porteo del panel viejo (/socios/admin/) — mismos endpoints, UI nueva.
+   Solo lectura si el rol no tiene la capacidad padron_editar. */
+(() => {
+  'use strict'
+  const P = window.Panel
+
+  // Endpoints existentes (los mismos del panel viejo)
+  const EP_SOCIOS = '/api/socios/admin/socios'
+  const EP_INTENTOS = '/api/socios/admin/intentos'
+  const EP_SOLICITUDES = '/api/socios/admin/solicitudes'
+
+  let cont = null
+  let editar = false          // capacidad padron_editar
+  let SOCIOS = []
+  let SOLICITUDES = []        // formulario web + intentos de login, mezclados
+  let orden = { key: 'lastLogin', dir: -1 } // arranca por actividad reciente
+  let filtro = ''             // '' (todos) | 'activos30' | 'sin'
+  let q = ''
+
+  const FILTROS = {
+    activos30: (s) => s.lastLogin && Date.now() - Date.parse(s.lastLogin) < 30 * 86400000,
+    sin: (s) => !s.lastLogin,
+  }
+  const ORDENES = {
+    // null/ausente al final, gane quien gane la dirección
+    lastLogin: (a, b) => (Date.parse(b.lastLogin || 0) || 0) - (Date.parse(a.lastLogin || 0) || 0),
+    nombre: (a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email), 'es'),
+    email: (a, b) => String(a.email || '').localeCompare(String(b.email || ''), 'es'),
+    alta: (a, b) => (Date.parse(b.alta || b.firstLogin || 0) || 0) - (Date.parse(a.alta || a.firstLogin || 0) || 0),
+    logins: (a, b) => (b.logins || 0) - (a.logins || 0),
+  }
+
+  /* ---------- helpers ---------- */
+  function errHttp(status) {
+    if (status === 401) return 'Tu sesión venció — recargá la página y volvé a entrar.'
+    if (status === 403) return 'Tu rol no tiene permiso para ver esto.'
+    return 'El servidor respondió ' + status + '. Probá de nuevo en un rato.'
+  }
+  function fmtFecha(iso) {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return '—'
+    return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  }
+  // "hace 3 días" — el dato operativo es la distancia, no la fecha exacta
+  function fmtRel(iso) {
+    if (!iso) return ''
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return ''
+    const min = Math.floor((Date.now() - d.getTime()) / 60000)
+    if (min < 1) return 'recién'
+    if (min < 60) return `hace ${min} min`
+    const h = Math.floor(min / 60)
+    if (h < 24) return `hace ${h} h`
+    const dias = Math.floor(h / 24)
+    if (dias < 31) return `hace ${dias} día${dias > 1 ? 's' : ''}`
+    const meses = Math.floor(dias / 30)
+    return `hace ${meses} mes${meses > 1 ? 'es' : ''}`
+  }
+  // wa.me solo acepta dígitos: "+54 9 299 456-7890" → "5492994567890"
+  const digitsOnly = (v) => String(v || '').replace(/\D/g, '')
+  const ICON_WA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2zm4.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>'
+
+  // feedback inline del padrón (al lado del buscador)
+  let msgT = null
+  function aviso(texto, clase, ms) {
+    const el = cont.querySelector('#so-msg')
+    if (!el) return
+    el.className = 'msg' + (clase ? ' ' + clase : '')
+    el.textContent = texto
+    clearTimeout(msgT)
+    if (texto) msgT = setTimeout(() => { el.textContent = ''; el.className = 'msg' }, ms || 6000)
+  }
+  let solMsgT = null
+  function avisoSol(texto, clase, ms) {
+    const el = cont.querySelector('#so-sol-msg')
+    if (!el) return
+    el.className = 'msg' + (clase ? ' ' + clase : '')
+    el.textContent = texto
+    clearTimeout(solMsgT)
+    if (texto) solMsgT = setTimeout(() => { el.textContent = ''; el.className = 'msg' }, ms || 6000)
+  }
+
+  /* ---------- padrón ---------- */
+  // POST compartido: alta rápida, nota, teléfono, temporal. El shape del body
+  // es el del panel viejo: { email, nota?, telefono?, name?, temporal? }.
+  async function saveSocio(email, nota, extra) {
+    try {
+      const res = await fetch(EP_SOCIOS, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, nota, ...(extra || {}) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      return { ok: res.ok && data.ok !== false, error: data.error || (res.ok ? '' : errHttp(res.status)), mailEnviado: data.mailEnviado, mailError: data.mailError }
+    } catch {
+      return { ok: false, error: 'sin conexión' }
+    }
+  }
+
+  function tempTag(s) {
+    if (!s.temporal) return ''
+    if (!s.tempExpiraEn) return ' <span class="tag tag-deb" title="Las 24hs corren desde su primer ingreso">Prueba sin usar</span>'
+    const ms = new Date(s.tempExpiraEn).getTime() - Date.now()
+    if (ms <= 0) return ` <span class="tag tag-mal" title="Venció ${P.esc(fmtFecha(s.tempExpiraEn))}">Prueba vencida</span>`
+    const h = Math.max(1, Math.round(ms / 3600000))
+    return ` <span class="tag tag-deb" title="Vence ${P.esc(fmtFecha(s.tempExpiraEn))}">Prueba · vence en ${h}h</span>`
+  }
+  function estadoHtml(s) {
+    const base = s.lastLogin
+      ? `<span class="tag tag-ok" title="Último ingreso: ${P.esc(fmtFecha(s.lastLogin))}">Activo ${P.esc(fmtRel(s.lastLogin))}</span>`
+      : '<span class="tag tag-off">Sin ingresar</span>'
+    return base + tempTag(s)
+  }
+
+  function filaSocio(s) {
+    const nombre = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
+    // WhatsApp: con teléfono va directo; sin teléfono y sin ingreso, link
+    // genérico de invitación (abre WhatsApp para elegir el contacto a mano).
+    const waMsg = `Hola! Ya sos socio de Flora. Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`
+    const dig = digitsOnly(s.telefono)
+    const waHref = dig
+      ? `https://wa.me/${dig}${s.lastLogin ? '' : '?text=' + encodeURIComponent(waMsg)}`
+      : (s.lastLogin ? '' : 'https://wa.me/?text=' + encodeURIComponent(waMsg))
+    const wa = waHref
+      ? `<a class="so-wa" target="_blank" rel="noopener" href="${P.esc(waHref)}" title="${dig ? 'Enviar WhatsApp' : 'Invitar por WhatsApp'}">${ICON_WA}</a>`
+      : ''
+    const tel = editar
+      ? `<input class="input so-tel" data-email="${P.esc(s.email)}" value="${P.esc(s.telefono || '')}" placeholder="+54 9 ..." />`
+      : `<span>${P.esc(s.telefono || '—')}</span>`
+    const nota = editar
+      ? `<input class="input so-nota-in" data-email="${P.esc(s.email)}" value="${P.esc(s.nota || '')}" placeholder="Nota…" />`
+      : `<span style="color:var(--ink2)">${P.esc(s.nota || '—')}</span>`
+    return `<tr>
+      <td><div class="fila"><span class="av">${P.esc(P.iniciales(nombre || s.email))}</span>
+        <span style="font-weight:600;white-space:nowrap">${P.esc(nombre || '(sin nombre aún)')}</span></div></td>
+      <td style="color:var(--ink2)">${P.esc(s.email)}</td>
+      <td><div class="fila so-telcell">${tel}${wa}</div></td>
+      <td style="white-space:nowrap">${estadoHtml(s)}</td>
+      <td style="color:var(--muted);white-space:nowrap" title="${s.firstLogin ? 'Primer ingreso: ' + P.esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? P.esc(fmtFecha(s.alta).split(' ')[0]) : '—'}</td>
+      <td class="r">${s.logins ? P.fmtN(s.logins) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${nota}</td>
+      ${editar ? `<td class="r"><button class="btn btn-peligro so-del" data-email="${P.esc(s.email)}" type="button">Quitar</button></td>` : ''}
+    </tr>`
+  }
+
+  function renderPadron() {
+    // sub-stats clicables (filtran al tocarlas; tocar la activa la limpia)
+    const activos30 = SOCIOS.filter(FILTROS.activos30).length
+    const sin = SOCIOS.filter(FILTROS.sin).length
+    const chip = (f, html, title) =>
+      `<button type="button" class="chip${filtro === f ? ' on' : ''}" data-filtro="${f}" title="${P.esc(title)}">${html}</button>`
+    cont.querySelector('#so-stats').innerHTML = [
+      chip('', `<strong>${P.fmtN(SOCIOS.length)}</strong> socios`, 'Ver todos'),
+      chip('activos30', `<strong>${P.fmtN(activos30)}</strong> activos últimos 30 días`, 'Solo los que entraron este mes'),
+      chip('sin', `<strong>${P.fmtN(sin)}</strong> sin ingresar`, 'Solo los que nunca entraron'),
+    ].join('')
+
+    let lista = [...SOCIOS].sort(ORDENES[orden.key])
+    if (orden.dir === 1) lista.reverse()
+    if (filtro && FILTROS[filtro]) lista = lista.filter(FILTROS[filtro])
+    if (q) {
+      lista = lista.filter((s) =>
+        `${s.name || ''} ${s.givenName || ''} ${s.familyName || ''} ${s.email} ${s.nota || ''} ${s.telefono || ''}`.toLowerCase().includes(q))
+    }
+
+    const el = cont.querySelector('#so-lista')
+    if (!lista.length) {
+      el.innerHTML = `<div class="vacio">${q || filtro ? 'Ningún socio coincide con ese filtro.' : 'Todavía no hay socios cargados.'}</div>`
+      return
+    }
+    const COLS = [
+      ['nombre', 'Socio'], ['email', 'Email'], [null, 'Teléfono'], ['lastLogin', 'Estado'],
+      ['alta', 'Alta'], ['logins', 'Ingresos', 'r'], [null, 'Nota'],
+    ]
+    if (editar) COLS.push([null, '', 'r'])
+    const ths = COLS.map(([key, label, cls]) => {
+      if (!key) return `<th${cls ? ` class="${cls}"` : ''}>${label}</th>`
+      const on = orden.key === key
+      const flecha = on ? (orden.dir === -1 ? ' ↓' : ' ↑') : ''
+      return `<th${cls ? ` class="${cls}"` : ''}><button type="button" class="so-th${on ? ' on' : ''}" data-sort="${key}">${label}${flecha}</button></th>`
+    }).join('')
+    el.innerHTML = `<div class="so-scroll"><table class="tabla">
+      <thead><tr>${ths}</tr></thead>
+      <tbody>${lista.map(filaSocio).join('')}</tbody></table></div>`
+  }
+
+  async function cargarSocios() {
+    const el = cont.querySelector('#so-lista')
+    if (!SOCIOS.length) el.innerHTML = '<div class="vacio">⏳ Cargando…</div>'
+    try {
+      const res = await fetch(EP_SOCIOS, { credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.ok) { el.innerHTML = `<div class="vacio">${P.esc(data.error || errHttp(res.status))}</div>`; return }
+      SOCIOS = data.socios || []
+      renderPadron()
+    } catch {
+      el.innerHTML = '<div class="vacio">Error de red al cargar el padrón — revisá la conexión y probá de nuevo.</div>'
+    }
+  }
+
+  /* ---------- solicitudes (formulario web + intentos de login) ---------- */
+  function endpointDe(item) { return item && item.tipo === 'formulario' ? EP_SOLICITUDES : EP_INTENTOS }
+
+  function filaSolicitud(i) {
+    const badge = i.tipo === 'formulario'
+      ? (i.intent === 'entrevista'
+          ? '<span class="tag tag-deb">Quiere entrevista médica</span>'
+          : '<span class="tag tag-ok">Dice tener REPROCANN</span>')
+      : `<span class="tag tag-deb">${P.fmtN(i.attempts || 1)} intento${i.attempts === 1 ? '' : 's'} de ingreso</span>`
+    const fecha = i.tipo === 'formulario'
+      ? `Solicitud ${P.esc(fmtRel(i.creado))} · ${P.esc(fmtFecha(i.creado))}`
+      : `Último intento ${P.esc(fmtRel(i.lastAttempt))} · ${P.esc(fmtFecha(i.lastAttempt))}`
+    const tel = i.phone
+      ? `<div class="so-sol-meta">Tel: <a href="https://wa.me/${P.esc(digitsOnly(i.phone))}" target="_blank" rel="noopener">${P.esc(i.phone)}</a></div>`
+      : ''
+    const adjunto = i.tieneAdjunto
+      ? `<div class="so-sol-meta"><a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(i.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a></div>`
+      : ''
+    const acciones = editar
+      ? `<div class="so-sol-acts">
+          <button class="btn btn-pri so-sol-add" data-email="${P.esc(i.email)}" type="button">Agregar como socio</button>
+          <button class="btn so-sol-temp" data-email="${P.esc(i.email)}" data-name="${P.esc(i.name || '')}" type="button">Aprobar temporal 24h</button>
+          <button class="btn btn-peligro so-sol-del" data-email="${P.esc(i.email)}" data-tipo="${P.esc(i.tipo)}" type="button">Descartar</button>
+        </div>`
+      : ''
+    return `<div class="so-sol">
+      <span class="av">${P.esc(P.iniciales(i.name || i.email))}</span>
+      <div class="so-sol-main">
+        <div class="fila" style="flex-wrap:wrap;gap:8px">
+          <strong>${P.esc(i.name || '(sin nombre)')}</strong>${badge}
+        </div>
+        <div class="so-sol-mail">${P.esc(i.email)}</div>
+        ${tel}${adjunto}
+        <div class="so-sol-meta">${fecha}</div>
+      </div>
+      ${acciones}
+    </div>`
+  }
+
+  function renderSolicitudes() {
+    const el = cont.querySelector('#so-sol-lista')
+    el.innerHTML = SOLICITUDES.length
+      ? SOLICITUDES.map(filaSolicitud).join('')
+      : '<div class="vacio">No hay solicitudes pendientes.</div>'
+    // contador en el sub-tab
+    const cnt = cont.querySelector('#so-sol-cnt')
+    cnt.hidden = !SOLICITUDES.length
+    cnt.textContent = SOLICITUDES.length || ''
+  }
+
+  async function cargarSolicitudes() {
+    const el = cont.querySelector('#so-sol-lista')
+    if (!SOLICITUDES.length) el.innerHTML = '<div class="vacio">⏳ Cargando…</div>'
+    try {
+      const [resInt, resSol] = await Promise.all([
+        fetch(EP_INTENTOS, { credentials: 'include' }),
+        fetch(EP_SOLICITUDES, { credentials: 'include' }),
+      ])
+      const [dataInt, dataSol] = await Promise.all([
+        resInt.json().catch(() => ({})),
+        resSol.json().catch(() => ({})),
+      ])
+      if (!resInt.ok && !resSol.ok) { el.innerHTML = `<div class="vacio">${P.esc(errHttp(resInt.status))}</div>`; return }
+      const intentos = (resInt.ok && dataInt.ok) ? (dataInt.intentos || []).map((i) => ({ ...i, tipo: 'intento' })) : []
+      const solicitudes = (resSol.ok && dataSol.ok) ? (dataSol.solicitudes || []).map((s) => ({ ...s, tipo: 'formulario' })) : []
+      SOLICITUDES = [...solicitudes, ...intentos].sort((a, b) => {
+        const fa = a.tipo === 'formulario' ? a.creado : a.lastAttempt
+        const fb = b.tipo === 'formulario' ? b.creado : b.lastAttempt
+        return String(fb || '').localeCompare(String(fa || ''))
+      })
+      renderSolicitudes()
+    } catch {
+      el.innerHTML = '<div class="vacio">Error de red al cargar las solicitudes.</div>'
+    }
+  }
+
+  async function descartarSolicitud(email, item) {
+    await fetch(endpointDe(item), {
+      method: 'DELETE', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+  }
+
+  /* ---------- acciones ---------- */
+  async function onAlta(e) {
+    e.preventDefault()
+    const emailEl = cont.querySelector('#so-alta-email')
+    const notaEl = cont.querySelector('#so-alta-nota')
+    const msg = cont.querySelector('#so-alta-msg')
+    const email = emailEl.value.trim().toLowerCase()
+    if (!email) return
+    msg.className = 'msg'; msg.textContent = '⏳ guardando…'
+    const { ok, error } = await saveSocio(email, notaEl.value.trim())
+    msg.className = 'msg ' + (ok ? 'ok' : 'err')
+    msg.textContent = ok ? '✔ socio agregado' : `✗ ${error || 'no se pudo agregar'} — probá de nuevo`
+    if (ok) { emailEl.value = ''; notaEl.value = ''; cargarSocios() }
+    setTimeout(() => { msg.textContent = ''; msg.className = 'msg' }, 6000)
+  }
+
+  async function onClick(e) {
+    // ordenar por columna
+    const th = e.target.closest('.so-th')
+    if (th) {
+      const key = th.dataset.sort
+      if (orden.key === key) orden.dir *= -1
+      else orden = { key, dir: -1 }
+      renderPadron()
+      return
+    }
+    // sub-stats como filtros
+    const chip = e.target.closest('#so-stats .chip')
+    if (chip) {
+      const f = chip.dataset.filtro
+      filtro = filtro === f ? '' : f
+      renderPadron()
+      return
+    }
+    // quitar socio
+    const del = e.target.closest('.so-del')
+    if (del) {
+      const email = del.dataset.email
+      if (!(await P.confirmar(`¿Dar de baja a ${email}? Deja de poder entrar a la carta.`, 'Sí, dar de baja'))) return
+      const res = await fetch(EP_SOCIOS, {
+        method: 'DELETE', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) { aviso('✗ ' + errHttp(res.status), 'err'); return }
+      aviso('✔ socio dado de baja', 'ok')
+      cargarSocios()
+      return
+    }
+    // solicitud → agregar como socio
+    const add = e.target.closest('.so-sol-add')
+    if (add) {
+      const email = add.dataset.email
+      const item = SOLICITUDES.find((i) => i.email === email)
+      const notaBase = item && item.tipo === 'formulario'
+        ? (item.intent === 'entrevista' ? 'Solicitud web · entrevista médica' : 'Solicitud web · ya tiene REPROCANN') + (item.phone ? ' · ' + item.phone : '')
+        : 'Vía intento de acceso'
+      add.disabled = true
+      add.textContent = 'Agregando…'
+      const { ok, error } = await saveSocio(email, notaBase)
+      if (ok) {
+        await descartarSolicitud(email, item)
+        avisoSol('✔ agregado al padrón', 'ok')
+        cargarSocios(); cargarSolicitudes()
+      } else {
+        add.disabled = false
+        add.textContent = 'Agregar como socio'
+        avisoSol(`✗ ${error || 'no se pudo agregar'} — probá de nuevo`, 'err')
+      }
+      return
+    }
+    // solicitud → acceso temporal 24h
+    const temp = e.target.closest('.so-sol-temp')
+    if (temp) {
+      const email = temp.dataset.email
+      const name = temp.dataset.name || ''
+      const item = SOLICITUDES.find((i) => i.email === email)
+      if (!(await P.confirmar(`¿Darle a ${name || email} acceso temporal de 24hs a la carta? Le llega un mail avisándole que ya puede entrar.`, 'Sí, aprobar'))) return
+      temp.disabled = true
+      temp.textContent = 'Aprobando…'
+      const { ok, error, mailEnviado, mailError } = await saveSocio(email, 'Acceso temporal (24h desde el primer login)', { name, temporal: true })
+      if (ok) {
+        await descartarSolicitud(email, item)
+        cargarSocios(); cargarSolicitudes()
+        if (mailEnviado === false) {
+          // El alta pegó, pero el mail no salió — avisamos fuerte: si no,
+          // parece que ya le llegó y nadie le escribe.
+          avisoSol(`Se aprobó, pero el mail NO salió (${mailError || 'error desconocido'}) — avisale vos por WhatsApp.`, 'err', 12000)
+        } else {
+          avisoSol('✔ acceso temporal aprobado y mail enviado', 'ok')
+        }
+      } else {
+        temp.disabled = false
+        temp.textContent = 'Aprobar temporal 24h'
+        avisoSol(`✗ ${error || 'no se pudo aprobar'} — probá de nuevo`, 'err')
+      }
+      return
+    }
+    // solicitud → descartar
+    const desc = e.target.closest('.so-sol-del')
+    if (desc) {
+      const email = desc.dataset.email
+      const item = SOLICITUDES.find((i) => i.email === email)
+      if (!(await P.confirmar(`¿Descartar la solicitud de ${email}?`, 'Sí, descartar'))) return
+      await descartarSolicitud(email, item)
+      cargarSolicitudes()
+    }
+  }
+
+  async function onChange(e) {
+    const tel = e.target.closest('.so-tel')
+    if (tel) {
+      aviso('⏳ guardando teléfono…')
+      const email = tel.dataset.email
+      const nuevo = tel.value.trim()
+      const { ok, error } = await saveSocio(email, undefined, { telefono: nuevo })
+      aviso(ok ? '✔ teléfono guardado' : `✗ ${error || 'no se pudo guardar el teléfono'}`, ok ? 'ok' : 'err')
+      if (ok) {
+        // refresca el link de WhatsApp de la fila sin pisar lo tipeado
+        const socio = SOCIOS.find((x) => x.email === email)
+        if (socio) socio.telefono = nuevo
+        renderPadron()
+      }
+      return
+    }
+    const nota = e.target.closest('.so-nota-in')
+    if (nota) {
+      aviso('⏳ guardando nota…')
+      const { ok, error } = await saveSocio(nota.dataset.email, nota.value)
+      aviso(ok ? '✔ nota guardada' : `✗ ${error || 'no se pudo guardar la nota'}`, ok ? 'ok' : 'err')
+      const socio = SOCIOS.find((x) => x.email === nota.dataset.email)
+      if (ok && socio) socio.nota = nota.value
+    }
+  }
+
+  /* ---------- registro ---------- */
+  P.registrar('socios', {
+    init(el) {
+      cont = el
+      editar = P.puede('padron_editar')
+      el.innerHTML = `
+        <div class="subs" id="so-subs">
+          <button type="button" class="on" data-sub="padron">Padrón</button>
+          <button type="button" data-sub="solicitudes">Solicitudes<span class="cnt" id="so-sol-cnt" hidden></span></button>
+        </div>
+
+        <div id="so-padron">
+          ${editar ? `
+          <div class="card" style="margin-bottom:14px">
+            <span class="k">Alta rápida</span>
+            <p class="so-help">Cargá el email de la cuenta de Google con la que el socio va a entrar. Apenas ingrese, su ficha se completa sola con el nombre de Google.</p>
+            <form id="so-alta" class="fila so-alta">
+              <input class="input" id="so-alta-email" type="email" required placeholder="email@gmail.com" autocomplete="off" />
+              <input class="input" id="so-alta-nota" type="text" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
+              <button class="btn btn-pri" type="submit">Agregar socio</button>
+              <span id="so-alta-msg" class="msg"></span>
+            </form>
+          </div>` : ''}
+          <div class="card">
+            <div class="fila" style="flex-wrap:wrap">
+              <input class="input" id="so-buscar" type="search" placeholder="Buscar por nombre, email o nota…" autocomplete="off" style="max-width:280px" />
+              <div id="so-stats" class="fila" style="flex-wrap:wrap"></div>
+              <span class="pn-sp"></span>
+              <span id="so-msg" class="msg"></span>
+            </div>
+            <div id="so-lista" style="margin-top:14px"><div class="vacio">⏳ Cargando…</div></div>
+          </div>
+        </div>
+
+        <div id="so-solicitudes" hidden>
+          <div class="card">
+            <div class="fila"><span class="k">Solicitudes de acceso</span><span class="pn-sp"></span><span id="so-sol-msg" class="msg"></span></div>
+            <p class="so-help">Gente que dejó sus datos pidiendo acceso a la carta o su entrevista médica, o que probó entrar con una cuenta de Google que todavía no es socia.</p>
+            <div id="so-sol-lista"><div class="vacio">⏳ Cargando…</div></div>
+          </div>
+        </div>`
+
+      // sub-tabs
+      el.querySelector('#so-subs').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-sub]')
+        if (!b) return
+        el.querySelectorAll('#so-subs button').forEach((x) => x.classList.toggle('on', x === b))
+        el.querySelector('#so-padron').hidden = b.dataset.sub !== 'padron'
+        el.querySelector('#so-solicitudes').hidden = b.dataset.sub !== 'solicitudes'
+      })
+
+      el.querySelector('#so-buscar').addEventListener('input', (e) => {
+        q = e.target.value.trim().toLowerCase()
+        renderPadron()
+      })
+      const alta = el.querySelector('#so-alta')
+      if (alta) alta.addEventListener('submit', onAlta)
+      el.addEventListener('click', onClick)
+      el.addEventListener('change', onChange)
+
+      cargarSocios()
+      cargarSolicitudes()
+    },
+  })
+})()

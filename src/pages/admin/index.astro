@@ -1,6 +1,7 @@
 ---
-// Panel del club v2 — shell (ruta paralela: /socios/panel/)
-// El admin viejo (/socios/admin/) sigue operando hasta el corte.
+// Panel del club v2 — shell (ruta: /admin/ — uso interno).
+// /socios queda para los pacientes; el admin viejo (/socios/admin/)
+// sigue operando hasta el corte.
 // Estética CLARA — no importa global.css del sitio a propósito:
 // el panel no hereda el grano cinematográfico ni sus bugs de compositor.
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
@@ -100,6 +101,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
     <script src="/panel/shell.js" is:inline></script>
+    <!-- módulos reales primero (primero-gana), placeholders al final cubren lo que falte -->
+    <script src="/panel/mod-finanzas.js" is:inline></script>
+    <script src="/panel/mod-socios.js" is:inline></script>
+    <script src="/panel/mod-reservas.js" is:inline></script>
+    <script src="/panel/mod-catalogo.js" is:inline></script>
+    <script src="/panel/mod-mostrador.js" is:inline></script>
+    <script src="/panel/mod-ajustes.js" is:inline></script>
     <script src="/panel/mod-placeholders.js" is:inline></script>
   </body>
 </html>

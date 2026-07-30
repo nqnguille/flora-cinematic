@@ -8,3 +8,5 @@
 /socios/extracciones /extracciones/ 301
 /socios/admin/geneticas    /socios/admin/    301
 /socios/admin/geneticas/   /socios/admin/    301
+/socios/panel/ /admin/ 301
+/socios/panel /admin/ 301

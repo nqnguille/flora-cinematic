@@ -206,7 +206,9 @@
 
   // ---------- API pública para los módulos ----------
   window.Panel = {
-    registrar(nombre, mod) { modulos[nombre] = mod },
+    // El primero que registra gana: los módulos reales cargan antes que
+    // mod-placeholders.js, así el placeholder solo cubre lo que falta.
+    registrar(nombre, mod) { if (!modulos[nombre]) modulos[nombre] = mod },
     ir,
     get me() { return me },
     set me(v) { me = v },
