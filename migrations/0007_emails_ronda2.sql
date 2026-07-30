@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS sugerencias_email (socio_id INTEGER PRIMARY KEY, email TEXT NOT NULL, nombre_google TEXT);
+DELETE FROM sugerencias_email;
+UPDATE socios SET email = 'clapreta2016@gmail.com' WHERE id = 150 AND email IS NULL;
+UPDATE socios SET email = 'drlea.lc@gmail.com' WHERE id = 147 AND email IS NULL;
+UPDATE socios SET email = 'ignacioguaquinchay7@gmail.com' WHERE id = 152 AND email IS NULL;
+UPDATE socios SET email = 'jsuarezirigoyen@gmail.com' WHERE id = 146 AND email IS NULL;
+UPDATE socios SET email = 'martinc8817@gmail.com' WHERE id = 156 AND email IS NULL;
+UPDATE socios SET email = 'matiassreus@gmail.com' WHERE id = 154 AND email IS NULL;
+INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (18, 'agustinmorales.nqn@gmail.com', 'Agustín Morales');
+INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (149, 'atusushi01@gmail.com', 'Santiago mendez');
+INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (105, 'gastonkarle@gmail.com', 'gaston karle');
+INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (12, 'linmobiliarianomade@gmail.com', 'Luis F Mauro');
+INSERT OR REPLACE INTO sugerencias_email (socio_id, email, nombre_google) VALUES (149, 'santisanchezdiego@gmail.com', 'Santy Sanchez Diego');

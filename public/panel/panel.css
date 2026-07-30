@@ -458,3 +458,10 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
 .mo-item { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 10px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px }
 .mo-agotado td { opacity: .5 }
+
+/* ============================================================
+   Módulo Inicio (in-)
+   ============================================================ */
+.in-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px }
+.in-tile { cursor: pointer; transition: transform .18s var(--ease), box-shadow .18s var(--ease) }
+.in-tile:hover { transform: translateY(-2px); box-shadow: var(--sombra-hover) }

@@ -421,6 +421,120 @@
   }
 
   /* ---------- registro ---------- */
+  // ============ Fichas (sf-): padrón financiero D1 ============
+  const esc = P.esc
+  let sfBox = null
+  let sfSocios = []
+  let sfSug = []
+  let sfQ = ''
+  let sfCargado = false
+  const SF_TIERS = ['NINGUNA', 'SMALL', 'MEDIUM', 'LARGE', 'EXTRA LARGE']
+
+  function sfMsg(texto, clase) {
+    const m = sfBox.querySelector('#sf-msg')
+    m.className = 'msg ' + (clase || '')
+    m.textContent = texto
+    if (texto) setTimeout(() => { if (m.textContent === texto) m.textContent = '' }, 5000)
+  }
+
+  async function sfCargar(forzar) {
+    if (sfCargado && !forzar) return
+    sfCargado = true
+    const r = await fetch('/api/panel/padron/lista', { credentials: 'include' })
+    if (!r.ok) { sfBox.querySelector('#sf-lista').innerHTML = `<div class="vacio">Error ${r.status} al traer las fichas.</div>`; return }
+    const d = await r.json()
+    sfSocios = d.socios
+    sfSug = d.sugerencias
+    const cnt = document.getElementById('sf-cnt')
+    cnt.hidden = !sfSug.length
+    cnt.textContent = sfSug.length
+    sfRender()
+  }
+
+  function sfRender() {
+    // sugerencias de email para confirmar con un click
+    const porId = Object.fromEntries(sfSocios.map((s) => [s.id, s]))
+    sfBox.querySelector('#sf-sugerencias').innerHTML = sfSug.length ? `
+      <div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
+        <span class="k">Cruces por confirmar</span>
+        <p class="so-help">Cuentas de Google que entraron a la carta y se parecen a un socio del padrón. Confirmá o descartá.</p>
+        ${sfSug.map((g) => `<div class="fila" style="padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+          <span><b>${esc(g.email)}</b> <span style="color:var(--muted)">(Google: ${esc(g.nombre_google || '—')})</span>
+          ¿es <b>${esc((porId[g.socio_id] || {}).nombre || '#' + g.socio_id)}</b>?</span>
+          <span class="pn-sp"></span>
+          <button class="btn sf-sug" data-id="${g.socio_id}" data-ok="1" type="button">Sí, es él</button>
+          <button class="btn sf-sug" data-id="${g.socio_id}" data-ok="" type="button">No</button>
+        </div>`).join('')}
+      </div>` : ''
+
+    const lista = sfSocios.filter((s) => !sfQ ||
+      (s.nombre + ' ' + (s.email || '') + ' ' + (s.nota || '')).toLowerCase().includes(sfQ))
+    sfBox.querySelector('#sf-lista').innerHTML = lista.length ? `
+      <table class="tabla"><thead><tr>
+        <th>Socio</th><th>Email (débito)</th><th>Teléfono</th><th>Membresía</th><th>Último pago</th><th>Estado</th>
+      </tr></thead><tbody>${lista.map((s) => `<tr>
+        <td><div class="fila"><span class="av">${esc(P.iniciales(s.nombre))}</span>
+          <div><div style="font-weight:600">${esc(s.nombre)}</div>
+          <div style="color:var(--muted);font-size:11px">${s.numero ? '#' + s.numero : ''}${s.reprocann ? ' · ' + esc(s.reprocann) : ''}</div></div></div></td>
+        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="email" type="email"
+          value="${esc(s.email || '')}" placeholder="sin email" style="min-width:210px;font-size:12px" />`
+          : esc(s.email || '—')}</td>
+        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="telefono" type="tel"
+          value="${esc(s.telefono || '')}" placeholder="+54 9…" style="max-width:130px;font-size:12px" />`
+          : esc(s.telefono || '—')}</td>
+        <td>${s.modalidad === 'plan' ? `<span class="tag tag-auto">${esc(s.tier)}</span>`
+          : editar ? `<select class="sel sf-tier" data-id="${s.id}" style="font-size:12px;max-width:150px">
+            ${SF_TIERS.map((t) => `<option value="${t}" ${(s.tier || 'NINGUNA') === t ? 'selected' : ''}>${t === 'NINGUNA' ? '— sin membresía' : t}</option>`).join('')}
+          </select>` : esc(s.tier || '—')}</td>
+        <td style="color:var(--muted);font-size:12px">${s.ultimo_pago ? esc(s.ultimo_pago.slice(0, 7)) : 'nunca'}</td>
+        <td><span class="tag ${s.estado === 'activo' ? 'tag-ok' : 'tag-off'}">${esc(s.estado)}</span></td>
+      </tr>`).join('')}</tbody></table>` : '<div class="vacio">No aparece nadie con esa búsqueda.</div>'
+  }
+
+  async function sfPatch(id, campo, valor) {
+    sfMsg('⏳ guardando…')
+    const r = await fetch('/api/panel/padron/socio', {
+      method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: Number(id), [campo]: valor }),
+    })
+    const d = await r.json().catch(() => ({}))
+    if (r.ok) { sfMsg('✔ guardado', 'ok'); return true }
+    sfMsg('✗ ' + (d.error || 'error ' + r.status), 'err')
+    return false
+  }
+
+  function sfInit(box) {
+    sfBox = box
+    box.querySelector('#sf-buscar').addEventListener('input', (e) => {
+      sfQ = e.target.value.trim().toLowerCase()
+      sfRender()
+    })
+    box.addEventListener('change', async (e) => {
+      const campo = e.target.closest('.sf-campo')
+      if (campo) { sfPatch(campo.dataset.id, campo.dataset.campo, campo.value.trim()); return }
+      const tier = e.target.closest('.sf-tier')
+      if (tier) {
+        const r = await fetch('/api/panel/padron/membresia', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ socio_id: Number(tier.dataset.id), tier: tier.value }),
+        })
+        sfMsg(r.ok ? '✔ membresía actualizada' : '✗ no se pudo', r.ok ? 'ok' : 'err')
+        if (r.ok) sfCargar(true)
+      }
+    })
+    box.addEventListener('click', async (e) => {
+      const b = e.target.closest('.sf-sug')
+      if (!b) return
+      const r = await fetch('/api/panel/padron/sugerencia', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ socio_id: Number(b.dataset.id), aceptar: !!b.dataset.ok }),
+      })
+      const d = await r.json().catch(() => ({}))
+      sfMsg(r.ok ? (d.aplicado ? '✔ email vinculado' : 'descartado') : '✗ ' + (d.error || 'error'), r.ok ? 'ok' : 'err')
+      sfCargar(true)
+    })
+  }
+
   P.registrar('socios', {
     init(el) {
       cont = el
@@ -429,6 +543,7 @@
         <div class="subs" id="so-subs">
           <button type="button" class="on" data-sub="padron">Padrón</button>
           <button type="button" data-sub="solicitudes">Solicitudes<span class="cnt" id="so-sol-cnt" hidden></span></button>
+          <button type="button" data-sub="fichas">Fichas<span class="cnt" id="sf-cnt" hidden></span></button>
         </div>
 
         <div id="so-padron">
@@ -460,6 +575,20 @@
             <p class="so-help">Gente que dejó sus datos pidiendo acceso a la carta o su entrevista médica, o que probó entrar con una cuenta de Google que todavía no es socia.</p>
             <div id="so-sol-lista"><div class="vacio">⏳ Cargando…</div></div>
           </div>
+        </div>
+
+        <div id="so-fichas" hidden>
+          <p class="so-help" style="max-width:76ch">La ficha financiera de cada socio: su email (para el débito
+          automático), teléfono y membresía. Viene de la hoja Pacientes del Excel — acá se corrige y se completa.</p>
+          <div id="sf-sugerencias"></div>
+          <div class="card">
+            <div class="fila" style="flex-wrap:wrap">
+              <input class="input" id="sf-buscar" type="search" placeholder="Buscar socio…" autocomplete="off" style="max-width:280px" />
+              <span class="pn-sp"></span>
+              <span id="sf-msg" class="msg"></span>
+            </div>
+            <div id="sf-lista" style="margin-top:14px"><div class="vacio">⏳ Cargando…</div></div>
+          </div>
         </div>`
 
       // sub-tabs
@@ -469,7 +598,10 @@
         el.querySelectorAll('#so-subs button').forEach((x) => x.classList.toggle('on', x === b))
         el.querySelector('#so-padron').hidden = b.dataset.sub !== 'padron'
         el.querySelector('#so-solicitudes').hidden = b.dataset.sub !== 'solicitudes'
+        el.querySelector('#so-fichas').hidden = b.dataset.sub !== 'fichas'
+        if (b.dataset.sub === 'fichas') sfCargar()
       })
+      sfInit(el.querySelector('#so-fichas'))
 
       el.querySelector('#so-buscar').addEventListener('input', (e) => {
         q = e.target.value.trim().toLowerCase()
