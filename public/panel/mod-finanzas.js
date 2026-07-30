@@ -300,10 +300,11 @@
         <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
       return
     }
-    const wa = `https://wa.me/?text=${encodeURIComponent(`Hola! Te paso el link para activar el débito automático de tu membresía ${d.tier} de Flora con el 20% de descuento (${P.fmt(d.monto)}/mes). Se activa una sola vez y después corre solo: ${d.link}`)}`
+    const wa = `https://wa.me/?text=${encodeURIComponent(`Hola! Te paso el link para activar el débito automático de tu membresía ${d.tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(d.monto)} por mes. Lo autorizás una sola vez y corre solo — si mantenés el débito, el descuento se te renueva otros 3 meses automáticamente: ${d.link}`)}`
     cuerpo.innerHTML = `
-      <p style="color:var(--ink2);margin:0 0 12px">Listo: ${P.esc(nombre)} paga <b>${P.fmt(d.monto)}</b> por mes
-      (${P.esc(d.tier)} con el 20%). Le falta autorizarlo una sola vez desde este link:</p>
+      <p style="color:var(--ink2);margin:0 0 12px">Listo: <b>3 cuotas mensuales de ${P.fmt(d.monto)}</b>
+      (${P.esc(d.tier)} con el 20%). Si ${P.esc(nombre)} mantiene la racha, el sistema le renueva el descuento
+      otros 3 meses solo; si corta, la suscripción termina ahí. Le falta autorizarla una vez desde este link:</p>
       <input class="input" value="${P.esc(d.link)}" readonly onclick="this.select()" />
       <div class="pn-mod-acciones">
         <a class="btn" href="${P.esc(d.link)}" target="_blank" rel="noopener">Abrir link</a>

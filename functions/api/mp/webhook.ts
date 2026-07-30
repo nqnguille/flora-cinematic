@@ -80,6 +80,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         await env.DB.prepare(
           `UPDATE membresias SET modalidad = 'debito' WHERE socio_id = ? AND hasta IS NULL AND modalidad = 'contado'`,
         ).bind(socioId).run();
+        // ¿completó un ciclo de 3? El 20% se renueva: la suscripción se
+        // extiende otros 3 meses sola (si corta, el end_date la termina).
+        const su = await env.DB.prepare(
+          `SELECT mp_preapproval_id, racha_meses FROM suscripciones
+            WHERE socio_id = ? AND estado = 'activa' ORDER BY actualizado DESC LIMIT 1`,
+        ).bind(socioId).first<{ mp_preapproval_id: string; racha_meses: number }>();
+        if (su && su.racha_meses > 0 && su.racha_meses % 3 === 0) {
+          const fin = new Date();
+          fin.setMonth(fin.getMonth() + 3);
+          fin.setDate(fin.getDate() + 10);
+          await fetch(`${MP}/preapproval/${su.mp_preapproval_id}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ auto_recurring: { end_date: fin.toISOString() } }),
+          });
+        }
       }
       return new Response('ok', { status: 201 });
     }
@@ -92,6 +108,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       await env.DB.prepare(
         `UPDATE suscripciones SET estado = ?, actualizado = datetime('now') WHERE mp_preapproval_id = ?`,
       ).bind(estado, String(pre.id)).run();
+      // Recién autorizada: ajustar el fin EXACTO a 3 cuotas desde la
+      // autorización (cobros en el mes 0, 1 y 2 + 20 días de margen).
+      if (estado === 'activa') {
+        const fin = new Date();
+        fin.setMonth(fin.getMonth() + 2);
+        fin.setDate(fin.getDate() + 20);
+        await fetch(`${MP}/preapproval/${pre.id}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auto_recurring: { end_date: fin.toISOString() } }),
+        }).catch(() => { /* si falla, queda el end_date de la creación (con margen) */ });
+      }
       // si se cancela, la racha vuelve a cero: el 20% se pierde (decisión 30/07)
       if (estado === 'cancelada') {
         await env.DB.prepare(

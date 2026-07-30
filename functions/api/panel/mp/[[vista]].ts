@@ -77,11 +77,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     ).bind(socio.tier).first<{ debito: number }>();
     if (!precio) return json({ error: `No hay precio de débito para ${socio.tier} en la lista vigente` }, 400);
 
-    // Preapproval sin plan: débito mensual por el precio con 20%.
+    // Preapproval individual con FIN: 3 cuotas mensuales únicamente (decisión
+    // 30/07). El end_date inicial deja margen para que el socio autorice; al
+    // autorizarse, el webhook lo ajusta fino (autorización + 2 meses + 20 días
+    // = exactamente 3 débitos). Si completa la racha de 3, el webhook lo
+    // extiende otros 3 meses solo — el premio a la constancia.
+    const fin = new Date();
+    fin.setMonth(fin.getMonth() + 3);
+    fin.setDate(fin.getDate() + 10);
     const r = await mpFetch(env, '/preapproval', {
       method: 'POST',
       body: JSON.stringify({
-        reason: `Flora Club — membresía ${socio.tier} (débito automático)`,
+        reason: `Flora Club - Membresia ${socio.tier} debito automatico (3 cuotas, 20% off)`,
         external_reference: `socio:${socio.id}`,
         payer_email: socio.email,
         back_url: 'https://floraong.ar/socios/cuenta/',
@@ -90,6 +97,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
           frequency_type: 'months',
           transaction_amount: precio.debito,
           currency_id: 'ARS',
+          end_date: fin.toISOString(),
         },
         status: 'pending',
       }),
