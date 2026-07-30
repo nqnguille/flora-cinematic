@@ -11,7 +11,7 @@
     mostrador: ['Carga de retiro en el momento: socio, gramos, genética', 'Descuenta saldo de gramos y stock solo', 'Cobros del día'],
     catalogo: ['Genéticas, aceites, cremas y extracciones', 'Precios con vigencia y ancla en dólares', 'Stock por ítem con kardex'],
     finanzas: ['Cómo viene el mes: entró, salió, resultado', 'Cobranza depurada (planes prepagos descontados solos)', 'Movimientos, gastos fijos con plantilla, aportes en USD, personal'],
-    ajustes: ['Quién entra al panel y con qué rol', 'dueno · socio_ong · socio_ong_carga · mostrador'],
+    ajustes: ['Quién entra al panel y con qué rol', 'Presidente · Socio · Socio con carga · Mostrador'],
   }
   Object.keys(PROXIMOS).forEach((nombre) => {
     P.registrar(nombre, {
