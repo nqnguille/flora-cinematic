@@ -95,6 +95,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
             headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ auto_recurring: { end_date: fin.toISOString() } }),
           });
+          await env.DB.prepare(`UPDATE suscripciones SET fin = ? WHERE mp_preapproval_id = ?`)
+            .bind(fin.toISOString().slice(0, 10), su.mp_preapproval_id).run();
         }
       }
       return new Response('ok', { status: 201 });
@@ -119,6 +121,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ auto_recurring: { end_date: fin.toISOString() } }),
         }).catch(() => { /* si falla, queda el end_date de la creación (con margen) */ });
+        await env.DB.prepare(`UPDATE suscripciones SET fin = ? WHERE mp_preapproval_id = ?`)
+          .bind(fin.toISOString().slice(0, 10), String(pre.id)).run();
       }
       // si se cancela, la racha vuelve a cero: el 20% se pierde (decisión 30/07)
       if (estado === 'cancelada') {

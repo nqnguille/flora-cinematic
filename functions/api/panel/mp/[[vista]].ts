@@ -106,10 +106,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       return json({ error: `Mercado Pago respondió ${r.status}: ${String(r.data.message || JSON.stringify(r.data)).slice(0, 200)}` }, 502);
     }
     await env.DB.prepare(
-      `INSERT INTO suscripciones (socio_id, mp_preapproval_id, estado, monto)
-       VALUES (?, ?, 'pendiente', ?)
+      `INSERT INTO suscripciones (socio_id, mp_preapproval_id, estado, monto, fin)
+       VALUES (?, ?, 'pendiente', ?, ?)
        ON CONFLICT (mp_preapproval_id) DO NOTHING`,
-    ).bind(socio.id, String(r.data.id), precio.debito).run();
+    ).bind(socio.id, String(r.data.id), precio.debito, fin.toISOString().slice(0, 10)).run();
     return json({
       ok: true,
       link: r.data.init_point,               // el socio entra acá y autoriza el débito
@@ -127,9 +127,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!r.ok) return json({ error: `MP respondió ${r.status}` }, 502);
     const ESTADO: Record<string, string> = { authorized: 'activa', paused: 'pausada', cancelled: 'cancelada', pending: 'pendiente' };
     const estado = ESTADO[String(r.data.status)] || 'pendiente';
-    await env.DB.prepare(`UPDATE suscripciones SET estado = ?, actualizado = datetime('now') WHERE id = ?`)
-      .bind(estado, id).run();
-    return json({ ok: true, estado });
+    const finMp = String((r.data.auto_recurring as Record<string, unknown> | undefined)?.end_date || '').slice(0, 10) || null;
+    await env.DB.prepare(`UPDATE suscripciones SET estado = ?, fin = COALESCE(?, fin), actualizado = datetime('now') WHERE id = ?`)
+      .bind(estado, finMp, id).run();
+    return json({ ok: true, estado, fin: finMp });
   }
 
   return json({ error: 'Vista desconocida' }, 404);

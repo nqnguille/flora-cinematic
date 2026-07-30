@@ -276,13 +276,14 @@
       con 20% (renovable cada 3 débitos seguidos — si corta, lo pierde). Cada acreditación entra sola al libro
       y habilita los gramos del mes. El alta se hace desde Cobranza, con el botón «Débito −20%» de cada socio.</p>
       <div class="card" style="padding-bottom:6px">${d.suscripciones.length ? `<table class="tabla"><thead><tr>
-        <th>Socio</th><th>Estado</th><th class="r">Monto</th><th class="r">Racha</th><th></th><th class="r"></th>
+        <th>Socio</th><th>Estado</th><th class="r">Monto</th><th class="r">Racha</th><th>Termina</th><th></th><th class="r"></th>
       </tr></thead><tbody>${d.suscripciones.map((s) => `<tr>
         <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>${P.esc(s.nombre)}</div></td>
         <td><span class="tag ${EST[s.estado] || 'tag-off'}">${P.esc(s.estado)}</span></td>
         <td class="r" style="font-weight:600">${P.fmt(s.monto)}</td>
         <td class="r">${s.racha_meses} mes${s.racha_meses === 1 ? '' : 'es'}</td>
-        <td style="color:var(--muted);font-size:11.5px">${s.racha_meses > 0 ? `el 20% se renueva en ${3 - (s.racha_meses % 3)} débito(s)` : ''}</td>
+        <td style="color:var(--ink2)">${s.fin ? `${s.fin.slice(8)}/${s.fin.slice(5, 7)}/${s.fin.slice(0, 4)}` : '—'}</td>
+        <td style="color:var(--muted);font-size:11.5px">${s.racha_meses > 0 ? `el 20% se renueva en ${3 - (s.racha_meses % 3)} débito(s)` : '3 cuotas y termina'}</td>
         <td class="r"><button class="btn fz-sync" data-id="${s.id}" type="button">Sincronizar</button></td>
       </tr>`).join('')}</tbody></table>` : '<div class="vacio">Todavía no hay suscripciones. Arrancá desde Cobranza con el botón «Débito −20%».</div>'}</div>`
   }
