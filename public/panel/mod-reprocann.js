@@ -153,18 +153,215 @@
     })
   }
 
+  // ============ Unificar pacientes (ru-): el volcado oficial del portal ============
+  // El portal de REPROCANN (cuenta de la ONG) es la única fuente con el DNI
+  // oficial de cada trámite. El volcado entra acá, el matching propone pares
+  // contra el padrón y CADA vínculo se confirma a mano. Una vez confirmado,
+  // los volcados siguientes actualizan a ese socio solos.
+  let ruDatos = null
+
+  const RU_ESTADOS = {
+    Aprobado: ['Aprobado', 'tag-ok'], PendienteEvaluacion: ['En evaluación', 'tag-off'],
+    PendienteConsentimientoPaciente: ['Espera su firma', 'tag-deb'], PendienteConsentimiento: ['Espera su firma', 'tag-deb'],
+    ObservadoPorPaciente: ['Observado', 'tag-deb'], PendienteVinculacionCultivador: ['Nos toca vincular', 'tag-mal'],
+    PendienteRevisionMedica: ['Volvió al médico', 'tag-auto'], Rechazado: ['Rechazado', 'tag-mal'], Anulado: ['Anulado', 'tag-mal'],
+  }
+  const ruEstado = (e) => {
+    const [txt, cls] = RU_ESTADOS[e] || [e, 'tag-off']
+    return `<span class="tag ${cls}">${P.esc(txt)}</span>`
+  }
+  const CHIP = {
+    dni: ['DNI', 'tag-ok'], nombre: ['nombre', 'tag-auto'], nombre_parcial: ['nombre parcial', 'tag-deb'],
+  }
+  const ruChips = (sen) => {
+    if (!sen) return ''
+    const m = (sen.match || []).map((s) => { const [t, c] = CHIP[s] || [s, 'tag-off']; return `<span class="tag ${c}">${t}</span>` })
+    const conf = (sen.conflictos || []).map((s) => `<span class="tag tag-mal">${s === 'dni' ? 'DNI distinto' : P.esc(s)}</span>`)
+    return m.concat(conf).join(' ')
+  }
+
+  async function ruCargar() {
+    const caja = cont.querySelector('#ru-panel')
+    caja.innerHTML = '<div class="vacio">⏳ Buscando pares…</div>'
+    const r = await fetch('/api/panel/reprocann/unificar', { credentials: 'include' })
+    if (!r.ok) { caja.innerHTML = `<div class="vacio">El servidor respondió ${r.status}.</div>`; return }
+    ruDatos = await r.json()
+    ruPintar()
+  }
+
+  function ruPintar() {
+    const d = ruDatos
+    const caja = cont.querySelector('#ru-panel')
+    const simples = d.pares.filter((g) => g.candidatos.length === 1 && (g.candidatos[0].senales || {}).confianza !== 'revisar')
+    const revisar = d.pares.filter((g) => g.candidatos.length > 1 || (g.candidatos[0].senales || {}).confianza === 'revisar')
+    const cnt = cont.querySelector('#ru-cnt')
+    if (cnt) { cnt.hidden = !d.pares.length; cnt.textContent = d.pares.length }
+
+    caja.innerHTML = `
+      <div class="card" style="margin-bottom:14px">
+        <span class="k">Volcado del portal</span>
+        <p class="so-help" style="margin:6px 0 8px">Pegá el JSON de trámites del portal de REPROCANN (cuenta de la ONG)
+        o subí el archivo. Cada carga actualiza sola a los ${d.vinculados} socio(s) ya vinculados y propone pares nuevos.
+        ${d.ultimaCarga ? `Última carga: ${P.esc(d.ultimaCarga.slice(0, 16).replace('T', ' '))}.` : 'Todavía no se cargó ninguno.'}</p>
+        <div class="fila" style="flex-wrap:wrap;gap:8px">
+          <textarea class="input" id="ru-json" rows="2" placeholder='Pegar acá el JSON…' style="flex:1;min-width:220px;font-size:11.5px;font-family:var(--font-ui)"></textarea>
+          <input type="file" id="ru-file" accept="application/json,.json" hidden />
+          <button class="btn" id="ru-subir" type="button">Subir archivo</button>
+          <button class="btn btn-pri" id="ru-procesar" type="button">Procesar</button>
+        </div>
+        <p class="msg" id="ru-msg" style="margin:8px 0 0"></p>
+      </div>
+
+      ${simples.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
+        <span class="k">Pares por confirmar (${simples.length})</span>
+        <p class="so-help">El matching dice que son la misma persona. Nada se une sin tu click.</p>
+        ${simples.map((g) => ruFila(g, g.candidatos[0])).join('')}
+      </div>` : ''}
+
+      ${revisar.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--amb)">
+        <span class="k">Revisar con cuidado (${revisar.length})</span>
+        <p class="so-help">Datos que se contradicen o más de un socio posible — mirá bien antes de confirmar.</p>
+        ${revisar.map((g) => g.candidatos.length === 1 ? ruFila(g, g.candidatos[0], true)
+          : `<div style="padding:9px 0;border-top:1px solid var(--line)">
+              <div><b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
+                <span style="color:var(--muted)">· DNI ${P.esc(g.dni)}</span> ${ruEstado(g.persona.estado)}</div>
+              <div class="so-help" style="margin:4px 0 6px">¿Cuál de estos socios es?</div>
+              ${g.candidatos.map((c) => `<div class="fila" style="padding:4px 0">
+                <span>${P.esc(c.socio.nombre)}${c.socio.email ? ` <span style="color:var(--muted);font-size:11px">${P.esc(c.socio.email)}</span>` : ''} ${ruChips(c.senales)}</span>
+                <span class="pn-sp"></span>
+                <button class="btn ru-si" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" type="button">Es él</button>
+              </div>`).join('')}
+              <div class="fila" style="padding:4px 0"><span class="pn-sp"></span>
+                <button class="btn ru-ninguno" data-dni="${P.esc(g.dni)}" data-socios="${g.candidatos.map((c) => c.socio_id).join(',')}" type="button">Ninguno de estos</button></div>
+            </div>`).join('')}
+      </div>` : ''}
+
+      ${!simples.length && !revisar.length ? `<div class="card" style="margin-bottom:14px"><div class="vacio">
+        No hay pares pendientes${d.vinculados ? ` — ${d.vinculados} socio(s) vinculados se actualizan solos con cada volcado` : ''}.</div></div>` : ''}
+
+      ${d.sinMatch.length ? `<details class="card" style="margin-bottom:14px">
+        <summary style="cursor:pointer;font-weight:600;font-size:13px">Sin match en el padrón (${d.sinMatch.length})</summary>
+        <p class="so-help" style="margin-top:8px">Trámites de la ONG cuya persona no se parece a ningún socio.
+        Con «Dar de alta» se abre el alta de socio ya precargada con su nombre y DNI oficiales.</p>
+        <table class="tabla"><thead><tr><th>Persona</th><th>DNI</th><th>Trámite</th><th>Vence</th><th class="r"></th></tr></thead>
+        <tbody>${d.sinMatch.map((p) => `<tr>
+          <td><b>${P.esc(p.nombre + ' ' + p.apellido)}</b>${p.renovacion ? ' <span class="tag tag-off">renovación</span>' : ''}</td>
+          <td style="font-family:var(--font-ui)">${P.esc(p.dni)}</td>
+          <td>${ruEstado(p.estado)}${p.plantas ? ` <span style="color:var(--muted);font-size:11px">${p.plantas} plantas</span>` : ''}</td>
+          <td style="color:var(--muted)">${p.vence ? P.esc(p.vence) : '—'}</td>
+          <td class="r"><button class="btn ru-alta" data-dni="${P.esc(p.dni)}" type="button">Dar de alta</button></td>
+        </tr>`).join('')}</tbody></table>
+      </details>` : ''}`
+
+    const msg = caja.querySelector('#ru-msg')
+    const file = caja.querySelector('#ru-file')
+    caja.querySelector('#ru-subir').addEventListener('click', () => file.click())
+    file.addEventListener('change', async () => {
+      if (file.files[0]) caja.querySelector('#ru-json').value = await file.files[0].text()
+    })
+    caja.querySelector('#ru-procesar').addEventListener('click', async () => {
+      let crudo
+      try { crudo = JSON.parse(caja.querySelector('#ru-json').value) } catch {
+        msg.className = 'msg err'; msg.textContent = '✗ Eso no es un JSON válido — copialo entero, sin recortar.'; return
+      }
+      msg.className = 'msg'; msg.textContent = '⏳ procesando…'
+      const r = await fetch('/api/panel/reprocann/sincronizar', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(crudo),
+      })
+      const res = await r.json().catch(() => ({}))
+      if (!r.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (res.error || 'error ' + r.status); return }
+      msg.className = 'msg ok'
+      msg.textContent = `✔ ${res.personas} persona(s) del portal · ${res.sincronizados} actualizadas solas · ${res.candidatosNuevos} par(es) nuevos por confirmar`
+      setTimeout(() => { ruCargar(); cargar() }, 900)
+    })
+  }
+
+  function ruFila(g, c, cuidado) {
+    return `<div class="fila" style="padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+      <span><b>${P.esc(c.socio.nombre)}</b>${c.socio.email ? ` <span style="color:var(--muted);font-size:11px">${P.esc(c.socio.email)}</span>` : ''}
+        <span style="color:var(--muted)"> ↔ </span>
+        <b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
+        <span style="color:var(--muted)">· DNI ${P.esc(g.dni)}</span>
+        ${ruEstado(g.persona.estado)}${g.persona.vence ? ` <span style="color:var(--muted);font-size:11px">vence ${P.esc(g.persona.vence)}</span>` : ''}
+        ${ruChips(c.senales)}</span>
+      <span class="pn-sp"></span>
+      <button class="btn ru-si ${cuidado ? '' : 'btn-pri'}" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" ${cuidado ? 'data-cuidado="1"' : ''} type="button">Sí, es él</button>
+      <button class="btn ru-no" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" type="button">No es</button>
+    </div>`
+  }
+
+  async function ruDecidir(body, boton) {
+    if (boton) boton.disabled = true
+    const r = await fetch('/api/panel/reprocann/vinculo', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) { alert(d.error || 'No se pudo: error ' + r.status); if (boton) boton.disabled = false; return }
+    if (d.avisoDni) alert(d.avisoDni)
+    ruCargar()
+    cargar()
+  }
+
   P.registrar('reprocann', {
     init(el) {
       cont = el
+      const puedeUnificar = P.puede('padron_editar')
       el.innerHTML = `
         <p class="so-help" style="max-width:78ch;margin:0 0 14px">El trámite pasa por manos del paciente,
         de Ezequiel, nuestras y del Ministerio. Acá se ve <b>de quién depende cada uno hoy</b> — el club es
         responsable del último paso: vincular al paciente como su cultivador con el mismo código.</p>
+        ${puedeUnificar ? `<div class="fila" style="margin:0 0 14px">
+          <button class="btn" id="ru-btn" type="button">Unificar pacientes<span class="cnt" id="ru-cnt" hidden
+            style="margin-left:7px;background:var(--dan);color:#fff;border-radius:999px;padding:1px 7px;font-size:10.5px"></span></button>
+        </div>
+        <div id="ru-panel" hidden></div>` : ''}
         <div id="rc-cuerpo"></div>`
       el.addEventListener('click', (e) => {
         const b = e.target.closest('.rc-editar')
-        if (b) modalEditar(b.dataset.id, b.dataset.nombre)
+        if (b) { modalEditar(b.dataset.id, b.dataset.nombre); return }
+        const si = e.target.closest('.ru-si')
+        if (si) {
+          if (si.dataset.cuidado && !confirm('Los datos no coinciden del todo. ¿Vincular igual?')) return
+          ruDecidir({ dni: si.dataset.dni, socio_id: Number(si.dataset.socio), aceptar: true }, si); return
+        }
+        const no = e.target.closest('.ru-no')
+        if (no) { ruDecidir({ dni: no.dataset.dni, socio_id: Number(no.dataset.socio), aceptar: false }, no); return }
+        const ning = e.target.closest('.ru-ninguno')
+        if (ning) { ruDecidir({ dni: ning.dataset.dni, rechazar_socio_ids: ning.dataset.socios.split(',').map(Number) }, ning); return }
+        const alta = e.target.closest('.ru-alta')
+        if (alta) {
+          const p = (ruDatos.sinMatch || []).find((x) => x.dni === alta.dataset.dni)
+          if (!p) return
+          const PASO = { Aprobado: 'aprobado', PendienteEvaluacion: 'en_evaluacion', PendienteVinculacionCultivador: 'cargado', PendienteConsentimientoPaciente: 'cargado', PendienteConsentimiento: 'cargado', ObservadoPorPaciente: 'cargado', PendienteRevisionMedica: 'en_evaluacion' }
+          sessionStorage.setItem('so-alta-prefill', JSON.stringify({
+            nombre: `${p.nombre} ${p.apellido}`.trim(), documento: p.dni,
+            reprocann_estado: PASO[p.estado] || 'esperando_codigo', reprocann_vence: p.vence || '',
+          }))
+          P.ir('socios')
+          // si el módulo Socios ya estaba inicializado, su init no vuelve a
+          // correr: el evento le avisa que abra el alta con la precarga
+          setTimeout(() => window.dispatchEvent(new Event('so-alta-prefill')), 50)
+        }
       })
+      const btn = el.querySelector('#ru-btn')
+      if (btn) btn.addEventListener('click', () => {
+        const panel = el.querySelector('#ru-panel')
+        panel.hidden = !panel.hidden
+        btn.classList.toggle('btn-pri', !panel.hidden)
+        if (!panel.hidden) ruCargar()
+      })
+      // el badge de pendientes, sin abrir el panel
+      if (puedeUnificar) fetch('/api/panel/reprocann/unificar', { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d) return
+          ruDatos = d
+          const cnt = el.querySelector('#ru-cnt')
+          if (cnt) { cnt.hidden = !d.pares.length; cnt.textContent = d.pares.length }
+        })
+        .catch(() => { /* sin red no hay badge */ })
       cargar()
     },
   })

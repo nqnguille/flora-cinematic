@@ -430,6 +430,14 @@
     let paso = 1
     let tarifas = []
     let datos = { email: '', nombre: '', telefono: '', documento: '', reprocann_estado: 'esperando_codigo', reprocann_codigo: '', reprocann_vence: '', nota: '', tier: 'NINGUNA' }
+    // Precarga desde "Unificar pacientes" (módulo REPROCANN): nombre y DNI
+    // oficiales del portal. Al nacer con documento, el socio queda enganchado
+    // a la sincronización del próximo volcado.
+    try {
+      const pre = JSON.parse(sessionStorage.getItem('so-alta-prefill') || 'null')
+      sessionStorage.removeItem('so-alta-prefill')
+      if (pre) Object.assign(datos, pre)
+    } catch { /* precarga rota: alta vacía normal */ }
 
     const ov = P.modal('Socio nuevo', '<div id="al-cuerpo"></div>')
     const cuerpo = ov.querySelector('#al-cuerpo')
@@ -862,6 +870,14 @@
             <div id="sf-lista" style="margin-top:14px"><div class="vacio">⏳ Cargando…</div></div>
           </div>
         </div>`
+
+      // "Dar de alta" desde Unificar pacientes (módulo REPROCANN): la precarga
+      // viaja por sessionStorage; si este módulo ya estaba inicializado, el
+      // evento avisa que hay que abrir el alta ahora.
+      if (editar && sessionStorage.getItem('so-alta-prefill')) altaAbrir()
+      window.addEventListener('so-alta-prefill', () => {
+        if (editar && sessionStorage.getItem('so-alta-prefill')) altaAbrir()
+      })
 
       // sub-tabs
       el.querySelector('#so-subs').addEventListener('click', (e) => {
