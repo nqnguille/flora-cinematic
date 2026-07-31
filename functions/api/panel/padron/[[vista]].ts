@@ -28,12 +28,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const [socios, sug] = await Promise.all([
       env.DB.prepare(
         `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.documento, s.estado, s.reprocann, s.nota,
+                s.debito_no_insistir,
                 m.tier, m.modalidad, m.gramos_mes,
                 (SELECT MAX(fecha) FROM movimientos mv WHERE mv.socio_id = s.id AND mv.tipo = 'ingreso'
                   AND mv.categoria = 'membresia') AS ultimo_pago,
-                (SELECT MAX(fecha) FROM dispensas d WHERE d.socio_id = s.id) AS ultimo_retiro
+                (SELECT MAX(fecha) FROM dispensas d WHERE d.socio_id = s.id) AS ultimo_retiro,
+                su.estado AS debito_estado, su.fin AS debito_fin
            FROM socios s
            LEFT JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL
+           LEFT JOIN suscripciones su ON su.id = (
+                SELECT id FROM suscripciones s2 WHERE s2.socio_id = s.id
+                 ORDER BY CASE s2.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1
+                          WHEN 'pausada' THEN 2 ELSE 3 END, s2.actualizado DESC, s2.id DESC LIMIT 1)
           WHERE s.numero != -1 OR s.numero IS NULL
           GROUP BY s.id
           ORDER BY s.estado = 'activo' DESC, s.nombre`,

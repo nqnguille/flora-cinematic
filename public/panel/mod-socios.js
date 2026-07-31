@@ -741,7 +741,7 @@
       (s.nombre + ' ' + (s.email || '') + ' ' + (s.documento || '') + ' ' + (s.nota || '')).toLowerCase().includes(sfQ))
     sfBox.querySelector('#sf-lista').innerHTML = lista.length ? `
       <table class="tabla"><thead><tr>
-        <th>Socio</th><th>Email (débito)</th><th>DNI</th><th>Teléfono</th><th>Membresía</th><th>Último pago</th><th>Estado</th>
+        <th>Socio</th><th>Email (débito)</th><th>DNI</th><th>Teléfono</th><th>Membresía</th><th>Débito</th><th>Último pago</th><th>Estado</th>
       </tr></thead><tbody>${lista.map((s) => `<tr>
         <td><div class="fila"><span class="av">${esc(P.iniciales(s.nombre))}</span>
           <div><div style="font-weight:600">${esc(s.nombre)}</div>
@@ -759,6 +759,11 @@
           : editar ? `<select class="sel sf-tier" data-id="${s.id}" style="font-size:12px;max-width:150px">
             ${SF_TIERS.map((t) => `<option value="${t}" ${(s.tier || 'NINGUNA') === t ? 'selected' : ''}>${t === 'NINGUNA' ? '— sin membresía' : t}</option>`).join('')}
           </select>` : esc(s.tier || '—')}</td>
+        <td>${s.debito_estado === 'activa' ? '<span class="tag tag-ok">al día</span>'
+          : s.debito_estado === 'pendiente' ? '<span class="tag tag-deb">esperando</span>'
+          : s.debito_estado === 'pausada' ? '<span class="tag tag-mal">pausado</span>'
+          : s.debito_no_insistir ? '<span class="tag tag-auto">no insistir</span>'
+          : s.tier ? '<span class="tag tag-off">sin débito</span>' : '—'}</td>
         <td style="color:var(--muted);font-size:12px">${s.ultimo_pago ? esc(s.ultimo_pago.slice(0, 7)) : 'nunca'}</td>
         <td><span class="tag ${s.estado === 'activo' ? 'tag-ok' : 'tag-off'}">${esc(s.estado)}</span></td>
       </tr>`).join('')}</tbody></table>` : '<div class="vacio">No aparece nadie con esa búsqueda.</div>'

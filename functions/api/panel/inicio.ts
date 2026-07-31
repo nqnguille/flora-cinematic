@@ -20,7 +20,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const hoy = new Date().toISOString().slice(0, 10);
   const mes = hoy.slice(0, 7);
 
-  const [retiros, cobros, pendientes, mesTot] = await Promise.all([
+  const [retiros, cobros, pendientes, mesTot, debitos] = await Promise.all([
     env.DB.prepare(
       `SELECT d.fecha, d.producto, d.gramos, d.unidades, s.nombre
          FROM dispensas d JOIN socios s ON s.id = d.socio_id
@@ -40,6 +40,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
           `SELECT tipo, COALESCE(SUM(neto), 0) AS total FROM movimientos
             WHERE substr(fecha, 1, 7) = ? AND estado = 'confirmado' GROUP BY tipo`,
         ).bind(mes).all()
+      : Promise.resolve(null),
+    // salud del débito automático, para el tile de Inicio
+    puede(rol, 'finanzas_ver')
+      ? env.DB.prepare(
+          `SELECT
+             (SELECT COUNT(*) FROM suscripciones WHERE estado = 'activa') AS al_dia,
+             (SELECT COUNT(*) FROM suscripciones WHERE estado = 'pendiente' AND (fin IS NULL OR fin >= ?1)) AS esperando,
+             (SELECT COUNT(*) FROM suscripciones WHERE estado = 'activa' AND substr(fin, 1, 7) = ?2) AS terminan_mes,
+             (SELECT COALESCE(SUM(neto), 0) FROM movimientos WHERE substr(fecha, 1, 7) = ?2
+               AND origen = 'mp_webhook' AND estado = 'confirmado') AS recaudado_mes`,
+        ).bind(hoy, mes).first<{ al_dia: number; esperando: number; terminan_mes: number; recaudado_mes: number }>()
       : Promise.resolve(null),
   ]);
 
@@ -74,5 +85,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     pendientesAprobacion: pendientes?.n ?? null,
     reservas,
     mes: mesTot ? { ingreso: totales.ingreso || 0, egreso: totales.egreso || 0 } : null,
+    debitos: debitos || null,
   });
 };
