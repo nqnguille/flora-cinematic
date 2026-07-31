@@ -127,7 +127,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = String(b.email || '').trim().toLowerCase();
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   const telefono = String(b.telefono || '').trim().slice(0, 30) || null;
-  const reprocann = String(b.reprocann || '').trim().slice(0, 60) || null;
+  // El estado del trámite entra al embudo (ver migración 0008), no como texto
+  // libre: es lo que después dice de quién depende cada socio.
+  const PASOS_ALTA = ['esperando_codigo', 'codigo_listo', 'cargado', 'en_evaluacion', 'aprobado', 'autocultivo'];
+  const rcEstado = PASOS_ALTA.includes(String(b.reprocann_estado)) ? String(b.reprocann_estado) : 'esperando_codigo';
+  const rcCodigo = String(b.reprocann_codigo || '').trim().toUpperCase().replace(/\s/g, '') || null;
+  const rcVence = String(b.reprocann_vence || '').slice(0, 10) || null;
   const nota = String(b.nota || '').trim().slice(0, 400) || null;
   const tier = String(b.tier || 'NINGUNA');
   const cobro = String(b.cobro || 'ninguno');           // efectivo | ninguno
@@ -137,6 +142,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!EMAIL_RE.test(email)) return json({ error: 'El email no parece válido' }, 400);
   if (!nombre) return json({ error: 'Falta el nombre' }, 400);
   if (tier !== 'NINGUNA' && !(tier in GRAMOS)) return json({ error: 'Membresía inválida' }, 400);
+  if (rcCodigo && rcCodigo.length !== 13) return json({ error: 'El código de vinculación tiene 13 caracteres' }, 400);
+  if (rcCodigo) {
+    const otro = await env.DB.prepare(`SELECT nombre FROM socios WHERE reprocann_codigo = ?`).bind(rcCodigo).first<{ nombre: string }>();
+    if (otro) return json({ error: `Ese código de vinculación ya es de ${otro.nombre}` }, 409);
+  }
 
   // 1) Ficha financiera (D1) — la que faltaba siempre
   let socioId: number;
@@ -144,9 +154,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (existente) {
     socioId = existente.id;
     await env.DB.prepare(
-      `UPDATE socios SET nombre = ?, telefono = COALESCE(?, telefono), reprocann = COALESCE(?, reprocann),
+      `UPDATE socios SET nombre = ?, telefono = COALESCE(?, telefono),
+              reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
+              reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
               nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
-    ).bind(nombre, telefono, reprocann, nota, socioId).run();
+    ).bind(nombre, telefono, rcEstado, rcCodigo, rcVence, nota, socioId).run();
   } else {
     // ¿hay una ficha del Excel con ese nombre y sin email? la reusamos en vez
     // de duplicar a la persona (el caso de los 121 socios sin email).
@@ -156,14 +168,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (porNombre) {
       socioId = porNombre.id;
       await env.DB.prepare(
-        `UPDATE socios SET email = ?, telefono = COALESCE(?, telefono), reprocann = COALESCE(?, reprocann),
+        `UPDATE socios SET email = ?, telefono = COALESCE(?, telefono),
+                reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
+                reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
                 nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
-      ).bind(email, telefono, reprocann, nota, socioId).run();
+      ).bind(email, telefono, rcEstado, rcCodigo, rcVence, nota, socioId).run();
     } else {
       const r = await env.DB.prepare(
-        `INSERT INTO socios (nombre, email, telefono, reprocann, nota, estado, alta)
-         VALUES (?, ?, ?, ?, ?, 'activo', date('now'))`,
-      ).bind(nombre, email, telefono, reprocann, nota).run();
+        `INSERT INTO socios (nombre, email, telefono, nota, estado, alta,
+                 reprocann_estado, reprocann_codigo, reprocann_vence, reprocann_actualizado)
+         VALUES (?, ?, ?, ?, 'activo', date('now'), ?, ?, ?, datetime('now'))`,
+      ).bind(nombre, email, telefono, nota, rcEstado, rcCodigo, rcVence).run();
       socioId = Number(r.meta.last_row_id);
     }
   }
@@ -219,5 +234,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ok: true, socioId, movimientoId,
     gramos: tier !== 'NINGUNA' ? GRAMOS[tier] : null,
     mailEnviado: mail.enviado, mailError: mail.error || null,
+    faltaCodigo: !rcCodigo && rcEstado !== 'aprobado' && rcEstado !== 'autocultivo',
   });
 };

@@ -429,7 +429,7 @@
   function altaAbrir() {
     let paso = 1
     let tarifas = []
-    let datos = { email: '', nombre: '', telefono: '', reprocann: '', nota: '', tier: 'NINGUNA' }
+    let datos = { email: '', nombre: '', telefono: '', reprocann_estado: 'esperando_codigo', reprocann_codigo: '', reprocann_vence: '', nota: '', tier: 'NINGUNA' }
 
     const ov = P.modal('Socio nuevo', '<div id="al-cuerpo"></div>')
     const cuerpo = ov.querySelector('#al-cuerpo')
@@ -450,22 +450,47 @@
             <div><label class="lb" for="al-tel">Teléfono</label>
               <input class="input" id="al-tel" type="tel" value="${P.esc(datos.telefono)}" placeholder="+54 9 299…" /></div>
           </div>
-          <div class="grid2">
-            <div><label class="lb" for="al-repro">REPROCANN</label>
-              <select class="sel" id="al-repro">
-                <option value="">— sin definir</option>
-                <option value="Vinculado">Vinculado</option>
-                <option value="Pendiente">En trámite</option>
-                <option value="Autocultivo">Autocultivo</option>
-              </select></div>
-            <div><label class="lb" for="al-nota">Nota</label>
-              <input class="input" id="al-nota" value="${P.esc(datos.nota)}" placeholder="Referido por…" /></div>
-          </div>
+          <div><label class="lb" for="al-repro">¿Cómo está su REPROCANN?</label>
+            <select class="sel" id="al-repro">
+              <option value="esperando_codigo">Todavía no lo tiene — se lo gestionamos</option>
+              <option value="codigo_listo">Ya me pasó su código de vinculación</option>
+              <option value="cargado">Trámite ya cargado por el médico</option>
+              <option value="en_evaluacion">En evaluación del Ministerio</option>
+              <option value="aprobado">Ya lo tiene aprobado y vigente</option>
+              <option value="autocultivo">Es autocultivador</option>
+            </select></div>
+          <div id="al-repro-extra"></div>
+          <div><label class="lb" for="al-nota">Nota</label>
+            <input class="input" id="al-nota" value="${P.esc(datos.nota)}" placeholder="Referido por…" /></div>
           <div class="fila"><span class="pn-sp"></span>
             <button class="btn btn-pri" id="al-sig1" type="button">Seguir →</button></div>
         </div>`
       const inputRepro = cuerpo.querySelector('#al-repro')
-      if (datos.reprocann) inputRepro.value = datos.reprocann
+      inputRepro.value = datos.reprocann_estado || 'esperando_codigo'
+      // El código de vinculación (13 caracteres) es lo que destraba el trámite:
+      // pedirlo acá evita el ida y vuelta por WhatsApp.
+      const pintarExtra = () => {
+        const e = inputRepro.value
+        const box = cuerpo.querySelector('#al-repro-extra')
+        if (e === 'codigo_listo' || e === 'cargado' || e === 'en_evaluacion') {
+          box.innerHTML = `<label class="lb" for="al-cod">Código de vinculación</label>
+            <input class="input" id="al-cod" maxlength="13" value="${P.esc(datos.reprocann_codigo)}"
+              placeholder="13 caracteres, se lo da su cuenta de Mi Argentina" style="letter-spacing:.08em;text-transform:uppercase" />
+            <p class="so-help" style="margin:6px 0 0">Si todavía no te lo pasó, dejalo vacío: al terminar te damos el link para pedírselo.</p>`
+        } else if (e === 'aprobado') {
+          box.innerHTML = `<div class="grid2">
+            <div><label class="lb" for="al-cod">Código de vinculación</label>
+              <input class="input" id="al-cod" maxlength="13" value="${P.esc(datos.reprocann_codigo)}" placeholder="opcional" style="letter-spacing:.08em;text-transform:uppercase" /></div>
+            <div><label class="lb" for="al-vence">Vence</label>
+              <input class="input" id="al-vence" type="date" value="${P.esc(datos.reprocann_vence)}" /></div>
+          </div>`
+        } else if (e === 'esperando_codigo') {
+          box.innerHTML = `<p class="so-help" style="margin:0">Al terminar el alta te damos el mensaje listo para pedirle
+            que genere su código de vinculación en Mi Argentina.</p>`
+        } else { box.innerHTML = '' }
+      }
+      inputRepro.addEventListener('change', pintarExtra)
+      pintarExtra()
       const email = cuerpo.querySelector('#al-email')
       email.focus()
       let t = null
@@ -477,7 +502,15 @@
         datos.email = email.value.trim().toLowerCase()
         datos.nombre = cuerpo.querySelector('#al-nombre').value.trim()
         datos.telefono = cuerpo.querySelector('#al-tel').value.trim()
-        datos.reprocann = inputRepro.value
+        datos.reprocann_estado = inputRepro.value
+        const campoCod = cuerpo.querySelector('#al-cod')
+        datos.reprocann_codigo = campoCod ? campoCod.value.trim().toUpperCase() : ''
+        const campoVence = cuerpo.querySelector('#al-vence')
+        datos.reprocann_vence = campoVence ? campoVence.value : ''
+        if (datos.reprocann_codigo && datos.reprocann_codigo.length !== 13) {
+          const aviso = cuerpo.querySelector('#al-precarga')
+          aviso.className = 'msg err'; aviso.textContent = 'El código de vinculación tiene 13 caracteres.'; return
+        }
         datos.nota = cuerpo.querySelector('#al-nota').value.trim()
         const aviso = cuerpo.querySelector('#al-precarga')
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
@@ -500,7 +533,10 @@
         if (d.solicitud.nombre && !cuerpo.querySelector('#al-nombre').value) cuerpo.querySelector('#al-nombre').value = d.solicitud.nombre
         if (d.solicitud.telefono && !cuerpo.querySelector('#al-tel').value) cuerpo.querySelector('#al-tel').value = d.solicitud.telefono
         avisos.push(`Dejó una solicitud web${d.solicitud.intent === 'acceso' ? ' (ya tiene REPROCANN)' : ' (pidió entrevista)'}${d.solicitud.adjunto ? ' con adjunto' : ''} — datos precargados.`)
-        if (d.solicitud.intent === 'acceso' && !cuerpo.querySelector('#al-repro').value) cuerpo.querySelector('#al-repro').value = 'Vinculado'
+        if (d.solicitud.intent === 'acceso') {
+          const sel = cuerpo.querySelector('#al-repro')
+          if (sel.value === 'esperando_codigo') { sel.value = 'aprobado'; sel.dispatchEvent(new Event('change')) }
+        }
       }
       if (d.yaTieneAcceso) avisos.push('Ya tiene acceso a la carta.')
       if (d.yaTieneFicha) avisos.push(`Ya tiene ficha en el padrón (${P.esc(d.yaTieneFicha.nombre)}) — se completa, no se duplica.`)
@@ -603,8 +639,12 @@
           extra = `<p class="msg err" style="margin-top:12px">La suscripción no se pudo crear: ${P.esc(ds.error || 'error')}. El socio quedó dado de alta igual.</p>`
         }
       }
-      const wa = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-        `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 ${d.gramos ? `Tu membresía ${datos.tier} te da ${d.gramos} g por mes. ` : ''}Entrá a la carta con tu cuenta de Google (${datos.email}): https://floraong.ar/socios/`)}`
+      const nom = datos.nombre.split(' ')[0]
+      const faltaCodigo = datos.reprocann_estado === 'esperando_codigo' ||
+        (['codigo_listo', 'cargado', 'en_evaluacion'].includes(datos.reprocann_estado) && !datos.reprocann_codigo)
+      const txtBase = `Hola ${nom}! Ya sos socio de Flora 🌿 ${d.gramos ? `Tu membresía ${datos.tier} te da ${d.gramos} g por mes. ` : ''}Entrá a la carta con tu cuenta de Google (${datos.email}): https://floraong.ar/socios/`
+      const txtCodigo = `Hola ${nom}! Ya sos socio de Flora 🌿 Para arrancar tu REPROCANN necesitamos tu código de vinculación: lo generás en tu cuenta de Mi Argentina y lo cargás acá, con el paso a paso: https://floraong.ar/socios/reprocann/`
+      const wa = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(faltaCodigo ? txtCodigo : txtBase)}`
       cuerpo.innerHTML = `
         <div style="text-align:center;padding:6px 0 4px">
           <div style="font-family:var(--font-display);font-size:26px;color:var(--grn)">Listo</div>
@@ -612,10 +652,15 @@
           <p class="so-help" style="margin:8px 0 0">${d.mailEnviado
             ? 'Le llegó el mail de bienvenida.'
             : `El mail de bienvenida NO salió (${P.esc(d.mailError || 'sin detalle')}) — avisale vos.`}</p>
+          ${faltaCodigo ? `<div style="margin-top:14px;padding:12px 16px;background:var(--amb-soft);border-radius:10px;text-align:left">
+            <b style="color:var(--amb);font-size:13px">Falta su código de vinculación</b>
+            <p class="so-help" style="margin:4px 0 0">Sin ese código no se puede arrancar el trámite de REPROCANN.
+            El botón de WhatsApp de acá abajo ya lleva el mensaje con el link y el paso a paso.</p>
+          </div>` : ''}
         </div>
         ${extra}
         <div class="pn-mod-acciones">
-          ${datos.telefono ? `<a class="btn" href="${P.esc(wa)}" target="_blank" rel="noopener">Saludar por WhatsApp</a>` : ''}
+          ${datos.telefono ? `<a class="btn ${faltaCodigo ? 'btn-pri' : ''}" href="${P.esc(wa)}" target="_blank" rel="noopener">${faltaCodigo ? 'Pedirle el código' : 'Saludar por WhatsApp'}</a>` : ''}
           <button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
         </div>`
       sfCargado = false
