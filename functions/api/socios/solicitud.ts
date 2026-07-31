@@ -65,12 +65,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const name = String(body?.name || '').trim().slice(0, 120);
   const email = String(body?.email || '').trim().toLowerCase().slice(0, 160);
   const phone = String(body?.phone || '').trim().slice(0, 40);
+  // El DNI viaja hasta el alta: es la llave común con la ficha del médico y
+  // lo pide el trámite de REPROCANN. Solo dígitos. No se rechaza si falta
+  // (formularios viejos cacheados no tienen el campo) — el alta lo completa.
+  const dni = String(body?.dni || '').replace(/\D/g, '').slice(0, 8);
   const intentRaw = String(body?.intent || 'acceso');
   const intent: Intent = (INTENTS as readonly string[]).includes(intentRaw) ? (intentRaw as Intent) : 'acceso';
 
   if (!name) return Response.json({ ok: false, error: 'falta el nombre' }, { status: 400 });
   if (!EMAIL_RE.test(email)) return Response.json({ ok: false, error: 'tiene que ser un email de Gmail (terminado en @gmail.com)' }, { status: 400 });
   if (!phone) return Response.json({ ok: false, error: 'falta el celular' }, { status: 400 });
+  if (dni && dni.length < 7) return Response.json({ ok: false, error: 'el DNI tiene 7 u 8 números' }, { status: 400 });
 
   const now = new Date().toISOString();
   const existingRaw = await env.SOLICITUDES.get(email);
@@ -79,6 +84,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const esNueva = !rec.creado;
   rec.name = name;
   rec.phone = phone;
+  if (dni) rec.dni = dni;
   rec.intent = intent;
   rec.creado = rec.creado || now;
   rec.actualizado = now;

@@ -429,7 +429,7 @@
   function altaAbrir() {
     let paso = 1
     let tarifas = []
-    let datos = { email: '', nombre: '', telefono: '', reprocann_estado: 'esperando_codigo', reprocann_codigo: '', reprocann_vence: '', nota: '', tier: 'NINGUNA' }
+    let datos = { email: '', nombre: '', telefono: '', documento: '', reprocann_estado: 'esperando_codigo', reprocann_codigo: '', reprocann_vence: '', nota: '', tier: 'NINGUNA' }
 
     const ov = P.modal('Socio nuevo', '<div id="al-cuerpo"></div>')
     const cuerpo = ov.querySelector('#al-cuerpo')
@@ -450,6 +450,9 @@
             <div><label class="lb" for="al-tel">Teléfono</label>
               <input class="input" id="al-tel" type="tel" value="${P.esc(datos.telefono)}" placeholder="+54 9 299…" /></div>
           </div>
+          <div><label class="lb" for="al-dni">DNI</label>
+            <input class="input" id="al-dni" inputmode="numeric" maxlength="10" value="${P.esc(datos.documento)}" placeholder="sin puntos" style="max-width:180px" />
+            <p class="so-help" style="margin:6px 0 0">Lo pide el trámite de REPROCANN y es lo que une su ficha con la del médico.</p></div>
           <div><label class="lb" for="al-repro">¿Cómo está su REPROCANN?</label>
             <select class="sel" id="al-repro">
               <option value="esperando_codigo">Todavía no lo tiene — se lo gestionamos</option>
@@ -502,6 +505,7 @@
         datos.email = email.value.trim().toLowerCase()
         datos.nombre = cuerpo.querySelector('#al-nombre').value.trim()
         datos.telefono = cuerpo.querySelector('#al-tel').value.trim()
+        datos.documento = cuerpo.querySelector('#al-dni').value.replace(/\D/g, '')
         datos.reprocann_estado = inputRepro.value
         const campoCod = cuerpo.querySelector('#al-cod')
         datos.reprocann_codigo = campoCod ? campoCod.value.trim().toUpperCase() : ''
@@ -510,6 +514,10 @@
         if (datos.reprocann_codigo && datos.reprocann_codigo.length !== 13) {
           const aviso = cuerpo.querySelector('#al-precarga')
           aviso.className = 'msg err'; aviso.textContent = 'El código de vinculación tiene 13 caracteres.'; return
+        }
+        if (datos.documento && (datos.documento.length < 7 || datos.documento.length > 8)) {
+          const aviso = cuerpo.querySelector('#al-precarga')
+          aviso.className = 'msg err'; aviso.textContent = 'El DNI tiene 7 u 8 números (sin puntos).'; return
         }
         datos.nota = cuerpo.querySelector('#al-nota').value.trim()
         const aviso = cuerpo.querySelector('#al-precarga')
@@ -532,6 +540,7 @@
       if (d.solicitud) {
         if (d.solicitud.nombre && !cuerpo.querySelector('#al-nombre').value) cuerpo.querySelector('#al-nombre').value = d.solicitud.nombre
         if (d.solicitud.telefono && !cuerpo.querySelector('#al-tel').value) cuerpo.querySelector('#al-tel').value = d.solicitud.telefono
+        if (d.solicitud.dni && !cuerpo.querySelector('#al-dni').value) cuerpo.querySelector('#al-dni').value = d.solicitud.dni
         avisos.push(`Dejó una solicitud web${d.solicitud.intent === 'acceso' ? ' (ya tiene REPROCANN)' : ' (pidió entrevista)'}${d.solicitud.adjunto ? ' con adjunto' : ''} — datos precargados.`)
         if (d.solicitud.intent === 'acceso') {
           const sel = cuerpo.querySelector('#al-repro')
@@ -539,7 +548,10 @@
         }
       }
       if (d.yaTieneAcceso) avisos.push('Ya tiene acceso a la carta.')
-      if (d.yaTieneFicha) avisos.push(`Ya tiene ficha en el padrón (${P.esc(d.yaTieneFicha.nombre)}) — se completa, no se duplica.`)
+      if (d.yaTieneFicha) {
+        avisos.push(`Ya tiene ficha en el padrón (${P.esc(d.yaTieneFicha.nombre)}) — se completa, no se duplica.`)
+        if (d.yaTieneFicha.documento && !cuerpo.querySelector('#al-dni').value) cuerpo.querySelector('#al-dni').value = d.yaTieneFicha.documento
+      }
       aviso.className = 'so-help'
       aviso.textContent = avisos.join(' ')
     }
@@ -718,10 +730,10 @@
       </div>` : ''
 
     const lista = sfSocios.filter((s) => !sfQ ||
-      (s.nombre + ' ' + (s.email || '') + ' ' + (s.nota || '')).toLowerCase().includes(sfQ))
+      (s.nombre + ' ' + (s.email || '') + ' ' + (s.documento || '') + ' ' + (s.nota || '')).toLowerCase().includes(sfQ))
     sfBox.querySelector('#sf-lista').innerHTML = lista.length ? `
       <table class="tabla"><thead><tr>
-        <th>Socio</th><th>Email (débito)</th><th>Teléfono</th><th>Membresía</th><th>Último pago</th><th>Estado</th>
+        <th>Socio</th><th>Email (débito)</th><th>DNI</th><th>Teléfono</th><th>Membresía</th><th>Último pago</th><th>Estado</th>
       </tr></thead><tbody>${lista.map((s) => `<tr>
         <td><div class="fila"><span class="av">${esc(P.iniciales(s.nombre))}</span>
           <div><div style="font-weight:600">${esc(s.nombre)}</div>
@@ -729,6 +741,9 @@
         <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="email" type="email"
           value="${esc(s.email || '')}" placeholder="sin email" style="min-width:210px;font-size:12px" />`
           : esc(s.email || '—')}</td>
+        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="documento" inputmode="numeric"
+          value="${esc(s.documento || '')}" placeholder="DNI" maxlength="10" style="max-width:100px;font-size:12px" />`
+          : esc(s.documento || '—')}</td>
         <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="telefono" type="tel"
           value="${esc(s.telefono || '')}" placeholder="+54 9…" style="max-width:130px;font-size:12px" />`
           : esc(s.telefono || '—')}</td>

@@ -93,9 +93,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!email) return json({ error: 'Falta email' }, 400);
 
   const [solicitud, yaEnKv, ficha, precios] = await Promise.all([
-    env.SOLICITUDES.get(email, 'json') as Promise<{ name?: string; phone?: string; intent?: string; tieneAdjunto?: boolean } | null>,
+    env.SOLICITUDES.get(email, 'json') as Promise<{ name?: string; phone?: string; dni?: string; intent?: string; tieneAdjunto?: boolean } | null>,
     env.SOCIOS.get(email),
-    env.DB.prepare(`SELECT id, nombre, telefono FROM socios WHERE email = ?`).bind(email).first(),
+    env.DB.prepare(`SELECT id, nombre, telefono, documento FROM socios WHERE email = ?`).bind(email).first(),
     env.DB.prepare(
       `SELECT p.item, p.gramos, p.contado, p.debito FROM precios p
          JOIN listas_precios lp ON lp.id = p.lista_id
@@ -109,7 +109,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   return json({
     ok: true,
-    solicitud: solicitud ? { nombre: solicitud.name, telefono: solicitud.phone, intent: solicitud.intent, adjunto: !!solicitud.tieneAdjunto } : null,
+    solicitud: solicitud ? { nombre: solicitud.name, telefono: solicitud.phone, dni: solicitud.dni || null, intent: solicitud.intent, adjunto: !!solicitud.tieneAdjunto } : null,
     yaTieneAcceso: !!yaEnKv,
     yaTieneFicha: ficha || null,
     tarifas,
@@ -127,6 +127,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = String(b.email || '').trim().toLowerCase();
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   const telefono = String(b.telefono || '').trim().slice(0, 30) || null;
+  // El DNI es la llave común con el consultorio (ver migración 0010): solo
+  // dígitos, sin puntos. No es obligatorio (el padrón viejo no lo tiene),
+  // pero si viene tiene que ser único — dos socios con el mismo DNI son la
+  // misma persona duplicada.
+  const documento = String(b.documento || '').replace(/\D/g, '') || null;
   // El estado del trámite entra al embudo (ver migración 0008), no como texto
   // libre: es lo que después dice de quién depende cada socio.
   const PASOS_ALTA = ['esperando_codigo', 'codigo_listo', 'cargado', 'en_evaluacion', 'aprobado', 'autocultivo'];
@@ -147,6 +152,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const otro = await env.DB.prepare(`SELECT nombre FROM socios WHERE reprocann_codigo = ?`).bind(rcCodigo).first<{ nombre: string }>();
     if (otro) return json({ error: `Ese código de vinculación ya es de ${otro.nombre}` }, 409);
   }
+  if (documento && (documento.length < 7 || documento.length > 8)) return json({ error: 'El DNI tiene 7 u 8 números' }, 400);
+  // Si el DNI ya está en el padrón hay dos casos: es de otro socio con su
+  // propio email (error real: dos personas no comparten DNI) o es una ficha
+  // sin email — la misma persona, cargada antes por otro camino. Esa se
+  // reusa: el DNI es mejor prueba de identidad que la coincidencia de nombre.
+  let fichaPorDni: { id: number } | null = null;
+  if (documento) {
+    const otro = await env.DB.prepare(`SELECT id, nombre, email FROM socios WHERE documento = ?`)
+      .bind(documento).first<{ id: number; nombre: string; email: string | null }>();
+    if (otro && otro.email && otro.email !== email) return json({ error: `Ese DNI ya es de ${otro.nombre}` }, 409);
+    if (otro && !otro.email) fichaPorDni = { id: otro.id };
+  }
 
   // 1) Ficha financiera (D1) — la que faltaba siempre
   let socioId: number;
@@ -154,31 +171,32 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (existente) {
     socioId = existente.id;
     await env.DB.prepare(
-      `UPDATE socios SET nombre = ?, telefono = COALESCE(?, telefono),
+      `UPDATE socios SET nombre = ?, telefono = COALESCE(?, telefono), documento = COALESCE(?, documento),
               reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
               reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
               nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
-    ).bind(nombre, telefono, rcEstado, rcCodigo, rcVence, nota, socioId).run();
+    ).bind(nombre, telefono, documento, rcEstado, rcCodigo, rcVence, nota, socioId).run();
   } else {
-    // ¿hay una ficha del Excel con ese nombre y sin email? la reusamos en vez
-    // de duplicar a la persona (el caso de los 121 socios sin email).
-    const porNombre = await env.DB.prepare(
+    // ¿hay una ficha previa de la misma persona sin email? Primero por DNI
+    // (prueba de identidad), después por nombre (el caso de los 121 socios
+    // del Excel sin email). La reusamos en vez de duplicar a la persona.
+    const porNombre = fichaPorDni || await env.DB.prepare(
       `SELECT id FROM socios WHERE email IS NULL AND lower(nombre) = lower(?) AND (numero IS NULL OR numero != -1) LIMIT 1`,
     ).bind(nombre).first<{ id: number }>();
     if (porNombre) {
       socioId = porNombre.id;
       await env.DB.prepare(
-        `UPDATE socios SET email = ?, telefono = COALESCE(?, telefono),
+        `UPDATE socios SET email = ?, nombre = ?, telefono = COALESCE(?, telefono), documento = COALESCE(?, documento),
                 reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
                 reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
                 nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
-      ).bind(email, telefono, rcEstado, rcCodigo, rcVence, nota, socioId).run();
+      ).bind(email, nombre, telefono, documento, rcEstado, rcCodigo, rcVence, nota, socioId).run();
     } else {
       const r = await env.DB.prepare(
-        `INSERT INTO socios (nombre, email, telefono, nota, estado, alta,
+        `INSERT INTO socios (nombre, email, telefono, documento, nota, estado, alta,
                  reprocann_estado, reprocann_codigo, reprocann_vence, reprocann_actualizado)
-         VALUES (?, ?, ?, ?, 'activo', date('now'), ?, ?, ?, datetime('now'))`,
-      ).bind(nombre, email, telefono, nota, rcEstado, rcCodigo, rcVence).run();
+         VALUES (?, ?, ?, ?, ?, 'activo', date('now'), ?, ?, ?, datetime('now'))`,
+      ).bind(nombre, email, telefono, documento, nota, rcEstado, rcCodigo, rcVence).run();
       socioId = Number(r.meta.last_row_id);
     }
   }

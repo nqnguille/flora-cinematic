@@ -27,7 +27,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   if (vista === 'lista') {
     const [socios, sug] = await Promise.all([
       env.DB.prepare(
-        `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.estado, s.reprocann, s.nota,
+        `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.documento, s.estado, s.reprocann, s.nota,
                 m.tier, m.modalidad, m.gramos_mes,
                 (SELECT MAX(fecha) FROM movimientos mv WHERE mv.socio_id = s.id AND mv.tipo = 'ingreso'
                   AND mv.categoria = 'membresia') AS ultimo_pago,
@@ -68,6 +68,16 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
     cambios.push('email = ?'); valores.push(email);
   }
   if ('telefono' in body) { cambios.push('telefono = ?'); valores.push(String(body.telefono || '').trim().slice(0, 30) || null); }
+  if ('documento' in body) {
+    // DNI: la llave común con el consultorio (migración 0010) — solo dígitos y único.
+    const doc = String(body.documento || '').replace(/\D/g, '') || null;
+    if (doc && (doc.length < 7 || doc.length > 8)) return json({ error: 'El DNI tiene 7 u 8 números' }, 400);
+    if (doc) {
+      const otro = await env.DB.prepare(`SELECT nombre FROM socios WHERE documento = ? AND id != ?`).bind(doc, id).first<{ nombre: string }>();
+      if (otro) return json({ error: `Ese DNI ya es de ${otro.nombre}` }, 409);
+    }
+    cambios.push('documento = ?'); valores.push(doc);
+  }
   if ('nota' in body) { cambios.push('nota = ?'); valores.push(String(body.nota || '').trim().slice(0, 400) || null); }
   if ('estado' in body) {
     const estado = String(body.estado);

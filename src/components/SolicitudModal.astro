@@ -24,6 +24,10 @@
         <span>Celular (WhatsApp)</span>
         <input type="tel" id="sl-sol-phone" name="phone" autocomplete="tel" placeholder="Tu número de WhatsApp" required />
       </label>
+      <label class="sl-solicitud-field">
+        <span>DNI <em>(sin puntos — lo pide el trámite de REPROCANN)</em></span>
+        <input type="text" id="sl-sol-dni" name="dni" inputmode="numeric" pattern="[0-9.\s]{7,10}" maxlength="10" title="Tu número de DNI, 7 u 8 dígitos" required />
+      </label>
       <label class="sl-solicitud-field" id="sl-sol-file-field" hidden>
         <span>Foto o PDF de tu REPROCANN vigente <em>(opcional, agiliza la aprobación)</em></span>
         <input type="file" id="sl-sol-file" name="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
@@ -111,6 +115,7 @@
             name: String(data.get('name') || ''),
             email: String(data.get('email') || ''),
             phone: String(data.get('phone') || ''),
+            dni: String(data.get('dni') || ''),
             website: String(data.get('website') || ''),
             intent,
           }),
