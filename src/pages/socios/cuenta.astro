@@ -38,6 +38,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <!-- Saldo de gramos: lo único de finanzas que ve el socio (sin plata) -->
+      <section class="cu-sec">
+        <a class="cu-rp-link" href="/socios/reprocann/">
+          <span><strong>Mi REPROCANN</strong><small>Ver en qué anda tu trámite y cargar tu código</small></span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </section>
+
       <section class="cu-sec" id="cu-saldo-sec" hidden>
         <h2 class="cu-sec-title">Tus gramos</h2>
         <div class="cu-saldo-card">
@@ -237,6 +244,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-vacio a { color: #b79de6; }
     .cu-vacio[hidden] { display: none; }
     .cu-gw { margin-top: 4px; }
+
+    .cu-rp-link { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      background: rgba(183, 157, 230, 0.08); border: 1px solid rgba(183, 157, 230, 0.28);
+      border-radius: 14px; padding: 16px 20px; text-decoration: none; color: #f4f1f7; }
+    .cu-rp-link:hover { background: rgba(183, 157, 230, 0.14); }
+    .cu-rp-link small { display: block; color: rgba(244, 241, 247, 0.55); font-size: 0.84rem; margin-top: 2px; }
+    .cu-rp-link span:last-child { color: #b79de6; font-size: 1.2rem; }
 
     /* saldo de gramos — nocturno de marca, verde solo para el dato */
     .cu-saldo-card {

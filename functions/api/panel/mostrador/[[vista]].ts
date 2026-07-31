@@ -35,7 +35,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const q = (url.searchParams.get('q') || '').trim();
     if (q.length < 2) return json({ ok: true, socios: [] });
     const rows = await env.DB.prepare(
-      `SELECT s.id, s.numero, s.nombre, s.email, s.estado,
+      `SELECT s.id, s.numero, s.nombre, s.email, s.estado, s.reprocann_estado,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL ORDER BY m.desde DESC LIMIT 1) AS tier
          FROM socios s
         WHERE (s.numero IS NULL OR s.numero != -1) AND (s.nombre LIKE '%' || ?1 || '%' OR s.email LIKE '%' || ?1 || '%')
@@ -47,7 +47,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   if (vista === 'socio') {
     const id = Number(url.searchParams.get('id'));
     if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
-    const socio = await env.DB.prepare(`SELECT id, numero, nombre, email, estado, reprocann, nota FROM socios WHERE id = ?`).bind(id).first();
+    const socio = await env.DB.prepare(
+      `SELECT id, numero, nombre, email, estado, reprocann, nota,
+              reprocann_estado, reprocann_vence FROM socios WHERE id = ?`,
+    ).bind(id).first();
     if (!socio) return json({ error: 'No existe' }, 404);
     const [saldo, ultimos] = await Promise.all([
       saldoDe(env, id),

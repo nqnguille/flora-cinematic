@@ -80,10 +80,11 @@
         <div class="fila"><span class="av">${P.esc(P.iniciales(socio.nombre))}</span>
           <b style="font-size:16px">${P.esc(socio.nombre)}</b>
           ${socio.numero ? `<span class="tag tag-off">#${socio.numero}</span>` : ''}
-          ${socio.reprocann ? `<span class="tag ${/vincul/i.test(socio.reprocann) ? 'tag-ok' : 'tag-deb'}">${P.esc(socio.reprocann)}</span>` : ''}</div>
+          </div>
       </div>
       <div class="grid2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:start">
         <div style="display:grid;gap:12px">
+          ${avisoReprocann(socio)}
           <div class="card">
             <span class="k">${esPlan ? `Saldo del plan (${P.esc(saldo.tier)})` : 'Le queda este mes'}</span>
             <div class="fila" style="align-items:baseline;gap:10px;margin:10px 0 4px">
@@ -124,6 +125,41 @@
         </div>
       </div>`
     pintarCarrito()
+  }
+
+
+  // El REPROCANN es lo que habilita legalmente a retirar. Si no está vigente,
+  // el mostrador lo dice ANTES de entregar — no después.
+  function avisoReprocann(socio) {
+    const e = socio.reprocann_estado || 'sin_iniciar'
+    if (e === 'aprobado') {
+      const v = socio.reprocann_vence
+      const dias = v ? Math.floor((Date.parse(v) - Date.now()) / 86400000) : null
+      if (dias !== null && dias < 0) return tarjeta('vencido', `El REPROCANN venció el ${v}. No debería retirar hasta renovarlo.`, 'dan')
+      if (dias !== null && dias < 45) return tarjeta('por vencer', `El REPROCANN vence en ${dias} días (${v}). Conviene arrancar la renovación.`, 'amb')
+      return ''
+    }
+    if (e === 'autocultivo') return ''
+    const TXT = {
+      sin_iniciar: 'No arrancó su REPROCANN todavía.',
+      revisar: 'No sabemos en qué anda su REPROCANN — hay que confirmarlo.',
+      esperando_codigo: 'Le falta cargar su código de vinculación.',
+      codigo_listo: 'Ya dio su código; Ezequiel todavía no cargó el trámite.',
+      cargado: 'Falta que acepte el consentimiento en su cuenta de REPROCANN.',
+      observado: 'Su trámite tiene una observación sin resolver.',
+      a_vincular: 'Ya firmó: nos toca vincularlo como cultivadora.',
+      en_evaluacion: 'Su trámite está en evaluación del Ministerio.',
+      revision_medica: 'El Ministerio devolvió su trámite al médico.',
+      rechazado: 'Su trámite fue RECHAZADO.',
+      vencido: 'Su certificado está vencido.',
+    }
+    const grave = ['rechazado', 'vencido'].includes(e)
+    return tarjeta('en trámite', TXT[e] || 'Su REPROCANN no está vigente.', grave ? 'dan' : 'amb')
+  }
+  function tarjeta(titulo, texto, color) {
+    return `<div class="card" style="border-left:3px solid var(--${color})">
+      <span class="k" style="color:var(--${color})">REPROCANN ${P.esc(titulo)}</span>
+      <div class="kpi-d" style="margin-top:6px;color:var(--ink2)">${P.esc(texto)}</div></div>`
   }
 
   function pintarCarrito() {

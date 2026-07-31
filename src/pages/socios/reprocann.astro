@@ -1,0 +1,224 @@
+---
+// Mi REPROCANN — la página donde el paciente ve en qué anda su trámite y
+// carga él mismo su código de vinculación. Antes ese código llegaba por
+// WhatsApp y alguien lo transcribía: un carácter mal copiado vincula el
+// trámite de otra persona. Acá lo pega el dueño del código, con su sesión.
+import Layout from '../../layouts/Layout.astro'
+import SociosLogin from '../../components/SociosLogin.astro'
+import SociosTos from '../../components/SociosTos.astro'
+import '../../styles/global.css'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Mi REPROCANN — socios | Flora ONG"
+  description="El estado de tu trámite de REPROCANN y dónde cargar tu código de vinculación."
+  noindex={true}
+>
+  <link rel="stylesheet" href="/socios/tienda.css" />
+  <main class="td-main">
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+      <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
+    </SociosLogin>
+    <SociosTos />
+
+    <div id="rp-content" class="td-content" hidden>
+      <div class="td-head">
+        <a href="/socios/cuenta/" class="td-back">← Mi cuenta</a>
+        <div class="td-brand"><img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" /><span class="td-brand-name"><em>club</em></span></div>
+        <span></span>
+      </div>
+
+      <h1 class="td-title">Tu <em>REPROCANN</em></h1>
+
+      <!-- estado del trámite -->
+      <section class="rp-sec">
+        <div class="rp-estado" id="rp-estado">
+          <span class="rp-punto" id="rp-punto"></span>
+          <p id="rp-mensaje">Cargando…</p>
+        </div>
+        <div class="rp-pasos" id="rp-pasos"></div>
+      </section>
+
+      <!-- cargar el código -->
+      <section class="rp-sec" id="rp-form-sec" hidden>
+        <h2 class="rp-h2">Cargá tu código de vinculación</h2>
+        <p class="rp-p">Es un código de <strong>13 caracteres</strong> que genera tu cuenta de REPROCANN.
+        Con él, nuestro médico presenta tu indicación y el club queda como tu cultivador.</p>
+
+        <details class="rp-como">
+          <summary>¿Cómo lo saco?</summary>
+          <ol class="rp-ol">
+            <li>Entrá a <a href="https://reprocann.msal.gob.ar/" target="_blank" rel="noopener">reprocann.msal.gob.ar</a> con tu cuenta de <strong>Mi Argentina</strong> (tu CUIL y tu clave).</li>
+            <li>Elegí el perfil <strong>Paciente y/o Autocultivador</strong>.</li>
+            <li>Completá el formulario de inscripción como paciente, si todavía no lo hiciste.</li>
+            <li>En <strong>Mis datos</strong> vas a ver tu <strong>código de vinculación</strong>.</li>
+            <li>Copialo y pegalo acá abajo.</li>
+          </ol>
+          <p class="rp-nota">Si elegís que Flora sea tu cultivador, ese mismo código se usa dos veces:
+          una para el médico y otra para el club. No hace falta que generes dos.</p>
+        </details>
+
+        <form id="rp-form" class="rp-form">
+          <input id="rp-codigo" class="rp-input" type="text" inputmode="text" maxlength="13"
+                 placeholder="Ej. A1B2C3D4E5F6G" autocomplete="off" spellcheck="false" required />
+          <button class="rp-btn" type="submit">Guardar mi código</button>
+        </form>
+        <p id="rp-msg" class="rp-msg" hidden></p>
+      </section>
+
+      <section class="rp-sec" id="rp-ok-sec" hidden>
+        <p class="rp-p">Tu código está cargado <span id="rp-codigo-parcial" class="rp-cod"></span>.
+        Si te equivocaste, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a> y lo corregimos.</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+  <script define:vars={{ googleClientId }}>
+    const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
+    // Los pasos que ve el paciente — su viaje, no nuestra jerga interna.
+    const VIAJE = [
+      { id: 'codigo', txt: 'Tu código' },
+      { id: 'medico', txt: 'Carga del médico' },
+      { id: 'firma', txt: 'Tu firma' },
+      { id: 'club', txt: 'Te vinculamos' },
+      { id: 'ministerio', txt: 'Ministerio' },
+      { id: 'listo', txt: 'Aprobado' },
+    ]
+    const DONDE = {
+      sin_iniciar: 0, esperando_codigo: 0, revisar: 0,
+      codigo_listo: 1, cargado: 2, observado: 2,
+      a_vincular: 3, en_evaluacion: 4, revision_medica: 4,
+      aprobado: 5, autocultivo: 5, rechazado: -1, vencido: -1,
+    }
+
+    async function cargar() {
+      const res = await fetch('/api/socios/codigo', { credentials: 'include' })
+      if (!res.ok) return false
+      const d = await res.json()
+      document.getElementById('socios-login').hidden = true
+      document.getElementById('rp-content').hidden = false
+
+      if (!d.vinculado) {
+        document.getElementById('rp-mensaje').textContent =
+          'Tu cuenta todavía no está asociada a tu ficha del club. Escribinos por WhatsApp y lo resolvemos.'
+        return true
+      }
+      document.getElementById('rp-mensaje').textContent = d.mensaje || ''
+      const punto = document.getElementById('rp-punto')
+      punto.className = 'rp-punto' + (d.teToca ? ' is-vos' : d.estado === 'aprobado' ? ' is-ok' : ' is-espera')
+
+      const paso = DONDE[d.estado] ?? 0
+      document.getElementById('rp-pasos').innerHTML = VIAJE.map((v, i) => `
+        <div class="rp-paso ${i < paso ? 'is-hecho' : i === paso ? 'is-ahora' : ''}">
+          <span class="rp-bolita"></span><span>${esc(v.txt)}</span>
+        </div>`).join('')
+
+      const pedirCodigo = ['sin_iniciar', 'esperando_codigo', 'revisar'].includes(d.estado) && !d.tieneCodigo
+      document.getElementById('rp-form-sec').hidden = !pedirCodigo
+      if (d.tieneCodigo) {
+        document.getElementById('rp-ok-sec').hidden = false
+        document.getElementById('rp-codigo-parcial').textContent = d.codigoParcial || ''
+      }
+      return true
+    }
+
+    document.getElementById('rp-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const msg = document.getElementById('rp-msg')
+      const btn = e.target.querySelector('button')
+      const codigo = document.getElementById('rp-codigo').value.trim()
+      btn.disabled = true
+      msg.hidden = false; msg.className = 'rp-msg'; msg.textContent = 'Guardando…'
+      const r = await fetch('/api/socios/codigo', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo }),
+      })
+      const d = await r.json().catch(() => ({}))
+      btn.disabled = false
+      if (r.ok) {
+        msg.className = 'rp-msg is-ok'
+        msg.textContent = '¡Listo! Ya lo tenemos. Te avisamos cuando el médico cargue tu trámite.'
+        setTimeout(cargar, 1200)
+      } else {
+        msg.className = 'rp-msg is-err'
+        msg.textContent = d.error || 'No se pudo guardar. Probá de nuevo.'
+      }
+    })
+
+    async function submitLogin(credential, tosAccept) {
+      try {
+        const res = await fetch('/api/socios/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ credential, tosAccept: !!tosAccept }),
+        })
+        const data = await res.json()
+        if (res.ok && data.ok) { window.hideSociosTos(); await cargar(); return }
+        if (data.needsTos) {
+          window.showSociosTos({ mode: 'accept', onAccept: () => submitLogin(credential, true) })
+          return
+        }
+        const msg = document.getElementById('socios-login-msg')
+        msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
+        msg.hidden = false
+      } catch {
+        const msg = document.getElementById('socios-login-msg')
+        msg.textContent = 'Hubo un problema de conexión.'
+        msg.hidden = false
+      }
+    }
+    window.handleGoogleCredential = (r) => submitLogin(r.credential, false)
+    cargar()
+  </script>
+
+  <style is:global>
+    .rp-sec { margin: 0 0 28px; }
+    .rp-h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: #f4f1f7; margin: 0 0 8px; }
+    .rp-p { color: rgba(244, 241, 247, 0.72); font-size: 0.95rem; line-height: 1.65; margin: 0 0 14px; }
+    .rp-p a, .rp-nota a { color: #3cb492; }
+
+    .rp-estado { display: flex; align-items: flex-start; gap: 12px; background: rgba(244, 241, 247, 0.04);
+      border: 1px solid rgba(244, 241, 247, 0.12); border-radius: 16px; padding: 18px 20px; }
+    .rp-estado p { margin: 0; color: #f4f1f7; font-size: 1rem; line-height: 1.55; }
+    .rp-punto { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; background: rgba(244,241,247,.4); }
+    .rp-punto.is-vos { background: #e6a83e; box-shadow: 0 0 0 4px rgba(230,168,62,.18); }
+    .rp-punto.is-espera { background: #b79de6; }
+    .rp-punto.is-ok { background: #3cb492; box-shadow: 0 0 0 4px rgba(60,180,146,.18); }
+
+    .rp-pasos { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 16px; padding: 0 4px; }
+    .rp-paso { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: rgba(244,241,247,.4); }
+    .rp-bolita { width: 8px; height: 8px; border-radius: 50%; background: rgba(244,241,247,.2); }
+    .rp-paso.is-hecho { color: rgba(244,241,247,.6); }
+    .rp-paso.is-hecho .rp-bolita { background: #3cb492; }
+    .rp-paso.is-ahora { color: #f4f1f7; font-weight: 600; }
+    .rp-paso.is-ahora .rp-bolita { background: #e6a83e; box-shadow: 0 0 0 3px rgba(230,168,62,.2); }
+
+    .rp-como { margin: 0 0 18px; border: 1px solid rgba(244,241,247,.12); border-radius: 14px; padding: 14px 18px;
+      background: rgba(244,241,247,.03); }
+    .rp-como summary { cursor: pointer; color: #b79de6; font-weight: 600; font-size: 0.92rem; }
+    .rp-ol { color: rgba(244,241,247,.72); font-size: 0.92rem; line-height: 1.75; margin: 12px 0 0; padding-left: 20px; }
+    .rp-ol strong { color: #f4f1f7; }
+    .rp-nota { color: rgba(244,241,247,.5); font-size: 0.85rem; margin: 12px 0 0; }
+
+    .rp-form { display: flex; gap: 10px; flex-wrap: wrap; }
+    .rp-input { flex: 1; min-width: 220px; background: rgba(244,241,247,.06); border: 1px solid rgba(244,241,247,.18);
+      border-radius: 12px; padding: 14px 16px; color: #f4f1f7; font-size: 1.05rem; letter-spacing: .12em;
+      font-family: var(--font-ui); text-transform: uppercase; }
+    .rp-input:focus { outline: 2px solid #3cb492; outline-offset: -1px; }
+    .rp-input::placeholder { color: rgba(244,241,247,.3); letter-spacing: .06em; text-transform: none; }
+    .rp-btn { background: #0A503C; color: #fff; border: 0; border-radius: 999px; padding: 14px 26px;
+      font-weight: 700; font-size: 0.92rem; cursor: pointer; }
+    .rp-btn:hover { filter: brightness(1.12); }
+    .rp-btn:disabled { opacity: .6; cursor: default; }
+    .rp-msg { margin: 12px 0 0; font-size: 0.9rem; color: rgba(244,241,247,.7); }
+    .rp-msg.is-ok { color: #3cb492; }
+    .rp-msg.is-err { color: #ff9d9d; }
+    .rp-msg[hidden] { display: none; }
+    .rp-cod { font-family: var(--font-ui); letter-spacing: .1em; color: #3cb492; }
+    #rp-content[hidden], #rp-form-sec[hidden], #rp-ok-sec[hidden] { display: none; }
+  </style>
+</Layout>
