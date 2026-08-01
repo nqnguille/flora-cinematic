@@ -142,8 +142,76 @@
       <td style="color:var(--muted);white-space:nowrap" title="${s.firstLogin ? 'Primer ingreso: ' + P.esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? P.esc(fmtFecha(s.alta).split(' ')[0]) : '—'}</td>
       <td class="r">${s.logins ? P.fmtN(s.logins) : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${nota}</td>
-      ${editar ? `<td class="r"><button class="btn btn-peligro so-del" data-email="${P.esc(s.email)}" type="button">Quitar</button></td>` : ''}
+      ${editar ? `<td class="r" style="white-space:nowrap">
+        ${P.puede('finanzas_aprobar') ? `<button class="btn so-mp" data-email="${P.esc(s.email)}" data-nombre="${P.esc(nombre || s.email)}" data-tel="${P.esc(s.telefono || '')}" title="Mandarle el link del débito automático" type="button">$ Débito</button>` : ''}
+        <button class="btn btn-peligro so-del" data-email="${P.esc(s.email)}" type="button">Quitar</button></td>` : ''}
     </tr>`
+  }
+
+  // ---------- link de pago (débito automático) desde el padrón ----------
+  // El link es el del PLAN de la membresía del socio (precargado en MP).
+  // Resuelve la ficha por email; si falta algo, el modal dice qué.
+  async function soDebito(email, nombre, telKv) {
+    const ov = P.modal(`Link de pago — ${nombre}`, '<div class="vacio">⏳ Buscando su membresía…</div>')
+    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
+    const r = await fetch(`/api/panel/mp/link?email=${encodeURIComponent(email)}`, { credentials: 'include' })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) { cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>`; return }
+    if (d.sinFicha) {
+      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0">Este socio no tiene ficha en el padrón financiero —
+        sin ficha no hay membresía ni precio. Completala desde la pestaña <b>Fichas</b> (o dalo de alta completo).</p>
+        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
+      return
+    }
+    if (d.sinMembresia) {
+      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> no tiene membresía vigente —
+        primero asignásela en la pestaña <b>Fichas</b> y después mandale el link.</p>
+        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
+      return
+    }
+    if (d.debito_estado === 'activa') {
+      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> ya tiene el débito automático
+        <span class="tag tag-ok">al día</span>${d.debito_fin ? ` — termina el ${P.esc(d.debito_fin.slice(8, 10))}/${P.esc(d.debito_fin.slice(5, 7))}` : ''}. No hace falta mandarle nada.</p>
+        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Perfecto</button></div>`
+      return
+    }
+    if (!d.link) {
+      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">No hay plan de Mercado Pago cargado para ${P.esc(d.tier)}.</p>
+        <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
+      return
+    }
+    const tel = (d.telefono || telKv || '').replace(/\D/g, '')
+    const txt = `Hola ${String(d.nombre).split(' ')[0]}! Te paso el link para activar el débito automático de tu membresía ${d.tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(d.monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${d.link}`
+    cuerpo.innerHTML = `
+      <p style="color:var(--ink2);margin:0 0 12px"><b>3 cuotas mensuales de ${P.fmt(d.monto)}</b> (${P.esc(d.tier)} con el 20%).
+      ${d.link_enviado ? `Ya se lo mandaste por ${d.link_via === 'email' ? 'email' : 'WhatsApp'} — esto cuenta como reenvío.` : 'Es el link del plan precargado en Mercado Pago.'}
+      ${d.no_insistir ? ' <span class="tag tag-auto">marcado «no insistir»</span>' : ''}</p>
+      <input class="input" value="${P.esc(d.link)}" readonly onclick="this.select()" />
+      <div class="pn-mod-acciones">
+        <button class="btn" id="so-mp-copiar" type="button">Copiar</button>
+        <button class="btn" id="so-mp-mail" type="button">Mandar por email</button>
+        ${tel ? `<a class="btn btn-pri" id="so-mp-wa" href="https://wa.me/${tel}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
+      </div>
+      <p class="msg" id="so-mp-msg" style="margin:8px 0 0"></p>`
+    const msg = cuerpo.querySelector('#so-mp-msg')
+    const registrar = (via) => fetch('/api/panel/mp/enviar', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ socio_id: d.socio_id, via }),
+    })
+    cuerpo.querySelector('#so-mp-copiar').addEventListener('click', () => {
+      navigator.clipboard.writeText(d.link)
+      registrar('whatsapp')
+      msg.className = 'msg ok'; msg.textContent = '✔ link copiado (queda registrado el envío)'
+    })
+    cuerpo.querySelector('#so-mp-wa')?.addEventListener('click', () => { registrar('whatsapp') })
+    cuerpo.querySelector('#so-mp-mail').addEventListener('click', async (e) => {
+      e.target.disabled = true
+      msg.className = 'msg'; msg.textContent = '⏳ mandando el mail…'
+      const rm = await registrar('email')
+      const dm = await rm.json().catch(() => ({}))
+      if (rm.ok) { msg.className = 'msg ok'; msg.textContent = '✔ mail enviado' }
+      else { msg.className = 'msg err'; msg.textContent = '✗ ' + (dm.error || 'no salió'); e.target.disabled = false }
+    })
   }
 
   function renderPadron() {
@@ -319,6 +387,9 @@
       renderPadron()
       return
     }
+    // link de pago del débito automático
+    const mp = e.target.closest('.so-mp')
+    if (mp) { soDebito(mp.dataset.email, mp.dataset.nombre, mp.dataset.tel); return }
     // quitar socio
     const del = e.target.closest('.so-del')
     if (del) {

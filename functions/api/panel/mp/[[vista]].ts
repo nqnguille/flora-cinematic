@@ -178,6 +178,37 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, cola });
   }
 
+  // El link de pago de UN socio, para mandárselo desde el padrón (módulo
+  // Socios): resuelve la ficha por email y devuelve el link del plan de su
+  // tier con el estado del débito — o qué le falta para poder mandárselo.
+  if (vista === 'link') {
+    const email = (new URL(request.url).searchParams.get('email') || '').trim().toLowerCase();
+    if (!email) return json({ error: 'Falta email' }, 400);
+    const socio = await env.DB.prepare(
+      `SELECT s.id, s.nombre, s.telefono, s.email, s.debito_no_insistir,
+              (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
+                ORDER BY m.desde DESC LIMIT 1) AS tier,
+              su.estado AS debito_estado, su.tier AS debito_tier, su.fin AS debito_fin,
+              (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_enviado,
+              (SELECT e.via FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_via
+         FROM socios s
+         LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
+        WHERE s.email = ? AND (s.numero IS NULL OR s.numero != -1)`,
+    ).bind(email).first<Record<string, unknown>>();
+    if (!socio) return json({ ok: true, sinFicha: true });
+    if (!socio.tier) return json({ ok: true, sinMembresia: true, socio_id: socio.id, nombre: socio.nombre });
+    const planes = await planesDebito(env);
+    const plan = planes[String(socio.tier)];
+    return json({
+      ok: true,
+      socio_id: socio.id, nombre: socio.nombre, telefono: socio.telefono,
+      tier: socio.tier, monto: plan?.monto ?? null, link: plan?.link ?? null,
+      debito_estado: socio.debito_estado, debito_fin: socio.debito_fin,
+      link_enviado: socio.link_enviado, link_via: socio.link_via,
+      no_insistir: !!socio.debito_no_insistir,
+    });
+  }
+
   // Suscripciones descubiertas sin socio: el pagador de MP no matcheó con el
   // padrón. Candidatos puntuados — la decisión es siempre del presidente.
   if (vista === 'identificar') {
