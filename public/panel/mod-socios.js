@@ -163,43 +163,57 @@
         <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
       return
     }
-    if (d.sinMembresia) {
-      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> no tiene membresía vigente —
-        primero asignásela en la pestaña <b>Fichas</b> y después mandale el link.</p>
-        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
-      return
-    }
     if (d.debito_estado === 'activa') {
       cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> ya tiene el débito automático
         <span class="tag tag-ok">al día</span>${d.debito_fin ? ` — termina el ${P.esc(d.debito_fin.slice(8, 10))}/${P.esc(d.debito_fin.slice(5, 7))}` : ''}. No hace falta mandarle nada.</p>
         <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Perfecto</button></div>`
       return
     }
-    if (!d.link) {
-      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">No hay plan de Mercado Pago cargado para ${P.esc(d.tier)}.</p>
+    if (!d.planes || !d.planes.length) {
+      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">No hay planes de Mercado Pago cargados.</p>
         <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
       return
     }
+    // Se puede ELEGIR el plan: el tier vigente es solo la sugerencia. Si el
+    // socio paga uno distinto, su membresía se actualiza sola al acreditarse.
+    let elegido = d.planes.find((p) => p.tier === d.tier) || d.planes[0]
     const tel = (d.telefono || telKv || '').replace(/\D/g, '')
-    const txt = `Hola ${String(d.nombre).split(' ')[0]}! Te paso el link para activar el débito automático de tu membresía ${d.tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(d.monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${d.link}`
     cuerpo.innerHTML = `
-      <p style="color:var(--ink2);margin:0 0 12px"><b>3 cuotas mensuales de ${P.fmt(d.monto)}</b> (${P.esc(d.tier)} con el 20%).
-      ${d.link_enviado ? `Ya se lo mandaste por ${d.link_via === 'email' ? 'email' : 'WhatsApp'} — esto cuenta como reenvío.` : 'Es el link del plan precargado en Mercado Pago.'}
+      <p class="so-help" style="margin:0 0 8px">${d.tier ? `Su membresía actual es <b>${P.esc(d.tier)}</b> — podés mandarle otro plan igual: al pagar, su membresía se actualiza sola.` : `<b>${P.esc(d.nombre)}</b> no tiene membresía asignada — elegí qué plan mandarle; al pagar queda con esa membresía.`}
       ${d.no_insistir ? ' <span class="tag tag-auto">marcado «no insistir»</span>' : ''}</p>
-      <input class="input" value="${P.esc(d.link)}" readonly onclick="this.select()" />
+      <div class="fila" id="so-mp-tiers" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${d.planes.map((p) => `<button class="chip so-mp-tier" data-tier="${P.esc(p.tier)}" type="button">
+          <b>${P.esc(p.tier)}</b> · ${p.gramos ? p.gramos + ' g · ' : ''}${P.fmt(p.monto)}</button>`).join('')}
+      </div>
+      <p style="color:var(--ink2);margin:0 0 10px" id="so-mp-desc"></p>
+      <input class="input" id="so-mp-link" readonly onclick="this.select()" />
       <div class="pn-mod-acciones">
         <button class="btn" id="so-mp-copiar" type="button">Copiar</button>
         <button class="btn" id="so-mp-mail" type="button">Mandar por email</button>
-        ${tel ? `<a class="btn btn-pri" id="so-mp-wa" href="https://wa.me/${tel}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
+        ${tel ? `<a class="btn btn-pri" id="so-mp-wa" href="#" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
       </div>
       <p class="msg" id="so-mp-msg" style="margin:8px 0 0"></p>`
     const msg = cuerpo.querySelector('#so-mp-msg')
+    const pintarPlan = () => {
+      cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.classList.toggle('on', b.dataset.tier === elegido.tier))
+      cuerpo.querySelector('#so-mp-desc').innerHTML = `<b>3 cuotas mensuales de ${P.fmt(elegido.monto)}</b> (${P.esc(elegido.tier)} con el 20%).
+        ${d.link_enviado ? `Ya le mandaste un link por ${d.link_via === 'email' ? 'email' : 'WhatsApp'} — esto cuenta como reenvío.` : ''}`
+      cuerpo.querySelector('#so-mp-link').value = elegido.link
+      const wa = cuerpo.querySelector('#so-mp-wa')
+      if (wa) wa.href = `https://wa.me/${tel}?text=${encodeURIComponent(
+        `Hola ${String(d.nombre).split(' ')[0]}! Te paso el link para activar el débito automático de tu membresía ${elegido.tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(elegido.monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${elegido.link}`)}`
+    }
+    pintarPlan()
+    cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.addEventListener('click', () => {
+      elegido = d.planes.find((p) => p.tier === b.dataset.tier)
+      pintarPlan()
+    }))
     const registrar = (via) => fetch('/api/panel/mp/enviar', {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ socio_id: d.socio_id, via }),
+      body: JSON.stringify({ socio_id: d.socio_id, via, tier: elegido.tier }),
     })
     cuerpo.querySelector('#so-mp-copiar').addEventListener('click', () => {
-      navigator.clipboard.writeText(d.link)
+      navigator.clipboard.writeText(elegido.link)
       registrar('whatsapp')
       msg.className = 'msg ok'; msg.textContent = '✔ link copiado (queda registrado el envío)'
     })

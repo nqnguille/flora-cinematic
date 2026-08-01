@@ -82,16 +82,29 @@ export async function procesarPagoAprobado(env: EnvMp, pago: Record<string, unkn
   const detalles = pago.transaction_details as Record<string, unknown> | undefined;
   const neto = Math.round(Number(detalles?.net_received_amount) || bruto);
   const esRecurrente = pago.operation_type === 'recurring_payment' || !!susc;
-  // gramos del tier vigente del socio (si lo conocemos y no es cuota social)
+  // gramos y tier: el plan pagado manda — si difiere de la membresía vigente,
+  // la membresía se actualiza sola (pagar MEDIUM es ser MEDIUM)
   let gramos: number | null = null;
   let tier = '';
+  const tierSusc = await (async () => {
+    if (!susc) return '';
+    const t = await env.DB.prepare(`SELECT tier FROM suscripciones WHERE id = ?`).bind(susc.id).first<{ tier: string | null }>();
+    return t?.tier && t.tier !== 'CUOTA SOCIAL' ? t.tier : '';
+  })();
+  let membresiaAsegurada = false;
   if (socioId && !esCuotaSocial) {
-    const m = await env.DB.prepare(
-      `SELECT tier, gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
-        ORDER BY desde DESC LIMIT 1`,
-    ).bind(socioId).first<{ tier: string; gramos_mes: number }>();
-    gramos = m?.gramos_mes ?? null;
-    tier = m?.tier ?? '';
+    if (tierSusc) {
+      tier = tierSusc;
+      gramos = await asegurarMembresiaDebito(env, socioId, tierSusc);
+      membresiaAsegurada = true;
+    } else {
+      const m = await env.DB.prepare(
+        `SELECT tier, gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
+          ORDER BY desde DESC LIMIT 1`,
+      ).bind(socioId).first<{ tier: string; gramos_mes: number }>();
+      gramos = m?.gramos_mes ?? null;
+      tier = m?.tier ?? '';
+    }
   }
   // la fecha real del pago, no la de hoy: el rescate puede llegar días después
   const fecha = String(pago.date_approved || pago.date_created || '').slice(0, 10) || null;
@@ -121,13 +134,42 @@ export async function procesarPagoAprobado(env: EnvMp, pago: Record<string, unkn
       ).bind(socioId).run();
     }
     // débito acumula: la modalidad del socio pasa a débito si no lo era
-    if (socioId) {
+    // (si el tier vino del plan, asegurarMembresiaDebito ya lo resolvió)
+    if (socioId && !membresiaAsegurada) {
       await env.DB.prepare(
         `UPDATE membresias SET modalidad = 'debito' WHERE socio_id = ? AND hasta IS NULL AND modalidad = 'contado'`,
       ).bind(socioId).run();
     }
   }
   return true;
+}
+
+// El débito manda sobre la membresía: si el socio autorizó (y paga) el plan
+// de un tier DISTINTO al que tenía, su membresía pasa a ese tier — pagar
+// MEDIUM es ser MEDIUM. Devuelve los gramos mensuales del tier.
+export async function asegurarMembresiaDebito(env: EnvMp, socioId: number, tier: string): Promise<number | null> {
+  const precio = await env.DB.prepare(
+    `SELECT p.gramos FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
+      WHERE p.item = ? AND p.tipo = 'membresia' ORDER BY lp.vigente_desde DESC LIMIT 1`,
+  ).bind(tier).first<{ gramos: number | null }>();
+  const gramos = precio?.gramos ? Math.round(precio.gramos) : null;
+  const vigente = await env.DB.prepare(
+    `SELECT id, tier, gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
+      ORDER BY desde DESC LIMIT 1`,
+  ).bind(socioId).first<{ id: number; tier: string; gramos_mes: number | null }>();
+  if (vigente && vigente.tier === tier) {
+    await env.DB.prepare(
+      `UPDATE membresias SET modalidad = 'debito' WHERE id = ? AND modalidad = 'contado'`,
+    ).bind(vigente.id).run();
+    return gramos ?? vigente.gramos_mes;
+  }
+  if (vigente) {
+    await env.DB.prepare(`UPDATE membresias SET hasta = date('now') WHERE id = ?`).bind(vigente.id).run();
+  }
+  await env.DB.prepare(
+    `INSERT INTO membresias (socio_id, tier, modalidad, gramos_mes, desde) VALUES (?, ?, 'debito', ?, date('now'))`,
+  ).bind(socioId, tier, gramos).run();
+  return gramos;
 }
 
 // Descubre un preapproval que nació de un LINK DE PLAN (sin aviso previo

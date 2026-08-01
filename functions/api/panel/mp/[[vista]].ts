@@ -17,7 +17,7 @@
 //
 // El token vive como secret MP_ACCESS_TOKEN en Cloudflare Pages — nunca en el repo.
 import { requireRol, puede } from '../_rol';
-import { procesarPagoAprobado, aplicarPreapproval, descubrirPreapproval } from '../../mp/webhook';
+import { procesarPagoAprobado, aplicarPreapproval, descubrirPreapproval, asegurarMembresiaDebito } from '../../mp/webhook';
 import { tokens } from '../reprocann/_unificar';
 
 interface Env {
@@ -54,17 +54,17 @@ const SUSC_RELEVANTE = `(
    ORDER BY CASE s2.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1
             WHEN 'pausada' THEN 2 ELSE 3 END, s2.actualizado DESC, s2.id DESC LIMIT 1)`;
 
-interface PlanInfo { plan_id: string; link: string; monto: number; tipo: string }
+interface PlanInfo { plan_id: string; link: string; monto: number; tipo: string; gramos: number | null }
 
 // Los planes del panel de MP, por tier (lista vigente gana). El link no se
 // guarda: se construye del id — una sola verdad, cero drift.
 async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
   const rows = await env.DB.prepare(
-    `SELECT p.item, p.tipo, p.debito, p.contado, p.mp_plan_id
+    `SELECT p.item, p.tipo, p.debito, p.contado, p.gramos, p.mp_plan_id
        FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
       WHERE p.mp_plan_id IS NOT NULL
       ORDER BY lp.vigente_desde DESC`,
-  ).all<{ item: string; tipo: string; debito: number | null; contado: number | null; mp_plan_id: string }>();
+  ).all<{ item: string; tipo: string; debito: number | null; contado: number | null; gramos: number | null; mp_plan_id: string }>();
   const out: Record<string, PlanInfo> = {};
   for (const r of rows.results) {
     if (r.item in out) continue;
@@ -73,6 +73,7 @@ async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
       link: `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${r.mp_plan_id}`,
       monto: r.debito ?? r.contado ?? 0,
       tipo: r.tipo,
+      gramos: r.gramos,
     };
   }
   return out;
@@ -196,13 +197,19 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
         WHERE s.email = ? AND (s.numero IS NULL OR s.numero != -1)`,
     ).bind(email).first<Record<string, unknown>>();
     if (!socio) return json({ ok: true, sinFicha: true });
-    if (!socio.tier) return json({ ok: true, sinMembresia: true, socio_id: socio.id, nombre: socio.nombre });
     const planes = await planesDebito(env);
-    const plan = planes[String(socio.tier)];
+    // todos los planes de membresía: el modal deja ELEGIR (el tier vigente es
+    // solo la sugerencia — puede estar retirando 10 y querer pasarse a 20)
+    const opciones = Object.entries(planes)
+      .filter(([, p]) => p.tipo === 'membresia')
+      .map(([tier, p]) => ({ tier, monto: p.monto, gramos: p.gramos, link: p.link }))
+      .sort((a, b) => (a.gramos || 0) - (b.gramos || 0));
+    const plan = socio.tier ? planes[String(socio.tier)] : null;
     return json({
       ok: true,
       socio_id: socio.id, nombre: socio.nombre, telefono: socio.telefono,
-      tier: socio.tier, monto: plan?.monto ?? null, link: plan?.link ?? null,
+      tier: socio.tier || null, monto: plan?.monto ?? null, link: plan?.link ?? null,
+      planes: opciones,
       debito_estado: socio.debito_estado, debito_fin: socio.debito_fin,
       link_enviado: socio.link_enviado, link_via: socio.link_via,
       no_insistir: !!socio.debito_no_insistir,
@@ -288,22 +295,25 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
          FROM socios s WHERE s.id = ?`,
     ).bind(socioId).first<{ id: number; nombre: string; email: string | null; tier: string | null }>();
     if (!socio) return json({ error: 'El socio no existe' }, 404);
-    if (!socio.tier) return json({ error: 'El socio no tiene membresía vigente' }, 400);
     const planes = await planesDebito(env);
-    const plan = planes[socio.tier];
-    if (!plan) return json({ error: `No hay plan de Mercado Pago cargado para ${socio.tier}` }, 400);
+    // el tier puede venir elegido a mano (upgrade/downgrade desde el modal);
+    // si no viene, se usa el de la membresía vigente
+    const tier = String(body.tier || socio.tier || '');
+    if (!tier) return json({ error: 'Elegí una membresía para el link' }, 400);
+    const plan = planes[tier];
+    if (!plan || plan.tipo !== 'membresia') return json({ error: `No hay plan de Mercado Pago cargado para ${tier}` }, 400);
 
     if (via === 'email') {
       if (!socio.email) return json({ error: 'El socio no tiene email' }, 400);
       const mail = await enviarMailDebito(env, {
-        email: socio.email, nombre: socio.nombre, tier: socio.tier, monto: plan.monto, link: plan.link,
+        email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, link: plan.link,
       });
       if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}) — mandáselo por WhatsApp` }, 502);
     }
     await env.DB.prepare(
       `INSERT INTO envios_debito (socio_id, tier, mp_plan_id, via, enviado_por) VALUES (?, ?, ?, ?, ?)`,
-    ).bind(socioId, socio.tier, plan.plan_id, via, auth.email).run();
-    return json({ ok: true, via, link: plan.link, monto: plan.monto, tier: socio.tier });
+    ).bind(socioId, tier, plan.plan_id, via, auth.email).run();
+    return json({ ok: true, via, link: plan.link, monto: plan.monto, tier });
   }
 
   // La decisión humana sobre una suscripción descubierta sin socio.
@@ -311,7 +321,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     const suscId = Number(body.suscripcion_id);
     if (!Number.isFinite(suscId)) return json({ error: 'Falta suscripcion_id' }, 400);
     const su = await env.DB.prepare(`SELECT * FROM suscripciones WHERE id = ?`).bind(suscId)
-      .first<{ id: number; socio_id: number | null; mp_plan_id: string | null }>();
+      .first<{ id: number; socio_id: number | null; mp_plan_id: string | null; tier: string | null }>();
     if (!su) return json({ error: 'No existe' }, 404);
 
     if (body.no_es_socio) {
@@ -329,23 +339,28 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
 
     await env.DB.prepare(`UPDATE suscripciones SET socio_id = ?, no_es_socio = 0, actualizado = datetime('now') WHERE id = ?`)
       .bind(socioId, suscId).run();
+    // el tier del plan pagado manda: si difiere de la membresía vigente, la
+    // membresía se actualiza sola (pagar MEDIUM es ser MEDIUM)
+    let gramos: number | null = null;
+    if (su.tier && su.tier !== 'CUOTA SOCIAL') {
+      gramos = await asegurarMembresiaDebito(env, socioId, su.tier);
+    } else {
+      const m = await env.DB.prepare(
+        `SELECT gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
+          ORDER BY desde DESC LIMIT 1`,
+      ).bind(socioId).first<{ gramos_mes: number }>();
+      gramos = m?.gramos_mes ?? null;
+    }
     // retro-enganche: los débitos que llegaron huérfanos pasan al socio, con
-    // los gramos de su tier (habilita el saldo de esos meses)
-    const m = await env.DB.prepare(
-      `SELECT gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
-        ORDER BY desde DESC LIMIT 1`,
-    ).bind(socioId).first<{ gramos_mes: number }>();
+    // los gramos del tier pagado (habilita el saldo de esos meses)
     await env.DB.prepare(
       `UPDATE movimientos SET socio_id = ?, gramos = COALESCE(?, gramos)
         WHERE suscripcion_id = ? AND socio_id IS NULL AND categoria = 'membresia'`,
-    ).bind(socioId, m?.gramos_mes ?? null, suscId).run();
+    ).bind(socioId, gramos, suscId).run();
     // la racha real = débitos acreditados de ESTA suscripción
     await env.DB.prepare(
       `UPDATE suscripciones SET racha_meses = (SELECT COUNT(*) FROM movimientos WHERE suscripcion_id = ? AND estado = 'confirmado') WHERE id = ?`,
     ).bind(suscId, suscId).run();
-    await env.DB.prepare(
-      `UPDATE membresias SET modalidad = 'debito' WHERE socio_id = ? AND hasta IS NULL AND modalidad = 'contado'`,
-    ).bind(socioId).run();
     return json({ ok: true, identificada: true });
   }
 
