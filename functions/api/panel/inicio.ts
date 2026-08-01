@@ -20,7 +20,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const hoy = new Date().toISOString().slice(0, 10);
   const mes = hoy.slice(0, 7);
 
-  const [retiros, cobros, pendientes, mesTot, debitos] = await Promise.all([
+  const [retiros, cobros, pendientes, mesTot, vencen, debitos] = await Promise.all([
     env.DB.prepare(
       `SELECT d.fecha, d.producto, d.gramos, d.unidades, s.nombre
          FROM dispensas d JOIN socios s ON s.id = d.socio_id
@@ -41,6 +41,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
             WHERE substr(fecha, 1, 7) = ? AND estado = 'confirmado' GROUP BY tipo`,
         ).bind(mes).all()
       : Promise.resolve(null),
+    // vencimientos de REPROCANN: recordatorio en el panel (decisión 01/08)
+    env.DB.prepare(
+      `SELECT id, nombre, reprocann_vence,
+              CAST(julianday(reprocann_vence) - julianday('now') AS INTEGER) AS dias
+         FROM socios
+        WHERE reprocann_estado = 'aprobado' AND reprocann_vence IS NOT NULL
+          AND (numero IS NULL OR numero != -1) AND papelera IS NULL
+        ORDER BY reprocann_vence LIMIT 8`,
+    ).all<{ id: number; nombre: string; reprocann_vence: string; dias: number }>(),
     // salud del débito automático, para el tile de Inicio
     puede(rol, 'finanzas_ver')
       ? env.DB.prepare(
@@ -88,5 +97,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     reservas,
     mes: mesTot ? { ingreso: totales.ingreso || 0, egreso: totales.egreso || 0 } : null,
     debitos: debitos || null,
+    vencimientos: {
+      vencidos: vencen.results.filter((v) => v.dias < 0).length,
+      en60: vencen.results.filter((v) => v.dias >= 0 && v.dias <= 60).length,
+      proximos: vencen.results.slice(0, 6),
+    },
   });
 };

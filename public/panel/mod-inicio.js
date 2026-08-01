@@ -40,6 +40,10 @@
         <span class="k">El mes va</span>
         <div class="kpi-v" style="font-size:30px;color:${res >= 0 ? 'var(--grn)' : 'var(--dan)'}">${res >= 0 ? '+' : '−'}${P.fmt(Math.abs(res))}</div>
         <div class="kpi-d">entró ${P.fmt(d.mes.ingreso)} · salió ${P.fmt(d.mes.egreso)}</div></div>`)
+      if (d.vencimientos && (d.vencimientos.vencidos || d.vencimientos.en60)) tiles.push(`<div class="card in-tile" data-ir="socios" data-filtro="porVencer">
+        <span class="k">REPROCANN por vencer</span>
+        <div class="kpi-v" style="font-size:30px;color:${d.vencimientos.vencidos ? 'var(--dan)' : 'var(--amb)'}">${d.vencimientos.vencidos + d.vencimientos.en60}</div>
+        <div class="kpi-d">${d.vencimientos.vencidos ? `<b style="color:var(--dan)">${d.vencimientos.vencidos} vencido(s)</b> · ` : ''}${d.vencimientos.en60} vencen en 60 días</div></div>`)
       if (d.debitos) tiles.push(`<div class="card in-tile" data-ir="finanzas">
         <span class="k">Débito automático</span>
         <div class="kpi-v" style="font-size:30px;color:var(--grn)">${P.fmt(d.debitos.recaudado_mes)}</div>
@@ -48,6 +52,15 @@
       cont.innerHTML = `
         <p style="color:var(--ink2);margin:0 0 14px;text-transform:capitalize">${P.esc(hoyLindo)}</p>
         <div class="in-tiles">${tiles.join('')}</div>
+        ${d.vencimientos && d.vencimientos.proximos.length ? `<div class="card" style="margin-top:14px">
+          <span class="k">Próximos vencimientos de REPROCANN</span>
+          ${d.vencimientos.proximos.map((v) => `<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)">
+            <span>${P.esc(v.nombre)}</span><span class="pn-sp"></span>
+            <span style="color:${v.dias < 0 ? 'var(--dan)' : v.dias <= 60 ? 'var(--amb)' : 'var(--muted)'};font-size:12.5px;font-weight:600">
+              ${v.dias < 0 ? 'vencido hace ' + Math.abs(v.dias) + ' días' : v.dias === 0 ? 'vence HOY' : 'vence en ' + v.dias + ' días'}
+              <i style="color:var(--muted);font-weight:400">· ${P.esc(String(v.reprocann_vence).slice(0, 10))}</i></span>
+          </div>`).join('')}
+        </div>` : ''}
         <div class="grid2" style="margin-top:14px;align-items:start">
           <div class="card"><span class="k">Retiros de hoy</span>
             <div class="mo-hist" style="margin-top:8px">${d.retirosHoy.lista.length
@@ -63,7 +76,16 @@
         </div>`
       cont.addEventListener('click', (e) => {
         const t = e.target.closest('.in-tile[data-ir]')
-        if (t) P.ir(t.dataset.ir)
+        if (!t) return
+        // el tile puede llevar un filtro precargado (ej. REPROCANN por vencer)
+        if (t.dataset.filtro) {
+          try {
+            const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
+            nav.filtro = t.dataset.filtro; nav.sub = 'maestra'
+            sessionStorage.setItem('so-nav', JSON.stringify(nav))
+          } catch { /* nada */ }
+        }
+        P.ir(t.dataset.ir)
       })
     },
   })

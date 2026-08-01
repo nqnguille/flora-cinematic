@@ -161,14 +161,33 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 async function sincronizarSocio(env: Env, socioId: number, per: TramitePortal, hoy: string): Promise<boolean> {
   const paso = pasoDe(per, hoy);
   if (!paso) return false;
+  // El DNI OFICIAL del portal manda (decisión 01/08): pisa lo cargado a mano
+  // — que a veces era un teléfono. El dato viejo queda en la nota por las
+  // dudas. Única excepción: si ese DNI ya es de otro socio (índice único),
+  // no se toca y queda para revisar.
+  let dniOficial: string | null = null;
+  if (per.dni) {
+    const otro = await env.DB.prepare(`SELECT id FROM socios WHERE documento = ? AND id != ?`)
+      .bind(per.dni, socioId).first();
+    if (!otro) {
+      dniOficial = per.dni;
+      const actual = await env.DB.prepare(`SELECT documento FROM socios WHERE id = ?`)
+        .bind(socioId).first<{ documento: string | null }>();
+      if (actual?.documento && actual.documento !== per.dni) {
+        await env.DB.prepare(
+          `UPDATE socios SET nota = COALESCE(nota || ' · ', '') || '⚠ tenía cargado otro DNI: ' || documento WHERE id = ?`,
+        ).bind(socioId).run();
+      }
+    }
+  }
   await env.DB.prepare(
     `UPDATE socios SET reprocann_estado = ?, reprocann_tramite = ?,
             reprocann_vence = COALESCE(?, reprocann_vence),
             reprocann_plantas = COALESCE(?, reprocann_plantas),
-            documento = COALESCE(documento, ?),
+            documento = COALESCE(?, documento),
             reprocann_actualizado = datetime('now')
       WHERE id = ?`,
-  ).bind(paso, per.tramite_id, per.vence, per.plantas, per.dni || null, socioId).run();
+  ).bind(paso, per.tramite_id, per.vence, per.plantas, dniOficial, socioId).run();
   return true;
 }
 
