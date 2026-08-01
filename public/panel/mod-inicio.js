@@ -43,7 +43,7 @@
       if (d.debitos) tiles.push(`<div class="card in-tile" data-ir="finanzas">
         <span class="k">Débito automático</span>
         <div class="kpi-v" style="font-size:30px;color:var(--grn)">${P.fmt(d.debitos.recaudado_mes)}</div>
-        <div class="kpi-d">${d.debitos.al_dia} al día · ${d.debitos.esperando} esperando${d.debitos.terminan_mes ? ` · <b style="color:var(--amb)">${d.debitos.terminan_mes} terminan este mes</b>` : ''}</div></div>`)
+        <div class="kpi-d">${d.debitos.al_dia} al día · ${d.debitos.esperando} esperando${d.debitos.terminan_mes ? ` · <b style="color:var(--amb)">${d.debitos.terminan_mes} terminan este mes</b>` : ''}${d.debitos.sin_identificar ? ` · <b style="color:var(--amb)">${d.debitos.sin_identificar} por identificar</b>` : ''}</div></div>`)
 
       cont.innerHTML = `
         <p style="color:var(--ink2);margin:0 0 14px;text-transform:capitalize">${P.esc(hoyLindo)}</p>

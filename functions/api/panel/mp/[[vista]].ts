@@ -1,18 +1,24 @@
 // Mercado Pago — el centro de comando del débito automático.
-//   GET  /api/panel/mp/suscripciones      → todas, con último débito y monto vigente
-//   GET  /api/panel/mp/cola               → socios activos con membresía SIN débito vivo
-//   POST /api/panel/mp/suscripcion  {socio_id}          → crea o REUSA el preapproval
-//   POST /api/panel/mp/enviar       {suscripcion_id, via} → registra envío / manda el mail
-//   POST /api/panel/mp/sincronizar  {id?}               → una o TODAS + rescate de pagos
-//   POST /api/panel/mp/no-insistir  {socio_id, valor}   → silencia a quien no quiere débito
-//   POST /api/panel/mp/monto        {suscripcion_id}    → ajusta el monto al precio vigente
 //
-// Modelo (decisión 31/07): suscripción de 3 cuotas ÚNICAMENTE con 20% off.
-// Al completarse se corta sola (end_date); la renovación es un link NUEVO al
-// precio vigente de ese momento — la manda el presidente desde la cola.
+// MODELO (orden de Guille 01/08): se usan los LINKS DE PLAN precargados del
+// panel de MP — nunca preapprovals individuales por socio. El link es
+// genérico: MP no nos dice qué socio lo pagó, así que el sistema DESCUBRE
+// las suscripciones nuevas de cada plan, matchea por email del pagador y lo
+// que no matchea va a una cola de identificación manual (patrón Unificar).
+//
+//   GET  /api/panel/mp/suscripciones     → todas, con último débito
+//   GET  /api/panel/mp/cola              → socios activos con membresía SIN débito vivo
+//   GET  /api/panel/mp/identificar       → suscripciones sin socio + candidatos
+//   POST /api/panel/mp/enviar        {socio_id, via}   → manda el link del PLAN
+//   POST /api/panel/mp/identificar   {suscripcion_id, socio_id | no_es_socio} → decisión humana
+//   POST /api/panel/mp/sincronizar   {id?}             → descubre + refresca + rescata pagos
+//   POST /api/panel/mp/no-insistir   {socio_id, valor}
+//   POST /api/panel/mp/monto         {suscripcion_id}  → solo suscripciones individuales legadas
+//
 // El token vive como secret MP_ACCESS_TOKEN en Cloudflare Pages — nunca en el repo.
 import { requireRol, puede } from '../_rol';
-import { procesarPagoAprobado, aplicarPreapproval } from '../../mp/webhook';
+import { procesarPagoAprobado, aplicarPreapproval, descubrirPreapproval } from '../../mp/webhook';
+import { tokens } from '../reprocann/_unificar';
 
 interface Env {
   DB: D1Database;
@@ -42,22 +48,33 @@ async function mpFetch(env: Env, path: string, init?: RequestInit): Promise<{ ok
 }
 
 // "La suscripción relevante" de un socio: activa > pendiente > pausada >
-// cancelada, la más nueva. Es la única forma sana de responder "¿cómo está el
-// débito de este socio?" cuando conviven una vieja cancelada y una nueva.
+// cancelada, la más nueva.
 const SUSC_RELEVANTE = `(
   SELECT id FROM suscripciones s2 WHERE s2.socio_id = s.id
    ORDER BY CASE s2.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1
             WHEN 'pausada' THEN 2 ELSE 3 END, s2.actualizado DESC, s2.id DESC LIMIT 1)`;
 
-// El precio de débito vigente por tier, una sola vez por request.
-async function preciosDebito(env: Env): Promise<Record<string, number>> {
+interface PlanInfo { plan_id: string; link: string; monto: number; tipo: string }
+
+// Los planes del panel de MP, por tier (lista vigente gana). El link no se
+// guarda: se construye del id — una sola verdad, cero drift.
+async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
   const rows = await env.DB.prepare(
-    `SELECT p.item, p.debito FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
-      WHERE p.tipo = 'membresia' AND p.debito IS NOT NULL
+    `SELECT p.item, p.tipo, p.debito, p.contado, p.mp_plan_id
+       FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
+      WHERE p.mp_plan_id IS NOT NULL
       ORDER BY lp.vigente_desde DESC`,
-  ).all<{ item: string; debito: number }>();
-  const out: Record<string, number> = {};
-  for (const r of rows.results) if (!(r.item in out)) out[r.item] = r.debito;
+  ).all<{ item: string; tipo: string; debito: number | null; contado: number | null; mp_plan_id: string }>();
+  const out: Record<string, PlanInfo> = {};
+  for (const r of rows.results) {
+    if (r.item in out) continue;
+    out[r.item] = {
+      plan_id: r.mp_plan_id,
+      link: `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${r.mp_plan_id}`,
+      monto: r.debito ?? r.contado ?? 0,
+      tipo: r.tipo,
+    };
+  }
   return out;
 }
 
@@ -120,49 +137,91 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
 
   if (vista === 'suscripciones') {
-    const [rows, precios] = await Promise.all([
-      env.DB.prepare(
-        `SELECT su.*, s.nombre, s.email, s.telefono,
-                (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
-                  ORDER BY m.desde DESC LIMIT 1) AS tier_actual,
-                (SELECT MAX(fecha) FROM movimientos mv WHERE mv.socio_id = su.socio_id
-                  AND mv.origen = 'mp_webhook' AND mv.concepto LIKE 'Débito automático%') AS ultimo_debito
-           FROM suscripciones su JOIN socios s ON s.id = su.socio_id
-          ORDER BY CASE su.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1 WHEN 'pausada' THEN 2 ELSE 3 END,
-                   su.actualizado DESC`,
-      ).all<Record<string, unknown>>(),
-      preciosDebito(env),
-    ]);
-    const suscripciones = rows.results.map((su) => ({
-      ...su,
-      monto_vigente: precios[String(su.tier_actual || su.tier || '')] ?? null,
-    }));
-    return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, suscripciones });
+    const rows = await env.DB.prepare(
+      `SELECT su.*, s.nombre, s.email, s.telefono,
+              (SELECT MAX(fecha) FROM movimientos mv WHERE mv.suscripcion_id = su.id
+                AND mv.origen = 'mp_webhook') AS ultimo_debito
+         FROM suscripciones su LEFT JOIN socios s ON s.id = su.socio_id
+        WHERE su.no_es_socio = 0
+        ORDER BY CASE su.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1 WHEN 'pausada' THEN 2 ELSE 3 END,
+                 su.actualizado DESC`,
+    ).all<Record<string, unknown>>();
+    return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, suscripciones: rows.results });
   }
 
   // La cola de "para mandar": socio activo + membresía vigente, sin débito
-  // vivo (nunca tuvo, canceló, o el link pendiente venció). Los "no insistir"
-  // viajan con su flag para que la UI los muestre plegados, no invisibles.
+  // vivo. El link es el del PLAN de su tier; el último envío sale del
+  // historial (el envío existe antes que la suscripción).
   if (vista === 'cola') {
-    const [rows, precios] = await Promise.all([
+    const [rows, planes] = await Promise.all([
       env.DB.prepare(
         `SELECT s.id, s.nombre, s.email, s.telefono, s.debito_no_insistir,
                 m.tier, m.modalidad,
                 su.id AS susc_id, su.estado AS susc_estado, su.fin AS susc_fin,
-                su.init_point, su.link_enviado, su.link_via, su.racha_meses
+                (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_enviado,
+                (SELECT e.via FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_via
            FROM socios s
            JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
            LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
           WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1)
             AND (su.id IS NULL OR su.estado = 'cancelada'
-                 OR (su.estado = 'pendiente' AND su.fin < date('now')))
+                 OR (su.estado = 'pendiente' AND COALESCE(su.fin, date(su.creado, '+10 day')) < date('now')))
           GROUP BY s.id
           ORDER BY s.debito_no_insistir, s.nombre`,
       ).all<Record<string, unknown>>(),
-      preciosDebito(env),
+      planesDebito(env),
     ]);
-    const cola = rows.results.map((r) => ({ ...r, monto: precios[String(r.tier)] ?? null }));
+    const cola = rows.results.map((r) => {
+      const p = planes[String(r.tier)];
+      return { ...r, monto: p?.monto ?? null, plan_link: p?.link ?? null };
+    });
     return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, cola });
+  }
+
+  // Suscripciones descubiertas sin socio: el pagador de MP no matcheó con el
+  // padrón. Candidatos puntuados — la decisión es siempre del presidente.
+  if (vista === 'identificar') {
+    if (auth.rol !== 'dueno') return json({ error: 'Sin permiso' }, 403);
+    const [sinDuenio, pool] = await Promise.all([
+      env.DB.prepare(
+        `SELECT su.*, (SELECT COUNT(*) FROM movimientos mv WHERE mv.suscripcion_id = su.id) AS pagos
+           FROM suscripciones su
+          WHERE su.socio_id IS NULL AND su.no_es_socio = 0 AND su.estado != 'cancelada'
+          ORDER BY su.creado DESC`,
+      ).all<Record<string, unknown>>(),
+      env.DB.prepare(
+        `SELECT s.id, s.nombre, s.email, m.tier,
+                (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_enviado,
+                (SELECT e.tier FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS enviado_tier
+           FROM socios s
+           JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
+           LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
+          WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1)
+            AND (su.id IS NULL OR su.estado = 'cancelada')
+          GROUP BY s.id`,
+      ).all<{ id: number; nombre: string; email: string | null; tier: string; link_enviado: string | null; enviado_tier: string | null }>(),
+    ]);
+    const hace30d = Date.now() - 30 * 86400000;
+    const pendientes = sinDuenio.results.map((su) => {
+      const localPart = String(su.mp_payer_email || '').split('@')[0];
+      const tokensPagador = tokens(localPart.replace(/[._\-\d]+/g, ' '));
+      const candidatos = pool.results
+        .map((s) => {
+          let puntaje = 0;
+          const senales: string[] = [];
+          if (su.tier && s.tier === su.tier) { puntaje += 40; senales.push('misma membresía'); }
+          const tn = tokens(s.nombre);
+          if (tokensPagador.length && tokensPagador.some((t) => tn.includes(t))) { puntaje += 30; senales.push('el email se parece'); }
+          if (s.link_enviado && Date.parse(s.link_enviado.replace(' ', 'T') + 'Z') > hace30d
+              && (!su.tier || s.enviado_tier === su.tier)) { puntaje += 20; senales.push('le mandamos el link hace poco'); }
+          return { socio_id: s.id, nombre: s.nombre, email: s.email, tier: s.tier, puntaje, senales };
+        })
+        .filter((c) => c.puntaje > 0)
+        .sort((a, b) => b.puntaje - a.puntaje)
+        .slice(0, 3);
+      return { ...su, candidatos };
+    });
+    return json({ ok: true, pendientes, pool: pool.results.map((s) => ({ socio_id: s.id, nombre: s.nombre, tier: s.tier })) });
   }
 
   return json({ error: 'Vista desconocida' }, 404);
@@ -176,7 +235,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
 
-  // no-insistir y enviar-whatsapp no le pegan a MP: no exigen token
   if (vista === 'no-insistir') {
     const socioId = Number(body.socio_id);
     if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
@@ -185,34 +243,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     return json({ ok: true });
   }
 
+  // Mandar el link del PLAN del tier del socio. WhatsApp lo abre el front
+  // (esto registra); el email lo manda el server con Resend.
   if (vista === 'enviar') {
-    const suscId = Number(body.suscripcion_id);
-    const via = String(body.via);
-    if (!Number.isFinite(suscId)) return json({ error: 'Falta suscripcion_id' }, 400);
-    if (via !== 'whatsapp' && via !== 'email') return json({ error: 'via inválida' }, 400);
-    const su = await env.DB.prepare(
-      `SELECT su.*, s.nombre, s.email FROM suscripciones su JOIN socios s ON s.id = su.socio_id WHERE su.id = ?`,
-    ).bind(suscId).first<{ id: number; init_point: string | null; monto: number; tier: string | null; nombre: string; email: string | null }>();
-    if (!su) return json({ error: 'No existe' }, 404);
-    if (!su.init_point) return json({ error: 'Esta suscripción no tiene link guardado — creale una nueva' }, 400);
-
-    if (via === 'email') {
-      if (!su.email) return json({ error: 'El socio no tiene email' }, 400);
-      const mail = await enviarMailDebito(env, {
-        email: su.email, nombre: su.nombre, tier: su.tier || 'membresía', monto: su.monto, link: su.init_point,
-      });
-      if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}) — mandáselo por WhatsApp` }, 502);
-    }
-    await env.DB.prepare(`UPDATE suscripciones SET link_enviado = datetime('now'), link_via = ?, actualizado = datetime('now') WHERE id = ?`)
-      .bind(via, suscId).run();
-    return json({ ok: true, via });
-  }
-
-  if (!env.MP_ACCESS_TOKEN) return json({ error: 'Falta configurar el token de Mercado Pago (secret MP_ACCESS_TOKEN)' }, 503);
-
-  if (vista === 'suscripcion') {
     const socioId = Number(body.socio_id);
+    const via = String(body.via);
     if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
+    if (via !== 'whatsapp' && via !== 'email') return json({ error: 'via inválida' }, 400);
     const socio = await env.DB.prepare(
       `SELECT s.id, s.nombre, s.email,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
@@ -220,81 +257,71 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
          FROM socios s WHERE s.id = ?`,
     ).bind(socioId).first<{ id: number; nombre: string; email: string | null; tier: string | null }>();
     if (!socio) return json({ error: 'El socio no existe' }, 404);
-    if (!socio.email) return json({ error: 'El socio no tiene email vinculado — cargalo primero en su ficha' }, 400);
-    if (!socio.tier) return json({ error: 'El socio no tiene membresía vigente — asignale una primero' }, 400);
-    const precios = await preciosDebito(env);
-    const monto = precios[socio.tier];
-    if (!monto) return json({ error: `No hay precio de débito para ${socio.tier} en la lista vigente` }, 400);
+    if (!socio.tier) return json({ error: 'El socio no tiene membresía vigente' }, 400);
+    const planes = await planesDebito(env);
+    const plan = planes[socio.tier];
+    if (!plan) return json({ error: `No hay plan de Mercado Pago cargado para ${socio.tier}` }, 400);
 
-    // Idempotencia: nunca dos suscripciones vivas del mismo socio.
-    const viva = await env.DB.prepare(
-      `SELECT * FROM suscripciones WHERE socio_id = ? AND estado IN ('activa', 'pausada', 'pendiente')
-        ORDER BY CASE estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1 ELSE 2 END, actualizado DESC LIMIT 1`,
-    ).bind(socioId).first<{ id: number; estado: string; fin: string | null; monto: number; init_point: string | null; mp_preapproval_id: string }>();
-    if (viva?.estado === 'activa') return json({ error: 'Ya tiene el débito activo' }, 409);
-    if (viva?.estado === 'pausada') return json({ error: 'Tiene el débito pausado en Mercado Pago — que lo reactive desde su cuenta, o cancelalo antes de crear otro' }, 409);
-    if (viva?.estado === 'pendiente') {
-      const vigente = !viva.fin || viva.fin >= new Date().toISOString().slice(0, 10);
-      if (vigente && viva.monto === monto) {
-        // el link pendiente sigue sano: reusarlo (recuperándolo de MP si es
-        // de antes de la migración 0012 y no quedó guardado)
-        let link = viva.init_point;
-        if (!link) {
-          const r = await mpFetch(env, `/preapproval/${viva.mp_preapproval_id}`);
-          link = String(r.data.init_point || '') || null;
-          if (link) await env.DB.prepare(`UPDATE suscripciones SET init_point = ? WHERE id = ?`).bind(link, viva.id).run();
-        }
-        if (link) return json({ ok: true, reusado: true, suscripcionId: viva.id, link, monto: viva.monto, tier: socio.tier });
-      }
-      // venció o quedó con monto viejo: se cancela en MP y se crea una nueva
-      await mpFetch(env, `/preapproval/${viva.mp_preapproval_id}`, { method: 'PUT', body: JSON.stringify({ status: 'cancelled' }) });
-      await env.DB.prepare(`UPDATE suscripciones SET estado = 'cancelada', actualizado = datetime('now') WHERE id = ?`).bind(viva.id).run();
+    if (via === 'email') {
+      if (!socio.email) return json({ error: 'El socio no tiene email' }, 400);
+      const mail = await enviarMailDebito(env, {
+        email: socio.email, nombre: socio.nombre, tier: socio.tier, monto: plan.monto, link: plan.link,
+      });
+      if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}) — mandáselo por WhatsApp` }, 502);
     }
-
-    // El fin inicial deja margen para autorizar; al autorizarse, el webhook lo
-    // ajusta EXACTO a 3 cuotas. No hay extensión automática: la renovación es
-    // un link nuevo al precio vigente, mandado desde la cola.
-    const fin = new Date();
-    fin.setMonth(fin.getMonth() + 3);
-    fin.setDate(fin.getDate() + 10);
-    const r = await mpFetch(env, '/preapproval', {
-      method: 'POST',
-      body: JSON.stringify({
-        reason: `Flora Club - Membresia ${socio.tier} debito automatico (3 cuotas, 20% off)`,
-        external_reference: `socio:${socio.id}`,
-        payer_email: socio.email,
-        back_url: 'https://floraong.ar/socios/cuenta/',
-        auto_recurring: {
-          frequency: 1,
-          frequency_type: 'months',
-          transaction_amount: monto,
-          currency_id: 'ARS',
-          end_date: fin.toISOString(),
-        },
-        status: 'pending',
-      }),
-    });
-    if (!r.ok) {
-      return json({ error: `Mercado Pago respondió ${r.status}: ${String(r.data.message || JSON.stringify(r.data)).slice(0, 200)}` }, 502);
-    }
-    const ins = await env.DB.prepare(
-      `INSERT INTO suscripciones (socio_id, mp_preapproval_id, estado, monto, fin, init_point, tier)
-       VALUES (?, ?, 'pendiente', ?, ?, ?, ?)
-       ON CONFLICT (mp_preapproval_id) DO NOTHING`,
-    ).bind(socio.id, String(r.data.id), monto, fin.toISOString().slice(0, 10), String(r.data.init_point || '') || null, socio.tier).run();
-    return json({
-      ok: true,
-      suscripcionId: Number(ins.meta.last_row_id),
-      link: r.data.init_point,               // el socio entra acá y autoriza el débito
-      preapprovalId: r.data.id,
-      monto,
-      tier: socio.tier,
-    });
+    await env.DB.prepare(
+      `INSERT INTO envios_debito (socio_id, tier, mp_plan_id, via, enviado_por) VALUES (?, ?, ?, ?, ?)`,
+    ).bind(socioId, socio.tier, plan.plan_id, via, auth.email).run();
+    return json({ ok: true, via, link: plan.link, monto: plan.monto, tier: socio.tier });
   }
 
+  // La decisión humana sobre una suscripción descubierta sin socio.
+  if (vista === 'identificar') {
+    const suscId = Number(body.suscripcion_id);
+    if (!Number.isFinite(suscId)) return json({ error: 'Falta suscripcion_id' }, 400);
+    const su = await env.DB.prepare(`SELECT * FROM suscripciones WHERE id = ?`).bind(suscId)
+      .first<{ id: number; socio_id: number | null; mp_plan_id: string | null }>();
+    if (!su) return json({ error: 'No existe' }, 404);
+
+    if (body.no_es_socio) {
+      await env.DB.prepare(`UPDATE suscripciones SET no_es_socio = 1, actualizado = datetime('now') WHERE id = ?`).bind(suscId).run();
+      return json({ ok: true, descartada: true });
+    }
+
+    const socioId = Number(body.socio_id);
+    if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
+    const viva = await env.DB.prepare(
+      `SELECT su2.id, s.nombre FROM suscripciones su2 JOIN socios s ON s.id = su2.socio_id
+        WHERE su2.socio_id = ? AND su2.estado IN ('activa','pendiente','pausada') AND su2.id != ?`,
+    ).bind(socioId, suscId).first<{ nombre: string }>();
+    if (viva) return json({ error: `${viva.nombre} ya tiene otra suscripción viva — resolvelo en MP primero` }, 409);
+
+    await env.DB.prepare(`UPDATE suscripciones SET socio_id = ?, no_es_socio = 0, actualizado = datetime('now') WHERE id = ?`)
+      .bind(socioId, suscId).run();
+    // retro-enganche: los débitos que llegaron huérfanos pasan al socio, con
+    // los gramos de su tier (habilita el saldo de esos meses)
+    const m = await env.DB.prepare(
+      `SELECT gramos_mes FROM membresias WHERE socio_id = ? AND hasta IS NULL AND modalidad != 'plan'
+        ORDER BY desde DESC LIMIT 1`,
+    ).bind(socioId).first<{ gramos_mes: number }>();
+    await env.DB.prepare(
+      `UPDATE movimientos SET socio_id = ?, gramos = COALESCE(?, gramos)
+        WHERE suscripcion_id = ? AND socio_id IS NULL AND categoria = 'membresia'`,
+    ).bind(socioId, m?.gramos_mes ?? null, suscId).run();
+    // la racha real = débitos acreditados de ESTA suscripción
+    await env.DB.prepare(
+      `UPDATE suscripciones SET racha_meses = (SELECT COUNT(*) FROM movimientos WHERE suscripcion_id = ? AND estado = 'confirmado') WHERE id = ?`,
+    ).bind(suscId, suscId).run();
+    await env.DB.prepare(
+      `UPDATE membresias SET modalidad = 'debito' WHERE socio_id = ? AND hasta IS NULL AND modalidad = 'contado'`,
+    ).bind(socioId).run();
+    return json({ ok: true, identificada: true });
+  }
+
+  if (!env.MP_ACCESS_TOKEN) return json({ error: 'Falta configurar el token de Mercado Pago (secret MP_ACCESS_TOKEN)' }, 503);
+
   if (vista === 'sincronizar') {
-    // Con id: una sola. Sin id: TODAS las vivas + rescate de débitos que el
-    // webhook se haya perdido (idempotente por ref, así que repetir es gratis).
+    // Con id: una sola. Sin id: descubrir + refrescar todas + rescatar pagos.
     if (body.id) {
       const su = await env.DB.prepare(`SELECT * FROM suscripciones WHERE id = ?`).bind(Number(body.id)).first<{ mp_preapproval_id: string }>();
       if (!su) return json({ error: 'No existe' }, 404);
@@ -304,8 +331,47 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       return json({ ok: true, estado });
     }
 
+    // 1) descubrimiento: por cada plan del panel, las suscripciones que MP
+    //    creó desde el link — nuevas entran (con match por email), conocidas
+    //    se refrescan. También averiguamos si el plan corta solo (repetitions).
+    const planes = await planesDebito(env);
+    let descubiertas = 0;
+    const planesInactivos: string[] = [];
+    for (const [tier, plan] of Object.entries(planes)) {
+      const info = await mpFetch(env, `/preapproval_plan/${plan.plan_id}`);
+      const repeticiones = info.ok ? Number((info.data.auto_recurring as Record<string, unknown> | undefined)?.repetitions) || null : null;
+      if (info.ok && String(info.data.status) !== 'active') planesInactivos.push(tier);
+      for (let offset = 0; offset < 500; offset += 50) {
+        const r = await mpFetch(env, `/preapproval/search?preapproval_plan_id=${plan.plan_id}&limit=50&offset=${offset}`);
+        if (!r.ok || !Array.isArray(r.data.results)) break;
+        const lote = r.data.results as Record<string, unknown>[];
+        for (const pre of lote) {
+          const que = await descubrirPreapproval(env, pre);
+          if (que === 'creada') descubiertas++;
+          await aplicarPreapproval(env, pre);
+          // el corte de 3 cuotas cuando el plan NO tiene repeticiones: se lo
+          // ponemos nosotros, anclado a la fecha de creación del preapproval.
+          // SOLO membresías — la cuota social es sin límite a propósito.
+          const rec = pre.auto_recurring as Record<string, unknown> | undefined;
+          if (!repeticiones && plan.tipo === 'membresia' && String(pre.status) === 'authorized' && !rec?.end_date) {
+            const ancla = new Date(String(pre.date_created || Date.now()));
+            ancla.setMonth(ancla.getMonth() + 2);
+            ancla.setDate(ancla.getDate() + 20);
+            await mpFetch(env, `/preapproval/${pre.id}`, {
+              method: 'PUT', body: JSON.stringify({ auto_recurring: { end_date: ancla.toISOString() } }),
+            });
+            await env.DB.prepare(`UPDATE suscripciones SET fin = ? WHERE mp_preapproval_id = ?`)
+              .bind(ancla.toISOString().slice(0, 10), String(pre.id)).run();
+          }
+        }
+        if (lote.length < 50) break;
+      }
+    }
+
+    // 2) refresco de las vivas que no son de estos planes (individuales legadas)
     const vivas = await env.DB.prepare(
-      `SELECT id, mp_preapproval_id, estado FROM suscripciones WHERE estado IN ('pendiente', 'activa', 'pausada')`,
+      `SELECT id, mp_preapproval_id, estado FROM suscripciones
+        WHERE estado IN ('pendiente', 'activa', 'pausada') AND origen = 'individual'`,
     ).all<{ id: number; mp_preapproval_id: string; estado: string }>();
     let revisadas = 0, cambiadas = 0;
     for (const su of vivas.results) {
@@ -316,8 +382,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       if (nuevo !== su.estado) cambiadas++;
     }
 
-    // débitos perdidos: pagos aprobados de los últimos 45 días que no tengan
-    // movimiento (webhook caído, deploy en el medio, etc.)
+    // 3) débitos perdidos: pagos aprobados de 45 días sin movimiento
     let rescatados = 0;
     const desde = new Date(Date.now() - 45 * 86400000).toISOString();
     const pagos = await mpFetch(env, `/v1/payments/search?sort=date_created&criteria=desc&range=date_created&begin_date=${desde}&end_date=${new Date().toISOString()}&status=approved&limit=100`);
@@ -327,33 +392,43 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
         if (await procesarPagoAprobado(env, pago)) rescatados++;
       }
     }
-    return json({ ok: true, revisadas, cambiadas, rescatados });
+
+    const sinIdentificar = await env.DB.prepare(
+      `SELECT COUNT(*) n FROM suscripciones WHERE socio_id IS NULL AND no_es_socio = 0 AND estado != 'cancelada'`,
+    ).first<{ n: number }>();
+    return json({
+      ok: true, descubiertas, revisadas, cambiadas, rescatados,
+      sinIdentificar: sinIdentificar?.n ?? 0, planesInactivos,
+    });
   }
 
-  // El tier o la lista cambiaron con el débito activo: ajustar el monto del
-  // preapproval al precio vigente SIN cortar la racha (MP lo permite en vivo).
+  // Solo para las suscripciones INDIVIDUALES legadas: el monto de las de plan
+  // lo maneja el plan en el panel de MP.
   if (vista === 'monto') {
     const suscId = Number(body.suscripcion_id);
     const su = await env.DB.prepare(
-      `SELECT su.*, s.id AS sid,
-              (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
+      `SELECT su.*, (SELECT tier FROM membresias m WHERE m.socio_id = su.socio_id AND m.hasta IS NULL AND m.modalidad != 'plan'
                 ORDER BY m.desde DESC LIMIT 1) AS tier_actual
-         FROM suscripciones su JOIN socios s ON s.id = su.socio_id WHERE su.id = ?`,
-    ).bind(suscId).first<{ id: number; mp_preapproval_id: string; estado: string; tier_actual: string | null }>();
+         FROM suscripciones su WHERE su.id = ?`,
+    ).bind(suscId).first<{ id: number; mp_preapproval_id: string; estado: string; origen: string; tier_actual: string | null }>();
     if (!su) return json({ error: 'No existe' }, 404);
+    if (su.origen === 'plan') return json({ error: 'El monto lo maneja el plan en Mercado Pago — cambialo desde el panel de MP' }, 400);
     if (su.estado !== 'activa') return json({ error: 'Solo se ajusta el monto de un débito activo' }, 400);
     if (!su.tier_actual) return json({ error: 'El socio no tiene membresía vigente' }, 400);
-    const precios = await preciosDebito(env);
-    const monto = precios[su.tier_actual];
-    if (!monto) return json({ error: `No hay precio de débito para ${su.tier_actual}` }, 400);
+    const precio = await env.DB.prepare(
+      `SELECT p.debito FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
+        WHERE p.item = ? AND p.tipo = 'membresia' AND p.debito IS NOT NULL
+        ORDER BY lp.vigente_desde DESC LIMIT 1`,
+    ).bind(su.tier_actual).first<{ debito: number }>();
+    if (!precio) return json({ error: `No hay precio de débito para ${su.tier_actual}` }, 400);
     const r = await mpFetch(env, `/preapproval/${su.mp_preapproval_id}`, {
       method: 'PUT',
-      body: JSON.stringify({ auto_recurring: { transaction_amount: monto, currency_id: 'ARS' } }),
+      body: JSON.stringify({ auto_recurring: { transaction_amount: precio.debito, currency_id: 'ARS' } }),
     });
     if (!r.ok) return json({ error: `MP respondió ${r.status}: ${String(r.data.message || '').slice(0, 150)}` }, 502);
     await env.DB.prepare(`UPDATE suscripciones SET monto = ?, tier = ?, actualizado = datetime('now') WHERE id = ?`)
-      .bind(monto, su.tier_actual, suscId).run();
-    return json({ ok: true, monto, tier: su.tier_actual });
+      .bind(precio.debito, su.tier_actual, suscId).run();
+    return json({ ok: true, monto: precio.debito, tier: su.tier_actual });
   }
 
   return json({ error: 'Vista desconocida' }, 404);

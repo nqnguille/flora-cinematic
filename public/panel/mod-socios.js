@@ -641,22 +641,24 @@
         msg.className = 'msg err'; msg.textContent = '✗ ' + (d.error || 'error ' + r.status)
         return
       }
-      // Alta hecha. Si pidió débito, encadenamos la suscripción.
+      // Alta hecha. Si pidió débito, el link es el del PLAN precargado en el
+      // panel de MP (nunca links personalizados — decisión 01/08).
       let extra = ''
       if (cobro === 'debito') {
-        const rs = await fetch('/api/panel/mp/suscripcion', {
-          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ socio_id: d.socioId }),
-        })
-        const ds = await rs.json().catch(() => ({}))
-        if (rs.ok) {
+        const t = tarifas.find((x) => x.item === datos.tier)
+        if (t && t.debito_link) {
           const waDeb = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Te paso el link para activar el débito automático de tu membresía ${datos.tier} con el 20% de descuento: 3 cuotas de ${P.fmt(ds.monto)} por mes. Se autoriza una sola vez: ${ds.link}`)}`
-          extra = `<div style="margin-top:12px"><span class="k">Link del débito</span>
-            <input class="input" value="${P.esc(ds.link)}" readonly onclick="this.select()" style="margin-top:6px" />
-            <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`
+            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Te paso el link para activar el débito automático de tu membresía ${datos.tier} con el 20% de descuento: 3 cuotas de ${P.fmt(t.debito)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${t.debito_link}`)}`
+          extra = `<div style="margin-top:12px"><span class="k">Link del débito (plan ${P.esc(datos.tier)})</span>
+            <input class="input" value="${P.esc(t.debito_link)}" readonly onclick="this.select()" style="margin-top:6px" />
+            <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" id="al-wa-debito" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`
+          // registrar el envío (para el "mandado hace N días" de Finanzas)
+          fetch('/api/panel/mp/enviar', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ socio_id: d.socioId, via: 'whatsapp' }),
+          }).catch(() => { /* el registro nunca bloquea el alta */ })
         } else {
-          extra = `<p class="msg err" style="margin-top:12px">La suscripción no se pudo crear: ${P.esc(ds.error || 'error')}. El socio quedó dado de alta igual.</p>`
+          extra = `<p class="msg err" style="margin-top:12px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el socio quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
         }
       }
       const nom = datos.nombre.split(' ')[0]

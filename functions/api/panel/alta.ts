@@ -97,15 +97,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     env.SOCIOS.get(email),
     env.DB.prepare(`SELECT id, nombre, telefono, documento FROM socios WHERE email = ?`).bind(email).first(),
     env.DB.prepare(
-      `SELECT p.item, p.gramos, p.contado, p.debito FROM precios p
+      `SELECT p.item, p.gramos, p.contado, p.debito, p.mp_plan_id FROM precios p
          JOIN listas_precios lp ON lp.id = p.lista_id
         WHERE p.tipo = 'membresia' ORDER BY lp.vigente_desde DESC, p.gramos`,
     ).all(),
   ]);
-  // una entrada por tier (la lista más reciente gana)
+  // una entrada por tier (la lista más reciente gana); el link del débito es
+  // el del PLAN precargado en el panel de MP (nunca links personalizados)
   const vistos = new Set<string>();
-  const tarifas = (precios.results as { item: string; gramos: number; contado: number; debito: number }[])
-    .filter((p) => (vistos.has(p.item) ? false : vistos.add(p.item)));
+  const tarifas = (precios.results as { item: string; gramos: number; contado: number; debito: number; mp_plan_id: string | null }[])
+    .filter((p) => (vistos.has(p.item) ? false : vistos.add(p.item)))
+    .map((p) => ({
+      ...p,
+      debito_link: p.mp_plan_id ? `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${p.mp_plan_id}` : null,
+    }));
 
   return json({
     ok: true,

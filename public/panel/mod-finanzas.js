@@ -272,8 +272,8 @@
 
   async function vDebito(cuerpo) {
     cuerpo.innerHTML = '<div class="vacio">⏳ Actualizando estados contra Mercado Pago…</div>'
-    // primero refrescar contra MP (estados + rescate de débitos perdidos),
-    // después pintar con la verdad al día
+    // primero refrescar contra MP (descubre suscripciones nuevas de los
+    // planes, refresca estados y rescata débitos perdidos), después pintar
     let sync = null
     try {
       const rs = await fetch('/api/panel/mp/sincronizar', {
@@ -282,18 +282,20 @@
       sync = rs.ok ? await rs.json() : null
     } catch { /* sin token o sin red: se pinta igual con lo local */ }
 
-    const [rSus, rCola] = await Promise.all([
+    const esAdmin = P.puede('finanzas_aprobar')
+    const [rSus, rCola, rIdent] = await Promise.all([
       fetch('/api/panel/mp/suscripciones', { credentials: 'include' }),
       fetch('/api/panel/mp/cola', { credentials: 'include' }),
+      esAdmin ? fetch('/api/panel/mp/identificar', { credentials: 'include' }) : Promise.resolve(null),
     ])
     if (!rSus.ok || !rCola.ok) { cuerpo.innerHTML = `<div class="vacio">El servidor respondió ${rSus.status}/${rCola.status}.</div>`; return }
     const d = await rSus.json()
     const cola = (await rCola.json()).cola
+    const ident = rIdent && rIdent.ok ? await rIdent.json() : { pendientes: [], pool: [] }
     const hoy = new Date().toISOString().slice(0, 10)
     const mes = hoy.slice(0, 7)
 
     const alDia = d.suscripciones.filter((s) => s.estado === 'activa')
-    const esperando = d.suscripciones.filter((s) => s.estado === 'pendiente' && (!s.fin || s.fin >= hoy))
     const terminanMes = alDia.filter((s) => s.fin && s.fin.slice(0, 7) === mes)
     const paraMandar = cola.filter((c) => !c.debito_no_insistir)
     const noInsistir = cola.filter((c) => c.debito_no_insistir)
@@ -303,34 +305,65 @@
     cuerpo.innerHTML = `
       ${!d.configurado ? `<div class="card" style="border-left:3px solid var(--amb);margin-bottom:12px">
         <span class="k">Falta el token de Mercado Pago</span>
-        <div class="kpi-d" style="margin-top:6px">Cuando esté cargado el secret MP_ACCESS_TOKEN, desde acá se crean
-        las suscripciones del 20%. Los botones ya están listos.</div></div>` : ''}
+        <div class="kpi-d" style="margin-top:6px">Cuando esté cargado el secret MP_ACCESS_TOKEN, el panel descubre y
+        sincroniza las suscripciones de los planes solo.</div></div>` : ''}
+      ${sync && sync.planesInactivos && sync.planesInactivos.length ? `<div class="card" style="border-left:3px solid var(--dan);margin-bottom:12px">
+        <span class="k">Plan pausado en MP</span>
+        <div class="kpi-d" style="margin-top:6px">El plan de ${P.esc(sync.planesInactivos.join(', '))} está dado de baja
+        en Mercado Pago: su link no acepta suscripciones nuevas. Reactivalo desde el panel de MP.</div></div>` : ''}
 
       <div class="fila" style="margin-bottom:12px;flex-wrap:wrap">
         <span class="chip">${alDia.length} al día</span>
-        <span class="chip">${esperando.length} esperando autorización</span>
         <span class="chip">${terminanMes.length} terminan este mes</span>
         <span class="chip">${paraMandar.length} sin débito</span>
+        ${ident.pendientes.length ? `<span class="chip" style="border-color:var(--amb);color:var(--amb)">${ident.pendientes.length} por identificar</span>` : ''}
         <span class="pn-sp"></span>
-        <span class="msg ok" style="font-size:11.5px">${sync ? `✔ estados al día${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}` : ''}</span>
+        <span class="msg ok" style="font-size:11.5px">${sync ? `✔ al día${sync.descubiertas ? ` · ${sync.descubiertas} nueva(s)` : ''}${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}` : ''}</span>
         <button class="btn" id="fz-mp-refrescar" type="button">Actualizar estados</button>
       </div>
 
+      ${ident.pendientes.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--amb)">
+        <span class="k">Para identificar (${ident.pendientes.length})</span>
+        <p class="so-help">Alguien se suscribió desde un link y su cuenta de Mercado Pago no coincide con ningún
+        email del padrón. Decí quién es y sus débitos (pasados y futuros) quedan enganchados al socio.</p>
+        ${ident.pendientes.map((su) => `<div style="padding:9px 0;border-top:1px solid var(--line)">
+          <div><b style="font-style:italic">${P.esc(su.mp_payer_email || 'pagador sin email')}</b>
+            · ${P.esc(su.tier || '—')} · ${P.fmt(su.monto)}/mes
+            ${su.pagos ? ` · <b>${su.pagos} pago(s)</b> sin socio` : ''}
+            <span class="tag ${su.estado === 'activa' ? 'tag-ok' : 'tag-deb'}">${P.esc(su.estado)}</span></div>
+          ${su.candidatos.length ? `<div class="so-help" style="margin:4px 0 2px">¿Es alguno de estos?</div>
+          ${su.candidatos.map((c) => `<div class="fila" style="padding:3px 0">
+            <span>${P.esc(c.nombre)} <span style="color:var(--muted);font-size:11px">${P.esc(c.tier)}${c.senales.length ? ' · ' + P.esc(c.senales.join(', ')) : ''}</span></span>
+            <span class="pn-sp"></span>
+            <button class="btn fz-ident-btn" data-susc="${su.id}" data-socio="${c.socio_id}" data-nombre="${P.esc(c.nombre)}" type="button">Es él</button>
+          </div>`).join('')}` : ''}
+          <div class="fila" style="padding:4px 0;flex-wrap:wrap">
+            <select class="sel fz-ident-sel" data-susc="${su.id}" style="font-size:12px;max-width:260px">
+              <option value="">Elegir otro socio…</option>
+              ${ident.pool.map((s) => `<option value="${s.socio_id}">${P.esc(s.nombre)} (${P.esc(s.tier)})</option>`).join('')}
+            </select>
+            <span class="pn-sp"></span>
+            <button class="btn fz-ident-no" data-susc="${su.id}" type="button">No es un socio</button>
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+
       <div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
         <span class="k">Para mandar (${paraMandar.length})</span>
-        <p class="so-help">Socios activos con membresía y sin débito andando. El link se crea una vez y se manda
-        por WhatsApp o por email — 3 cuotas con el 20%, al precio vigente de hoy.</p>
+        <p class="so-help">Socios activos con membresía y sin débito andando. El link es el del PLAN de su
+        membresía (precargado en Mercado Pago): 3 cuotas con el 20%, corta solo al completarse.</p>
         ${paraMandar.length ? paraMandar.map((c) => {
-          const renovar = c.susc_estado === 'cancelada' || (c.susc_estado === 'pendiente' && c.susc_fin < hoy)
           const situ = !c.susc_id ? '<span class="tag tag-off">nunca tuvo</span>'
             : c.susc_estado === 'cancelada' ? '<span class="tag tag-off">canceló / terminó</span>'
-            : '<span class="tag tag-deb">el link venció</span>'
+            : '<span class="tag tag-deb">intento sin terminar</span>'
+          const mandado = c.link_enviado ? `<span style="color:var(--muted);font-size:11px">mandado ${hace(c.link_enviado)} por ${c.link_via === 'email' ? 'email' : 'WhatsApp'}</span>` : ''
           return `<div class="fila" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap">
-            <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:11.5px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes con débito' : 'sin precio'}</span> ${situ}
-            ${!c.email ? '<span class="tag tag-mal">falta email</span>' : ''}</span>
+            <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:11.5px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes' : 'sin plan'}</span> ${situ} ${mandado}</span>
             <span class="pn-sp"></span>
-            ${c.email ? `<button class="btn btn-pri fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}" data-tel="${P.esc(c.telefono || '')}" type="button">${renovar ? 'Renovar débito' : 'Crear link'}</button>`
-              : `<button class="btn" data-ir-fichas type="button">Completar email</button>`}
+            ${c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
+              data-tel="${P.esc(c.telefono || '')}" data-email="${P.esc(c.email || '')}" data-tier="${P.esc(c.tier)}"
+              data-monto="${c.monto || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
+              : '<span class="tag tag-mal">sin plan en MP</span>'}
             <button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>
           </div>`
         }).join('') : '<div class="vacio">Todos los socios con membresía tienen su débito andando 🎉</div>'}
@@ -348,83 +381,73 @@
           <th>Socio</th><th>Estado</th><th class="r">Monto</th><th class="r">Cuota</th><th>Termina</th><th class="r"></th>
         </tr></thead><tbody>${d.suscripciones.map((s) => {
           const [txt, cls] = EST[s.estado] || [s.estado, 'tag-off']
-          const cuota = s.estado === 'activa' || s.racha_meses > 0 ? `${s.racha_meses % 3 === 0 && s.racha_meses > 0 ? 3 : s.racha_meses % 3}/3` : '—'
+          const cuota = s.tier === 'CUOTA SOCIAL' ? '∞' : (s.estado === 'activa' || s.racha_meses > 0 ? `${s.racha_meses % 3 === 0 && s.racha_meses > 0 ? 3 : s.racha_meses % 3}/3` : '—')
           const atrasado = s.estado === 'activa' && s.ultimo_debito && (Date.now() - Date.parse(s.ultimo_debito)) > 33 * 86400000
-          const montoViejo = s.estado === 'activa' && s.monto_vigente && s.monto !== s.monto_vigente
-          const pendiente = s.estado === 'pendiente' && (!s.fin || s.fin >= hoy)
+          const esLegado = s.origen !== 'plan'
           return `<tr>
-          <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>
-            <div><div>${P.esc(s.nombre)}</div>
-            ${pendiente ? `<div style="color:var(--muted);font-size:11px">${s.link_enviado ? `link mandado ${hace(s.link_enviado)} por ${s.link_via === 'email' ? 'email' : 'WhatsApp'}` : 'link creado, sin mandar'}</div>` : ''}</div></div></td>
+          <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || '?'))}</span>
+            <div><div>${s.nombre ? P.esc(s.nombre) : `<i style="color:var(--muted)">${P.esc(s.mp_payer_email || 'sin identificar')}</i>`}</div>
+            <div style="color:var(--muted);font-size:11px">${P.esc(s.tier || '')}${esLegado ? ' · individual' : ''}</div></div></div></td>
           <td><span class="tag ${cls}">${txt}</span>
-            ${atrasado ? `<span class="tag tag-mal" title="MP reintenta solo">sin débito ${hace(s.ultimo_debito)}</span>` : ''}
-            ${montoViejo ? `<span class="tag tag-deb">monto viejo</span>` : ''}</td>
-          <td class="r" style="font-weight:600">${P.fmt(s.monto)}${montoViejo ? `<div style="color:var(--muted);font-size:10.5px;font-weight:400">hoy: ${P.fmt(s.monto_vigente)}</div>` : ''}</td>
+            ${!s.socio_id ? '<span class="tag tag-deb">sin identificar</span>' : ''}
+            ${atrasado ? `<span class="tag tag-mal" title="MP reintenta solo">sin débito ${hace(s.ultimo_debito)}</span>` : ''}</td>
+          <td class="r" style="font-weight:600">${P.fmt(s.monto)}</td>
           <td class="r">${cuota}</td>
           <td style="color:var(--ink2)">${s.fin ? fFecha(s.fin) + '/' + s.fin.slice(0, 4) : '—'}</td>
-          <td class="r">
-            ${pendiente && s.init_point ? `
-              ${s.telefono ? `<a class="btn" target="_blank" rel="noopener" data-reenvio="${s.id}"
-                href="https://wa.me/${String(s.telefono).replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(s.tier || 'tu membresía', s.monto, s.init_point))}">WhatsApp</a>` : ''}
-              ${s.email ? `<button class="btn fz-mail" data-id="${s.id}" type="button">Email</button>` : ''}
-              <button class="btn fz-copiar" data-link="${P.esc(s.init_point)}" type="button">Copiar</button>` : ''}
-            ${montoViejo ? `<button class="btn fz-monto" data-id="${s.id}" type="button">Ajustar monto</button>` : ''}
-          </td>
+          <td class="r">${esLegado && s.estado === 'pendiente' && s.init_point ? `<button class="btn fz-copiar" data-link="${P.esc(s.init_point)}" type="button">Copiar</button>` : ''}</td>
         </tr>`
-        }).join('')}</tbody></table>` : '<div class="vacio">Todavía no hay suscripciones — arrancá con «Crear link» acá arriba.</div>'}
+        }).join('')}</tbody></table>` : '<div class="vacio">Todavía no hay suscripciones — arrancá con «Mandar link» acá arriba.</div>'}
       </div>`
 
     cuerpo.querySelector('#fz-mp-refrescar')?.addEventListener('click', () => vDebito(cuerpo))
-    cuerpo.querySelectorAll('[data-ir-fichas]').forEach((b) => b.addEventListener('click', () => P.ir('socios')))
-    cuerpo.querySelectorAll('[data-reenvio]').forEach((a) => a.addEventListener('click', () => {
-      fetch('/api/panel/mp/enviar', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ suscripcion_id: Number(a.dataset.reenvio), via: 'whatsapp' }),
-      })
+    cuerpo.querySelectorAll('.fz-ident-sel').forEach((sel) => sel.addEventListener('change', () => {
+      if (!sel.value) return
+      const nombre = sel.options[sel.selectedIndex].textContent
+      identificar(Number(sel.dataset.susc), Number(sel.value), nombre)
     }))
   }
 
-  function waTexto(tier, monto, link) {
-    return `Hola! Te paso el link para activar el débito automático de tu membresía ${tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(monto)} por mes. Se autoriza una sola vez desde Mercado Pago y lo podés dar de baja cuando quieras: ${link}`
-  }
-
-  async function crearSuscripcion(socioId, nombre, telefono) {
-    const ov = P.modal(`Débito automático — ${nombre}`, '<div class="vacio">⏳ Creando la suscripción en Mercado Pago…</div>')
-    const r = await fetch('/api/panel/mp/suscripcion', {
+  async function identificar(suscId, socioId, nombre) {
+    if (!(await P.confirmar(`Vincular esta suscripción a ${nombre}: sus débitos pasados y futuros quedan a su nombre. ¿Dale?`, 'Sí, es él'))) return
+    const r = await fetch('/api/panel/mp/identificar', {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ socio_id: Number(socioId) }),
+      body: JSON.stringify({ suscripcion_id: suscId, socio_id: socioId }),
     })
     const d = await r.json().catch(() => ({}))
-    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
-    if (!r.ok) {
-      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>
-        <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
-      return
-    }
-    const tel = String(telefono || '').replace(/\D/g, '')
-    const wa = `https://wa.me/${tel}?text=${encodeURIComponent(waTexto(d.tier, d.monto, d.link))}`
-    cuerpo.innerHTML = `
-      <p style="color:var(--ink2);margin:0 0 12px">${d.reusado ? 'El link que ya tenía sigue vigente — es este mismo:' :
-        `Listo: <b>3 cuotas mensuales de ${P.fmt(d.monto)}</b> (${P.esc(d.tier)} con el 20%). A los 3 meses termina sola
-        — la renovación se manda desde acá, al precio vigente de ese momento.`} Le falta autorizarla una vez desde este link:</p>
-      <input class="input" value="${P.esc(d.link)}" readonly onclick="this.select()" />
+    if (!r.ok) { alert(d.error || 'No se pudo: error ' + r.status); return }
+    pintar()
+  }
+
+  function waTexto(tier, monto, link) {
+    return `Hola! Te paso el link para activar el débito automático de tu membresía ${tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${link}`
+  }
+
+  // El modal de envío: el link ya existe (es el del plan) — solo se elige el
+  // canal. Cada envío queda registrado para el "mandado hace N días".
+  function mandarLink(ds) {
+    const ov = P.modal(`Débito automático — ${ds.nombre}`, `
+      <p style="color:var(--ink2);margin:0 0 12px"><b>3 cuotas mensuales de ${P.fmt(Number(ds.monto))}</b>
+      (${P.esc(ds.tier)} con el 20%). Es el link del plan precargado en Mercado Pago: al completar las 3 cuotas
+      corta solo, y la renovación se manda desde acá al precio vigente de ese momento.</p>
+      <input class="input" value="${P.esc(ds.link)}" readonly onclick="this.select()" />
       <div class="pn-mod-acciones">
-        <button class="btn" id="fz-cs-copiar" type="button">Copiar</button>
-        <button class="btn" id="fz-cs-mail" type="button">Mandar por email</button>
-        <a class="btn btn-pri" href="${P.esc(wa)}" target="_blank" rel="noopener" id="fz-cs-wa">Mandar por WhatsApp</a>
+        <button class="btn" id="fz-ml-copiar" type="button">Copiar</button>
+        ${ds.email ? '<button class="btn" id="fz-ml-mail" type="button">Mandar por email</button>' : ''}
+        ${ds.tel ? `<a class="btn btn-pri" id="fz-ml-wa" href="https://wa.me/${ds.tel.replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(ds.tier, Number(ds.monto), ds.link))}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
       </div>
-      <p class="msg" id="fz-cs-msg" style="margin:8px 0 0"></p>`
-    const msg = cuerpo.querySelector('#fz-cs-msg')
+      <p class="msg" id="fz-ml-msg" style="margin:8px 0 0"></p>`)
+    const msg = ov.querySelector('#fz-ml-msg')
     const registrar = (via) => fetch('/api/panel/mp/enviar', {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ suscripcion_id: Number(d.suscripcionId), via }),
+      body: JSON.stringify({ socio_id: Number(ds.socio), via }),
     })
-    cuerpo.querySelector('#fz-cs-wa').addEventListener('click', () => { registrar('whatsapp') })
-    cuerpo.querySelector('#fz-cs-copiar').addEventListener('click', () => {
-      navigator.clipboard.writeText(d.link)
-      msg.className = 'msg ok'; msg.textContent = '✔ link copiado'
+    ov.querySelector('#fz-ml-copiar').addEventListener('click', () => {
+      navigator.clipboard.writeText(ds.link)
+      registrar('whatsapp')
+      msg.className = 'msg ok'; msg.textContent = '✔ link copiado (queda registrado el envío)'
     })
-    cuerpo.querySelector('#fz-cs-mail').addEventListener('click', async (e) => {
+    ov.querySelector('#fz-ml-wa')?.addEventListener('click', () => { registrar('whatsapp') })
+    ov.querySelector('#fz-ml-mail')?.addEventListener('click', async (e) => {
       e.target.disabled = true
       msg.className = 'msg'; msg.textContent = '⏳ mandando el mail…'
       const rm = await registrar('email')
@@ -503,7 +526,19 @@
       return
     }
     const deb = e.target.closest('.fz-debito-btn')
-    if (deb) { crearSuscripcion(deb.dataset.socio, deb.dataset.nombre, deb.dataset.tel); return }
+    if (deb) { mandarLink(deb.dataset); return }
+    const identBtn = e.target.closest('.fz-ident-btn')
+    if (identBtn) { identificar(Number(identBtn.dataset.susc), Number(identBtn.dataset.socio), identBtn.dataset.nombre); return }
+    const identNo = e.target.closest('.fz-ident-no')
+    if (identNo) {
+      if (!(await P.confirmar('Marcar que este pagador NO es un socio del club. Sus pagos quedan como ingresos sin socio.', 'No es socio'))) return
+      await fetch('/api/panel/mp/identificar', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suscripcion_id: Number(identNo.dataset.susc), no_es_socio: 1 }),
+      })
+      pintar()
+      return
+    }
     const noIns = e.target.closest('.fz-no-insistir')
     if (noIns) {
       noIns.disabled = true
@@ -514,31 +549,8 @@
       pintar()
       return
     }
-    const mail = e.target.closest('.fz-mail')
-    if (mail) {
-      mail.disabled = true; mail.textContent = '⏳'
-      const rm = await fetch('/api/panel/mp/enviar', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ suscripcion_id: Number(mail.dataset.id), via: 'email' }),
-      })
-      if (rm.ok) { mail.textContent = '✔ enviado' }
-      else { const dm = await rm.json().catch(() => ({})); mail.textContent = 'Email'; mail.disabled = false; alert(dm.error || 'El mail no salió') }
-      return
-    }
     const cop = e.target.closest('.fz-copiar')
     if (cop) { navigator.clipboard.writeText(cop.dataset.link); cop.textContent = '✔'; setTimeout(() => { cop.textContent = 'Copiar' }, 1500); return }
-    const monto = e.target.closest('.fz-monto')
-    if (monto) {
-      if (!(await P.confirmar('Ajustar el monto del débito al precio vigente de su membresía. El socio no tiene que autorizar de nuevo. ¿Dale?', 'Sí, ajustar'))) return
-      monto.disabled = true
-      const rm = await fetch('/api/panel/mp/monto', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ suscripcion_id: Number(monto.dataset.id) }),
-      })
-      if (!rm.ok) { const dm = await rm.json().catch(() => ({})); alert(dm.error || 'No se pudo'); monto.disabled = false; return }
-      pintar()
-      return
-    }
     const ap = e.target.closest('.fz-aprobar'), an = e.target.closest('.fz-anular')
     if (ap || an) {
       if (an && !(await P.confirmar('¿Anular este movimiento? Sale de todos los totales.', 'Sí, anular'))) return

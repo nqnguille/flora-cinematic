@@ -49,7 +49,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
              (SELECT COUNT(*) FROM suscripciones WHERE estado = 'pendiente' AND (fin IS NULL OR fin >= ?1)) AS esperando,
              (SELECT COUNT(*) FROM suscripciones WHERE estado = 'activa' AND substr(fin, 1, 7) = ?2) AS terminan_mes,
              (SELECT COALESCE(SUM(neto), 0) FROM movimientos WHERE substr(fecha, 1, 7) = ?2
-               AND origen = 'mp_webhook' AND estado = 'confirmado') AS recaudado_mes`,
+               AND origen = 'mp_webhook' AND estado = 'confirmado') AS recaudado_mes,
+             (SELECT COUNT(*) FROM suscripciones WHERE socio_id IS NULL AND no_es_socio = 0
+               AND estado != 'cancelada') AS sin_identificar`,
         ).bind(hoy, mes).first<{ al_dia: number; esperando: number; terminan_mes: number; recaudado_mes: number }>()
       : Promise.resolve(null),
   ]);
