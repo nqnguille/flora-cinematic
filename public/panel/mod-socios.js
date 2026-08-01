@@ -1019,6 +1019,29 @@
     ldRender()
   }
 
+  /* El embudo respira solo: mientras la pestaña Leads está a la vista, un pago
+     que entra mueve la tarjeta sin tocar F5. Nunca repinta si el dueño está
+     tipeando una nota, y no gasta requests con la pestaña en segundo plano. */
+  function ldVisible() {
+    // El módulo puede no estar montado (ej. pantalla de login): jamás romper.
+    try {
+      const sub = cont.querySelector('#so-leads')
+      return !!sub && !sub.hidden && document.visibilityState === 'visible'
+    } catch { return false }
+  }
+  function ldTipeando() {
+    return document.activeElement && document.activeElement.classList &&
+      document.activeElement.classList.contains('ld-nota')
+  }
+  setInterval(() => {
+    if (!ldVisible() || ldTipeando()) return
+    ldRender()                     // refresca la cuenta regresiva sin red
+  }, 30000)
+  setInterval(() => {
+    if (!ldVisible() || ldTipeando()) return
+    ldCargar()                     // trae pagos y leads nuevos
+  }, 60000)
+
   function ldBadgeOrigen(l) {
     if (l.origen === 'solicitud_web') return l.intent === 'entrevista'
       ? '<span class="tag tag-deb">pidió entrevista</span>'
@@ -1028,6 +1051,31 @@
     return '<span class="tag tag-off">manual</span>'
   }
 
+  /* El ciclo de pago del consultorio, visible de un vistazo: la reserva
+     retenida muestra su cuenta regresiva, el pago aprobado su tilde, y la
+     vencida queda marcada para perseguirla. */
+  function ldChipPago(l) {
+    if (l.origen !== 'consultorio' || !l.pago_estado) return ''
+    if (l.pago_estado === 'aprobado') return '<span class="tag tag-ok">✓ pagado</span>'
+    if (l.pago_estado === 'vencido') return '<span class="tag tag-mal">venció sin pagar</span>'
+    if (l.pago_estado === 'retenido') {
+      const min = l.pago_vence
+        ? Math.ceil((Date.parse(String(l.pago_vence).replace(' ', 'T') + 'Z') - Date.now()) / 60000)
+        : 0
+      return min > 0
+        ? `<span class="tag tag-deb">⏳ esperando pago · ${min} min</span>`
+        : '<span class="tag tag-deb">⏳ esperando pago</span>'
+    }
+    return ''
+  }
+
+  function ldTurnoLinea(l) {
+    if (!l.turno_fecha) return ''
+    const f = new Date(String(l.turno_fecha).replace(' ', 'T') + 'Z')
+    const txt = f.toLocaleString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' })
+    return `<div style="color:var(--muted);font-size:11.5px">🗓 turno ${P.esc(txt)} hs</div>`
+  }
+
   function ldCard(l) {
     const dias = Math.floor((Date.now() - Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z')) / 86400000)
     const idx = LD_ETAPAS.findIndex(([e]) => e === l.etapa)
@@ -1035,10 +1083,11 @@
     const tel = digitsOnly(l.telefono)
     return `<div class="card" style="padding:12px 14px;margin-bottom:10px">
       <div class="fila" style="flex-wrap:wrap;gap:6px">
-        <b style="font-size:13.5px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}
+        <b style="font-size:13.5px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}${ldChipPago(l)}
       </div>
       ${l.email ? `<div style="color:var(--muted);font-size:11.5px;margin-top:2px">${P.esc(l.email)}</div>` : ''}
       ${l.telefono ? `<div style="color:var(--muted);font-size:11.5px">${P.esc(l.telefono)}</div>` : ''}
+      ${ldTurnoLinea(l)}
       <div style="color:var(--muted);font-size:11px;margin-top:4px">${dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`} en esta etapa</div>
       ${l.tiene_adjunto ? `<div style="font-size:11.5px;margin-top:3px"><a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a></div>` : ''}
       ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:8px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
