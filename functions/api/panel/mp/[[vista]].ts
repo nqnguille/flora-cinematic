@@ -52,6 +52,17 @@ async function mpFetch(env: Env, path: string, init?: RequestInit): Promise<{ ok
   return { ok: res.ok, status: res.status, data };
 }
 
+// El débito SOLO se ofrece a quien ya hizo la entrevista médica y tiene el
+// trámite subido a REPROCANN: aprobado o pendiente de evaluación (regla de
+// Guille 01/08). Cualquier otro paso del embudo bloquea el envío del link.
+const REPROCANN_OK = new Set(['aprobado', 'en_evaluacion']);
+const PASO_LINDO: Record<string, string> = {
+  sin_iniciar: 'sin iniciar', esperando_codigo: 'esperando su código', codigo_listo: 'código listo',
+  cargado: 'esperando su firma', observado: 'observado', a_vincular: 'falta vincularlo',
+  en_evaluacion: 'en evaluación', revision_medica: 'volvió al médico', aprobado: 'aprobado',
+  autocultivo: 'autocultivo', revisar: 'a revisar', rechazado: 'rechazado', vencido: 'vencido',
+};
+
 // "La suscripción relevante" de un socio: activa > pendiente > pausada >
 // cancelada, la más nueva.
 const SUSC_RELEVANTE = `(
@@ -170,7 +181,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   if (vista === 'cola') {
     const [rows, planes] = await Promise.all([
       env.DB.prepare(
-        `SELECT s.id, s.nombre, s.email, s.telefono, s.debito_no_insistir,
+        `SELECT s.id, s.nombre, s.email, s.telefono, s.debito_no_insistir, s.reprocann_estado,
                 m.tier, m.modalidad,
                 su.id AS susc_id, su.estado AS susc_estado, su.fin AS susc_fin,
                 (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_enviado,
@@ -188,7 +199,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     ]);
     const cola = rows.results.map((r) => {
       const p = planes[String(r.tier)];
-      return { ...r, monto: p?.monto ?? null, contado: p?.contado ?? null, gramos: p?.gramos ?? null, plan_link: p?.link ?? null };
+      return {
+        ...r, monto: p?.monto ?? null, contado: p?.contado ?? null, gramos: p?.gramos ?? null,
+        plan_link: p?.link ?? null,
+        reprocann_ok: REPROCANN_OK.has(String(r.reprocann_estado)),
+        reprocann_paso: PASO_LINDO[String(r.reprocann_estado)] || String(r.reprocann_estado || 'sin dato'),
+      };
     });
     return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, cola });
   }
@@ -202,7 +218,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const socioIdParam = Number(url.searchParams.get('socio_id')) || 0;
     if (!email && !socioIdParam) return json({ error: 'Falta email o socio_id' }, 400);
     const socio = await env.DB.prepare(
-      `SELECT s.id, s.nombre, s.telefono, s.email, s.debito_no_insistir,
+      `SELECT s.id, s.nombre, s.telefono, s.email, s.debito_no_insistir, s.reprocann_estado,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
                 ORDER BY m.desde DESC LIMIT 1) AS tier,
               su.estado AS debito_estado, su.tier AS debito_tier, su.fin AS debito_fin,
@@ -224,6 +240,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     return json({
       ok: true,
       socio_id: socio.id, nombre: socio.nombre, telefono: socio.telefono,
+      reprocann_ok: REPROCANN_OK.has(String(socio.reprocann_estado)),
+      reprocann_paso: PASO_LINDO[String(socio.reprocann_estado)] || String(socio.reprocann_estado || 'sin dato'),
       tier: socio.tier || null, monto: plan?.monto ?? null, contado: plan?.contado ?? null, link: plan?.link ?? null,
       planes: opciones,
       debito_estado: socio.debito_estado, debito_fin: socio.debito_fin,
@@ -305,12 +323,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
     if (via !== 'whatsapp' && via !== 'email') return json({ error: 'via inválida' }, 400);
     const socio = await env.DB.prepare(
-      `SELECT s.id, s.nombre, s.email,
+      `SELECT s.id, s.nombre, s.email, s.reprocann_estado,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
                 ORDER BY m.desde DESC LIMIT 1) AS tier
          FROM socios s WHERE s.id = ?`,
-    ).bind(socioId).first<{ id: number; nombre: string; email: string | null; tier: string | null }>();
+    ).bind(socioId).first<{ id: number; nombre: string; email: string | null; reprocann_estado: string | null; tier: string | null }>();
     if (!socio) return json({ error: 'El socio no existe' }, 404);
+    // el 20% es para quien ya hizo la entrevista y tiene el trámite subido
+    if (!REPROCANN_OK.has(String(socio.reprocann_estado))) {
+      const paso = PASO_LINDO[String(socio.reprocann_estado)] || 'sin dato';
+      return json({ error: `Su REPROCANN está «${paso}» — el link se manda recién con el trámite subido (aprobado o en evaluación)` }, 400);
+    }
     const planes = await planesDebito(env);
     // el tier puede venir elegido a mano (upgrade/downgrade desde el modal);
     // si no viene, se usa el de la membresía vigente

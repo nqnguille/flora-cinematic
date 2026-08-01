@@ -351,7 +351,8 @@
       <div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
         <span class="k">Para mandar (${paraMandar.length})</span>
         <p class="so-help">Socios activos con membresía y sin débito andando. El link es el del PLAN de su
-        membresía (precargado en Mercado Pago): 3 cuotas con el 20%, corta solo al completarse.</p>
+        membresía: 3 cuotas con el 20%, corta solo al completarse. Solo se manda a quien ya tiene el trámite
+        subido a REPROCANN (aprobado o en evaluación) — los demás aparecen marcados.</p>
         ${paraMandar.length ? paraMandar.map((c) => {
           const situ = !c.susc_id ? '<span class="tag tag-off">nunca tuvo</span>'
             : c.susc_estado === 'cancelada' ? '<span class="tag tag-off">canceló / terminó</span>'
@@ -360,7 +361,8 @@
           return `<div class="fila" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap">
             <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:11.5px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes' : 'sin plan'}</span> ${situ} ${mandado}</span>
             <span class="pn-sp"></span>
-            ${c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
+            ${!c.reprocann_ok ? `<span class="tag tag-deb" title="El link se manda recién con el trámite subido a REPROCANN (aprobado o en evaluación)">REPROCANN: ${P.esc(c.reprocann_paso)}</span>`
+              : c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
               data-tel="${P.esc(c.telefono || '')}" data-email="${P.esc(c.email || '')}" data-tier="${P.esc(c.tier)}"
               data-monto="${c.monto || 0}" data-contado="${c.contado || 0}" data-gramos="${c.gramos || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
               : '<span class="tag tag-mal">sin plan en MP</span>'}

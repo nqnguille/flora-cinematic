@@ -163,6 +163,13 @@
         <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
       return
     }
+    if (d.reprocann_ok === false && !d.sinFicha) {
+      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0">El REPROCANN de <b>${P.esc(d.nombre)}</b> está
+        <span class="tag tag-deb">${P.esc(d.reprocann_paso || 'sin dato')}</span> — el débito con descuento se ofrece recién
+        cuando el trámite está subido (aprobado o en evaluación). Empujá su trámite desde el módulo <b>REPROCANN</b> y volvé acá.</p>
+        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
+      return
+    }
     if (d.debito_estado === 'activa') {
       cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> ya tiene el débito automático
         <span class="tag tag-ok">al día</span>${d.debito_fin ? ` — termina el ${P.esc(d.debito_fin.slice(8, 10))}/${P.esc(d.debito_fin.slice(5, 7))}` : ''}. No hace falta mandarle nada.</p>
@@ -684,6 +691,8 @@
 
     function pintar3() {
       const conMemb = datos.tier !== 'NINGUNA'
+      // el 20% del débito es solo para trámite subido (aprobado o en evaluación)
+      const reproOk = ['aprobado', 'en_evaluacion'].includes(datos.reprocann_estado)
       cuerpo.innerHTML = `${pasosHtml()}
         <div class="card" style="box-shadow:none;background:var(--card2);margin-bottom:12px">
           <b>${P.esc(datos.nombre)}</b>
@@ -696,10 +705,13 @@
             <b style="display:block">Cobré ${P.fmt(datos.precio || 0)}</b>
             <span style="color:var(--muted);font-weight:400;font-size:11.5px">Registra el pago y le habilita los gramos</span>
           </button>
-          <button class="btn btn-pri al-fin" data-cobro="debito" type="button" style="padding:14px;text-align:left;height:auto">
+          ${reproOk ? `<button class="btn btn-pri al-fin" data-cobro="debito" type="button" style="padding:14px;text-align:left;height:auto">
             <b style="display:block">Mandarle el débito −20%</b>
-            <span style="opacity:.85;font-weight:400;font-size:11.5px">Crea la suscripción y el link de WhatsApp</span>
-          </button>
+            <span style="opacity:.85;font-weight:400;font-size:11.5px">El link del plan, listo para WhatsApp</span>
+          </button>` : `<div class="card" style="box-shadow:none;background:var(--card2);padding:14px">
+            <b style="display:block;font-size:13px">Débito −20%: todavía no</b>
+            <span style="color:var(--muted);font-size:11.5px">Se ofrece cuando su trámite esté subido a REPROCANN (aprobado o en evaluación).</span>
+          </div>`}
         </div>
         <div class="fila" style="margin-top:10px"><button class="btn al-fin" data-cobro="ninguno" type="button">Después paga</button>
         <span class="pn-sp"></span><span class="msg" id="al-msg"></span></div>`
