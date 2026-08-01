@@ -104,10 +104,40 @@
 
 
   /* ============ Lista maestra (mu-): una fila por persona ============ */
-  let MU = { socios: [], pasos: [], sugerencias: [] }
-  let muFiltro = ''           // '' | quien:club/paciente/medico/organismo | porVencer | sinDebito | noInsistir | sinIngresar | sinAcceso | activos30
+  let MU = { socios: [], pasos: [], sugerencias: [], sugerenciasCarta: [] }
+  let muFiltro = ''           // '' | quien | porVencer | sinDebito | debeMes | noInsistir | sinIngresar | sinAcceso | activos30
   let muQ = ''
   let muCargado = false
+  // F5 vuelve exactamente adonde estabas (regla de la casa)
+  try {
+    const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
+    muFiltro = nav.filtro || ''
+    muQ = nav.q || ''
+  } catch { /* nada */ }
+  const guardarNav = (sub) => {
+    try {
+      const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
+      sessionStorage.setItem('so-nav', JSON.stringify({ filtro: muFiltro, q: muQ, sub: sub || nav.sub || 'maestra' }))
+    } catch { /* nada */ }
+  }
+  const mesActual = () => new Date().toISOString().slice(0, 7)
+  const debeElMes = (s) => !!s.tier && s.modalidad !== 'plan' && s.debito_estado !== 'activa'
+    && (!s.ultimo_pago || String(s.ultimo_pago).slice(0, 7) !== mesActual())
+
+  // El score de vida: decide quién va arriba y quién duerme plegado.
+  function muScore(s) {
+    if (s.sinFicha) return -1
+    let p = 0
+    if (s.tier) p += 4
+    const dRet = s.ultimo_retiro ? (Date.now() - Date.parse(s.ultimo_retiro)) / 86400000 : 9999
+    if (dRet < 45) p += 3
+    else if (dRet < 120) p += 1
+    if (['activa', 'pendiente'].includes(s.debito_estado)) p += 2
+    if (['club', 'paciente', 'medico'].includes(s.quien)) p += 2
+    if (s.por_vencer) p += 2
+    if (s.carta && s.carta.lastLogin && Date.now() - Date.parse(s.carta.lastLogin) < 30 * 86400000) p += 1
+    return p
+  }
 
   const QUIEN_TAG = {
     club: ['Nos toca', 'tag-mal'], paciente: ['Le toca al paciente', 'tag-deb'],
@@ -120,6 +150,7 @@
     if (['club', 'paciente', 'medico', 'organismo'].includes(muFiltro)) return s.quien === muFiltro
     if (muFiltro === 'porVencer') return !!s.por_vencer
     if (muFiltro === 'sinDebito') return !!s.tier && !['activa', 'pendiente'].includes(s.debito_estado) && !s.debito_no_insistir
+    if (muFiltro === 'debeMes') return debeElMes(s)
     if (muFiltro === 'noInsistir') return !!s.debito_no_insistir
     if (muFiltro === 'sinIngresar') return s.carta && !s.carta.lastLogin
     if (muFiltro === 'sinAcceso') return !s.carta && !s.sinFicha
@@ -127,29 +158,47 @@
     return true
   }
 
+  // Presupuesto de color: la única pill saturada de la fila es la que pide
+  // acción. Lo normal ×100 va en texto gris — el ojo vuelve a ver el ámbar.
   function muChipReprocann(s) {
-    if (s.sinFicha) return '<span class="tag tag-deb">sin ficha</span>'
+    if (s.sinFicha) return '<span style="color:var(--muted);font-size:12px">—</span>'
+    if (s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo') {
+      const vence = s.por_vencer ? ' <span class="tag tag-mal" title="El certificado vence en menos de 60 días">⚠ vence</span>' : ''
+      return `<span style="color:var(--ink2);font-size:12.5px" title="${P.esc(s.paso_ayuda || '')}"><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);margin-right:5px"></i>${P.esc(s.paso_nombre)}</span>${vence}`
+    }
     const cls = s.quien === 'club' ? 'tag-mal' : s.quien === 'paciente' ? 'tag-deb'
-      : s.quien === 'medico' ? 'tag-auto'
-      : (s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo') ? 'tag-ok' : 'tag-off'
-    const vence = s.por_vencer ? ' <span class="tag tag-mal" title="El certificado vence en menos de 60 días">⚠ vence</span>' : ''
-    return `<span class="tag ${cls}" title="${P.esc(s.paso_ayuda || '')}">${P.esc(s.paso_nombre)}</span>${vence}`
+      : s.quien === 'medico' ? 'tag-auto' : 'tag-off'
+    return `<span class="tag ${cls}" title="${P.esc(s.paso_ayuda || '')}">${P.esc(s.paso_nombre)}</span>`
   }
 
-  function muChipDebito(s) {
-    if (s.sinFicha) return '—'
-    if (s.debito_estado === 'activa') return '<span class="tag tag-ok">al día</span>'
-    if (s.debito_estado === 'pendiente') return '<span class="tag tag-deb">esperando</span>'
-    if (s.debito_estado === 'pausada') return '<span class="tag tag-mal">pausado</span>'
-    if (s.debito_no_insistir) return '<span class="tag tag-auto">no insistir</span>'
-    return s.tier ? '<span class="tag tag-off">sin débito</span>' : '—'
+  // Membresía y débito en UNA columna: pill del tier + segunda línea con la
+  // historia de pago (el dato operativo que faltaba).
+  function muCeldaMembresia(s) {
+    if (s.sinFicha) return '<span class="tag tag-deb" title="Entra a la carta pero no tiene ficha en el padrón">solo carta</span>'
+    if (!s.tier) return '<span style="color:var(--muted)">—</span>'
+    const pill = `<span class="tag ${s.modalidad === 'plan' ? 'tag-auto' : ''}">${P.esc(s.tier)}${s.modalidad === 'plan' ? ' · plan' : ''}</span>`
+    let linea = ''
+    if (s.modalidad === 'plan') linea = ''
+    else if (s.debito_estado === 'activa') linea = '<span style="color:var(--grn)">débito al día</span>'
+    else if (s.debito_estado === 'pendiente') linea = 'débito esperando autorización'
+    else if (s.debito_estado === 'pausada') linea = '<span style="color:var(--dan)">débito pausado</span>'
+    else if (debeElMes(s)) linea = `<span style="color:var(--amb);font-weight:600">sin pago este mes</span>${s.ultimo_pago ? ' · pagó ' + fmtRel(s.ultimo_pago) : ''}`
+    else if (s.ultimo_pago) linea = 'pagó ' + fmtRel(s.ultimo_pago)
+    else if (s.debito_no_insistir) linea = 'no insistir con débito'
+    return `${pill}${linea ? `<div style="color:var(--muted);font-size:11px;margin-top:2px">${linea}</div>` : ''}`
   }
 
   function muChipCarta(s) {
-    if (!s.carta) return s.sinFicha ? '—' : '<span class="tag tag-deb" title="Tiene ficha pero no puede entrar a la carta">sin acceso</span>'
+    if (!s.carta) {
+      // "sin acceso" solo grita si la persona está viva (paga o retira)
+      if (s.sinFicha) return '—'
+      const vivo = s.tier || (s.ultimo_retiro && Date.now() - Date.parse(s.ultimo_retiro) < 90 * 86400000)
+      return vivo ? '<span class="tag tag-deb" title="Tiene ficha pero no puede entrar a la carta">sin acceso</span>'
+        : '<span style="color:var(--muted);font-size:12px">—</span>'
+    }
     const base = s.carta.lastLogin
-      ? `<span class="tag tag-ok" title="Último ingreso: ${P.esc(fmtFecha(s.carta.lastLogin))}">carta ${P.esc(fmtRel(s.carta.lastLogin))}</span>`
-      : '<span class="tag tag-off">sin ingresar</span>'
+      ? `<span style="color:var(--ink2);font-size:12px" title="Último ingreso: ${P.esc(fmtFecha(s.carta.lastLogin))}">carta ${P.esc(fmtRel(s.carta.lastLogin))}</span>`
+      : '<span style="color:var(--muted);font-size:12px">sin ingresar</span>'
     return base + tempTag(s.carta)
   }
 
@@ -160,9 +209,41 @@
     const r = await fetch('/api/panel/padron/maestra', { credentials: 'include' })
     if (!r.ok) { caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`; return }
     MU = await r.json()
+    MU.socios.forEach((x) => { x._score = muScore(x) })
+    MU.socios.sort((a, b) => (b._score - a._score)
+      || (Date.parse(b.ultimo_retiro || 0) || 0) - (Date.parse(a.ultimo_retiro || 0) || 0)
+      || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'))
     window.PanelPasosReprocann = MU.pasos   // lo usa el drawer para el timeline
     muCargado = true
     muRender()
+  }
+
+  function muFila(s) {
+    const puedeLink = s.id && s.tier && !['activa', 'pendiente'].includes(s.debito_estado)
+      && !s.debito_no_insistir && ['aprobado', 'en_evaluacion'].includes(s.reprocann_estado)
+    return `
+      <tr class="mu-fila" data-id="${s.id || ''}" data-email="${P.esc(s.email || '')}" style="cursor:${s.id ? 'pointer' : 'default'}">
+        <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || s.email || '?'))}</span>
+          <div><div style="font-weight:600">${P.esc(s.nombre || '(sin nombre)')}</div>
+          ${s.email ? `<div style="color:var(--muted);font-size:11px">${P.esc(s.email)}</div>`
+            : (s.tier ? '<div style="color:var(--amb);font-size:11px">sin email — el débito lo necesita</div>' : '')}</div></div></td>
+        <td>${muCeldaMembresia(s)}</td>
+        <td>${muChipReprocann(s)}</td>
+        <td>${muChipCarta(s)}</td>
+        <td style="color:var(--muted);font-size:12px">${s.ultimo_retiro ? P.esc(fmtRel(s.ultimo_retiro)) : '—'}</td>
+        <td class="r" style="white-space:nowrap">
+          ${puedeLink ? `<button class="btn mu-mp" data-id="${s.id}" data-nombre="${P.esc(s.nombre)}" data-tel="${P.esc(s.telefono || '')}" title="Mandarle el link del débito" type="button">$</button>` : ''}
+          ${s.sinFicha && editar ? `<button class="btn mu-crear" data-email="${P.esc(s.email)}" data-nombre="${P.esc(s.nombre || '')}" data-tel="${P.esc(s.telefono || '')}" data-nota="${P.esc(s.nota || '')}" type="button">Crear ficha</button>` : ''}
+          ${s.telefono && s.id ? `<a class="so-wa mu-wa" target="_blank" rel="noopener" data-id="${s.id}" title="WhatsApp según su paso de REPROCANN"
+            href="${P.esc(muWa(s))}">${ICON_WA}</a>` : ''}
+        </td>
+      </tr>`
+  }
+
+  function muTabla(lista) {
+    return `<div class="so-scroll"><table class="tabla"><thead><tr>
+      <th>Socio</th><th>Membresía</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
+    </tr></thead><tbody>${lista.map(muFila).join('')}</tbody></table></div>`
   }
 
   function muRender() {
@@ -171,6 +252,7 @@
     const alPaciente = socios.filter((s) => s.quien === 'paciente').length
     const alMedico = socios.filter((s) => s.quien === 'medico').length
     const porVencer = socios.filter((s) => s.por_vencer).length
+    const deudores = socios.filter(debeElMes).length
 
     cont.querySelector('#mu-tiles').innerHTML = `
       <div class="grid3" style="margin-bottom:10px">
@@ -180,25 +262,34 @@
         <div class="card mu-tile ${muFiltro === 'paciente' ? 'on' : ''}" data-f="paciente" style="border-left:3px solid var(--amb);cursor:pointer">
           <span class="k">Le toca al paciente</span><div class="kpi-v" style="font-size:28px;color:var(--amb)">${alPaciente}</div>
           <div class="kpi-d">su código o su firma</div></div>
-        <div class="card mu-tile ${muFiltro === 'medico' ? 'on' : ''}" data-f="medico" style="border-left:3px solid var(--vio);cursor:pointer">
-          <span class="k">Le toca a Ezequiel</span><div class="kpi-v" style="font-size:28px;color:var(--vio)">${alMedico}</div>
-          <div class="kpi-d">cargar el trámite o corregirlo</div></div>
+        <div class="card mu-tile ${muFiltro === 'debeMes' ? 'on' : ''}" data-f="debeMes" style="border-left:3px solid var(--amb);cursor:pointer">
+          <span class="k">Deben el mes</span><div class="kpi-v" style="font-size:28px;color:var(--amb)">${deudores}</div>
+          <div class="kpi-d">con membresía y sin pago del mes</div></div>
       </div>
-      ${porVencer ? `<div class="card mu-tile ${muFiltro === 'porVencer' ? 'on' : ''}" data-f="porVencer" style="border-left:3px solid var(--amb);margin-bottom:10px;cursor:pointer">
-        <span class="k">Vencimientos</span><div class="kpi-d" style="margin-top:6px"><b>${porVencer}</b> certificado(s) vencen en menos de 60 días.</div></div>` : ''}`
+      <div class="fila" style="margin-bottom:10px;flex-wrap:wrap;gap:10px">
+        ${alMedico ? `<button class="chip mu-tile ${muFiltro === 'medico' ? 'on' : ''}" data-f="medico" type="button">Le toca a Ezequiel: <b>${alMedico}</b></button>` : ''}
+        ${porVencer ? `<button class="chip mu-tile ${muFiltro === 'porVencer' ? 'on' : ''}" data-f="porVencer" type="button" style="border-color:var(--amb);color:var(--amb)">⚠ vencen en 60 días: <b>${porVencer}</b></button>` : ''}
+      </div>`
 
-    // sugerencias de email por confirmar (ex pestaña Fichas)
+    // cruces por confirmar: sugerencias de Google + huérfanos↔fichas por nombre
     const porId = Object.fromEntries(socios.filter((s) => s.id).map((s) => [s.id, s]))
-    cont.querySelector('#mu-sugerencias').innerHTML = (MU.sugerencias || []).length ? `
+    let vistosCarta = []
+    try { vistosCarta = JSON.parse(sessionStorage.getItem('so-cruces-no') || '[]') } catch { /* nada */ }
+    const cruces = (MU.sugerencias || []).map((g) => ({ tipo: 'google', ...g }))
+      .concat((MU.sugerenciasCarta || []).filter((g) => !vistosCarta.includes(g.socio_id + ':' + g.email))
+        .map((g) => ({ tipo: 'carta', ...g })))
+    cont.querySelector('#mu-sugerencias').innerHTML = cruces.length ? `
       <div class="card" style="margin-bottom:12px;border-left:3px solid var(--vio)">
-        <span class="k">Cruces por confirmar</span>
-        <p class="so-help">Cuentas de Google que entraron a la carta y se parecen a un socio del padrón.</p>
-        ${MU.sugerencias.map((g) => `<div class="fila" style="padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap">
-          <span><b>${P.esc(g.email)}</b> <span style="color:var(--muted)">(Google: ${P.esc(g.nombre_google || '—')})</span>
-          ¿es <b>${P.esc((porId[g.socio_id] || {}).nombre || '#' + g.socio_id)}</b>?</span>
+        <span class="k">Cruces por confirmar (${cruces.length})</span>
+        <p class="so-help">La misma persona parece estar dos veces: una ficha del padrón y un acceso a la carta.
+        Confirmá y quedan unidas (el email pasa a la ficha).</p>
+        ${cruces.map((g) => `<div class="fila" style="padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+          <span><b>${P.esc(g.email)}</b> <span style="color:var(--muted)">(${g.tipo === 'google' ? 'Google: ' + P.esc(g.nombre_google || '—') : 'carta: ' + P.esc(g.nombre_kv || '—')})</span>
+          ¿es <b>${P.esc(g.tipo === 'google' ? ((porId[g.socio_id] || {}).nombre || '#' + g.socio_id) : g.nombre_socio)}</b>?
+          ${g.confianza === 'parcial' ? '<span class="tag tag-deb">parecido</span>' : ''}</span>
           <span class="pn-sp"></span>
-          <button class="btn mu-sug" data-id="${g.socio_id}" data-ok="1" type="button">Sí, es él</button>
-          <button class="btn mu-sug" data-id="${g.socio_id}" data-ok="" type="button">No</button>
+          <button class="btn ${g.tipo === 'google' ? 'mu-sug' : 'mu-sugcarta'}" data-id="${g.socio_id}" data-email="${P.esc(g.email)}" data-ok="1" type="button">Sí, es él</button>
+          <button class="btn ${g.tipo === 'google' ? 'mu-sug' : 'mu-sugcarta'}" data-id="${g.socio_id}" data-email="${P.esc(g.email)}" data-ok="" type="button">No</button>
         </div>`).join('')}
       </div>` : ''
 
@@ -217,25 +308,28 @@
           .toLowerCase().includes(muQ))
     }
     const caja = cont.querySelector('#mu-lista')
-    caja.innerHTML = lista.length ? `<div class="so-scroll"><table class="tabla"><thead><tr>
-      <th>Socio</th><th>Membresía</th><th>Débito</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
-    </tr></thead><tbody>${lista.map((s) => `
-      <tr class="mu-fila" data-id="${s.id || ''}" data-email="${P.esc(s.email || '')}" style="cursor:${s.id ? 'pointer' : 'default'}">
-        <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || s.email || '?'))}</span>
-          <div><div style="font-weight:600">${P.esc(s.nombre || '(sin nombre)')}</div>
-          <div style="color:var(--muted);font-size:11px">${P.esc(s.email || 'sin email')}</div></div></div></td>
-        <td>${s.sinFicha ? '<span class="tag tag-deb" title="Entra a la carta pero no tiene ficha en el padrón">solo carta</span>'
-          : s.tier ? `<span class="tag ${s.modalidad === 'plan' ? 'tag-auto' : ''}">${P.esc(s.tier)}${s.modalidad === 'debito' ? ' · débito' : s.modalidad === 'plan' ? ' · plan' : ''}</span>` : '—'}</td>
-        <td>${muChipDebito(s)}</td>
-        <td>${muChipReprocann(s)}</td>
-        <td>${muChipCarta(s)}</td>
-        <td style="color:var(--muted);font-size:12px">${s.ultimo_retiro ? P.esc(fmtRel(s.ultimo_retiro)) : '—'}</td>
-        <td class="r">${s.telefono && s.id ? `<a class="so-wa mu-wa" target="_blank" rel="noopener" data-id="${s.id}" title="WhatsApp según su paso de REPROCANN"
-          href="${P.esc(muWa(s))}">${ICON_WA}</a>` : ''}</td>
-      </tr>`).join('')}</tbody></table></div>`
-      : '<div class="vacio">Nadie coincide con ese filtro.</div>'
+    if (!lista.length) {
+      caja.innerHTML = '<div class="vacio">Nadie coincide con ese filtro.</div>'
+    } else if (muQ || muFiltro) {
+      // buscando o filtrando: una sola tabla plana con todo lo que matchea
+      caja.innerHTML = muTabla(lista)
+    } else {
+      // vista por defecto: los vivos arriba, lo demás plegado
+      const activos = lista.filter((s) => !s.sinFicha && s._score >= 3)
+      const dormidos = lista.filter((s) => !s.sinFicha && s._score < 3)
+      const soloCarta = lista.filter((s) => s.sinFicha)
+      caja.innerHTML = `
+        ${activos.length ? muTabla(activos) : '<div class="vacio">Sin socios activos.</div>'}
+        ${dormidos.length ? `<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+          ${dormidos.length} ficha(s) dormida(s) — sin membresía ni retiros recientes</summary>
+          <div style="margin-top:8px">${muTabla(dormidos)}</div></details>` : ''}
+        ${soloCarta.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+          ${soloCarta.length} con acceso a la carta y sin ficha</summary>
+          <div style="margin-top:8px">${muTabla(soloCarta)}</div></details>` : ''}`
+    }
     const total = cont.querySelector('#mu-total')
     if (total) total.textContent = `${lista.length} de ${socios.length}`
+    guardarNav()
   }
 
   // WhatsApp contextual por paso (los textos viven también en el drawer)
@@ -842,6 +936,126 @@
   }
 
 
+
+  /* ============ Embudo de LEADS (ld-): del contacto al socio ============ */
+  // Etapas (decisión 01/08): nuevo → contactado → entrevista → convertido
+  // (+ perdido). Las solicitudes web y los intentos de login entran solos.
+  let LEADS = []
+  const LD_ETAPAS = [
+    ['nuevo', 'Nuevos', 'var(--vio)'],
+    ['contactado', 'Contactados', 'var(--amb)'],
+    ['entrevista', 'Entrevista médica', 'var(--grn)'],
+    ['convertido', 'Convertidos', 'var(--grn)'],
+  ]
+
+  async function ldCargar() {
+    const caja = cont.querySelector('#ld-tablero')
+    if (!LEADS.length) caja.innerHTML = '<div class="vacio">⏳ Cargando el embudo…</div>'
+    const r = await fetch('/api/panel/leads', { credentials: 'include' })
+    if (!r.ok) { caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`; return }
+    LEADS = (await r.json()).leads
+    ldRender()
+  }
+
+  function ldBadgeOrigen(l) {
+    if (l.origen === 'solicitud_web') return l.intent === 'entrevista'
+      ? '<span class="tag tag-deb">pidió entrevista</span>'
+      : '<span class="tag tag-ok">dice tener REPROCANN</span>'
+    if (l.origen === 'intento') return '<span class="tag tag-off">probó entrar</span>'
+    if (l.origen === 'consultorio') return '<span class="tag tag-auto">consultorio</span>'
+    return '<span class="tag tag-off">manual</span>'
+  }
+
+  function ldCard(l) {
+    const dias = Math.floor((Date.now() - Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z')) / 86400000)
+    const idx = LD_ETAPAS.findIndex(([e]) => e === l.etapa)
+    const sig = LD_ETAPAS[idx + 1]
+    const tel = digitsOnly(l.telefono)
+    return `<div class="card" style="padding:12px 14px;margin-bottom:10px">
+      <div class="fila" style="flex-wrap:wrap;gap:6px">
+        <b style="font-size:13.5px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}
+      </div>
+      ${l.email ? `<div style="color:var(--muted);font-size:11.5px;margin-top:2px">${P.esc(l.email)}</div>` : ''}
+      ${l.telefono ? `<div style="color:var(--muted);font-size:11.5px">${P.esc(l.telefono)}</div>` : ''}
+      <div style="color:var(--muted);font-size:11px;margin-top:4px">${dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`} en esta etapa</div>
+      ${l.tiene_adjunto ? `<div style="font-size:11.5px;margin-top:3px"><a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a></div>` : ''}
+      ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:8px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
+      <div class="fila" style="margin-top:9px;flex-wrap:wrap;gap:5px">
+        ${tel ? `<a class="btn" style="padding:4px 9px;font-size:11.5px" target="_blank" rel="noopener"
+          href="https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${String(l.nombre || '').split(' ')[0]}! Te escribimos de Flora 🌿`)}">WhatsApp</a>` : ''}
+        ${editar && l.etapa !== 'convertido' ? `<button class="btn btn-pri ld-alta" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" type="button">Dar de alta</button>` : ''}
+        ${editar && sig && l.etapa !== 'convertido' && sig[0] !== 'convertido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="${sig[0]}" type="button">→ ${sig[1]}</button>` : ''}
+        ${editar && l.etapa !== 'convertido' && l.etapa !== 'perdido' ? `<button class="btn ld-perdido" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button">Perdido</button>` : ''}
+        ${editar && l.etapa === 'perdido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>` : ''}
+      </div>
+    </div>`
+  }
+
+  function ldRender() {
+    const caja = cont.querySelector('#ld-tablero')
+    const por = Object.fromEntries(LD_ETAPAS.map(([e]) => [e, []]))
+    const perdidos = []
+    for (const l of LEADS) {
+      if (l.etapa === 'perdido') perdidos.push(l)
+      else (por[l.etapa] || por.nuevo).push(l)
+    }
+    const cnt = cont.querySelector('#ld-cnt')
+    if (cnt) { cnt.hidden = !por.nuevo.length; cnt.textContent = por.nuevo.length || '' }
+    caja.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;align-items:start">
+        ${LD_ETAPAS.map(([etapa, nombre, color]) => `
+          <div>
+            <div class="fila" style="margin-bottom:8px">
+              <span class="k" style="border-left:3px solid ${color};padding-left:8px">${nombre}</span>
+              <span class="pn-sp"></span><b style="color:var(--muted);font-size:12px">${por[etapa].length}</b>
+            </div>
+            ${por[etapa].length ? por[etapa].map(ldCard).join('') : '<div class="vacio" style="padding:14px;font-size:12px">Vacío</div>'}
+          </div>`).join('')}
+      </div>
+      ${perdidos.length ? `<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+        ${perdidos.length} perdido(s)</summary>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:8px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
+  }
+
+  async function ldPatch(id, body) {
+    const r = await fetch('/api/panel/leads', {
+      method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: Number(id), ...body }),
+    })
+    if (r.ok) ldCargar()
+    else { const d = await r.json().catch(() => ({})); alert(d.error || 'No se pudo') }
+  }
+
+  function ldNuevo() {
+    const ov = P.modal('Lead nuevo', `
+      <div style="display:grid;gap:10px">
+        <div><label class="lb" for="ld-n-nombre">Nombre</label><input class="input" id="ld-n-nombre" /></div>
+        <div class="grid2">
+          <div><label class="lb" for="ld-n-tel">Teléfono</label><input class="input" id="ld-n-tel" placeholder="+54 9 299…" /></div>
+          <div><label class="lb" for="ld-n-email">Email (si lo tenés)</label><input class="input" id="ld-n-email" type="email" /></div>
+        </div>
+        <div><label class="lb" for="ld-n-nota">Nota</label><input class="input" id="ld-n-nota" placeholder="De dónde salió, qué busca…" /></div>
+        <div class="fila"><span class="pn-sp"></span><button class="btn btn-pri" id="ld-n-ok" type="button">Crear lead</button></div>
+        <p class="msg" id="ld-n-msg"></p>
+      </div>`)
+    ov.querySelector('#ld-n-ok').addEventListener('click', async () => {
+      const msg = ov.querySelector('#ld-n-msg')
+      msg.className = 'msg'; msg.textContent = '⏳ creando…'
+      const r = await fetch('/api/panel/leads', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: ov.querySelector('#ld-n-nombre').value.trim(),
+          telefono: ov.querySelector('#ld-n-tel').value.trim(),
+          email: ov.querySelector('#ld-n-email').value.trim(),
+          nota: ov.querySelector('#ld-n-nota').value.trim(),
+        }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (d.error || 'error'); return }
+      P.cerrarModal(); ldCargar()
+    })
+  }
+
   /* ============ registro del módulo ============ */
   P.registrar('socios', {
     init(el) {
@@ -850,7 +1064,7 @@
       el.innerHTML = `
         <div class="subs" id="so-subs">
           <button type="button" class="on" data-sub="maestra">Socios</button>
-          <button type="button" data-sub="solicitudes">Solicitudes<span class="cnt" id="so-sol-cnt" hidden></span></button>
+          <button type="button" data-sub="leads">Leads<span class="cnt" id="ld-cnt" hidden style="margin-left:6px"></span></button>
           ${editar ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
         </div>
 
@@ -886,12 +1100,15 @@
           </div>
         </div>
 
-        <div id="so-solicitudes" hidden>
-          <div class="card">
-            <div class="fila"><span class="k">Solicitudes de acceso</span><span class="pn-sp"></span><span id="so-sol-msg" class="msg"></span></div>
-            <p class="so-help">Gente que dejó sus datos pidiendo acceso a la carta o su entrevista médica, o que probó entrar con una cuenta de Google que todavía no es socia.</p>
-            <div id="so-sol-lista"><div class="vacio">⏳ Cargando…</div></div>
+        <div id="so-leads" hidden>
+          <div class="fila" style="margin-bottom:12px;flex-wrap:wrap">
+            <p class="so-help" style="margin:0;max-width:62ch">El recorrido de cada interesado hasta hacerse socio.
+            Las solicitudes web y los intentos de entrar a la carta aparecen solos como leads nuevos; al darlo de
+            alta, el lead se convierte solo.</p>
+            <span class="pn-sp"></span>
+            ${editar ? '<button class="btn btn-pri" id="ld-nuevo" type="button">+ Lead</button>' : ''}
           </div>
+          <div id="ld-tablero"><div class="vacio">⏳ Cargando…</div></div>
         </div>
 
         <div id="so-unificar" hidden>
@@ -916,11 +1133,13 @@
         if (!b) return
         el.querySelectorAll('#so-subs button').forEach((x) => x.classList.toggle('on', x === b))
         el.querySelector('#so-maestra').hidden = b.dataset.sub !== 'maestra'
-        el.querySelector('#so-solicitudes').hidden = b.dataset.sub !== 'solicitudes'
+        el.querySelector('#so-leads').hidden = b.dataset.sub !== 'leads'
         const uni = el.querySelector('#so-unificar')
         if (uni) uni.hidden = b.dataset.sub !== 'unificar'
         if (b.dataset.sub === 'unificar') ruCargar()
+        if (b.dataset.sub === 'leads') ldCargar()
         if (b.dataset.sub === 'maestra') muCargar()
+        guardarNav(b.dataset.sub)
       })
 
       el.querySelector('#mu-buscar').addEventListener('input', (e) => {
@@ -953,6 +1172,62 @@
           muCargar(true)
           return
         }
+        // sugerencias de cruce carta↔ficha (huérfano con nombre parecido)
+        const sc = e.target.closest('.mu-sugcarta')
+        if (sc) {
+          if (!sc.dataset.ok) {
+            try {
+              const v = JSON.parse(sessionStorage.getItem('so-cruces-no') || '[]')
+              v.push(sc.dataset.id + ':' + sc.dataset.email)
+              sessionStorage.setItem('so-cruces-no', JSON.stringify(v))
+            } catch { /* nada */ }
+            muRender()
+            return
+          }
+          const r = await fetch('/api/panel/padron/socio', {
+            method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: Number(sc.dataset.id), email: sc.dataset.email }),
+          })
+          const d = await r.json().catch(() => ({}))
+          aviso(r.ok ? '✔ unidos: el email quedó en la ficha' : '✗ ' + (d.error || 'error'), r.ok ? 'ok' : 'err')
+          muCargar(true)
+          return
+        }
+        // crear ficha para un huérfano solo-carta
+        const crear = e.target.closest('.mu-crear')
+        if (crear) {
+          sessionStorage.setItem('so-alta-prefill', JSON.stringify({
+            email: crear.dataset.email, nombre: crear.dataset.nombre,
+            telefono: crear.dataset.tel, nota: crear.dataset.nota,
+          }))
+          altaAbrir()
+          return
+        }
+        // link de pago rápido desde la fila
+        const mp = e.target.closest('.mu-mp')
+        if (mp) {
+          window.PanelSocioDetalle.modalDebito({ id: Number(mp.dataset.id), nombre: mp.dataset.nombre, telefono: mp.dataset.tel })
+          return
+        }
+        // leads
+        const ldMover = e.target.closest('.ld-mover')
+        if (ldMover) { ldPatch(ldMover.dataset.id, { etapa: ldMover.dataset.etapa }); return }
+        const ldPerd = e.target.closest('.ld-perdido')
+        if (ldPerd) {
+          if (!(await P.confirmar('¿Marcar este lead como perdido? Queda guardado por si vuelve.', 'Sí, perdido'))) return
+          ldPatch(ldPerd.dataset.id, { etapa: 'perdido' })
+          return
+        }
+        const ldAlta = e.target.closest('.ld-alta')
+        if (ldAlta) {
+          const l = LEADS.find((x) => x.id === Number(ldAlta.dataset.id))
+          if (!l) return
+          sessionStorage.setItem('so-alta-prefill', JSON.stringify({
+            nombre: l.nombre || '', email: l.email || '', telefono: l.telefono || '', nota: l.nota || '',
+          }))
+          altaAbrir()
+          return
+        }
         // abrir la ficha 360° (el WhatsApp no la abre)
         if (e.target.closest('.mu-wa')) return
         const fila = e.target.closest('.mu-fila')
@@ -982,9 +1257,15 @@
           altaAbrir()
           return
         }
-        // solicitudes: los handlers viven en onClick (compartido)
-        onClick(e)
       })
+
+      // la nota del lead se guarda al salir del campo
+      el.addEventListener('change', (e) => {
+        const nota = e.target.closest('.ld-nota')
+        if (nota) ldPatch(nota.dataset.id, { nota: nota.value })
+      })
+      const ldBtn = el.querySelector('#ld-nuevo')
+      if (ldBtn) ldBtn.addEventListener('click', ldNuevo)
 
       // badge de pares pendientes de Unificar, sin abrir la pestaña
       if (editar) {
@@ -1000,7 +1281,17 @@
       }
 
       muCargar()
-      cargarSolicitudes()
+      ldCargar()   // pinta el tablero de fondo y el badge de nuevos
+      // volver al sub-tab donde estaba (regla F5 de la casa)
+      try {
+        const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
+        if (nav.sub && nav.sub !== 'maestra') {
+          const b = el.querySelector(`#so-subs button[data-sub="${nav.sub}"]`)
+          if (b) b.click()
+        }
+        const busca = el.querySelector('#mu-buscar')
+        if (busca && muQ) busca.value = muQ
+      } catch { /* nada */ }
     },
   })
 })()

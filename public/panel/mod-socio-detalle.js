@@ -116,6 +116,19 @@
               : `<b>${P.esc(d.membresia?.tier || '— sin membresía')}</b>`}
             ${d.membresia?.gramos_mes ? `<span style="color:var(--muted);font-size:12px">${d.membresia.gramos_mes} g por mes · desde ${fFecha(d.membresia.desde)}</span>` : ''}
           </div>
+          ${d.saldo && d.membresia ? (() => {
+            const sal = d.saldo
+            if (sal.tipo === 'plan') {
+              const pct = sal.total ? Math.max(0, Math.min(100, (sal.retirado / sal.total) * 100)) : 0
+              return `<div style="margin-top:10px;font-size:12.5px;color:var(--ink2)">
+                Plan prepago: retiró <b>${sal.retirado} g</b> de ${sal.total} — le quedan <b>${sal.saldo} g</b> hasta ${fFecha(sal.hasta)}
+                <div style="height:6px;border-radius:4px;background:var(--line);margin-top:5px"><div style="height:6px;border-radius:4px;background:var(--vio);width:${pct.toFixed(0)}%"></div></div></div>`
+            }
+            const deuda = !sal.pagoEsteMes
+            return `<div style="margin-top:10px;font-size:12.5px;color:var(--ink2)">
+              Este mes: retiró <b>${sal.retiradoMes} g</b>${sal.habilitado ? ` de ${sal.habilitado} habilitados — saldo <b style="color:${sal.saldo < 0 ? 'var(--dan)' : 'var(--grn)'}">${sal.saldo} g</b>` : ''}
+              ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
+          })() : ''}
           <p class="msg" id="sd-msg-memb" style="margin:6px 0 0"></p>
         </details>
 
@@ -308,7 +321,7 @@
       <input class="input" id="sd-mp-link" readonly onclick="this.select()" />
       <div class="pn-mod-acciones">
         <button class="btn" id="sd-mp-copiar" type="button">Copiar</button>
-        ${d.socio_id && s.email ? '<button class="btn" id="sd-mp-mail" type="button">Mandar por email</button>' : ''}
+        ${d.socio_id ? '<button class="btn" id="sd-mp-mail" type="button">Mandar por email</button>' : ''}
         ${tel ? '<a class="btn btn-pri" id="sd-mp-wa" href="#" target="_blank" rel="noopener">Mandar por WhatsApp</a>' : ''}
       </div>
       <p class="msg" id="sd-mp-msg" style="margin:8px 0 0"></p>`
@@ -347,5 +360,5 @@
     })
   }
 
-  window.PanelSocioDetalle = { abrir, cerrar }
+  window.PanelSocioDetalle = { abrir, cerrar, modalDebito }
 })()

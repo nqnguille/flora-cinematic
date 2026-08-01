@@ -8,6 +8,7 @@
 // Editar exige padron_editar (presidente); ver alcanza con padron_ver.
 import { requireRol, puede } from '../_rol';
 import { PASOS } from '../reprocann/_pasos';
+import { tokens } from '../reprocann/_unificar';
 
 interface Env {
   DB: D1Database;
@@ -99,7 +100,33 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
       carta: { lastLogin: v.lastLogin || null, logins: v.logins || 0, temporal: !!v.temporal, tempExpiraEn: v.tempExpiraEn || null },
     }));
 
-    return json({ ok: true, pasos: PASOS, socios: [...filas, ...huerfanos], sugerencias: sug.results });
+    // ¿Un huérfano y una ficha sin email son la misma persona? Cruce por
+    // nombre normalizado (misma vara que Unificar): exacto o subset de
+    // tokens. Se confirma a mano en la card "Cruces por confirmar" — el Sí
+    // le pone el email a la ficha y el huérfano desaparece solo.
+    const sinEmail = filas.filter((f) => !f.email && f.nombre);
+    const sugerenciasCarta: { email: string; nombre_kv: string; socio_id: number; nombre_socio: string; confianza: string }[] = [];
+    for (const h of huerfanos) {
+      const th = tokens(h.nombre);
+      if (th.length < 2) continue;
+      const setH = new Set(th);
+      const candidatos = sinEmail.map((f) => {
+        const tf = tokens(String(f.nombre));
+        const inter = tf.filter((t) => setH.has(t));
+        const exacto = tf.length === th.length && inter.length === tf.length;
+        const subset = !exacto && inter.length >= 2 && (inter.length === tf.length || inter.length === th.length);
+        return { f, puntos: exacto ? 2 : subset ? 1 : 0 };
+      }).filter((c) => c.puntos > 0).sort((a, b) => b.puntos - a.puntos);
+      if (candidatos.length === 1 || (candidatos.length > 1 && candidatos[0].puntos > candidatos[1].puntos)) {
+        const c = candidatos[0];
+        sugerenciasCarta.push({
+          email: String(h.email), nombre_kv: h.nombre, socio_id: Number(c.f.id),
+          nombre_socio: String(c.f.nombre), confianza: c.puntos === 2 ? 'exacto' : 'parcial',
+        });
+      }
+    }
+
+    return json({ ok: true, pasos: PASOS, socios: [...filas, ...huerfanos], sugerencias: sug.results, sugerenciasCarta });
   }
 
   if (vista === 'lista') {

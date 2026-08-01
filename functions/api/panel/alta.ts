@@ -248,8 +248,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     movimientoId = Number(r.meta.last_row_id);
   }
 
-  // 5) La solicitud web ya cumplió su función
+  // 5) La solicitud web ya cumplió su función — y si venía del embudo de
+  // leads, el lead se convierte solo
   await env.SOLICITUDES.delete(email).catch(() => { /* puede no existir */ });
+  await env.DB.prepare(
+    `UPDATE leads SET etapa = 'convertido', socio_id = ?, etapa_desde = datetime('now'), actualizado = datetime('now')
+      WHERE email = ? AND etapa NOT IN ('convertido')`,
+  ).bind(socioId, email).run().catch(() => { /* sin lead no pasa nada */ });
 
   // 6) Bienvenida (nunca bloquea el alta)
   const mail = await enviarBienvenida(env, {

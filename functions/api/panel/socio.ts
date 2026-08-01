@@ -3,6 +3,7 @@
 // último envío del link, actividad reciente y el acceso a la carta (KV).
 // Los montos de la actividad solo viajan si el rol puede verlos.
 import { requireRol, puede } from './_rol';
+import { saldoDe } from './_saldo';
 
 interface Env {
   DB: D1Database;
@@ -23,7 +24,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
 
   const verPlata = puede(auth.rol, 'finanzas_ver');
-  const [socio, membresia, susc, envio, dispensas, movimientos] = await Promise.all([
+  const [socio, membresia, susc, envio, dispensas, movimientos, saldo] = await Promise.all([
     env.DB.prepare(`SELECT * FROM socios WHERE id = ? AND (numero IS NULL OR numero != -1)`).bind(id).first<Record<string, unknown>>(),
     env.DB.prepare(
       `SELECT tier, modalidad, gramos_mes, desde FROM membresias WHERE socio_id = ? AND hasta IS NULL
@@ -47,6 +48,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
             WHERE socio_id = ? AND tipo = 'ingreso' ORDER BY fecha DESC, id DESC LIMIT 5`,
         ).bind(id).all()
       : Promise.resolve(null),
+    saldoDe(env, id).catch(() => null),
   ]);
   if (!socio) return json({ error: 'No existe' }, 404);
 
@@ -63,6 +65,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   return json({
     ok: true,
     socio,
+    saldo: saldo || null,
     membresia: membresia || null,
     debito: susc ? { ...susc, ultimo_envio: envio || null } : (envio ? { estado: null, ultimo_envio: envio } : null),
     dispensas: dispensas.results,
