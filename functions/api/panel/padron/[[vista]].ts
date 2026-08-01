@@ -36,7 +36,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const hoy = new Date().toISOString().slice(0, 10);
     const [socios, sug] = await Promise.all([
       env.DB.prepare(
-        `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.documento, s.estado, s.nota,
+        `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.documento, s.estado, s.nota, s.papelera,
                 s.reprocann_estado, s.reprocann_codigo, s.reprocann_vence, s.reprocann_actualizado,
                 s.debito_no_insistir,
                 m.tier, m.modalidad, m.gramos_mes,
@@ -104,7 +104,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     // nombre normalizado (misma vara que Unificar): exacto o subset de
     // tokens. Se confirma a mano en la card "Cruces por confirmar" — el Sí
     // le pone el email a la ficha y el huérfano desaparece solo.
-    const sinEmail = filas.filter((f) => !f.email && f.nombre);
+    const sinEmail = filas.filter((f) => !f.email && f.nombre && !f.papelera);
     const sugerenciasCarta: { email: string; nombre_kv: string; socio_id: number; nombre_socio: string; confianza: string }[] = [];
     for (const h of huerfanos) {
       const th = tokens(h.nombre);
@@ -225,6 +225,47 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       ).bind(socioId, tier, GRAMOS[tier]).run();
     }
     return json({ ok: true });
+  }
+
+  // Papelera: mandar/restaurar en masa. Soft-delete siempre — las finanzas
+  // históricas referencian socio_id y no se tocan.
+  if (vista === 'papelera') {
+    const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Number.isFinite) : [];
+    const accion = String(body.accion);
+    if (!ids.length) return json({ error: 'Sin socios seleccionados' }, 400);
+    if (accion !== 'mandar' && accion !== 'restaurar') return json({ error: 'Acción inválida' }, 400);
+    const marcas = ids.map(() => '?').join(',');
+    await env.DB.prepare(
+      accion === 'mandar'
+        ? `UPDATE socios SET papelera = datetime('now'), actualizado = datetime('now') WHERE id IN (${marcas})`
+        : `UPDATE socios SET papelera = NULL, actualizado = datetime('now') WHERE id IN (${marcas})`,
+    ).bind(...ids).run();
+    return json({ ok: true, afectados: ids.length, accion });
+  }
+
+  // Borrado DEFINITIVO de una ficha de la papelera — solo si no tiene NINGÚN
+  // rastro operativo (movimientos, retiros, suscripciones, vínculos): las que
+  // vinieron del Excel sin actividad. Si tiene historia, queda en la papelera.
+  if (vista === 'purgar') {
+    const id = Number(body.id);
+    if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
+    const socio = await env.DB.prepare(`SELECT nombre, papelera FROM socios WHERE id = ?`).bind(id).first<{ nombre: string; papelera: string | null }>();
+    if (!socio) return json({ error: 'No existe' }, 404);
+    if (!socio.papelera) return json({ error: 'Primero mandalo a la papelera' }, 400);
+    const rastro = await env.DB.prepare(
+      `SELECT (SELECT COUNT(*) FROM movimientos WHERE socio_id = ?1) +
+              (SELECT COUNT(*) FROM dispensas WHERE socio_id = ?1) +
+              (SELECT COUNT(*) FROM suscripciones WHERE socio_id = ?1) +
+              (SELECT COUNT(*) FROM vinculos_reprocann WHERE socio_id = ?1) +
+              (SELECT COUNT(*) FROM membresias WHERE socio_id = ?1) AS n`,
+    ).bind(id).first<{ n: number }>();
+    if (rastro && rastro.n > 0) {
+      return json({ error: `${socio.nombre} tiene historia (pagos, retiros o trámites) — se queda en la papelera, no se borra` }, 409);
+    }
+    await env.DB.prepare(`DELETE FROM sugerencias_email WHERE socio_id = ?`).bind(id).run();
+    await env.DB.prepare(`DELETE FROM leads WHERE socio_id = ?`).bind(id).run();
+    await env.DB.prepare(`DELETE FROM socios WHERE id = ?`).bind(id).run();
+    return json({ ok: true, purgado: true });
   }
 
   if (vista === 'sugerencia') {

@@ -189,7 +189,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
            FROM socios s
            JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
            LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
-          WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1)
+          WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1) AND s.papelera IS NULL
             AND (su.id IS NULL OR su.estado = 'cancelada'
                  OR (su.estado = 'pendiente' AND COALESCE(su.fin, date(su.creado, '+10 day')) < date('now')))
           GROUP BY s.id
@@ -226,7 +226,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
               (SELECT e.via FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_via
          FROM socios s
          LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
-        WHERE (s.email = ?1 OR s.id = ?2) AND (s.numero IS NULL OR s.numero != -1)`,
+        WHERE (s.email = ?1 OR s.id = ?2) AND (s.numero IS NULL OR s.numero != -1) AND s.papelera IS NULL`,
     ).bind(email || null, socioIdParam || null).first<Record<string, unknown>>();
     if (!socio) return json({ ok: true, sinFicha: true });
     const planes = await planesDebito(env);
@@ -268,7 +268,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
            FROM socios s
            JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
            LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
-          WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1)
+          WHERE s.estado = 'activo' AND (s.numero IS NULL OR s.numero != -1) AND s.papelera IS NULL
             AND (su.id IS NULL OR su.estado = 'cancelada')
           GROUP BY s.id`,
       ).all<{ id: number; nombre: string; email: string | null; tier: string; link_enviado: string | null; enviado_tier: string | null }>(),

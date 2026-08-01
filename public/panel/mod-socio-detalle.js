@@ -188,6 +188,7 @@
         ${editar ? `<details><summary>Zona peligrosa</summary>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar socio'}</button>
+            <button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>
             ${d.carta.acceso ? '<button class="btn btn-peligro" id="sd-quitar-carta" type="button">Quitar acceso a la carta</button>' : ''}
           </div>
           <p class="msg" id="sd-msg-zona" style="margin:6px 0 0"></p>
@@ -271,6 +272,17 @@
         body: JSON.stringify({ id: s.id, estado: nuevo }),
       })
       alCambiar?.(); abrir(s.id, alCambiar)
+    })
+    caja.querySelector('#sd-papelera')?.addEventListener('click', async () => {
+      const mandar = !s.papelera
+      if (mandar && !(await P.confirmar(`¿Mandar a ${s.nombre} a la papelera? Desaparece de todas las vistas del panel, pero se puede restaurar cuando quieras.`, 'Sí, a la papelera'))) return
+      await fetch('/api/panel/padron/papelera', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [s.id], accion: mandar ? 'mandar' : 'restaurar' }),
+      })
+      alCambiar?.()
+      if (mandar) cerrar()
+      else abrir(s.id, alCambiar)
     })
     caja.querySelector('#sd-quitar-carta')?.addEventListener('click', async () => {
       if (!(await P.confirmar(`¿Quitarle el acceso a la carta a ${s.email}? Deja de poder entrar.`, 'Sí, quitar'))) return

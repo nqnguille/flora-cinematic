@@ -43,7 +43,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
               (SELECT MAX(fecha) FROM dispensas d WHERE d.socio_id = s.id) AS ultimo_retiro,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL LIMIT 1) AS tier
          FROM socios s
-        WHERE (s.numero IS NULL OR s.numero != -1)
+        WHERE (s.numero IS NULL OR s.numero != -1) AND s.papelera IS NULL
         ORDER BY s.reprocann_actualizado IS NULL, s.reprocann_actualizado ASC, s.nombre`,
     ).all();
     // vencimientos próximos: el certificado de persona jurídica dura 1 año
@@ -60,7 +60,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const [personas, vinculos, socios] = await Promise.all([
       env.DB.prepare(`SELECT * FROM tramites_portal`).all<Record<string, unknown>>(),
       env.DB.prepare(`SELECT socio_id, dni, estado, senales FROM vinculos_reprocann`).all<{ socio_id: number; dni: string; estado: string; senales: string | null }>(),
-      env.DB.prepare(`SELECT id, nombre, email, documento FROM socios WHERE (numero IS NULL OR numero != -1)`).all<{ id: number; nombre: string; email: string | null; documento: string | null }>(),
+      env.DB.prepare(`SELECT id, nombre, email, documento FROM socios WHERE (numero IS NULL OR numero != -1) AND papelera IS NULL`).all<{ id: number; nombre: string; email: string | null; documento: string | null }>(),
     ]);
     const porId = new Map(socios.results.map((s) => [s.id, s]));
     const porDni = new Map((personas.results as unknown as TramitePortal[]).map((p) => [p.dni, p]));
@@ -207,7 +207,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     //    documento igual (un DNI cargado a mano vale como vínculo de hecho)
     const [vinculos, socios] = await Promise.all([
       env.DB.prepare(`SELECT socio_id, dni, estado FROM vinculos_reprocann`).all<{ socio_id: number; dni: string; estado: string }>(),
-      env.DB.prepare(`SELECT id, nombre, documento FROM socios WHERE (numero IS NULL OR numero != -1)`).all<{ id: number; nombre: string; documento: string | null }>(),
+      env.DB.prepare(`SELECT id, nombre, documento FROM socios WHERE (numero IS NULL OR numero != -1) AND papelera IS NULL`).all<{ id: number; nombre: string; documento: string | null }>(),
     ]);
     const confirmadoPorDni = new Map(vinculos.results.filter((v) => v.estado === 'confirmado').map((v) => [v.dni, v.socio_id]));
     const socioPorDoc = new Map(socios.results.filter((s) => s.documento).map((s) => [s.documento as string, s.id]));

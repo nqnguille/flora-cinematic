@@ -127,6 +127,7 @@
   // El score de vida: decide quién va arriba y quién duerme plegado.
   function muScore(s) {
     if (s.sinFicha) return -1
+    if (s.papelera) return -2
     let p = 0
     if (s.tier) p += 4
     const dRet = s.ultimo_retiro ? (Date.now() - Date.parse(s.ultimo_retiro)) / 86400000 : 9999
@@ -145,6 +146,8 @@
   }
 
   function muPasa(s) {
+    if (s.papelera) return muFiltro === 'papelera'
+    if (muFiltro === 'papelera') return false
     if (!muFiltro) return true
     if (muFiltro === 'accionables') return ['club', 'paciente', 'medico'].includes(s.quien)
     if (['club', 'paciente', 'medico', 'organismo'].includes(muFiltro)) return s.quien === muFiltro
@@ -218,11 +221,25 @@
     muRender()
   }
 
-  function muFila(s) {
-    const puedeLink = s.id && s.tier && !['activa', 'pendiente'].includes(s.debito_estado)
+  function muFila(s, conCheck) {
+    const puedeLink = s.id && !s.papelera && s.tier && !['activa', 'pendiente'].includes(s.debito_estado)
       && !s.debito_no_insistir && ['aprobado', 'en_evaluacion'].includes(s.reprocann_estado)
+    if (s.papelera) {
+      return `
+      <tr class="mu-fila" data-id="${s.id}" style="cursor:pointer;opacity:.75">
+        <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || '?'))}</span>
+          <div><div style="font-weight:600">${P.esc(s.nombre)}</div>
+          <div style="color:var(--muted);font-size:11px">en la papelera desde ${P.esc(String(s.papelera).slice(0, 10))}</div></div></div></td>
+        <td colspan="4" style="color:var(--muted);font-size:12px">${s.tier ? P.esc(s.tier) + ' · ' : ''}${P.esc(s.paso_nombre || '')}${s.nota ? ' · ' + P.esc(String(s.nota).slice(0, 60)) : ''}</td>
+        <td class="r" style="white-space:nowrap">
+          <button class="btn mu-restaurar" data-id="${s.id}" type="button">Restaurar</button>
+          <button class="btn btn-peligro mu-purgar" data-id="${s.id}" data-nombre="${P.esc(s.nombre)}" type="button">Borrar</button>
+        </td>
+      </tr>`
+    }
     return `
       <tr class="mu-fila" data-id="${s.id || ''}" data-email="${P.esc(s.email || '')}" style="cursor:${s.id ? 'pointer' : 'default'}">
+        ${conCheck ? `<td style="width:30px"><input type="checkbox" class="mu-check" data-id="${s.id}" onclick="event.stopPropagation()" /></td>` : ''}
         <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || s.email || '?'))}</span>
           <div><div style="font-weight:600">${P.esc(s.nombre || '(sin nombre)')}</div>
           ${s.email ? `<div style="color:var(--muted);font-size:11px">${P.esc(s.email)}</div>`
@@ -240,19 +257,21 @@
       </tr>`
   }
 
-  function muTabla(lista) {
+  function muTabla(lista, conCheck) {
     return `<div class="so-scroll"><table class="tabla"><thead><tr>
+      ${conCheck ? '<th style="width:30px"><input type="checkbox" id="mu-check-all" title="Marcar todas" /></th>' : ''}
       <th>Socio</th><th>Membresía</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
-    </tr></thead><tbody>${lista.map(muFila).join('')}</tbody></table></div>`
+    </tr></thead><tbody>${lista.map((x) => muFila(x, conCheck)).join('')}</tbody></table></div>`
   }
 
   function muRender() {
     const socios = MU.socios
-    const nosToca = socios.filter((s) => s.quien === 'club').length
-    const alPaciente = socios.filter((s) => s.quien === 'paciente').length
-    const alMedico = socios.filter((s) => s.quien === 'medico').length
-    const porVencer = socios.filter((s) => s.por_vencer).length
-    const deudores = socios.filter(debeElMes).length
+    const vivos = socios.filter((s) => !s.papelera)
+    const nosToca = vivos.filter((s) => s.quien === 'club').length
+    const alPaciente = vivos.filter((s) => s.quien === 'paciente').length
+    const alMedico = vivos.filter((s) => s.quien === 'medico').length
+    const porVencer = vivos.filter((s) => s.por_vencer).length
+    const deudores = vivos.filter(debeElMes).length
 
     cont.querySelector('#mu-tiles').innerHTML = `
       <div class="grid3" style="margin-bottom:10px">
@@ -293,11 +312,13 @@
         </div>`).join('')}
       </div>` : ''
 
+    const enPapelera = socios.filter((s) => s.papelera).length
     const CHIPS = [
       ['', 'Todos'], ['accionables', 'Hay algo que hacer'], ['organismo', 'Ministerio'],
       ['sinDebito', 'Sin débito'], ['noInsistir', 'No insistir'],
       ['sinIngresar', 'Sin ingresar'], ['sinAcceso', 'Sin acceso'], ['activos30', 'Activos 30d'],
     ]
+    if (enPapelera) CHIPS.push(['papelera', `🗑 Papelera (${enPapelera})`])
     cont.querySelector('#mu-chips').innerHTML = CHIPS.map(([v, n]) =>
       `<button class="chip ${muFiltro === v ? 'on' : ''}" data-f="${v}" type="button">${n}</button>`).join('')
 
@@ -322,7 +343,11 @@
         ${activos.length ? muTabla(activos) : '<div class="vacio">Sin socios activos.</div>'}
         ${dormidos.length ? `<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
           ${dormidos.length} ficha(s) dormida(s) — sin membresía ni retiros recientes</summary>
-          <div style="margin-top:8px">${muTabla(dormidos)}</div></details>` : ''}
+          ${editar ? `<div class="fila" style="margin:8px 0 0">
+            <p class="so-help" style="margin:0">Para depurar el padrón del Excel: marcá las que no correspondan y mandalas a la papelera (siempre se pueden restaurar).</p>
+            <span class="pn-sp"></span>
+            <button class="btn mu-papelera-bulk" type="button">🗑 A la papelera (<span id="mu-sel-n">0</span>)</button></div>` : ''}
+          <div style="margin-top:8px">${muTabla(dormidos, editar)}</div></details>` : ''}
         ${soloCarta.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
           ${soloCarta.length} con acceso a la carta y sin ficha</summary>
           <div style="margin-top:8px">${muTabla(soloCarta)}</div></details>` : ''}`
@@ -1226,6 +1251,54 @@
             nombre: l.nombre || '', email: l.email || '', telefono: l.telefono || '', nota: l.nota || '',
           }))
           altaAbrir()
+          return
+        }
+        // papelera: selección múltiple y acciones
+        if (e.target.id === 'mu-check-all') {
+          const on = e.target.checked
+          cont.querySelectorAll('.mu-check').forEach((c) => { c.checked = on })
+          const n = cont.querySelector('#mu-sel-n')
+          if (n) n.textContent = cont.querySelectorAll('.mu-check:checked').length
+          return
+        }
+        if (e.target.classList && e.target.classList.contains('mu-check')) {
+          const n = cont.querySelector('#mu-sel-n')
+          if (n) n.textContent = cont.querySelectorAll('.mu-check:checked').length
+          return
+        }
+        const bulk = e.target.closest('.mu-papelera-bulk')
+        if (bulk) {
+          const ids = [...cont.querySelectorAll('.mu-check:checked')].map((c) => Number(c.dataset.id))
+          if (!ids.length) { aviso('Marcá al menos una ficha', 'err'); return }
+          if (!(await P.confirmar(`¿Mandar ${ids.length} ficha(s) a la papelera? Desaparecen de todas las vistas pero se pueden restaurar cuando quieras.`, 'Sí, a la papelera'))) return
+          const r = await fetch('/api/panel/padron/papelera', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, accion: 'mandar' }),
+          })
+          aviso(r.ok ? `✔ ${ids.length} a la papelera` : '✗ no se pudo', r.ok ? 'ok' : 'err')
+          muCargar(true)
+          return
+        }
+        const rest = e.target.closest('.mu-restaurar')
+        if (rest) {
+          const r = await fetch('/api/panel/padron/papelera', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: [Number(rest.dataset.id)], accion: 'restaurar' }),
+          })
+          aviso(r.ok ? '✔ restaurado' : '✗ no se pudo', r.ok ? 'ok' : 'err')
+          muCargar(true)
+          return
+        }
+        const purg = e.target.closest('.mu-purgar')
+        if (purg) {
+          if (!(await P.confirmar(`BORRAR DEFINITIVAMENTE a ${purg.dataset.nombre}. Solo se puede si no tiene ningún pago, retiro ni trámite — si tiene historia, queda en la papelera. ¿Seguro?`, 'Sí, borrar'))) return
+          const r = await fetch('/api/panel/padron/purgar', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: Number(purg.dataset.id) }),
+          })
+          const d = await r.json().catch(() => ({}))
+          aviso(r.ok ? '✔ borrado definitivo' : '✗ ' + (d.error || 'no se pudo'), r.ok ? 'ok' : 'err', 9000)
+          muCargar(true)
           return
         }
         // abrir la ficha 360° (el WhatsApp no la abre)

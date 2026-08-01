@@ -182,7 +182,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `UPDATE socios SET nombre = ?, telefono = COALESCE(?, telefono), documento = COALESCE(?, documento),
               reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
               reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
-              nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
+              nota = COALESCE(?, nota), estado = 'activo', papelera = NULL, actualizado = datetime('now') WHERE id = ?`,
     ).bind(nombre, telefono, documento, rcEstado, rcCodigo, rcVence, nota, socioId).run();
   } else {
     // ¿hay una ficha previa de la misma persona sin email? Primero por DNI
@@ -197,7 +197,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         `UPDATE socios SET email = ?, nombre = ?, telefono = COALESCE(?, telefono), documento = COALESCE(?, documento),
                 reprocann_estado = ?, reprocann_codigo = COALESCE(?, reprocann_codigo),
                 reprocann_vence = COALESCE(?, reprocann_vence), reprocann_actualizado = datetime('now'),
-                nota = COALESCE(?, nota), estado = 'activo', actualizado = datetime('now') WHERE id = ?`,
+                nota = COALESCE(?, nota), estado = 'activo', papelera = NULL, actualizado = datetime('now') WHERE id = ?`,
       ).bind(email, nombre, telefono, documento, rcEstado, rcCodigo, rcVence, nota, socioId).run();
     } else {
       const r = await env.DB.prepare(

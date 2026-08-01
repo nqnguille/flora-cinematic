@@ -65,7 +65,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     `UPDATE leads SET etapa = 'convertido', socio_id = (SELECT id FROM socios WHERE socios.email = leads.email),
             actualizado = datetime('now')
       WHERE etapa NOT IN ('convertido', 'perdido') AND email IS NOT NULL
-        AND EXISTS (SELECT 1 FROM socios WHERE socios.email = leads.email AND (socios.numero IS NULL OR socios.numero != -1))`,
+        AND EXISTS (SELECT 1 FROM socios WHERE socios.email = leads.email AND (socios.numero IS NULL OR socios.numero != -1) AND socios.papelera IS NULL)`,
   ).run();
 
   const rows = await env.DB.prepare(
