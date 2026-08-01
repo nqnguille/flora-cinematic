@@ -66,7 +66,9 @@ async function enviarBienvenida(
         </td></tr>
         <tr><td style="padding:32px 36px 0;"><div style="height:1px;line-height:1px;background:#eee7f4;">&nbsp;</div></td></tr>
         <tr><td style="padding:20px 36px 36px;text-align:center;">
-          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8d8598;">&iquest;Dudas a cualquier hora? Escribinos por <a href="https://wa.me/5492996375723" style="color:#0A503C;text-decoration:none;font-weight:700;">WhatsApp</a><br>&mdash; Equipo Flora</p>
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.9;color:#8d8598;">Contactanos por
+            <a href="https://wa.me/5492996375723" style="color:#0A503C;text-decoration:none;font-weight:700;white-space:nowrap;"><img src="https://floraong.ar/img/ico-wa.png" width="15" height="15" alt="" style="vertical-align:-2px;border:0;margin-right:3px;">WhatsApp</a> o
+            <a href="https://www.instagram.com/flora.cultivamosconciencia" style="color:#0A503C;text-decoration:none;font-weight:700;white-space:nowrap;"><img src="https://floraong.ar/img/ico-ig.png" width="15" height="15" alt="" style="vertical-align:-2px;border:0;margin-right:3px;">Instagram</a><br>&mdash; Equipo Flora</p>
         </td></tr>
       </table>
     </td></tr>

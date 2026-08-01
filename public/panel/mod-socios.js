@@ -202,7 +202,7 @@
       const wa = cuerpo.querySelector('#so-mp-wa')
       const tierL = elegido.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
       if (wa) wa.href = `https://wa.me/${tel}?text=${encodeURIComponent(
-        `Hola ${String(d.nombre).split(' ')[0]}! Tu plan ${tierL}${elegido.contado ? ` (${P.fmt(elegido.contado)})` : ''} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(elegido.monto)} por mes. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${elegido.link}`)}`
+        `Hola ${String(d.nombre).split(' ')[0]}! Tu plan ${tierL}${elegido.gramos ? ` de ${elegido.gramos} gramos por mes` : ''}${elegido.contado ? ` que vale ${P.fmt(elegido.contado)}` : ''} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses, te queda en ${P.fmt(elegido.monto)}. Se autoriza una vez desde MercadoPago, podés usar el medio de pago que prefieras (crédito/débito/saldo) y podés cancelarlo si te arrepentís. Suscribite acá: ${elegido.link}`)}`
     }
     pintarPlan()
     cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.addEventListener('click', () => {
@@ -735,7 +735,7 @@
         if (t && t.debito_link) {
           const tierL = datos.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
           const waDeb = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Tu plan ${tierL} (${P.fmt(t.contado)}) tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(t.debito)} por mes. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${t.debito_link}`)}`
+            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Tu plan ${tierL} de ${t.gramos} gramos por mes que vale ${P.fmt(t.contado)} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses, te queda en ${P.fmt(t.debito)}. Se autoriza una vez desde MercadoPago, podés usar el medio de pago que prefieras (crédito/débito/saldo) y podés cancelarlo si te arrepentís. Suscribite acá: ${t.debito_link}`)}`
           extra = `<div style="margin-top:12px"><span class="k">Link del débito (plan ${P.esc(datos.tier)})</span>
             <input class="input" value="${P.esc(t.debito_link)}" readonly onclick="this.select()" style="margin-top:6px" />
             <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" id="al-wa-debito" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`

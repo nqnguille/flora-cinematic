@@ -89,7 +89,7 @@ async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
 // blanco) y voz «verde cómplice»: gratitud primero, datos de plata al grano.
 async function enviarMailDebito(
   env: Env,
-  d: { email: string; nombre: string; tier: string; monto: number; contado: number | null; link: string },
+  d: { email: string; nombre: string; tier: string; monto: number; contado: number | null; gramos: number | null; link: string },
 ): Promise<{ enviado: boolean; error?: string }> {
   if (!env.RESEND_API_KEY) return { enviado: false, error: 'RESEND_API_KEY no configurado' };
   const saludo = d.nombre ? d.nombre.split(/\s+/)[0] : '';
@@ -111,7 +111,10 @@ async function enviarMailDebito(
           <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.3;color:#381f56;">${saludo ? `Gracias por elegirnos, ${saludo}` : 'Gracias por elegirnos'}</h1>
         </td></tr>
         <tr><td style="padding:16px 36px 0;text-align:center;">
-          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Tu plan <strong style="color:#381f56;">${tierFmt}</strong>${contadoFmt ? ` (${contadoFmt})` : ''} tiene un <strong style="color:#381f56;">20% de descuento</strong> adhiri&eacute;ndote al d&eacute;bito autom&aacute;tico por 3 meses: te queda en <strong style="color:#381f56;">${montoFmt}</strong>. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/d&eacute;bito/dinero en cuenta) y pod&eacute;s cancelarlo si te arrepent&iacute;s.</p>
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Tu plan <strong style="color:#381f56;">${tierFmt}</strong>${d.gramos ? ` de <strong style="color:#381f56;">${d.gramos} gramos por mes</strong>` : ''}${contadoFmt ? ` que vale ${contadoFmt}` : ''} tiene un <strong style="color:#381f56;">20% de descuento</strong> adhiri&eacute;ndote al d&eacute;bito autom&aacute;tico por 3 meses, te queda en <strong style="color:#381f56;">${montoFmt}</strong>.</p>
+        </td></tr>
+        <tr><td style="padding:12px 36px 0;text-align:center;">
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Se autoriza una vez desde MercadoPago, y pod&eacute;s usar el medio de pago que prefieras (cr&eacute;dito/d&eacute;bito/saldo) y pod&eacute;s cancelarlo si te arrepent&iacute;s.</p>
         </td></tr>
         <tr><td style="padding:28px 36px 0;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
@@ -122,7 +125,9 @@ async function enviarMailDebito(
         </td></tr>
         <tr><td style="padding:32px 36px 0;"><div style="height:1px;line-height:1px;background:#eee7f4;">&nbsp;</div></td></tr>
         <tr><td style="padding:20px 36px 36px;text-align:center;">
-          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8d8598;">&iquest;Dudas a cualquier hora? Escribinos por <a href="https://wa.me/5492996375723" style="color:#0A503C;text-decoration:none;font-weight:700;">WhatsApp</a><br>&mdash; Equipo Flora</p>
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.9;color:#8d8598;">Contactanos por
+            <a href="https://wa.me/5492996375723" style="color:#0A503C;text-decoration:none;font-weight:700;white-space:nowrap;"><img src="https://floraong.ar/img/ico-wa.png" width="15" height="15" alt="" style="vertical-align:-2px;border:0;margin-right:3px;">WhatsApp</a> o
+            <a href="https://www.instagram.com/flora.cultivamosconciencia" style="color:#0A503C;text-decoration:none;font-weight:700;white-space:nowrap;"><img src="https://floraong.ar/img/ico-ig.png" width="15" height="15" alt="" style="vertical-align:-2px;border:0;margin-right:3px;">Instagram</a><br>&mdash; Equipo Flora</p>
         </td></tr>
       </table>
     </td></tr>
@@ -183,7 +188,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     ]);
     const cola = rows.results.map((r) => {
       const p = planes[String(r.tier)];
-      return { ...r, monto: p?.monto ?? null, contado: p?.contado ?? null, plan_link: p?.link ?? null };
+      return { ...r, monto: p?.monto ?? null, contado: p?.contado ?? null, gramos: p?.gramos ?? null, plan_link: p?.link ?? null };
     });
     return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, cola });
   }
@@ -317,7 +322,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (via === 'email') {
       if (!socio.email) return json({ error: 'El socio no tiene email' }, 400);
       const mail = await enviarMailDebito(env, {
-        email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, contado: plan.contado, link: plan.link,
+        email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, contado: plan.contado, gramos: plan.gramos, link: plan.link,
       });
       if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}) — mandáselo por WhatsApp` }, 502);
     }

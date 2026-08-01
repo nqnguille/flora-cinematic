@@ -362,7 +362,7 @@
             <span class="pn-sp"></span>
             ${c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
               data-tel="${P.esc(c.telefono || '')}" data-email="${P.esc(c.email || '')}" data-tier="${P.esc(c.tier)}"
-              data-monto="${c.monto || 0}" data-contado="${c.contado || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
+              data-monto="${c.monto || 0}" data-contado="${c.contado || 0}" data-gramos="${c.gramos || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
               : '<span class="tag tag-mal">sin plan en MP</span>'}
             <button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>
           </div>`
@@ -420,11 +420,12 @@
 
   const tierLindo = (t) => String(t || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
 
-  function waTexto(tier, contado, monto, link) {
+  function waTexto(tier, gramos, contado, monto, link) {
+    const g = gramos ? ` de ${gramos} gramos por mes` : ''
     const plan = contado
-      ? `Tu plan ${tierLindo(tier)} (${P.fmt(contado)}) tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(monto)} por mes.`
-      : `Tu plan ${tierLindo(tier)} tiene un 20% de descuento con débito automático por 3 meses: ${P.fmt(monto)} por mes.`
-    return `Hola! ${plan} Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${link}`
+      ? `Tu plan ${tierLindo(tier)}${g} que vale ${P.fmt(contado)} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses, te queda en ${P.fmt(monto)}.`
+      : `Tu plan ${tierLindo(tier)}${g} tiene un 20% de descuento con débito automático por 3 meses: ${P.fmt(monto)} por mes.`
+    return `Hola! ${plan} Se autoriza una vez desde MercadoPago, podés usar el medio de pago que prefieras (crédito/débito/saldo) y podés cancelarlo si te arrepentís. Suscribite acá: ${link}`
   }
 
   // El modal de envío: el link ya existe (es el del plan) — solo se elige el
@@ -438,7 +439,7 @@
       <div class="pn-mod-acciones">
         <button class="btn" id="fz-ml-copiar" type="button">Copiar</button>
         ${ds.email ? '<button class="btn" id="fz-ml-mail" type="button">Mandar por email</button>' : ''}
-        ${ds.tel ? `<a class="btn btn-pri" id="fz-ml-wa" href="https://wa.me/${ds.tel.replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(ds.tier, Number(ds.contado), Number(ds.monto), ds.link))}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
+        ${ds.tel ? `<a class="btn btn-pri" id="fz-ml-wa" href="https://wa.me/${ds.tel.replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(ds.tier, Number(ds.gramos), Number(ds.contado), Number(ds.monto), ds.link))}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
       </div>
       <p class="msg" id="fz-ml-msg" style="margin:8px 0 0"></p>`)
     const msg = ov.querySelector('#fz-ml-msg')
@@ -539,7 +540,7 @@
       const d = await r.json().catch(() => ({}))
       deb.disabled = false
       if (!r.ok || !d.link) { alert(d.error || (d.debito_estado === 'activa' ? 'Ya tiene el débito al día.' : 'No se pudo armar el link — ¿tiene membresía?')); return }
-      mandarLink({ socio: deb.dataset.socio, nombre: deb.dataset.nombre, tel: d.telefono || '', email: '', tier: d.tier, monto: d.monto, contado: d.contado || 0, link: d.link })
+      mandarLink({ socio: deb.dataset.socio, nombre: deb.dataset.nombre, tel: d.telefono || '', email: '', tier: d.tier, monto: d.monto, contado: d.contado || 0, gramos: (d.planes || []).find((p) => p.tier === d.tier)?.gramos || 0, link: d.link })
       return
     }
     const identBtn = e.target.closest('.fz-ident-btn')
