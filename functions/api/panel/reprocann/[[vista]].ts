@@ -19,23 +19,10 @@ interface Env {
   SUPER_ADMIN_EMAILS?: string;
 }
 
-// El embudo, en orden. `quien` = de quién depende que avance: eso es lo que
-// convierte una lista de estados en una lista de acciones.
-export const PASOS: { id: string; nombre: string; quien: string; ayuda: string }[] = [
-  { id: 'sin_iniciar', nombre: 'Sin iniciar', quien: 'club', ayuda: 'Todavía no arrancó el trámite.' },
-  { id: 'esperando_codigo', nombre: 'Esperando su código', quien: 'paciente', ayuda: 'Tiene que generar su código de vinculación en Mi Argentina.' },
-  { id: 'codigo_listo', nombre: 'Código listo', quien: 'medico', ayuda: 'Ya tenemos el código: le toca a Ezequiel cargar el trámite.' },
-  { id: 'cargado', nombre: 'Esperando su firma', quien: 'paciente', ayuda: 'El médico cargó el trámite; el paciente tiene que aceptar el consentimiento desde su cuenta.' },
-  { id: 'observado', nombre: 'Observado por el paciente', quien: 'paciente', ayuda: 'El paciente objetó algo del trámite.' },
-  { id: 'a_vincular', nombre: 'Nos toca vincular', quien: 'club', ayuda: 'El paciente ya firmó: Flora tiene que vincularlo como su cultivadora.' },
-  { id: 'en_evaluacion', nombre: 'En evaluación', quien: 'organismo', ayuda: 'Ya está todo hecho de nuestro lado; espera al Ministerio.' },
-  { id: 'revision_medica', nombre: 'Volvió al médico', quien: 'medico', ayuda: 'El organismo pidió correcciones al profesional.' },
-  { id: 'aprobado', nombre: 'Aprobado', quien: '—', ayuda: 'Certificado vigente.' },
-  { id: 'autocultivo', nombre: 'Autocultivo', quien: '—', ayuda: 'Cultiva por su cuenta, no depende de Flora.' },
-  { id: 'revisar', nombre: 'A revisar', quien: 'club', ayuda: 'Viene del Excel sin dato claro: hay que confirmar en qué anda.' },
-  { id: 'rechazado', nombre: 'Rechazado', quien: 'club', ayuda: 'El organismo lo rechazó.' },
-  { id: 'vencido', nombre: 'Vencido', quien: 'club', ayuda: 'El certificado venció: hay que renovar.' },
-];
+// El catálogo del embudo vive en _pasos.ts (compartido con la lista maestra
+// del padrón y el detalle del socio); se re-exporta para compatibilidad.
+import { PASOS } from './_pasos';
+export { PASOS };
 const IDS = new Set(PASOS.map((p) => p.id));
 
 function json(data: unknown, status = 200): Response {

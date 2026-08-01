@@ -77,6 +77,9 @@
   function restaurarNav() {
     let nav = null
     try { nav = JSON.parse(localStorage.getItem(NAV_KEY) || 'null') } catch { /* json roto */ }
+    // secciones que se fusionaron: el que trabajaba ahí cae parado en la nueva
+    const ALIAS = { reprocann: 'socios' }
+    if (nav && ALIAS[nav.sec]) nav.sec = ALIAS[nav.sec]
     const visibles = [...document.querySelectorAll('.pn-rail button[data-sec]')].filter((b) => !b.hidden)
     const primera = visibles.length ? visibles[0].dataset.sec : null
     const destino = nav && nav.sec && visibles.some((b) => b.dataset.sec === nav.sec) ? nav.sec : primera

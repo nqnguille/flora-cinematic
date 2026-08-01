@@ -1,13 +1,17 @@
 // Padrón financiero — las fichas de los socios (D1, hoja Pacientes migrada):
-//   GET   /api/panel/padron/lista        → todos con membresía vigente y sugerencias de email
+//   GET   /api/panel/padron/maestra      → LA lista única: ficha + membresía +
+//         débito + paso REPROCANN + acceso a la carta (KV) + sugerencias
+//   GET   /api/panel/padron/lista        → (legado) fichas con membresía
 //   PATCH /api/panel/padron/socio        → {id, email?, telefono?, nota?, estado?}
 //   POST  /api/panel/padron/membresia    → {socio_id, tier} asigna membresía vigente
 //   POST  /api/panel/padron/sugerencia   → {socio_id, aceptar: true|false}
 // Editar exige padron_editar (presidente); ver alcanza con padron_ver.
 import { requireRol, puede } from '../_rol';
+import { PASOS } from '../reprocann/_pasos';
 
 interface Env {
   DB: D1Database;
+  SOCIOS: KVNamespace;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
 }
@@ -23,6 +27,80 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   if (!puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
+
+  // La lista maestra de la ficha 360°: una fila por persona con las cuatro
+  // dimensiones (membresía, débito, REPROCANN, acceso a la carta). Los que
+  // tienen acceso a la carta pero no ficha entran al final como sinFicha.
+  if (vista === 'maestra') {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const [socios, sug] = await Promise.all([
+      env.DB.prepare(
+        `SELECT s.id, s.numero, s.nombre, s.email, s.telefono, s.documento, s.estado, s.nota,
+                s.reprocann_estado, s.reprocann_codigo, s.reprocann_vence, s.reprocann_actualizado,
+                s.debito_no_insistir,
+                m.tier, m.modalidad, m.gramos_mes,
+                (SELECT MAX(fecha) FROM movimientos mv WHERE mv.socio_id = s.id AND mv.tipo = 'ingreso'
+                  AND mv.categoria = 'membresia') AS ultimo_pago,
+                (SELECT MAX(fecha) FROM dispensas d WHERE d.socio_id = s.id) AS ultimo_retiro,
+                su.estado AS debito_estado, su.fin AS debito_fin
+           FROM socios s
+           LEFT JOIN membresias m ON m.socio_id = s.id AND m.hasta IS NULL
+           LEFT JOIN suscripciones su ON su.id = (
+                SELECT id FROM suscripciones s2 WHERE s2.socio_id = s.id
+                 ORDER BY CASE s2.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1
+                          WHEN 'pausada' THEN 2 ELSE 3 END, s2.actualizado DESC, s2.id DESC LIMIT 1)
+          WHERE s.numero != -1 OR s.numero IS NULL
+          GROUP BY s.id
+          ORDER BY s.estado = 'activo' DESC, s.nombre`,
+      ).all<Record<string, unknown>>(),
+      env.DB.prepare(`SELECT * FROM sugerencias_email`).all(),
+    ]);
+
+    // acceso a la carta (KV): lastLogin/logins/temporal por email. Las claves
+    // KV no cuentan como subrequests HTTP — ~160 gets van sobrados.
+    const kv = new Map<string, Record<string, unknown>>();
+    try {
+      const lista = await env.SOCIOS.list({ limit: 1000 });
+      const valores = await Promise.all(lista.keys.map(async (k) => {
+        const crudo = await env.SOCIOS.get(k.name);
+        if (!crudo) return null;
+        if (crudo === 'ok') return { email: k.name };
+        try { return { email: k.name, ...JSON.parse(crudo) }; } catch { return { email: k.name }; }
+      }));
+      for (const v of valores) if (v) kv.set(String(v.email).toLowerCase(), v);
+    } catch { /* sin KV la lista sale igual, solo sin estado de carta */ }
+
+    const porPaso = Object.fromEntries(PASOS.map((p) => [p.id, p]));
+    const filas = socios.results.map((s) => {
+      const acceso = s.email ? kv.get(String(s.email).toLowerCase()) : undefined;
+      if (acceso) kv.delete(String(s.email).toLowerCase());
+      const paso = porPaso[String(s.reprocann_estado)] || null;
+      const vence = String(s.reprocann_vence || '');
+      const porVencer = s.reprocann_estado === 'aprobado' && vence &&
+        (Date.parse(vence) - Date.parse(hoy)) < 60 * 86400000;
+      return {
+        ...s,
+        quien: paso?.quien || '—',
+        paso_nombre: paso?.nombre || String(s.reprocann_estado || '—'),
+        paso_ayuda: paso?.ayuda || '',
+        por_vencer: !!porVencer,
+        carta: acceso ? {
+          lastLogin: acceso.lastLogin || null, logins: acceso.logins || 0,
+          temporal: !!acceso.temporal, tempExpiraEn: acceso.tempExpiraEn || null,
+        } : null,
+      };
+    });
+    // acceso a la carta sin ficha en el padrón (la vieja "alta rápida")
+    const huerfanos = [...kv.values()].map((v) => ({
+      id: null, sinFicha: true, email: v.email,
+      nombre: String(v.name || [v.givenName, v.familyName].filter(Boolean).join(' ') || v.email),
+      telefono: v.telefono || null, nota: v.nota || null,
+      quien: '—', paso_nombre: '—', paso_ayuda: '', por_vencer: false,
+      carta: { lastLogin: v.lastLogin || null, logins: v.logins || 0, temporal: !!v.temporal, tempExpiraEn: v.tempExpiraEn || null },
+    }));
+
+    return json({ ok: true, pasos: PASOS, socios: [...filas, ...huerfanos], sugerencias: sug.results });
+  }
 
   if (vista === 'lista') {
     const [socios, sug] = await Promise.all([

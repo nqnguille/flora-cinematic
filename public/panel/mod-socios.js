@@ -1,35 +1,22 @@
-/* Módulo Socios (prefijo so-): padrón del club + solicitudes de acceso.
-   Porteo del panel viejo (/socios/admin/) — mismos endpoints, UI nueva.
-   Solo lectura si el rol no tiene la capacidad padron_editar. */
+/* Módulo Socios (prefijo so-): LA lista maestra del club — la ficha 360°.
+   Fusión de los ex módulos Socios y REPROCANN (decisión 01/08): una fila por
+   persona con membresía, débito, paso del trámite y acceso a la carta; el
+   detalle vive en el drawer (mod-socio-detalle.js). El embudo sobrevive como
+   tiles-filtro arriba de la lista. Sub-pestañas: Socios · Solicitudes ·
+   Unificar (el volcado del portal, ex módulo REPROCANN). */
 (() => {
   'use strict'
   const P = window.Panel
 
-  // Endpoints existentes (los mismos del panel viejo)
+  // Endpoints del acceso a la carta (KV, panel viejo) — los usa el alta
+  // rápida, las solicitudes y el eco de teléfono/nota del drawer.
   const EP_SOCIOS = '/api/socios/admin/socios'
   const EP_INTENTOS = '/api/socios/admin/intentos'
   const EP_SOLICITUDES = '/api/socios/admin/solicitudes'
 
   let cont = null
   let editar = false          // capacidad padron_editar
-  let SOCIOS = []
   let SOLICITUDES = []        // formulario web + intentos de login, mezclados
-  let orden = { key: 'lastLogin', dir: -1 } // arranca por actividad reciente
-  let filtro = ''             // '' (todos) | 'activos30' | 'sin'
-  let q = ''
-
-  const FILTROS = {
-    activos30: (s) => s.lastLogin && Date.now() - Date.parse(s.lastLogin) < 30 * 86400000,
-    sin: (s) => !s.lastLogin,
-  }
-  const ORDENES = {
-    // null/ausente al final, gane quien gane la dirección
-    lastLogin: (a, b) => (Date.parse(b.lastLogin || 0) || 0) - (Date.parse(a.lastLogin || 0) || 0),
-    nombre: (a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email), 'es'),
-    email: (a, b) => String(a.email || '').localeCompare(String(b.email || ''), 'es'),
-    alta: (a, b) => (Date.parse(b.alta || b.firstLogin || 0) || 0) - (Date.parse(a.alta || a.firstLogin || 0) || 0),
-    logins: (a, b) => (b.logins || 0) - (a.logins || 0),
-  }
 
   /* ---------- helpers ---------- */
   function errHttp(status) {
@@ -83,7 +70,7 @@
     if (texto) solMsgT = setTimeout(() => { el.textContent = ''; el.className = 'msg' }, ms || 6000)
   }
 
-  /* ---------- padrón ---------- */
+  /* ---------- acceso a la carta (KV): alta rápida y solicitudes ---------- */
   // POST compartido: alta rápida, nota, teléfono, temporal. El shape del body
   // es el del panel viejo: { email, nota?, telefono?, name?, temporal? }.
   async function saveSocio(email, nota, extra) {
@@ -115,180 +102,156 @@
     return base + tempTag(s)
   }
 
-  function filaSocio(s) {
-    const nombre = s.name || [s.givenName, s.familyName].filter(Boolean).join(' ')
-    // WhatsApp: con teléfono va directo; sin teléfono y sin ingreso, link
-    // genérico de invitación (abre WhatsApp para elegir el contacto a mano).
-    const waMsg = `Hola! Ya sos socio de Flora. Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`
-    const dig = digitsOnly(s.telefono)
-    const waHref = dig
-      ? `https://wa.me/${dig}${s.lastLogin ? '' : '?text=' + encodeURIComponent(waMsg)}`
-      : (s.lastLogin ? '' : 'https://wa.me/?text=' + encodeURIComponent(waMsg))
-    const wa = waHref
-      ? `<a class="so-wa" target="_blank" rel="noopener" href="${P.esc(waHref)}" title="${dig ? 'Enviar WhatsApp' : 'Invitar por WhatsApp'}">${ICON_WA}</a>`
-      : ''
-    const tel = editar
-      ? `<input class="input so-tel" data-email="${P.esc(s.email)}" value="${P.esc(s.telefono || '')}" placeholder="+54 9 ..." />`
-      : `<span>${P.esc(s.telefono || '—')}</span>`
-    const nota = editar
-      ? `<input class="input so-nota-in" data-email="${P.esc(s.email)}" value="${P.esc(s.nota || '')}" placeholder="Nota…" />`
-      : `<span style="color:var(--ink2)">${P.esc(s.nota || '—')}</span>`
-    return `<tr>
-      <td><div class="fila"><span class="av">${P.esc(P.iniciales(nombre || s.email))}</span>
-        <span style="font-weight:600;white-space:nowrap">${P.esc(nombre || '(sin nombre aún)')}</span></div></td>
-      <td style="color:var(--ink2)">${P.esc(s.email)}</td>
-      <td><div class="fila so-telcell">${tel}${wa}</div></td>
-      <td style="white-space:nowrap">${estadoHtml(s)}</td>
-      <td style="color:var(--muted);white-space:nowrap" title="${s.firstLogin ? 'Primer ingreso: ' + P.esc(fmtFecha(s.firstLogin)) : ''}">${s.alta ? P.esc(fmtFecha(s.alta).split(' ')[0]) : '—'}</td>
-      <td class="r">${s.logins ? P.fmtN(s.logins) : '<span style="color:var(--muted)">—</span>'}</td>
-      <td>${nota}</td>
-      ${editar ? `<td class="r" style="white-space:nowrap">
-        ${P.puede('finanzas_aprobar') ? `<button class="btn so-mp" data-email="${P.esc(s.email)}" data-nombre="${P.esc(nombre || s.email)}" data-tel="${P.esc(s.telefono || '')}" title="Mandarle el link del débito automático" type="button">$ Débito</button>` : ''}
-        <button class="btn btn-peligro so-del" data-email="${P.esc(s.email)}" type="button">Quitar</button></td>` : ''}
-    </tr>`
+
+  /* ============ Lista maestra (mu-): una fila por persona ============ */
+  let MU = { socios: [], pasos: [], sugerencias: [] }
+  let muFiltro = ''           // '' | quien:club/paciente/medico/organismo | porVencer | sinDebito | noInsistir | sinIngresar | sinAcceso | activos30
+  let muQ = ''
+  let muCargado = false
+
+  const QUIEN_TAG = {
+    club: ['Nos toca', 'tag-mal'], paciente: ['Le toca al paciente', 'tag-deb'],
+    medico: ['Le toca a Ezequiel', 'tag-auto'], organismo: ['Ministerio', 'tag-off'],
   }
 
-  // ---------- link de pago (débito automático) desde el padrón ----------
-  // El link es el del PLAN de la membresía del socio (precargado en MP).
-  // Resuelve la ficha por email; si falta algo, el modal dice qué.
-  async function soDebito(email, nombre, telKv) {
-    const ov = P.modal(`Link de pago — ${nombre}`, '<div class="vacio">⏳ Buscando su membresía…</div>')
-    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
-    const r = await fetch(`/api/panel/mp/link?email=${encodeURIComponent(email)}`, { credentials: 'include' })
-    const d = await r.json().catch(() => ({}))
-    if (!r.ok) { cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>`; return }
-    if (d.sinFicha) {
-      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0">Este socio no tiene ficha en el padrón financiero —
-        sin ficha no hay membresía ni precio. Completala desde la pestaña <b>Fichas</b> (o dalo de alta completo).</p>
-        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
-      return
-    }
-    if (d.reprocann_ok === false && !d.sinFicha) {
-      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0">El REPROCANN de <b>${P.esc(d.nombre)}</b> está
-        <span class="tag tag-deb">${P.esc(d.reprocann_paso || 'sin dato')}</span> — el débito con descuento se ofrece recién
-        cuando el trámite está subido (aprobado o en evaluación). Empujá su trámite desde el módulo <b>REPROCANN</b> y volvé acá.</p>
-        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
-      return
-    }
-    if (d.debito_estado === 'activa') {
-      cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> ya tiene el débito automático
-        <span class="tag tag-ok">al día</span>${d.debito_fin ? ` — termina el ${P.esc(d.debito_fin.slice(8, 10))}/${P.esc(d.debito_fin.slice(5, 7))}` : ''}. No hace falta mandarle nada.</p>
-        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Perfecto</button></div>`
-      return
-    }
-    if (!d.planes || !d.planes.length) {
-      cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">No hay planes de Mercado Pago cargados.</p>
-        <div class="pn-mod-acciones"><button class="btn" onclick="Panel.cerrarModal()" type="button">Cerrar</button></div>`
-      return
-    }
-    // Se puede ELEGIR el plan: el tier vigente es solo la sugerencia. Si el
-    // socio paga uno distinto, su membresía se actualiza sola al acreditarse.
-    let elegido = d.planes.find((p) => p.tier === d.tier) || d.planes[0]
-    const tel = (d.telefono || telKv || '').replace(/\D/g, '')
-    cuerpo.innerHTML = `
-      <p class="so-help" style="margin:0 0 8px">${d.tier ? `Su membresía actual es <b>${P.esc(d.tier)}</b> — podés mandarle otro plan igual: al pagar, su membresía se actualiza sola.` : `<b>${P.esc(d.nombre)}</b> no tiene membresía asignada — elegí qué plan mandarle; al pagar queda con esa membresía.`}
-      ${d.no_insistir ? ' <span class="tag tag-auto">marcado «no insistir»</span>' : ''}</p>
-      <div class="fila" id="so-mp-tiers" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
-        ${d.planes.map((p) => `<button class="chip so-mp-tier" data-tier="${P.esc(p.tier)}" type="button">
-          <b>${P.esc(p.tier)}</b> · ${p.gramos ? p.gramos + ' g · ' : ''}${P.fmt(p.monto)}</button>`).join('')}
-      </div>
-      <p style="color:var(--ink2);margin:0 0 10px" id="so-mp-desc"></p>
-      <input class="input" id="so-mp-link" readonly onclick="this.select()" />
-      <div class="pn-mod-acciones">
-        <button class="btn" id="so-mp-copiar" type="button">Copiar</button>
-        <button class="btn" id="so-mp-mail" type="button">Mandar por email</button>
-        ${tel ? `<a class="btn btn-pri" id="so-mp-wa" href="#" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
-      </div>
-      <p class="msg" id="so-mp-msg" style="margin:8px 0 0"></p>`
-    const msg = cuerpo.querySelector('#so-mp-msg')
-    const pintarPlan = () => {
-      cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.classList.toggle('on', b.dataset.tier === elegido.tier))
-      cuerpo.querySelector('#so-mp-desc').innerHTML = `${elegido.contado ? `<span style="color:var(--muted);text-decoration:line-through">${P.fmt(elegido.contado)}</span> → ` : ''}<b>${P.fmt(elegido.monto)} por mes</b> con débito automático — 20% off, 3 cuotas y corta solo.
-        ${d.link_enviado ? `Ya le mandaste un link por ${d.link_via === 'email' ? 'email' : 'WhatsApp'} — esto cuenta como reenvío.` : ''}`
-      cuerpo.querySelector('#so-mp-link').value = elegido.link
-      const wa = cuerpo.querySelector('#so-mp-wa')
-      const tierL = elegido.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
-      if (wa) wa.href = `https://wa.me/${tel}?text=${encodeURIComponent(
-        `Hola ${String(d.nombre).split(' ')[0]}! Tu plan ${tierL}${elegido.gramos ? ` de ${elegido.gramos} gramos por mes` : ''}${elegido.contado ? ` que vale ${P.fmt(elegido.contado)}` : ''} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses, te queda en ${P.fmt(elegido.monto)}. Se autoriza una vez desde MercadoPago, podés usar el medio de pago que prefieras (crédito/débito/saldo) y podés cancelarlo si te arrepentís. Suscribite acá: ${elegido.link}`)}`
-    }
-    pintarPlan()
-    cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.addEventListener('click', () => {
-      elegido = d.planes.find((p) => p.tier === b.dataset.tier)
-      pintarPlan()
-    }))
-    const registrar = (via) => fetch('/api/panel/mp/enviar', {
-      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ socio_id: d.socio_id, via, tier: elegido.tier }),
-    })
-    cuerpo.querySelector('#so-mp-copiar').addEventListener('click', () => {
-      navigator.clipboard.writeText(elegido.link)
-      registrar('whatsapp')
-      msg.className = 'msg ok'; msg.textContent = '✔ link copiado (queda registrado el envío)'
-    })
-    cuerpo.querySelector('#so-mp-wa')?.addEventListener('click', () => { registrar('whatsapp') })
-    cuerpo.querySelector('#so-mp-mail').addEventListener('click', async (e) => {
-      e.target.disabled = true
-      msg.className = 'msg'; msg.textContent = '⏳ mandando el mail…'
-      const rm = await registrar('email')
-      const dm = await rm.json().catch(() => ({}))
-      if (rm.ok) { msg.className = 'msg ok'; msg.textContent = '✔ mail enviado' }
-      else { msg.className = 'msg err'; msg.textContent = '✗ ' + (dm.error || 'no salió'); e.target.disabled = false }
-    })
+  function muPasa(s) {
+    if (!muFiltro) return true
+    if (muFiltro === 'accionables') return ['club', 'paciente', 'medico'].includes(s.quien)
+    if (['club', 'paciente', 'medico', 'organismo'].includes(muFiltro)) return s.quien === muFiltro
+    if (muFiltro === 'porVencer') return !!s.por_vencer
+    if (muFiltro === 'sinDebito') return !!s.tier && !['activa', 'pendiente'].includes(s.debito_estado) && !s.debito_no_insistir
+    if (muFiltro === 'noInsistir') return !!s.debito_no_insistir
+    if (muFiltro === 'sinIngresar') return s.carta && !s.carta.lastLogin
+    if (muFiltro === 'sinAcceso') return !s.carta && !s.sinFicha
+    if (muFiltro === 'activos30') return s.carta && s.carta.lastLogin && Date.now() - Date.parse(s.carta.lastLogin) < 30 * 86400000
+    return true
   }
 
-  function renderPadron() {
-    // sub-stats clicables (filtran al tocarlas; tocar la activa la limpia)
-    const activos30 = SOCIOS.filter(FILTROS.activos30).length
-    const sin = SOCIOS.filter(FILTROS.sin).length
-    const chip = (f, html, title) =>
-      `<button type="button" class="chip${filtro === f ? ' on' : ''}" data-filtro="${f}" title="${P.esc(title)}">${html}</button>`
-    cont.querySelector('#so-stats').innerHTML = [
-      chip('', `<strong>${P.fmtN(SOCIOS.length)}</strong> socios`, 'Ver todos'),
-      chip('activos30', `<strong>${P.fmtN(activos30)}</strong> activos últimos 30 días`, 'Solo los que entraron este mes'),
-      chip('sin', `<strong>${P.fmtN(sin)}</strong> sin ingresar`, 'Solo los que nunca entraron'),
-    ].join('')
+  function muChipReprocann(s) {
+    if (s.sinFicha) return '<span class="tag tag-deb">sin ficha</span>'
+    const cls = s.quien === 'club' ? 'tag-mal' : s.quien === 'paciente' ? 'tag-deb'
+      : s.quien === 'medico' ? 'tag-auto'
+      : (s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo') ? 'tag-ok' : 'tag-off'
+    const vence = s.por_vencer ? ' <span class="tag tag-mal" title="El certificado vence en menos de 60 días">⚠ vence</span>' : ''
+    return `<span class="tag ${cls}" title="${P.esc(s.paso_ayuda || '')}">${P.esc(s.paso_nombre)}</span>${vence}`
+  }
 
-    let lista = [...SOCIOS].sort(ORDENES[orden.key])
-    if (orden.dir === 1) lista.reverse()
-    if (filtro && FILTROS[filtro]) lista = lista.filter(FILTROS[filtro])
-    if (q) {
-      lista = lista.filter((s) =>
-        `${s.name || ''} ${s.givenName || ''} ${s.familyName || ''} ${s.email} ${s.nota || ''} ${s.telefono || ''}`.toLowerCase().includes(q))
-    }
+  function muChipDebito(s) {
+    if (s.sinFicha) return '—'
+    if (s.debito_estado === 'activa') return '<span class="tag tag-ok">al día</span>'
+    if (s.debito_estado === 'pendiente') return '<span class="tag tag-deb">esperando</span>'
+    if (s.debito_estado === 'pausada') return '<span class="tag tag-mal">pausado</span>'
+    if (s.debito_no_insistir) return '<span class="tag tag-auto">no insistir</span>'
+    return s.tier ? '<span class="tag tag-off">sin débito</span>' : '—'
+  }
 
-    const el = cont.querySelector('#so-lista')
-    if (!lista.length) {
-      el.innerHTML = `<div class="vacio">${q || filtro ? 'Ningún socio coincide con ese filtro.' : 'Todavía no hay socios cargados.'}</div>`
-      return
-    }
-    const COLS = [
-      ['nombre', 'Socio'], ['email', 'Email'], [null, 'Teléfono'], ['lastLogin', 'Estado'],
-      ['alta', 'Alta'], ['logins', 'Ingresos', 'r'], [null, 'Nota'],
+  function muChipCarta(s) {
+    if (!s.carta) return s.sinFicha ? '—' : '<span class="tag tag-deb" title="Tiene ficha pero no puede entrar a la carta">sin acceso</span>'
+    const base = s.carta.lastLogin
+      ? `<span class="tag tag-ok" title="Último ingreso: ${P.esc(fmtFecha(s.carta.lastLogin))}">carta ${P.esc(fmtRel(s.carta.lastLogin))}</span>`
+      : '<span class="tag tag-off">sin ingresar</span>'
+    return base + tempTag(s.carta)
+  }
+
+  async function muCargar(forzar) {
+    if (muCargado && !forzar) { muRender(); return }
+    const caja = cont.querySelector('#mu-lista')
+    if (!MU.socios.length) caja.innerHTML = '<div class="vacio">⏳ Cargando el padrón…</div>'
+    const r = await fetch('/api/panel/padron/maestra', { credentials: 'include' })
+    if (!r.ok) { caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`; return }
+    MU = await r.json()
+    window.PanelPasosReprocann = MU.pasos   // lo usa el drawer para el timeline
+    muCargado = true
+    muRender()
+  }
+
+  function muRender() {
+    const socios = MU.socios
+    const nosToca = socios.filter((s) => s.quien === 'club').length
+    const alPaciente = socios.filter((s) => s.quien === 'paciente').length
+    const alMedico = socios.filter((s) => s.quien === 'medico').length
+    const porVencer = socios.filter((s) => s.por_vencer).length
+
+    cont.querySelector('#mu-tiles').innerHTML = `
+      <div class="grid3" style="margin-bottom:10px">
+        <div class="card mu-tile ${muFiltro === 'club' ? 'on' : ''}" data-f="club" style="border-left:3px solid var(--dan);cursor:pointer">
+          <span class="k">Nos toca a nosotros</span><div class="kpi-v" style="font-size:28px;color:var(--dan)">${nosToca}</div>
+          <div class="kpi-d">vincular como cultivadora o definir</div></div>
+        <div class="card mu-tile ${muFiltro === 'paciente' ? 'on' : ''}" data-f="paciente" style="border-left:3px solid var(--amb);cursor:pointer">
+          <span class="k">Le toca al paciente</span><div class="kpi-v" style="font-size:28px;color:var(--amb)">${alPaciente}</div>
+          <div class="kpi-d">su código o su firma</div></div>
+        <div class="card mu-tile ${muFiltro === 'medico' ? 'on' : ''}" data-f="medico" style="border-left:3px solid var(--vio);cursor:pointer">
+          <span class="k">Le toca a Ezequiel</span><div class="kpi-v" style="font-size:28px;color:var(--vio)">${alMedico}</div>
+          <div class="kpi-d">cargar el trámite o corregirlo</div></div>
+      </div>
+      ${porVencer ? `<div class="card mu-tile ${muFiltro === 'porVencer' ? 'on' : ''}" data-f="porVencer" style="border-left:3px solid var(--amb);margin-bottom:10px;cursor:pointer">
+        <span class="k">Vencimientos</span><div class="kpi-d" style="margin-top:6px"><b>${porVencer}</b> certificado(s) vencen en menos de 60 días.</div></div>` : ''}`
+
+    // sugerencias de email por confirmar (ex pestaña Fichas)
+    const porId = Object.fromEntries(socios.filter((s) => s.id).map((s) => [s.id, s]))
+    cont.querySelector('#mu-sugerencias').innerHTML = (MU.sugerencias || []).length ? `
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--vio)">
+        <span class="k">Cruces por confirmar</span>
+        <p class="so-help">Cuentas de Google que entraron a la carta y se parecen a un socio del padrón.</p>
+        ${MU.sugerencias.map((g) => `<div class="fila" style="padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+          <span><b>${P.esc(g.email)}</b> <span style="color:var(--muted)">(Google: ${P.esc(g.nombre_google || '—')})</span>
+          ¿es <b>${P.esc((porId[g.socio_id] || {}).nombre || '#' + g.socio_id)}</b>?</span>
+          <span class="pn-sp"></span>
+          <button class="btn mu-sug" data-id="${g.socio_id}" data-ok="1" type="button">Sí, es él</button>
+          <button class="btn mu-sug" data-id="${g.socio_id}" data-ok="" type="button">No</button>
+        </div>`).join('')}
+      </div>` : ''
+
+    const CHIPS = [
+      ['', 'Todos'], ['accionables', 'Hay algo que hacer'], ['organismo', 'Ministerio'],
+      ['sinDebito', 'Sin débito'], ['noInsistir', 'No insistir'],
+      ['sinIngresar', 'Sin ingresar'], ['sinAcceso', 'Sin acceso'], ['activos30', 'Activos 30d'],
     ]
-    if (editar) COLS.push([null, '', 'r'])
-    const ths = COLS.map(([key, label, cls]) => {
-      if (!key) return `<th${cls ? ` class="${cls}"` : ''}>${label}</th>`
-      const on = orden.key === key
-      const flecha = on ? (orden.dir === -1 ? ' ↓' : ' ↑') : ''
-      return `<th${cls ? ` class="${cls}"` : ''}><button type="button" class="so-th${on ? ' on' : ''}" data-sort="${key}">${label}${flecha}</button></th>`
-    }).join('')
-    el.innerHTML = `<div class="so-scroll"><table class="tabla">
-      <thead><tr>${ths}</tr></thead>
-      <tbody>${lista.map(filaSocio).join('')}</tbody></table></div>`
+    cont.querySelector('#mu-chips').innerHTML = CHIPS.map(([v, n]) =>
+      `<button class="chip ${muFiltro === v ? 'on' : ''}" data-f="${v}" type="button">${n}</button>`).join('')
+
+    let lista = socios.filter(muPasa)
+    if (muQ) {
+      lista = lista.filter((s) =>
+        `${s.nombre || ''} ${s.email || ''} ${s.documento || ''} ${s.telefono || ''} ${s.nota || ''} ${s.reprocann_codigo || ''}`
+          .toLowerCase().includes(muQ))
+    }
+    const caja = cont.querySelector('#mu-lista')
+    caja.innerHTML = lista.length ? `<div class="so-scroll"><table class="tabla"><thead><tr>
+      <th>Socio</th><th>Membresía</th><th>Débito</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
+    </tr></thead><tbody>${lista.map((s) => `
+      <tr class="mu-fila" data-id="${s.id || ''}" data-email="${P.esc(s.email || '')}" style="cursor:${s.id ? 'pointer' : 'default'}">
+        <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || s.email || '?'))}</span>
+          <div><div style="font-weight:600">${P.esc(s.nombre || '(sin nombre)')}</div>
+          <div style="color:var(--muted);font-size:11px">${P.esc(s.email || 'sin email')}</div></div></div></td>
+        <td>${s.sinFicha ? '<span class="tag tag-deb" title="Entra a la carta pero no tiene ficha en el padrón">solo carta</span>'
+          : s.tier ? `<span class="tag ${s.modalidad === 'plan' ? 'tag-auto' : ''}">${P.esc(s.tier)}${s.modalidad === 'debito' ? ' · débito' : s.modalidad === 'plan' ? ' · plan' : ''}</span>` : '—'}</td>
+        <td>${muChipDebito(s)}</td>
+        <td>${muChipReprocann(s)}</td>
+        <td>${muChipCarta(s)}</td>
+        <td style="color:var(--muted);font-size:12px">${s.ultimo_retiro ? P.esc(fmtRel(s.ultimo_retiro)) : '—'}</td>
+        <td class="r">${s.telefono && s.id ? `<a class="so-wa mu-wa" target="_blank" rel="noopener" data-id="${s.id}" title="WhatsApp según su paso de REPROCANN"
+          href="${P.esc(muWa(s))}">${ICON_WA}</a>` : ''}</td>
+      </tr>`).join('')}</tbody></table></div>`
+      : '<div class="vacio">Nadie coincide con ese filtro.</div>'
+    const total = cont.querySelector('#mu-total')
+    if (total) total.textContent = `${lista.length} de ${socios.length}`
   }
 
-  async function cargarSocios() {
-    const el = cont.querySelector('#so-lista')
-    if (!SOCIOS.length) el.innerHTML = '<div class="vacio">⏳ Cargando…</div>'
-    try {
-      const res = await fetch(EP_SOCIOS, { credentials: 'include' })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.ok) { el.innerHTML = `<div class="vacio">${P.esc(data.error || errHttp(res.status))}</div>`; return }
-      SOCIOS = data.socios || []
-      renderPadron()
-    } catch {
-      el.innerHTML = '<div class="vacio">Error de red al cargar el padrón — revisá la conexión y probá de nuevo.</div>'
+  // WhatsApp contextual por paso (los textos viven también en el drawer)
+  function muWa(s) {
+    const nom = (s.nombre || '').split(' ')[0]
+    const T = {
+      esperando_codigo: `Hola ${nom}! Para arrancar tu REPROCANN necesitamos tu código de vinculación. Lo sacás de tu cuenta en Mi Argentina y lo cargás acá: https://floraong.ar/socios/reprocann/`,
+      revisar: `Hola ${nom}! Estamos ordenando los trámites de REPROCANN del club. ¿Nos contás cómo está el tuyo? Si te falta cargarlo, es acá: https://floraong.ar/socios/reprocann/`,
+      sin_iniciar: `Hola ${nom}! ¿Arrancamos tu REPROCANN? El primer paso es tu código de vinculación: https://floraong.ar/socios/reprocann/`,
+      cargado: `Hola ${nom}! Tu trámite de REPROCANN ya está cargado. Falta un paso tuyo: entrá a reprocann.msal.gob.ar con tu Mi Argentina y aceptá el consentimiento. Con eso seguimos nosotros.`,
+      observado: `Hola ${nom}! Tu trámite de REPROCANN tiene una observación. Entrá a reprocann.msal.gob.ar y fijate qué dice, así lo resolvemos.`,
+      aprobado: `Hola ${nom}! Tu REPROCANN está aprobado 🌿`,
+      vencido: `Hola ${nom}! Tu certificado de REPROCANN venció. Escribinos y arrancamos la renovación.`,
     }
+    const txt = T[s.reprocann_estado] || `Hola ${nom}! Ya sos socio de Flora. Entrá a la carta del club con tu cuenta de Google (${s.email}): https://floraong.ar/socios/carta/`
+    return `https://wa.me/${digitsOnly(s.telefono)}?text=${encodeURIComponent(txt)}`
   }
 
   /* ---------- solicitudes (formulario web + intentos de login) ---------- */
@@ -375,59 +338,9 @@
     })
   }
 
-  /* ---------- acciones ---------- */
-  async function onAlta(e) {
-    e.preventDefault()
-    const emailEl = cont.querySelector('#so-alta-email')
-    const notaEl = cont.querySelector('#so-alta-nota')
-    const msg = cont.querySelector('#so-alta-msg')
-    const email = emailEl.value.trim().toLowerCase()
-    if (!email) return
-    msg.className = 'msg'; msg.textContent = '⏳ guardando…'
-    const { ok, error } = await saveSocio(email, notaEl.value.trim())
-    msg.className = 'msg ' + (ok ? 'ok' : 'err')
-    msg.textContent = ok ? '✔ socio agregado' : `✗ ${error || 'no se pudo agregar'} — probá de nuevo`
-    if (ok) { emailEl.value = ''; notaEl.value = ''; cargarSocios() }
-    setTimeout(() => { msg.textContent = ''; msg.className = 'msg' }, 6000)
-  }
 
+  // Acciones de la pestaña Solicitudes (delegadas desde el listener del módulo)
   async function onClick(e) {
-    // ordenar por columna
-    const th = e.target.closest('.so-th')
-    if (th) {
-      const key = th.dataset.sort
-      if (orden.key === key) orden.dir *= -1
-      else orden = { key, dir: -1 }
-      renderPadron()
-      return
-    }
-    // sub-stats como filtros
-    const chip = e.target.closest('#so-stats .chip')
-    if (chip) {
-      const f = chip.dataset.filtro
-      filtro = filtro === f ? '' : f
-      renderPadron()
-      return
-    }
-    // link de pago del débito automático
-    const mp = e.target.closest('.so-mp')
-    if (mp) { soDebito(mp.dataset.email, mp.dataset.nombre, mp.dataset.tel); return }
-    // quitar socio
-    const del = e.target.closest('.so-del')
-    if (del) {
-      const email = del.dataset.email
-      if (!(await P.confirmar(`¿Dar de baja a ${email}? Deja de poder entrar a la carta.`, 'Sí, dar de baja'))) return
-      const res = await fetch(EP_SOCIOS, {
-        method: 'DELETE', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      if (!res.ok) { aviso('✗ ' + errHttp(res.status), 'err'); return }
-      aviso('✔ socio dado de baja', 'ok')
-      cargarSocios()
-      return
-    }
-    // solicitud → agregar como socio
     const add = e.target.closest('.so-sol-add')
     if (add) {
       const email = add.dataset.email
@@ -441,7 +354,7 @@
       if (ok) {
         await descartarSolicitud(email, item)
         avisoSol('✔ agregado al padrón', 'ok')
-        cargarSocios(); cargarSolicitudes()
+        muCargar(true); cargarSolicitudes()
       } else {
         add.disabled = false
         add.textContent = 'Agregar como socio'
@@ -449,7 +362,6 @@
       }
       return
     }
-    // solicitud → acceso temporal 24h
     const temp = e.target.closest('.so-sol-temp')
     if (temp) {
       const email = temp.dataset.email
@@ -461,10 +373,8 @@
       const { ok, error, mailEnviado, mailError } = await saveSocio(email, 'Acceso temporal (24h desde el primer login)', { name, temporal: true })
       if (ok) {
         await descartarSolicitud(email, item)
-        cargarSocios(); cargarSolicitudes()
+        muCargar(true); cargarSolicitudes()
         if (mailEnviado === false) {
-          // El alta pegó, pero el mail no salió — avisamos fuerte: si no,
-          // parece que ya le llegó y nadie le escribe.
           avisoSol(`Se aprobó, pero el mail NO salió (${mailError || 'error desconocido'}) — avisale vos por WhatsApp.`, 'err', 12000)
         } else {
           avisoSol('✔ acceso temporal aprobado y mail enviado', 'ok')
@@ -476,7 +386,6 @@
       }
       return
     }
-    // solicitud → descartar
     const desc = e.target.closest('.so-sol-del')
     if (desc) {
       const email = desc.dataset.email
@@ -487,31 +396,21 @@
     }
   }
 
-  async function onChange(e) {
-    const tel = e.target.closest('.so-tel')
-    if (tel) {
-      aviso('⏳ guardando teléfono…')
-      const email = tel.dataset.email
-      const nuevo = tel.value.trim()
-      const { ok, error } = await saveSocio(email, undefined, { telefono: nuevo })
-      aviso(ok ? '✔ teléfono guardado' : `✗ ${error || 'no se pudo guardar el teléfono'}`, ok ? 'ok' : 'err')
-      if (ok) {
-        // refresca el link de WhatsApp de la fila sin pisar lo tipeado
-        const socio = SOCIOS.find((x) => x.email === email)
-        if (socio) socio.telefono = nuevo
-        renderPadron()
-      }
-      return
-    }
-    const nota = e.target.closest('.so-nota-in')
-    if (nota) {
-      aviso('⏳ guardando nota…')
-      const { ok, error } = await saveSocio(nota.dataset.email, nota.value)
-      aviso(ok ? '✔ nota guardada' : `✗ ${error || 'no se pudo guardar la nota'}`, ok ? 'ok' : 'err')
-      const socio = SOCIOS.find((x) => x.email === nota.dataset.email)
-      if (ok && socio) socio.nota = nota.value
-    }
+  async function onAlta(e) {
+    e.preventDefault()
+    const emailEl = cont.querySelector('#so-alta-email')
+    const notaEl = cont.querySelector('#so-alta-nota')
+    const msg = cont.querySelector('#so-alta-msg')
+    const email = emailEl.value.trim().toLowerCase()
+    if (!email) return
+    msg.className = 'msg'; msg.textContent = '⏳ guardando…'
+    const { ok, error } = await saveSocio(email, notaEl.value.trim())
+    msg.className = 'msg ' + (ok ? 'ok' : 'err')
+    msg.textContent = ok ? '✔ socio agregado' : `✗ ${error || 'no se pudo agregar'} — probá de nuevo`
+    if (ok) { emailEl.value = ''; notaEl.value = ''; muCargar(true) }
+    setTimeout(() => { msg.textContent = ''; msg.className = 'msg' }, 6000)
   }
+
 
   /* ---------- registro ---------- */
   // ============ Alta unificada (al-): un socio, de una sola vez ============
@@ -784,159 +683,188 @@
           ${datos.telefono ? `<a class="btn ${faltaCodigo ? 'btn-pri' : ''}" href="${P.esc(wa)}" target="_blank" rel="noopener">${faltaCodigo ? 'Pedirle el código' : 'Saludar por WhatsApp'}</a>` : ''}
           <button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
         </div>`
-      sfCargado = false
-      if (sfBox && !sfBox.hidden) sfCargar(true)
-      cargarSocios()
+      muCargar(true)
     }
 
     pintar1()
   }
 
-  // ============ Fichas (sf-): padrón financiero D1 ============
-  const esc = P.esc
-  let sfBox = null
-  let sfSocios = []
-  let sfSug = []
-  let sfQ = ''
-  let sfCargado = false
-  const SF_TIERS = ['NINGUNA', 'SMALL', 'MEDIUM', 'LARGE', 'EXTRA LARGE']
 
-  function sfMsg(texto, clase) {
-    const m = sfBox.querySelector('#sf-msg')
-    m.className = 'msg ' + (clase || '')
-    m.textContent = texto
-    if (texto) setTimeout(() => { if (m.textContent === texto) m.textContent = '' }, 5000)
+  // ============ Unificar pacientes (ru-): el volcado oficial del portal ============
+  // El portal de REPROCANN (cuenta de la ONG) es la única fuente con el DNI
+  // oficial de cada trámite. El volcado entra acá, el matching propone pares
+  // contra el padrón y CADA vínculo se confirma a mano. Una vez confirmado,
+  // los volcados siguientes actualizan a ese socio solos.
+  let ruDatos = null
+
+  const RU_ESTADOS = {
+    Aprobado: ['Aprobado', 'tag-ok'], PendienteEvaluacion: ['En evaluación', 'tag-off'],
+    PendienteConsentimientoPaciente: ['Espera su firma', 'tag-deb'], PendienteConsentimiento: ['Espera su firma', 'tag-deb'],
+    ObservadoPorPaciente: ['Observado', 'tag-deb'], PendienteVinculacionCultivador: ['Nos toca vincular', 'tag-mal'],
+    PendienteRevisionMedica: ['Volvió al médico', 'tag-auto'], Rechazado: ['Rechazado', 'tag-mal'], Anulado: ['Anulado', 'tag-mal'],
+  }
+  const ruEstado = (e) => {
+    const [txt, cls] = RU_ESTADOS[e] || [e, 'tag-off']
+    return `<span class="tag ${cls}">${P.esc(txt)}</span>`
+  }
+  const CHIP = {
+    dni: ['DNI', 'tag-ok'], nombre: ['nombre', 'tag-auto'], nombre_parcial: ['nombre parcial', 'tag-deb'],
+  }
+  const ruChips = (sen) => {
+    if (!sen) return ''
+    const m = (sen.match || []).map((s) => { const [t, c] = CHIP[s] || [s, 'tag-off']; return `<span class="tag ${c}">${t}</span>` })
+    const conf = (sen.conflictos || []).map((s) => `<span class="tag tag-mal">${s === 'dni' ? 'DNI distinto' : P.esc(s)}</span>`)
+    return m.concat(conf).join(' ')
   }
 
-  async function sfCargar(forzar) {
-    if (sfCargado && !forzar) return
-    sfCargado = true
-    const r = await fetch('/api/panel/padron/lista', { credentials: 'include' })
-    if (!r.ok) { sfBox.querySelector('#sf-lista').innerHTML = `<div class="vacio">Error ${r.status} al traer las fichas.</div>`; return }
-    const d = await r.json()
-    sfSocios = d.socios
-    sfSug = d.sugerencias
-    const cnt = document.getElementById('sf-cnt')
-    cnt.hidden = !sfSug.length
-    cnt.textContent = sfSug.length
-    sfRender()
+  async function ruCargar() {
+    const caja = cont.querySelector('#ru-panel')
+    caja.innerHTML = '<div class="vacio">⏳ Buscando pares…</div>'
+    const r = await fetch('/api/panel/reprocann/unificar', { credentials: 'include' })
+    if (!r.ok) { caja.innerHTML = `<div class="vacio">El servidor respondió ${r.status}.</div>`; return }
+    ruDatos = await r.json()
+    ruPintar()
   }
 
-  function sfRender() {
-    // sugerencias de email para confirmar con un click
-    const porId = Object.fromEntries(sfSocios.map((s) => [s.id, s]))
-    sfBox.querySelector('#sf-sugerencias').innerHTML = sfSug.length ? `
-      <div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
-        <span class="k">Cruces por confirmar</span>
-        <p class="so-help">Cuentas de Google que entraron a la carta y se parecen a un socio del padrón. Confirmá o descartá.</p>
-        ${sfSug.map((g) => `<div class="fila" style="padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap">
-          <span><b>${esc(g.email)}</b> <span style="color:var(--muted)">(Google: ${esc(g.nombre_google || '—')})</span>
-          ¿es <b>${esc((porId[g.socio_id] || {}).nombre || '#' + g.socio_id)}</b>?</span>
-          <span class="pn-sp"></span>
-          <button class="btn sf-sug" data-id="${g.socio_id}" data-ok="1" type="button">Sí, es él</button>
-          <button class="btn sf-sug" data-id="${g.socio_id}" data-ok="" type="button">No</button>
-        </div>`).join('')}
-      </div>` : ''
+  function ruPintar() {
+    const d = ruDatos
+    const caja = cont.querySelector('#ru-panel')
+    const simples = d.pares.filter((g) => g.candidatos.length === 1 && (g.candidatos[0].senales || {}).confianza !== 'revisar')
+    const revisar = d.pares.filter((g) => g.candidatos.length > 1 || (g.candidatos[0].senales || {}).confianza === 'revisar')
+    const cnt = cont.querySelector('#ru-cnt')
+    if (cnt) { cnt.hidden = !d.pares.length; cnt.textContent = d.pares.length }
 
-    const lista = sfSocios.filter((s) => !sfQ ||
-      (s.nombre + ' ' + (s.email || '') + ' ' + (s.documento || '') + ' ' + (s.nota || '')).toLowerCase().includes(sfQ))
-    sfBox.querySelector('#sf-lista').innerHTML = lista.length ? `
-      <table class="tabla"><thead><tr>
-        <th>Socio</th><th>Email (débito)</th><th>DNI</th><th>Teléfono</th><th>Membresía</th><th>Débito</th><th>Último pago</th><th>Estado</th>
-      </tr></thead><tbody>${lista.map((s) => `<tr>
-        <td><div class="fila"><span class="av">${esc(P.iniciales(s.nombre))}</span>
-          <div><div style="font-weight:600">${esc(s.nombre)}</div>
-          <div style="color:var(--muted);font-size:11px">${s.numero ? '#' + s.numero : ''}${s.reprocann ? ' · ' + esc(s.reprocann) : ''}</div></div></div></td>
-        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="email" type="email"
-          value="${esc(s.email || '')}" placeholder="sin email" style="min-width:210px;font-size:12px" />`
-          : esc(s.email || '—')}</td>
-        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="documento" inputmode="numeric"
-          value="${esc(s.documento || '')}" placeholder="DNI" maxlength="10" style="max-width:100px;font-size:12px" />`
-          : esc(s.documento || '—')}</td>
-        <td>${editar ? `<input class="input sf-campo" data-id="${s.id}" data-campo="telefono" type="tel"
-          value="${esc(s.telefono || '')}" placeholder="+54 9…" style="max-width:130px;font-size:12px" />`
-          : esc(s.telefono || '—')}</td>
-        <td>${s.modalidad === 'plan' ? `<span class="tag tag-auto">${esc(s.tier)}</span>`
-          : editar ? `<select class="sel sf-tier" data-id="${s.id}" style="font-size:12px;max-width:150px">
-            ${SF_TIERS.map((t) => `<option value="${t}" ${(s.tier || 'NINGUNA') === t ? 'selected' : ''}>${t === 'NINGUNA' ? '— sin membresía' : t}</option>`).join('')}
-          </select>` : esc(s.tier || '—')}</td>
-        <td>${s.debito_estado === 'activa' ? '<span class="tag tag-ok">al día</span>'
-          : s.debito_estado === 'pendiente' ? '<span class="tag tag-deb">esperando</span>'
-          : s.debito_estado === 'pausada' ? '<span class="tag tag-mal">pausado</span>'
-          : s.debito_no_insistir ? '<span class="tag tag-auto">no insistir</span>'
-          : s.tier ? '<span class="tag tag-off">sin débito</span>' : '—'}</td>
-        <td style="color:var(--muted);font-size:12px">${s.ultimo_pago ? esc(s.ultimo_pago.slice(0, 7)) : 'nunca'}</td>
-        <td><span class="tag ${s.estado === 'activo' ? 'tag-ok' : 'tag-off'}">${esc(s.estado)}</span></td>
-      </tr>`).join('')}</tbody></table>` : '<div class="vacio">No aparece nadie con esa búsqueda.</div>'
+    caja.innerHTML = `
+      <div class="card" style="margin-bottom:14px">
+        <span class="k">Volcado del portal</span>
+        <p class="so-help" style="margin:6px 0 8px">Pegá el JSON de trámites del portal de REPROCANN (cuenta de la ONG)
+        o subí el archivo. Cada carga actualiza sola a los ${d.vinculados} socio(s) ya vinculados y propone pares nuevos.
+        ${d.ultimaCarga ? `Última carga: ${P.esc(d.ultimaCarga.slice(0, 16).replace('T', ' '))}.` : 'Todavía no se cargó ninguno.'}</p>
+        <div class="fila" style="flex-wrap:wrap;gap:8px">
+          <textarea class="input" id="ru-json" rows="2" placeholder='Pegar acá el JSON…' style="flex:1;min-width:220px;font-size:11.5px;font-family:var(--font-ui)"></textarea>
+          <input type="file" id="ru-file" accept="application/json,.json" hidden />
+          <button class="btn" id="ru-subir" type="button">Subir archivo</button>
+          <button class="btn btn-pri" id="ru-procesar" type="button">Procesar</button>
+        </div>
+        <p class="msg" id="ru-msg" style="margin:8px 0 0"></p>
+      </div>
+
+      ${simples.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--vio)">
+        <span class="k">Pares por confirmar (${simples.length})</span>
+        <p class="so-help">El matching dice que son la misma persona. Nada se une sin tu click.</p>
+        ${simples.map((g) => ruFila(g, g.candidatos[0])).join('')}
+      </div>` : ''}
+
+      ${revisar.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--amb)">
+        <span class="k">Revisar con cuidado (${revisar.length})</span>
+        <p class="so-help">Datos que se contradicen o más de un socio posible — mirá bien antes de confirmar.</p>
+        ${revisar.map((g) => g.candidatos.length === 1 ? ruFila(g, g.candidatos[0], true)
+          : `<div style="padding:9px 0;border-top:1px solid var(--line)">
+              <div><b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
+                <span style="color:var(--muted)">· DNI ${P.esc(g.dni)}</span> ${ruEstado(g.persona.estado)}</div>
+              <div class="so-help" style="margin:4px 0 6px">¿Cuál de estos socios es?</div>
+              ${g.candidatos.map((c) => `<div class="fila" style="padding:4px 0">
+                <span>${P.esc(c.socio.nombre)}${c.socio.email ? ` <span style="color:var(--muted);font-size:11px">${P.esc(c.socio.email)}</span>` : ''} ${ruChips(c.senales)}</span>
+                <span class="pn-sp"></span>
+                <button class="btn ru-si" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" type="button">Es él</button>
+              </div>`).join('')}
+              <div class="fila" style="padding:4px 0"><span class="pn-sp"></span>
+                <button class="btn ru-ninguno" data-dni="${P.esc(g.dni)}" data-socios="${g.candidatos.map((c) => c.socio_id).join(',')}" type="button">Ninguno de estos</button></div>
+            </div>`).join('')}
+      </div>` : ''}
+
+      ${!simples.length && !revisar.length ? `<div class="card" style="margin-bottom:14px"><div class="vacio">
+        No hay pares pendientes${d.vinculados ? ` — ${d.vinculados} socio(s) vinculados se actualizan solos con cada volcado` : ''}.</div></div>` : ''}
+
+      ${d.sinMatch.length ? `<details class="card" style="margin-bottom:14px">
+        <summary style="cursor:pointer;font-weight:600;font-size:13px">Sin match en el padrón (${d.sinMatch.length})</summary>
+        <p class="so-help" style="margin-top:8px">Trámites de la ONG cuya persona no se parece a ningún socio.
+        Con «Dar de alta» se abre el alta de socio ya precargada con su nombre y DNI oficiales.</p>
+        <table class="tabla"><thead><tr><th>Persona</th><th>DNI</th><th>Trámite</th><th>Vence</th><th class="r"></th></tr></thead>
+        <tbody>${d.sinMatch.map((p) => `<tr>
+          <td><b>${P.esc(p.nombre + ' ' + p.apellido)}</b>${p.renovacion ? ' <span class="tag tag-off">renovación</span>' : ''}</td>
+          <td style="font-family:var(--font-ui)">${P.esc(p.dni)}</td>
+          <td>${ruEstado(p.estado)}${p.plantas ? ` <span style="color:var(--muted);font-size:11px">${p.plantas} plantas</span>` : ''}</td>
+          <td style="color:var(--muted)">${p.vence ? P.esc(p.vence) : '—'}</td>
+          <td class="r"><button class="btn ru-alta" data-dni="${P.esc(p.dni)}" type="button">Dar de alta</button></td>
+        </tr>`).join('')}</tbody></table>
+      </details>` : ''}`
+
+    const msg = caja.querySelector('#ru-msg')
+    const file = caja.querySelector('#ru-file')
+    caja.querySelector('#ru-subir').addEventListener('click', () => file.click())
+    file.addEventListener('change', async () => {
+      if (file.files[0]) caja.querySelector('#ru-json').value = await file.files[0].text()
+    })
+    caja.querySelector('#ru-procesar').addEventListener('click', async () => {
+      let crudo
+      try { crudo = JSON.parse(caja.querySelector('#ru-json').value) } catch {
+        msg.className = 'msg err'; msg.textContent = '✗ Eso no es un JSON válido — copialo entero, sin recortar.'; return
+      }
+      msg.className = 'msg'; msg.textContent = '⏳ procesando…'
+      const r = await fetch('/api/panel/reprocann/sincronizar', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(crudo),
+      })
+      const res = await r.json().catch(() => ({}))
+      if (!r.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (res.error || 'error ' + r.status); return }
+      msg.className = 'msg ok'
+      msg.textContent = `✔ ${res.personas} persona(s) del portal · ${res.sincronizados} actualizadas solas · ${res.candidatosNuevos} par(es) nuevos por confirmar`
+      setTimeout(() => { ruCargar(); muCargar(true) }, 900)
+    })
   }
 
-  async function sfPatch(id, campo, valor) {
-    sfMsg('⏳ guardando…')
-    const r = await fetch('/api/panel/padron/socio', {
-      method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: Number(id), [campo]: valor }),
+  function ruFila(g, c, cuidado) {
+    return `<div class="fila" style="padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap">
+      <span><b>${P.esc(c.socio.nombre)}</b>${c.socio.email ? ` <span style="color:var(--muted);font-size:11px">${P.esc(c.socio.email)}</span>` : ''}
+        <span style="color:var(--muted)"> ↔ </span>
+        <b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
+        <span style="color:var(--muted)">· DNI ${P.esc(g.dni)}</span>
+        ${ruEstado(g.persona.estado)}${g.persona.vence ? ` <span style="color:var(--muted);font-size:11px">vence ${P.esc(g.persona.vence)}</span>` : ''}
+        ${ruChips(c.senales)}</span>
+      <span class="pn-sp"></span>
+      <button class="btn ru-si ${cuidado ? '' : 'btn-pri'}" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" ${cuidado ? 'data-cuidado="1"' : ''} type="button">Sí, es él</button>
+      <button class="btn ru-no" data-dni="${P.esc(g.dni)}" data-socio="${c.socio_id}" type="button">No es</button>
+    </div>`
+  }
+
+  async function ruDecidir(body, boton) {
+    if (boton) boton.disabled = true
+    const r = await fetch('/api/panel/reprocann/vinculo', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     })
     const d = await r.json().catch(() => ({}))
-    if (r.ok) { sfMsg('✔ guardado', 'ok'); return true }
-    sfMsg('✗ ' + (d.error || 'error ' + r.status), 'err')
-    return false
+    if (!r.ok) { alert(d.error || 'No se pudo: error ' + r.status); if (boton) boton.disabled = false; return }
+    if (d.avisoDni) alert(d.avisoDni)
+    ruCargar()
+    muCargar(true)
   }
 
-  function sfInit(box) {
-    sfBox = box
-    box.querySelector('#sf-buscar').addEventListener('input', (e) => {
-      sfQ = e.target.value.trim().toLowerCase()
-      sfRender()
-    })
-    box.addEventListener('change', async (e) => {
-      const campo = e.target.closest('.sf-campo')
-      if (campo) { sfPatch(campo.dataset.id, campo.dataset.campo, campo.value.trim()); return }
-      const tier = e.target.closest('.sf-tier')
-      if (tier) {
-        const r = await fetch('/api/panel/padron/membresia', {
-          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ socio_id: Number(tier.dataset.id), tier: tier.value }),
-        })
-        sfMsg(r.ok ? '✔ membresía actualizada' : '✗ no se pudo', r.ok ? 'ok' : 'err')
-        if (r.ok) sfCargar(true)
-      }
-    })
-    box.addEventListener('click', async (e) => {
-      const b = e.target.closest('.sf-sug')
-      if (!b) return
-      const r = await fetch('/api/panel/padron/sugerencia', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ socio_id: Number(b.dataset.id), aceptar: !!b.dataset.ok }),
-      })
-      const d = await r.json().catch(() => ({}))
-      sfMsg(r.ok ? (d.aplicado ? '✔ email vinculado' : 'descartado') : '✗ ' + (d.error || 'error'), r.ok ? 'ok' : 'err')
-      sfCargar(true)
-    })
-  }
 
+  /* ============ registro del módulo ============ */
   P.registrar('socios', {
     init(el) {
       cont = el
       editar = P.puede('padron_editar')
       el.innerHTML = `
         <div class="subs" id="so-subs">
-          <button type="button" class="on" data-sub="padron">Padrón</button>
+          <button type="button" class="on" data-sub="maestra">Socios</button>
           <button type="button" data-sub="solicitudes">Solicitudes<span class="cnt" id="so-sol-cnt" hidden></span></button>
-          <button type="button" data-sub="fichas">Fichas<span class="cnt" id="sf-cnt" hidden></span></button>
+          ${editar ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
         </div>
 
-        <div id="so-padron">
+        <div id="so-maestra">
           ${editar ? `
-          <div class="card" style="margin-bottom:14px">
+          <div class="card" style="margin-bottom:12px">
             <div class="fila"><span class="k">Socio nuevo</span><span class="pn-sp"></span>
               <button class="btn btn-pri" id="so-alta-completa" type="button">+ Dar de alta</button></div>
             <p class="so-help">El alta completa: acceso a la carta, ficha en el padrón, membresía y el primer cobro
             — todo de una vez. Si dejó una solicitud web, sus datos vienen precargados.</p>
           </div>
-          <details class="card" style="margin-bottom:14px">
+          <details class="card" style="margin-bottom:12px">
             <summary style="cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600">Alta rápida (solo acceso a la carta)</summary>
-            <p class="so-help" style="margin-top:10px">Le da acceso a la carta pero NO le crea ficha en el padrón:
-            el Mostrador no lo va a encontrar hasta que completes su ficha.</p>
+            <p class="so-help" style="margin-top:10px">Le da acceso a la carta pero NO le crea ficha en el padrón.</p>
             <form id="so-alta" class="fila so-alta">
               <input class="input" id="so-alta-email" type="email" required placeholder="email@gmail.com" autocomplete="off" />
               <input class="input" id="so-alta-nota" type="text" placeholder="Nota (ej. Gastón — WhatsApp)" autocomplete="off" />
@@ -944,14 +872,17 @@
               <span id="so-alta-msg" class="msg"></span>
             </form>
           </details>` : ''}
+          <div id="mu-tiles"></div>
+          <div id="mu-sugerencias"></div>
           <div class="card">
             <div class="fila" style="flex-wrap:wrap">
-              <input class="input" id="so-buscar" type="search" placeholder="Buscar por nombre, email o nota…" autocomplete="off" style="max-width:280px" />
-              <div id="so-stats" class="fila" style="flex-wrap:wrap"></div>
+              <input class="input" id="mu-buscar" type="search" placeholder="Buscar por nombre, email, DNI, código…" autocomplete="off" style="max-width:300px" />
+              <div id="mu-chips" class="fila" style="flex-wrap:wrap"></div>
               <span class="pn-sp"></span>
+              <span id="mu-total" style="color:var(--muted);font-size:12px"></span>
               <span id="so-msg" class="msg"></span>
             </div>
-            <div id="so-lista" style="margin-top:14px"><div class="vacio">⏳ Cargando…</div></div>
+            <div id="mu-lista" style="margin-top:12px"><div class="vacio">⏳ Cargando…</div></div>
           </div>
         </div>
 
@@ -963,23 +894,17 @@
           </div>
         </div>
 
-        <div id="so-fichas" hidden>
-          <p class="so-help" style="max-width:76ch">La ficha financiera de cada socio: su email (para el débito
-          automático), teléfono y membresía. Viene de la hoja Pacientes del Excel — acá se corrige y se completa.</p>
-          <div id="sf-sugerencias"></div>
-          <div class="card">
-            <div class="fila" style="flex-wrap:wrap">
-              <input class="input" id="sf-buscar" type="search" placeholder="Buscar socio…" autocomplete="off" style="max-width:280px" />
-              <span class="pn-sp"></span>
-              <span id="sf-msg" class="msg"></span>
-            </div>
-            <div id="sf-lista" style="margin-top:14px"><div class="vacio">⏳ Cargando…</div></div>
-          </div>
+        <div id="so-unificar" hidden>
+          <p class="so-help" style="max-width:78ch;margin:0 0 12px">El volcado oficial del portal de REPROCANN
+          (cuenta de la ONG): actualiza solo a los vinculados y propone pares para confirmar. Nada se une sin tu click.</p>
+          <div id="ru-panel"></div>
         </div>`
 
-      // "Dar de alta" desde Unificar pacientes (módulo REPROCANN): la precarga
-      // viaja por sessionStorage; si este módulo ya estaba inicializado, el
-      // evento avisa que hay que abrir el alta ahora.
+      // precarga del alta que llega desde Unificar ("Dar de alta")
+      try {
+        const pre = JSON.parse(sessionStorage.getItem('so-alta-prefill') || 'null')
+        if (pre && editar) { /* se consume dentro de altaAbrir */ }
+      } catch { /* nada */ }
       if (editar && sessionStorage.getItem('so-alta-prefill')) altaAbrir()
       window.addEventListener('so-alta-prefill', () => {
         if (editar && sessionStorage.getItem('so-alta-prefill')) altaAbrir()
@@ -990,25 +915,91 @@
         const b = e.target.closest('button[data-sub]')
         if (!b) return
         el.querySelectorAll('#so-subs button').forEach((x) => x.classList.toggle('on', x === b))
-        el.querySelector('#so-padron').hidden = b.dataset.sub !== 'padron'
+        el.querySelector('#so-maestra').hidden = b.dataset.sub !== 'maestra'
         el.querySelector('#so-solicitudes').hidden = b.dataset.sub !== 'solicitudes'
-        el.querySelector('#so-fichas').hidden = b.dataset.sub !== 'fichas'
-        if (b.dataset.sub === 'fichas') sfCargar()
+        const uni = el.querySelector('#so-unificar')
+        if (uni) uni.hidden = b.dataset.sub !== 'unificar'
+        if (b.dataset.sub === 'unificar') ruCargar()
+        if (b.dataset.sub === 'maestra') muCargar()
       })
-      sfInit(el.querySelector('#so-fichas'))
 
-      el.querySelector('#so-buscar').addEventListener('input', (e) => {
-        q = e.target.value.trim().toLowerCase()
-        renderPadron()
+      el.querySelector('#mu-buscar').addEventListener('input', (e) => {
+        muQ = e.target.value.trim().toLowerCase()
+        muRender()
+        el.querySelector('#mu-buscar').focus()
       })
-      const alta = el.querySelector('#so-alta')
-      if (alta) alta.addEventListener('submit', onAlta)
-      const altaC = el.querySelector('#so-alta-completa')
-      if (altaC) altaC.addEventListener('click', altaAbrir)
-      el.addEventListener('click', onClick)
-      el.addEventListener('change', onChange)
 
-      cargarSocios()
+      const altaBtn = el.querySelector('#so-alta-completa')
+      if (altaBtn) altaBtn.addEventListener('click', () => altaAbrir())
+      const altaForm = el.querySelector('#so-alta')
+      if (altaForm) altaForm.addEventListener('submit', onAlta)
+
+      // delegación de clicks del módulo
+      el.addEventListener('click', async (e) => {
+        // tiles y chips = filtros de la misma lista
+        const tile = e.target.closest('.mu-tile')
+        if (tile) { muFiltro = muFiltro === tile.dataset.f ? '' : tile.dataset.f; muRender(); return }
+        const chip = e.target.closest('#mu-chips .chip')
+        if (chip) { muFiltro = chip.dataset.f; muRender(); return }
+        // sugerencias de email
+        const sug = e.target.closest('.mu-sug')
+        if (sug) {
+          const r = await fetch('/api/panel/padron/sugerencia', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ socio_id: Number(sug.dataset.id), aceptar: !!sug.dataset.ok }),
+          })
+          const d = await r.json().catch(() => ({}))
+          aviso(r.ok ? (d.aplicado ? '✔ email vinculado' : 'descartado') : '✗ ' + (d.error || 'error'), r.ok ? 'ok' : 'err')
+          muCargar(true)
+          return
+        }
+        // abrir la ficha 360° (el WhatsApp no la abre)
+        if (e.target.closest('.mu-wa')) return
+        const fila = e.target.closest('.mu-fila')
+        if (fila && fila.dataset.id) {
+          window.PanelSocioDetalle.abrir(Number(fila.dataset.id), () => muCargar(true))
+          return
+        }
+        // unificar pacientes (ru-)
+        const si = e.target.closest('.ru-si')
+        if (si) {
+          if (si.dataset.cuidado && !confirm('Los datos no coinciden del todo. ¿Vincular igual?')) return
+          ruDecidir({ dni: si.dataset.dni, socio_id: Number(si.dataset.socio), aceptar: true }, si); return
+        }
+        const no = e.target.closest('.ru-no')
+        if (no) { ruDecidir({ dni: no.dataset.dni, socio_id: Number(no.dataset.socio), aceptar: false }, no); return }
+        const ning = e.target.closest('.ru-ninguno')
+        if (ning) { ruDecidir({ dni: ning.dataset.dni, rechazar_socio_ids: ning.dataset.socios.split(',').map(Number) }, ning); return }
+        const altaRu = e.target.closest('.ru-alta')
+        if (altaRu) {
+          const p = (ruDatos && ruDatos.sinMatch || []).find((x) => x.dni === altaRu.dataset.dni)
+          if (!p) return
+          const PASO = { Aprobado: 'aprobado', PendienteEvaluacion: 'en_evaluacion', PendienteVinculacionCultivador: 'cargado', PendienteConsentimientoPaciente: 'cargado', PendienteConsentimiento: 'cargado', ObservadoPorPaciente: 'cargado', PendienteRevisionMedica: 'en_evaluacion' }
+          sessionStorage.setItem('so-alta-prefill', JSON.stringify({
+            nombre: `${p.nombre} ${p.apellido}`.trim(), documento: p.dni,
+            reprocann_estado: PASO[p.estado] || 'esperando_codigo', reprocann_vence: p.vence || '',
+          }))
+          altaAbrir()
+          return
+        }
+        // solicitudes: los handlers viven en onClick (compartido)
+        onClick(e)
+      })
+
+      // badge de pares pendientes de Unificar, sin abrir la pestaña
+      if (editar) {
+        fetch('/api/panel/reprocann/unificar', { credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (!d) return
+            ruDatos = d
+            const cnt = el.querySelector('#ru-cnt')
+            if (cnt) { cnt.hidden = !d.pares.length; cnt.textContent = d.pares.length }
+          })
+          .catch(() => { /* sin red no hay badge */ })
+      }
+
+      muCargar()
       cargarSolicitudes()
     },
   })
