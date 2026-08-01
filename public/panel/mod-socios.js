@@ -109,15 +109,17 @@
   let muQ = ''
   let muCargado = false
   // F5 vuelve exactamente adonde estabas (regla de la casa)
+  let muAgrupar = false
   try {
     const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
     muFiltro = nav.filtro || ''
     muQ = nav.q || ''
+    muAgrupar = !!nav.agrupar
   } catch { /* nada */ }
   const guardarNav = (sub) => {
     try {
       const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
-      sessionStorage.setItem('so-nav', JSON.stringify({ filtro: muFiltro, q: muQ, sub: sub || nav.sub || 'maestra' }))
+      sessionStorage.setItem('so-nav', JSON.stringify({ filtro: muFiltro, q: muQ, agrupar: muAgrupar, sub: sub || nav.sub || 'maestra' }))
     } catch { /* nada */ }
   }
   const mesActual = () => new Date().toISOString().slice(0, 7)
@@ -154,6 +156,7 @@
     if (muFiltro === 'porVencer') return !!s.por_vencer
     if (muFiltro === 'sinDebito') return !!s.tier && !['activa', 'pendiente'].includes(s.debito_estado) && !s.debito_no_insistir
     if (muFiltro === 'debeMes') return debeElMes(s)
+    if (muFiltro.startsWith('paso:')) return s.reprocann_estado === muFiltro.slice(5)
     if (muFiltro === 'noInsistir') return !!s.debito_no_insistir
     if (muFiltro === 'sinIngresar') return s.carta && !s.carta.lastLogin
     if (muFiltro === 'sinAcceso') return !s.carta && !s.sinFicha
@@ -322,6 +325,22 @@
     cont.querySelector('#mu-chips').innerHTML = CHIPS.map(([v, n]) =>
       `<button class="chip ${muFiltro === v ? 'on' : ''}" data-f="${v}" type="button">${n}</button>`).join('')
 
+    // segunda fila: el embudo entero como chips — solo los pasos con gente,
+    // en el orden del trámite, con su cuenta. Más el modo agrupado.
+    const cuentaPaso = {}
+    for (const x of vivos) cuentaPaso[x.reprocann_estado] = (cuentaPaso[x.reprocann_estado] || 0) + 1
+    const QCOLOR = { club: 'var(--dan)', paciente: 'var(--amb)', medico: 'var(--vio)', organismo: 'var(--muted)' }
+    const chipsRc = (MU.pasos || [])
+      .filter((p) => cuentaPaso[p.id])
+      .map((p) => `<button class="chip ${muFiltro === 'paso:' + p.id ? 'on' : ''}" data-f="paso:${p.id}" type="button" title="${P.esc(p.ayuda)}">
+        <i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${p.id === 'aprobado' || p.id === 'autocultivo' ? 'var(--grn)' : (QCOLOR[p.quien] || 'var(--muted)')};margin-right:5px;vertical-align:1px"></i>${P.esc(p.nombre)} <b>${cuentaPaso[p.id]}</b></button>`)
+      .join('')
+    const rc = cont.querySelector('#mu-chips-rc')
+    if (rc) rc.innerHTML = `
+      <span class="k" style="align-self:center;margin-right:2px">REPROCANN</span>${chipsRc}
+      <span class="pn-sp"></span>
+      <button class="chip ${muAgrupar ? 'on' : ''}" id="mu-agrupar" type="button" title="Ver la lista partida en secciones por estado del trámite">☰ Agrupar por estado</button>`
+
     let lista = socios.filter(muPasa)
     if (muQ) {
       lista = lista.filter((s) =>
@@ -331,6 +350,24 @@
     const caja = cont.querySelector('#mu-lista')
     if (!lista.length) {
       caja.innerHTML = '<div class="vacio">Nadie coincide con ese filtro.</div>'
+    } else if (muAgrupar && muFiltro !== 'papelera') {
+      // la lista entera partida por estado del trámite, en el orden del embudo
+      const sinPapelera = lista.filter((x) => !x.papelera && !x.sinFicha)
+      const QTAG = { club: ['Nos toca', 'tag-mal'], paciente: ['Le toca al paciente', 'tag-deb'], medico: ['Le toca a Ezequiel', 'tag-auto'], organismo: ['Ministerio', 'tag-off'] }
+      caja.innerHTML = (MU.pasos || []).map((p) => {
+        const grupo = sinPapelera.filter((x) => x.reprocann_estado === p.id)
+        if (!grupo.length) return ''
+        const [qtxt, qcls] = QTAG[p.quien] || ['', 'tag-ok']
+        return `<div style="margin-bottom:16px">
+          <div class="fila" style="margin-bottom:6px">
+            <b style="font-size:13.5px">${P.esc(p.nombre)}</b>
+            ${qtxt ? `<span class="tag ${qcls}">${qtxt}</span>` : '<span class="tag tag-ok">al día</span>'}
+            <span style="color:var(--muted);font-size:12px">· ${grupo.length}</span>
+            <span class="pn-sp"></span>
+            <span style="color:var(--muted);font-size:11px">${P.esc(p.ayuda)}</span>
+          </div>
+          ${muTabla(grupo)}</div>`
+      }).join('') || '<div class="vacio">Nadie coincide.</div>'
     } else if (muQ || muFiltro) {
       // buscando o filtrando: una sola tabla plana con todo lo que matchea
       caja.innerHTML = muTabla(lista)
@@ -1117,6 +1154,7 @@
             <div class="fila" style="flex-wrap:wrap">
               <input class="input" id="mu-buscar" type="search" placeholder="Buscar por nombre, email, DNI, código…" autocomplete="off" style="max-width:300px" />
               <div id="mu-chips" class="fila" style="flex-wrap:wrap"></div>
+              <div id="mu-chips-rc" class="fila" style="flex-wrap:wrap;flex-basis:100%;margin-top:8px;gap:5px"></div>
               <span class="pn-sp"></span>
               <span id="mu-total" style="color:var(--muted);font-size:12px"></span>
               <span id="so-msg" class="msg"></span>
@@ -1183,8 +1221,14 @@
         // tiles y chips = filtros de la misma lista
         const tile = e.target.closest('.mu-tile')
         if (tile) { muFiltro = muFiltro === tile.dataset.f ? '' : tile.dataset.f; muRender(); return }
-        const chip = e.target.closest('#mu-chips .chip')
-        if (chip) { muFiltro = chip.dataset.f; muRender(); return }
+        const agr = e.target.closest('#mu-agrupar')
+        if (agr) { muAgrupar = !muAgrupar; muRender(); return }
+        const chip = e.target.closest('#mu-chips .chip, #mu-chips-rc .chip')
+        if (chip && chip.dataset.f !== undefined) {
+          muFiltro = muFiltro === chip.dataset.f ? '' : chip.dataset.f
+          muRender()
+          return
+        }
         // sugerencias de email
         const sug = e.target.closest('.mu-sug')
         if (sug) {
