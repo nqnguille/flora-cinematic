@@ -327,10 +327,16 @@
         <p class="so-help">Alguien se suscribió desde un link y su cuenta de Mercado Pago no coincide con ningún
         email del padrón. Decí quién es y sus débitos (pasados y futuros) quedan enganchados al socio.</p>
         ${ident.pendientes.map((su) => `<div style="padding:9px 0;border-top:1px solid var(--line)">
-          <div><b style="font-style:italic">${P.esc(su.mp_payer_email || 'pagador sin email')}</b>
+          <div><b>${P.esc((su.pagador && su.pagador.nombre) || su.mp_payer_email || 'pagador sin datos')}</b>
             · ${P.esc(su.tier || '—')} · ${P.fmt(su.monto)}/mes
             ${su.pagos ? ` · <b>${su.pagos} pago(s)</b> sin socio` : ''}
             <span class="tag ${su.estado === 'activa' ? 'tag-ok' : 'tag-deb'}">${P.esc(su.estado)}</span></div>
+          ${su.pagador ? `<div style="color:var(--muted);font-size:11.5px;margin-top:2px">
+            ${[su.pagador.dni ? 'DNI ' + su.pagador.dni : '', su.pagador.email || su.mp_payer_email || '',
+               su.pagador.nickname ? 'MP: ' + su.pagador.nickname : '',
+               su.pagador.titular_tarjeta && su.pagador.titular_tarjeta !== su.pagador.nombre ? 'tarjeta de ' + su.pagador.titular_tarjeta : '',
+               su.pagador.metodo === 'account_money' ? 'paga con dinero en cuenta' : su.pagador.metodo || '']
+              .filter(Boolean).map((x) => P.esc(x)).join(' · ')}</div>` : ''}
           ${su.candidatos.length ? `<div class="so-help" style="margin:4px 0 2px">¿Es alguno de estos?</div>
           ${su.candidatos.map((c) => `<div class="fila" style="padding:3px 0">
             <span>${P.esc(c.nombre)} <span style="color:var(--muted);font-size:11px">${P.esc(c.tier)}${c.senales.length ? ' · ' + P.esc(c.senales.join(', ')) : ''}</span></span>

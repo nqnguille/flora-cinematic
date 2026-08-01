@@ -273,6 +273,56 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
           GROUP BY s.id`,
       ).all<{ id: number; nombre: string; email: string | null; tier: string; link_enviado: string | null; enviado_tier: string | null }>(),
     ]);
+    // Lo que MP sabe del pagador: del último pago real salen nombre, DNI,
+    // email y el titular de la tarjeta — mucho más que el payer_email del
+    // preapproval. Con el DNI, el candidato sale solo.
+    const pagadores = new Map<number, Record<string, unknown>>();
+    if (env.MP_ACCESS_TOKEN) {
+      for (const su of sinDuenio.results) {
+        const dato: Record<string, unknown> = {};
+        const mov = await env.DB.prepare(
+          `SELECT ref FROM movimientos WHERE suscripcion_id = ? AND ref LIKE 'mp:%' ORDER BY fecha DESC, id DESC LIMIT 1`,
+        ).bind(su.id).first<{ ref: string }>();
+        if (mov) {
+          const pago = await mpFetch(env, `/v1/payments/${mov.ref.slice(3)}`);
+          if (pago.ok) {
+            const py = (pago.data.payer || {}) as Record<string, unknown>;
+            const ident = (py.identification || {}) as Record<string, unknown>;
+            const card = (pago.data.card || {}) as Record<string, unknown>;
+            const holder = (card.cardholder || {}) as Record<string, unknown>;
+            const hIdent = (holder.identification || {}) as Record<string, unknown>;
+            dato.nombre = [py.first_name, py.last_name].filter(Boolean).join(' ') || null;
+            dato.dni = String(ident.number || hIdent.number || '').replace(/\D/g, '') || null;
+            dato.email = String(py.email || '') || null;
+            dato.titular_tarjeta = String(holder.name || '') || null;
+            dato.metodo = String(pago.data.payment_method_id || '') || null;
+          }
+        }
+        if (!dato.nombre || !dato.dni) {
+          // el preapproval y el perfil público del pagador completan lo que falte
+          const pre = await mpFetch(env, `/preapproval/${su.mp_preapproval_id}`);
+          if (pre.ok) {
+            dato.email = dato.email || String(pre.data.payer_email || '') || null;
+            const payerId = pre.data.payer_id;
+            if (payerId) {
+              const u = await mpFetch(env, `/users/${payerId}`);
+              if (u.ok) {
+                dato.nombre = dato.nombre || [u.data.first_name, u.data.last_name].filter(Boolean).join(' ') || null;
+                dato.nickname = String(u.data.nickname || '') || null;
+              }
+            }
+          }
+        }
+        pagadores.set(Number(su.id), dato);
+      }
+    }
+    // candidato directo por DNI del pagador contra el padrón
+    const porDoc = new Map<string, { id: number; nombre: string }>();
+    const docs = await env.DB.prepare(
+      `SELECT id, nombre, documento FROM socios WHERE documento IS NOT NULL AND (numero IS NULL OR numero != -1) AND papelera IS NULL`,
+    ).all<{ id: number; nombre: string; documento: string }>();
+    for (const d of docs.results) porDoc.set(d.documento, { id: d.id, nombre: d.nombre });
+
     const hace30d = Date.now() - 30 * 86400000;
     const pendientes = sinDuenio.results.map((su) => {
       const localPart = String(su.mp_payer_email || '').split('@')[0];
@@ -291,7 +341,19 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
         .filter((c) => c.puntaje > 0)
         .sort((a, b) => b.puntaje - a.puntaje)
         .slice(0, 3);
-      return { ...su, candidatos };
+      const pagador = pagadores.get(Number(su.id)) || null;
+      // si el DNI del pago coincide con un socio, ese es EL candidato
+      if (pagador && pagador.dni && porDoc.has(String(pagador.dni))) {
+        const hit = porDoc.get(String(pagador.dni))!;
+        if (!candidatos.some((c) => c.socio_id === hit.id)) {
+          candidatos.unshift({ socio_id: hit.id, nombre: hit.nombre, email: null, tier: su.tier as string, puntaje: 100, senales: ['el DNI del pago coincide'] });
+        } else {
+          const c = candidatos.find((x) => x.socio_id === hit.id)!;
+          c.puntaje += 100; c.senales.unshift('el DNI del pago coincide');
+          candidatos.sort((a, b) => b.puntaje - a.puntaje);
+        }
+      }
+      return { ...su, pagador, candidatos };
     });
     return json({ ok: true, pendientes, pool: pool.results.map((s) => ({ socio_id: s.id, nombre: s.nombre, tier: s.tier })) });
   }
