@@ -30,6 +30,11 @@ interface Env {
 
 const MP = 'https://api.mercadopago.com';
 
+// MEDIUM -> Medium, EXTRA LARGE -> Extra Large (para el copy de cara al socio)
+function tierLindo(t: string): string {
+  return String(t || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+}
+
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
@@ -54,7 +59,7 @@ const SUSC_RELEVANTE = `(
    ORDER BY CASE s2.estado WHEN 'activa' THEN 0 WHEN 'pendiente' THEN 1
             WHEN 'pausada' THEN 2 ELSE 3 END, s2.actualizado DESC, s2.id DESC LIMIT 1)`;
 
-interface PlanInfo { plan_id: string; link: string; monto: number; tipo: string; gramos: number | null }
+interface PlanInfo { plan_id: string; link: string; monto: number; contado: number | null; tipo: string; gramos: number | null }
 
 // Los planes del panel de MP, por tier (lista vigente gana). El link no se
 // guarda: se construye del id — una sola verdad, cero drift.
@@ -72,6 +77,7 @@ async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
       plan_id: r.mp_plan_id,
       link: `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${r.mp_plan_id}`,
       monto: r.debito ?? r.contado ?? 0,
+      contado: r.contado,
       tipo: r.tipo,
       gramos: r.gramos,
     };
@@ -83,11 +89,13 @@ async function planesDebito(env: Env): Promise<Record<string, PlanInfo>> {
 // blanco) y voz «verde cómplice»: gratitud primero, datos de plata al grano.
 async function enviarMailDebito(
   env: Env,
-  d: { email: string; nombre: string; tier: string; monto: number; link: string },
+  d: { email: string; nombre: string; tier: string; monto: number; contado: number | null; link: string },
 ): Promise<{ enviado: boolean; error?: string }> {
   if (!env.RESEND_API_KEY) return { enviado: false, error: 'RESEND_API_KEY no configurado' };
   const saludo = d.nombre ? d.nombre.split(/\s+/)[0] : '';
   const montoFmt = '$' + d.monto.toLocaleString('es-AR');
+  const contadoFmt = d.contado ? '$' + d.contado.toLocaleString('es-AR') : null;
+  const tierFmt = tierLindo(d.tier);
   const html = `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Flora</title></head>
@@ -103,12 +111,12 @@ async function enviarMailDebito(
           <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.3;color:#381f56;">${saludo ? `Gracias por elegirnos, ${saludo}` : 'Gracias por elegirnos'}</h1>
         </td></tr>
         <tr><td style="padding:16px 36px 0;text-align:center;">
-          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Tu membres&iacute;a <strong style="color:#381f56;">${d.tier}</strong> con d&eacute;bito autom&aacute;tico: <strong style="color:#381f56;">${montoFmt} por mes</strong>, 3 cuotas con el 20% menos que de contado. Se autoriza una sola vez desde Mercado Pago y la das de baja cuando quieras.</p>
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Tu plan <strong style="color:#381f56;">${tierFmt}</strong>${contadoFmt ? ` (${contadoFmt})` : ''} tiene un <strong style="color:#381f56;">20% de descuento</strong> adhiri&eacute;ndote al d&eacute;bito autom&aacute;tico por 3 meses: te queda en <strong style="color:#381f56;">${montoFmt}</strong>. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/d&eacute;bito/dinero en cuenta) y pod&eacute;s cancelarlo si te arrepent&iacute;s.</p>
         </td></tr>
         <tr><td style="padding:28px 36px 0;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
-            <tr><td style="border-radius:999px;background:#0A503C;">
-              <a href="${d.link}" style="display:inline-block;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:999px;">Activar a tiempo &rarr;</a>
+            <tr><td style="border-radius:8px;background:#009EE3;">
+              <a href="${d.link}" style="display:inline-block;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:13.5px;font-weight:700;letter-spacing:0.02em;text-decoration:none;padding:13px 26px;border-radius:8px;"><img src="https://floraong.ar/img/mp-logo.png" width="26" height="18" alt="" style="vertical-align:middle;margin-right:10px;border:0;">SUSCRIBIR CON MERCADOPAGO</a>
             </td></tr>
           </table>
         </td></tr>
@@ -175,7 +183,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     ]);
     const cola = rows.results.map((r) => {
       const p = planes[String(r.tier)];
-      return { ...r, monto: p?.monto ?? null, plan_link: p?.link ?? null };
+      return { ...r, monto: p?.monto ?? null, contado: p?.contado ?? null, plan_link: p?.link ?? null };
     });
     return json({ ok: true, configurado: !!env.MP_ACCESS_TOKEN, cola });
   }
@@ -184,8 +192,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   // Socios): resuelve la ficha por email y devuelve el link del plan de su
   // tier con el estado del débito — o qué le falta para poder mandárselo.
   if (vista === 'link') {
-    const email = (new URL(request.url).searchParams.get('email') || '').trim().toLowerCase();
-    if (!email) return json({ error: 'Falta email' }, 400);
+    const url = new URL(request.url);
+    const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+    const socioIdParam = Number(url.searchParams.get('socio_id')) || 0;
+    if (!email && !socioIdParam) return json({ error: 'Falta email o socio_id' }, 400);
     const socio = await env.DB.prepare(
       `SELECT s.id, s.nombre, s.telefono, s.email, s.debito_no_insistir,
               (SELECT tier FROM membresias m WHERE m.socio_id = s.id AND m.hasta IS NULL AND m.modalidad != 'plan'
@@ -195,21 +205,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
               (SELECT e.via FROM envios_debito e WHERE e.socio_id = s.id ORDER BY e.enviado DESC LIMIT 1) AS link_via
          FROM socios s
          LEFT JOIN suscripciones su ON su.id = ${SUSC_RELEVANTE}
-        WHERE s.email = ? AND (s.numero IS NULL OR s.numero != -1)`,
-    ).bind(email).first<Record<string, unknown>>();
+        WHERE (s.email = ?1 OR s.id = ?2) AND (s.numero IS NULL OR s.numero != -1)`,
+    ).bind(email || null, socioIdParam || null).first<Record<string, unknown>>();
     if (!socio) return json({ ok: true, sinFicha: true });
     const planes = await planesDebito(env);
     // todos los planes de membresía: el modal deja ELEGIR (el tier vigente es
     // solo la sugerencia — puede estar retirando 10 y querer pasarse a 20)
     const opciones = Object.entries(planes)
       .filter(([, p]) => p.tipo === 'membresia')
-      .map(([tier, p]) => ({ tier, monto: p.monto, gramos: p.gramos, link: p.link }))
+      .map(([tier, p]) => ({ tier, monto: p.monto, contado: p.contado, gramos: p.gramos, link: p.link }))
       .sort((a, b) => (a.gramos || 0) - (b.gramos || 0));
     const plan = socio.tier ? planes[String(socio.tier)] : null;
     return json({
       ok: true,
       socio_id: socio.id, nombre: socio.nombre, telefono: socio.telefono,
-      tier: socio.tier || null, monto: plan?.monto ?? null, link: plan?.link ?? null,
+      tier: socio.tier || null, monto: plan?.monto ?? null, contado: plan?.contado ?? null, link: plan?.link ?? null,
       planes: opciones,
       debito_estado: socio.debito_estado, debito_fin: socio.debito_fin,
       link_enviado: socio.link_enviado, link_via: socio.link_via,
@@ -307,14 +317,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (via === 'email') {
       if (!socio.email) return json({ error: 'El socio no tiene email' }, 400);
       const mail = await enviarMailDebito(env, {
-        email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, link: plan.link,
+        email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, contado: plan.contado, link: plan.link,
       });
       if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}) — mandáselo por WhatsApp` }, 502);
     }
     await env.DB.prepare(
       `INSERT INTO envios_debito (socio_id, tier, mp_plan_id, via, enviado_por) VALUES (?, ?, ?, ?, ?)`,
     ).bind(socioId, tier, plan.plan_id, via, auth.email).run();
-    return json({ ok: true, via, link: plan.link, monto: plan.monto, tier });
+    return json({ ok: true, via, link: plan.link, monto: plan.monto, contado: plan.contado, tier });
   }
 
   // La decisión humana sobre una suscripción descubierta sin socio.

@@ -196,12 +196,13 @@
     const msg = cuerpo.querySelector('#so-mp-msg')
     const pintarPlan = () => {
       cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.classList.toggle('on', b.dataset.tier === elegido.tier))
-      cuerpo.querySelector('#so-mp-desc').innerHTML = `<b>3 cuotas mensuales de ${P.fmt(elegido.monto)}</b> (${P.esc(elegido.tier)} con el 20%).
+      cuerpo.querySelector('#so-mp-desc').innerHTML = `${elegido.contado ? `<span style="color:var(--muted);text-decoration:line-through">${P.fmt(elegido.contado)}</span> → ` : ''}<b>${P.fmt(elegido.monto)} por mes</b> con débito automático — 20% off, 3 cuotas y corta solo.
         ${d.link_enviado ? `Ya le mandaste un link por ${d.link_via === 'email' ? 'email' : 'WhatsApp'} — esto cuenta como reenvío.` : ''}`
       cuerpo.querySelector('#so-mp-link').value = elegido.link
       const wa = cuerpo.querySelector('#so-mp-wa')
+      const tierL = elegido.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
       if (wa) wa.href = `https://wa.me/${tel}?text=${encodeURIComponent(
-        `Hola ${String(d.nombre).split(' ')[0]}! Te paso el link para activar el débito automático de tu membresía ${elegido.tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(elegido.monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${elegido.link}`)}`
+        `Hola ${String(d.nombre).split(' ')[0]}! Tu plan ${tierL}${elegido.contado ? ` (${P.fmt(elegido.contado)})` : ''} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(elegido.monto)} por mes. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${elegido.link}`)}`
     }
     pintarPlan()
     cuerpo.querySelectorAll('.so-mp-tier').forEach((b) => b.addEventListener('click', () => {
@@ -652,9 +653,9 @@
     function pintar2() {
       const opciones = tarifas.length ? tarifas : [
         { item: 'SMALL', gramos: 10, contado: 200000, debito: 160000 },
-        { item: 'MEDIUM', gramos: 20, contado: 360000, debito: 288000 },
-        { item: 'LARGE', gramos: 30, contado: 480000, debito: 384000 },
-        { item: 'EXTRA LARGE', gramos: 40, contado: 600000, debito: 480000 },
+        { item: 'MEDIUM', gramos: 20, contado: 375000, debito: 300000 },
+        { item: 'LARGE', gramos: 30, contado: 525000, debito: 420000 },
+        { item: 'EXTRA LARGE', gramos: 40, contado: 625000, debito: 500000 },
       ]
       cuerpo.innerHTML = `${pasosHtml()}
         <p class="so-help" style="margin:0 0 10px">Elegí la membresía de ${P.esc(datos.nombre.split(' ')[0])}.
@@ -732,8 +733,9 @@
       if (cobro === 'debito') {
         const t = tarifas.find((x) => x.item === datos.tier)
         if (t && t.debito_link) {
+          const tierL = datos.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
           const waDeb = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Te paso el link para activar el débito automático de tu membresía ${datos.tier} con el 20% de descuento: 3 cuotas de ${P.fmt(t.debito)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${t.debito_link}`)}`
+            `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Tu plan ${tierL} (${P.fmt(t.contado)}) tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(t.debito)} por mes. Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${t.debito_link}`)}`
           extra = `<div style="margin-top:12px"><span class="k">Link del débito (plan ${P.esc(datos.tier)})</span>
             <input class="input" value="${P.esc(t.debito_link)}" readonly onclick="this.select()" style="margin-top:6px" />
             <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" id="al-wa-debito" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`

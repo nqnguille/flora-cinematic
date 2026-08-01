@@ -362,7 +362,7 @@
             <span class="pn-sp"></span>
             ${c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
               data-tel="${P.esc(c.telefono || '')}" data-email="${P.esc(c.email || '')}" data-tier="${P.esc(c.tier)}"
-              data-monto="${c.monto || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
+              data-monto="${c.monto || 0}" data-contado="${c.contado || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
               : '<span class="tag tag-mal">sin plan en MP</span>'}
             <button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>
           </div>`
@@ -418,22 +418,27 @@
     pintar()
   }
 
-  function waTexto(tier, monto, link) {
-    return `Hola! Te paso el link para activar el débito automático de tu membresía ${tier} de Flora con el 20% de descuento: 3 cuotas de ${P.fmt(monto)} por mes. Se autoriza una sola vez desde Mercado Pago y corta solo al completarse: ${link}`
+  const tierLindo = (t) => String(t || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+
+  function waTexto(tier, contado, monto, link) {
+    const plan = contado
+      ? `Tu plan ${tierLindo(tier)} (${P.fmt(contado)}) tiene un 20% de descuento adhiriéndote al débito automático por 3 meses: te queda en ${P.fmt(monto)} por mes.`
+      : `Tu plan ${tierLindo(tier)} tiene un 20% de descuento con débito automático por 3 meses: ${P.fmt(monto)} por mes.`
+    return `Hola! ${plan} Se autoriza una sola vez desde MercadoPago, con el medio de pago que elijas (tarjetas/débito/dinero en cuenta), y podés cancelarlo si te arrepentís. Suscribite acá: ${link}`
   }
 
   // El modal de envío: el link ya existe (es el del plan) — solo se elige el
   // canal. Cada envío queda registrado para el "mandado hace N días".
   function mandarLink(ds) {
     const ov = P.modal(`Débito automático — ${ds.nombre}`, `
-      <p style="color:var(--ink2);margin:0 0 12px"><b>3 cuotas mensuales de ${P.fmt(Number(ds.monto))}</b>
-      (${P.esc(ds.tier)} con el 20%). Es el link del plan precargado en Mercado Pago: al completar las 3 cuotas
-      corta solo, y la renovación se manda desde acá al precio vigente de ese momento.</p>
+      <p style="color:var(--ink2);margin:0 0 12px">Plan <b>${P.esc(tierLindo(ds.tier))}</b>${Number(ds.contado) ? ` (${P.fmt(Number(ds.contado))})` : ''}
+      con el <b>20% de descuento</b> por débito automático: <b>${P.fmt(Number(ds.monto))} por mes</b>, 3 cuotas y corta solo.
+      El socio lo autoriza una vez desde MercadoPago con el medio de pago que elija, y puede cancelarlo cuando quiera.</p>
       <input class="input" value="${P.esc(ds.link)}" readonly onclick="this.select()" />
       <div class="pn-mod-acciones">
         <button class="btn" id="fz-ml-copiar" type="button">Copiar</button>
         ${ds.email ? '<button class="btn" id="fz-ml-mail" type="button">Mandar por email</button>' : ''}
-        ${ds.tel ? `<a class="btn btn-pri" id="fz-ml-wa" href="https://wa.me/${ds.tel.replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(ds.tier, Number(ds.monto), ds.link))}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
+        ${ds.tel ? `<a class="btn btn-pri" id="fz-ml-wa" href="https://wa.me/${ds.tel.replace(/\D/g, '')}?text=${encodeURIComponent(waTexto(ds.tier, Number(ds.contado), Number(ds.monto), ds.link))}" target="_blank" rel="noopener">Mandar por WhatsApp</a>` : ''}
       </div>
       <p class="msg" id="fz-ml-msg" style="margin:8px 0 0"></p>`)
     const msg = ov.querySelector('#fz-ml-msg')
@@ -526,7 +531,17 @@
       return
     }
     const deb = e.target.closest('.fz-debito-btn')
-    if (deb) { mandarLink(deb.dataset); return }
+    if (deb) {
+      if (deb.dataset.link) { mandarLink(deb.dataset); return }
+      // desde Cobranza el botón solo trae socio+nombre: buscar el resto
+      deb.disabled = true
+      const r = await fetch(`/api/panel/mp/link?socio_id=${deb.dataset.socio}`, { credentials: 'include' })
+      const d = await r.json().catch(() => ({}))
+      deb.disabled = false
+      if (!r.ok || !d.link) { alert(d.error || (d.debito_estado === 'activa' ? 'Ya tiene el débito al día.' : 'No se pudo armar el link — ¿tiene membresía?')); return }
+      mandarLink({ socio: deb.dataset.socio, nombre: deb.dataset.nombre, tel: d.telefono || '', email: '', tier: d.tier, monto: d.monto, contado: d.contado || 0, link: d.link })
+      return
+    }
     const identBtn = e.target.closest('.fz-ident-btn')
     if (identBtn) { identificar(Number(identBtn.dataset.susc), Number(identBtn.dataset.socio), identBtn.dataset.nombre); return }
     const identNo = e.target.closest('.fz-ident-no')
