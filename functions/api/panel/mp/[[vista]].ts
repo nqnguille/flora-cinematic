@@ -454,12 +454,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     }
 
     // 2) refresco de las vivas que no son de estos planes (individuales legadas)
+    //    — y DEPURACIÓN: el modelo de preapproval individual está muerto
+    //    (decisión 01/08: solo links de plan), así que TODA pendiente
+    //    individual es un link viejo sin destino. Se cancela en MP y acá, y
+    //    el socio vuelve a la cola con su botón $. Las activas legadas (si
+    //    alguna vez las hubo) se respetan hasta que terminen solas.
     const vivas = await env.DB.prepare(
       `SELECT id, mp_preapproval_id, estado FROM suscripciones
         WHERE estado IN ('pendiente', 'activa', 'pausada') AND origen = 'individual'`,
     ).all<{ id: number; mp_preapproval_id: string; estado: string }>();
-    let revisadas = 0, cambiadas = 0;
+    let revisadas = 0, cambiadas = 0, depuradas = 0;
     for (const su of vivas.results) {
+      if (su.estado === 'pendiente') {
+        await mpFetch(env, `/preapproval/${su.mp_preapproval_id}`, { method: 'PUT', body: JSON.stringify({ status: 'cancelled' }) });
+        await env.DB.prepare(`UPDATE suscripciones SET estado = 'cancelada', actualizado = datetime('now') WHERE id = ?`).bind(su.id).run();
+        depuradas++;
+        continue;
+      }
       const r = await mpFetch(env, `/preapproval/${su.mp_preapproval_id}`);
       if (!r.ok) continue;
       revisadas++;
@@ -482,7 +493,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       `SELECT COUNT(*) n FROM suscripciones WHERE socio_id IS NULL AND no_es_socio = 0 AND estado != 'cancelada'`,
     ).first<{ n: number }>();
     return json({
-      ok: true, descubiertas, revisadas, cambiadas, rescatados,
+      ok: true, descubiertas, revisadas, cambiadas, rescatados, depuradas,
       sinIdentificar: sinIdentificar?.n ?? 0, planesInactivos,
     });
   }

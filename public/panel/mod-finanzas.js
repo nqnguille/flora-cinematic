@@ -318,7 +318,7 @@
         <span class="chip">${paraMandar.length} sin débito</span>
         ${ident.pendientes.length ? `<span class="chip" style="border-color:var(--amb);color:var(--amb)">${ident.pendientes.length} por identificar</span>` : ''}
         <span class="pn-sp"></span>
-        <span class="msg ok" style="font-size:11.5px">${sync ? `✔ al día${sync.descubiertas ? ` · ${sync.descubiertas} nueva(s)` : ''}${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}` : ''}</span>
+        <span class="msg ok" style="font-size:11.5px">${sync ? `✔ al día${sync.descubiertas ? ` · ${sync.descubiertas} nueva(s)` : ''}${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}${sync.depuradas ? ` · ${sync.depuradas} link(s) viejo(s) cancelado(s)` : ''}` : ''}</span>
         <button class="btn" id="fz-mp-refrescar" type="button">Actualizar estados</button>
       </div>
 
