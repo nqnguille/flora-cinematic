@@ -1,6 +1,7 @@
-import { requireAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -13,7 +14,7 @@ const CATEGORIAS = ['aceites', 'cremas', 'extracciones'];
 const MAX_ITEMS_POR_CATEGORIA = 40;
 
 async function guard(request: Request, env: Env) {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'catalogo_editar');
   if (check.status !== 200) {
     return Response.json(
       { ok: false, error: check.status === 401 ? 'no autenticado' : 'sin permisos de administrador' },

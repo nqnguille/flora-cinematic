@@ -1,6 +1,7 @@
-import { requireSuperAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -10,7 +11,7 @@ interface Env {
 // Sirve el adjunto (foto/PDF del REPROCANN) de una solicitud — a diferencia
 // de /foto/*, esto es privado: dato personal, no un asset de marketing.
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const check = await requireSuperAdmin(request, env);
+  const check = await requireCap(request, env, 'carta_gestionar');
   if (check.status !== 200) {
     return new Response(check.status === 401 ? 'No autenticado' : 'No autorizado', { status: check.status });
   }

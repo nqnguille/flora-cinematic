@@ -2,7 +2,7 @@
 // solo viaje: ficha D1, membresía vigente, suscripción de MP relevante,
 // último envío del link, actividad reciente y el acceso a la carta (KV).
 // Los montos de la actividad solo viajan si el rol puede verlos.
-import { requireRol, puede } from './_rol';
+import { requireCap, puede } from './_rol';
 import { saldoDe } from './_saldo';
 
 interface Env {
@@ -17,9 +17,8 @@ function json(data: unknown, status = 200): Response {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga', 'mostrador']);
+  const auth = await requireCap(request, env, 'padron_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
   const id = Number(new URL(request.url).searchParams.get('id'));
   if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
 

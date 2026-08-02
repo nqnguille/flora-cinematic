@@ -12,7 +12,7 @@
 // Regla de visibilidad: quien no tiene personal_ver ve los egresos de
 // sueldos AGRUPADOS como "Personal", sin concepto ni persona — los totales
 // no cambian, el detalle por persona queda solo para el presidente.
-import { requireRol, puede, type Rol } from '../_rol';
+import { requireCap, puede, type Rol } from '../_rol';
 
 interface Env {
   DB: D1Database;
@@ -45,7 +45,7 @@ function taparSueldos<T extends { categoria?: string; concepto?: string; persona
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga']);
+  const auth = await requireCap(request, env, 'finanzas_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const rol = auth.rol;
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
@@ -247,7 +247,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong_carga']);
+  const auth = await requireCap(request, env, 'finanzas_cargar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const rol = auth.rol;
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
@@ -315,7 +315,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
 };
 
 export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'finanzas_aprobar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   if (vista !== 'movimientos') return json({ error: 'Vista desconocida' }, 404);

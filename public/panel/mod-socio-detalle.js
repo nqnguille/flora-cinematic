@@ -62,7 +62,7 @@
   function pintar(d) {
     const s = d.socio
     const editar = P.puede('padron_editar')
-    const plata = P.puede('finanzas_aprobar')
+    const mp = P.puede('mp_enviar')
     const pasos = (window.PanelPasosReprocann || [])
     const paso = pasos.find((p) => p.id === s.reprocann_estado)
     const actualIdx = pasos.findIndex((p) => p.id === s.reprocann_estado)
@@ -139,7 +139,7 @@
               ${d.debito.fin ? ` · termina ${fFecha(d.debito.fin)}` : ''}` : 'Sin suscripción todavía.'}
             ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:11.5px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
           </div>
-          ${plata ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
+          ${mp ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn btn-pri" id="sd-debito" type="button">$ Mandar link de pago</button>
             <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
           </div>` : ''}
@@ -149,7 +149,7 @@
           <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
-          ${editar || P.puede('mostrador_operar') ? `
+          ${P.puede('reprocann_editar') ? `
           <div class="grid2" style="gap:10px;margin-top:8px">
             <div class="campo"><label class="lb">Paso</label>
               <select class="sel" id="sd-rc-paso">${pasos.map((p) => `<option value="${p.id}" ${s.reprocann_estado === p.id ? 'selected' : ''}>${P.esc(p.nombre)}</option>`).join('')}</select></div>
@@ -188,8 +188,8 @@
         ${editar ? `<details><summary>Zona peligrosa</summary>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar socio'}</button>
-            <button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>
-            ${d.carta.acceso ? '<button class="btn btn-peligro" id="sd-quitar-carta" type="button">Quitar acceso a la carta</button>' : ''}
+            ${P.puede('papelera_gestionar') ? `<button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>` : ''}
+            ${d.carta.acceso && P.puede('carta_gestionar') ? '<button class="btn btn-peligro" id="sd-quitar-carta" type="button">Quitar acceso a la carta</button>' : ''}
           </div>
           <p class="msg" id="sd-msg-zona" style="margin:6px 0 0"></p>
         </details>` : ''}

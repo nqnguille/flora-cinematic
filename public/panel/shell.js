@@ -149,9 +149,8 @@
     // identidad
     $('pn-quien-ini').textContent = iniciales(me.email)
     $('pn-quien-mail').textContent = me.email
-    // El rol interno es 'dueno'; en la ONG el cargo real es Presidente.
-    const ETIQUETA = { dueno: 'Presidente', socio_ong: 'Socio', socio_ong_carga: 'Socio · carga', mostrador: 'Mostrador' }
-    $('pn-rol').textContent = ETIQUETA[me.rol] || me.rol
+    // la etiqueta humana del rol la manda el server (/api/panel/me)
+    $('pn-rol').textContent = me.etiqueta || me.rol
     // el rail solo muestra lo que el rol puede
     document.querySelectorAll('.pn-rail button[data-sec]').forEach((b) => {
       const cap = b.dataset.cap

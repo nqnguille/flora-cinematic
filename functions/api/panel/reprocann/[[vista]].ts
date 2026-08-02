@@ -9,7 +9,7 @@
 // Por qué existe: el club es responsable del ÚLTIMO paso (vincular al paciente
 // como su cultivador con el mismo código). Sin esto no había forma de saber a
 // quién había que empujar: el 84 de 156 socios no tenía ni el dato cargado.
-import { requireRol, puede } from '../_rol';
+import { requireCap, puede } from '../_rol';
 import { extraerTramites, agruparPorPersona, pasoDe, emparejar, puntuar } from './_unificar';
 import type { TramitePortal } from './_unificar';
 
@@ -30,9 +30,8 @@ function json(data: unknown, status = 200): Response {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga', 'mostrador']);
+  const auth = await requireCap(request, env, 'padron_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
 
   if (vista === 'embudo') {
@@ -56,7 +55,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   // Los pares por confirmar y los trámites sin match. Solo presidente: acá
   // se ven los DNI oficiales del padrón del Ministerio.
   if (vista === 'unificar') {
-    if (auth.rol !== 'dueno') return json({ error: 'Sin permiso' }, 403);
+    if (!puede(auth.rol, 'reprocann_editar')) return json({ error: 'Sin permiso' }, 403);
     const [personas, vinculos, socios] = await Promise.all([
       env.DB.prepare(`SELECT * FROM tramites_portal`).all<Record<string, unknown>>(),
       env.DB.prepare(`SELECT socio_id, dni, estado, senales FROM vinculos_reprocann`).all<{ socio_id: number; dni: string; estado: string; senales: string | null }>(),
@@ -109,11 +108,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'mostrador']);
+  const auth = await requireCap(request, env, 'reprocann_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_editar') && !puede(auth.rol, 'mostrador_operar')) {
-    return json({ error: 'Sin permiso' }, 403);
-  }
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   if (vista !== 'socio') return json({ error: 'Vista desconocida' }, 404);
   let b: Record<string, unknown>;
@@ -192,7 +188,7 @@ async function sincronizarSocio(env: Env, socioId: number, per: TramitePortal, h
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'reprocann_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   const hoy = new Date().toISOString().slice(0, 10);

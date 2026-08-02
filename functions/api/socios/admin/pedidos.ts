@@ -1,6 +1,7 @@
-import { requireAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -12,7 +13,7 @@ const TTL_SECONDS = 90 * 24 * 60 * 60;
 const ESTADOS = ['pendiente', 'listo', 'entregado', 'cancelado'];
 
 async function guard(request: Request, env: Env) {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'reservas_operar');
   if (check.status !== 200) {
     return Response.json(
       { ok: false, error: check.status === 401 ? 'no autenticado' : 'sin permisos de administrador' },

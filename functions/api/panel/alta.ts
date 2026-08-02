@@ -6,7 +6,7 @@
 //
 //   GET  /api/panel/alta?email=…   → precarga desde la solicitud web (si existe)
 //   POST /api/panel/alta           → crea acceso + ficha + membresía (+ cobro)
-import { requireRol, puede } from './_rol';
+import { requireCap } from './_rol';
 
 interface Env {
   DB: D1Database;
@@ -90,7 +90,7 @@ async function enviarBienvenida(
 // Precarga: si esa persona ya dejó una solicitud web, sus datos vienen solos
 // (se termina la triple carga nombre/email/teléfono).
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'padron_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const email = (new URL(request.url).searchParams.get('email') || '').trim().toLowerCase();
   if (!email) return json({ error: 'Falta email' }, 400);
@@ -125,9 +125,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'padron_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
 
   let b: Record<string, unknown>;
   try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }

@@ -6,7 +6,7 @@
 //   POST  /api/panel/padron/membresia    → {socio_id, tier} asigna membresía vigente
 //   POST  /api/panel/padron/sugerencia   → {socio_id, aceptar: true|false}
 // Editar exige padron_editar (presidente); ver alcanza con padron_ver.
-import { requireRol, puede } from '../_rol';
+import { requireCap, puede } from '../_rol';
 import { PASOS } from '../reprocann/_pasos';
 import { tokens } from '../reprocann/_unificar';
 
@@ -24,9 +24,8 @@ function json(data: unknown, status = 200): Response {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga', 'mostrador']);
+  const auth = await requireCap(request, env, 'padron_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
 
   // La lista maestra de la ficha 360°: una fila por persona con las cuatro
@@ -158,7 +157,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'padron_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   if (vista !== 'socio') return json({ error: 'Vista desconocida' }, 404);
@@ -204,13 +203,16 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  // Guard grueso: alguna capacidad de escritura sobre el padrón. El permiso
+  // fino se chequea por vista (papelera y purgar tienen el suyo propio).
+  const auth = await requireCap(request, env, ['padron_editar', 'papelera_gestionar', 'papelera_purgar']);
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
 
   if (vista === 'membresia') {
+    if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
     const socioId = Number(body.socio_id);
     const tier = String(body.tier || '');
     if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
@@ -230,6 +232,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   // Papelera: mandar/restaurar en masa. Soft-delete siempre — las finanzas
   // históricas referencian socio_id y no se tocan.
   if (vista === 'papelera') {
+    if (!puede(auth.rol, 'papelera_gestionar')) return json({ error: 'Sin permiso' }, 403);
     const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Number.isFinite) : [];
     const accion = String(body.accion);
     if (!ids.length) return json({ error: 'Sin socios seleccionados' }, 400);
@@ -247,6 +250,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   // rastro operativo (movimientos, retiros, suscripciones, vínculos): las que
   // vinieron del Excel sin actividad. Si tiene historia, queda en la papelera.
   if (vista === 'purgar') {
+    if (!puede(auth.rol, 'papelera_purgar')) return json({ error: 'Sin permiso' }, 403);
     const id = Number(body.id);
     if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
     const socio = await env.DB.prepare(`SELECT nombre, papelera FROM socios WHERE id = ?`).bind(id).first<{ nombre: string; papelera: string | null }>();
@@ -269,6 +273,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   }
 
   if (vista === 'sugerencia') {
+    if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
     const socioId = Number(body.socio_id);
     const sug = await env.DB.prepare(`SELECT * FROM sugerencias_email WHERE socio_id = ?`).bind(socioId).first<{ email: string }>();
     if (!sug) return json({ error: 'No hay sugerencia para ese socio' }, 404);

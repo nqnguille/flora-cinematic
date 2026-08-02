@@ -1,6 +1,7 @@
-import { requireSuperAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -21,10 +22,10 @@ function parseRec(raw: string | null): any {
 }
 
 async function guard(request: Request, env: Env) {
-  const check = await requireSuperAdmin(request, env);
+  const check = await requireCap(request, env, 'carta_gestionar');
   if (check.status !== 200) {
     return Response.json(
-      { ok: false, error: check.status === 401 ? 'no autenticado' : 'solo el super admin puede gestionar socios' },
+      { ok: false, error: check.status === 401 ? 'no autenticado' : 'sin permiso para gestionar la carta de socios' },
       { status: check.status }
     );
   }
@@ -110,10 +111,16 @@ async function enviarMailTemporal(env: Env, { email, name }: { email: string; na
   }
 }
 
-// Lista de socios con su ficha (email + nota + perfil de Google capturado en login)
+// Lista de socios con su ficha (email + nota + perfil de Google capturado en login).
+// Lectura también para quien opera reservas (el buscador de reasignación).
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const denied = await guard(request, env);
-  if (denied) return denied;
+  const check = await requireCap(request, env, ['carta_gestionar', 'reservas_operar']);
+  if (check.status !== 200) {
+    return Response.json(
+      { ok: false, error: check.status === 401 ? 'no autenticado' : 'sin permiso' },
+      { status: check.status }
+    );
+  }
 
   const list = await env.SOCIOS.list();
   const socios = await Promise.all(

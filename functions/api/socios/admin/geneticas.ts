@@ -1,6 +1,7 @@
-import { requireAdmin, isSuperAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -17,7 +18,7 @@ async function getVersion(env: Env): Promise<number> {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'catalogo_editar');
   if (check.status !== 200) {
     return Response.json({ ok: false, error: check.status === 401 ? 'no autenticado' : 'no autorizado' }, { status: check.status });
   }
@@ -27,7 +28,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     ok: true,
     geneticas: raw ? JSON.parse(raw) : [],
     version: await getVersion(env),
-    isSuperAdmin: isSuperAdmin(check.email, env),
+    isSuperAdmin: check.rol === 'dueno',
     email: check.email, // identidad del admin para el chip del header
   });
 };
@@ -37,7 +38,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 // pantalla cargó los datos, se rechaza en vez de pisar ese cambio en
 // silencio (dos admins podían perder ediciones del otro sin ningún aviso).
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'catalogo_editar');
   if (check.status !== 200) {
     return Response.json({ ok: false, error: check.status === 401 ? 'no autenticado' : 'no autorizado' }, { status: check.status });
   }
@@ -82,7 +83,7 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
 // sin tocar el resto del catálogo ni ediciones pendientes del cliente. También
 // bumpea la versión — así un PUT viejo en otra pestaña detecta el conflicto.
 export const onRequestPatch: PagesFunction<Env> = async ({ request, env }) => {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'catalogo_editar');
   if (check.status !== 200) {
     return Response.json({ ok: false, error: check.status === 401 ? 'no autenticado' : 'no autorizado' }, { status: check.status });
   }

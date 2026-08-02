@@ -276,13 +276,14 @@
     // planes, refresca estados y rescata débitos perdidos), después pintar
     let sync = null
     try {
+      if (!P.puede('mp_gestionar')) throw new Error('sin permiso')
       const rs = await fetch('/api/panel/mp/sincronizar', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
       })
       sync = rs.ok ? await rs.json() : null
     } catch { /* sin token o sin red: se pinta igual con lo local */ }
 
-    const esAdmin = P.puede('finanzas_aprobar')
+    const esAdmin = P.puede('mp_gestionar')
     const [rSus, rCola, rIdent] = await Promise.all([
       fetch('/api/panel/mp/suscripciones', { credentials: 'include' }),
       fetch('/api/panel/mp/cola', { credentials: 'include' }),
@@ -368,18 +369,18 @@
             <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:11.5px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes' : 'sin plan'}</span> ${situ} ${mandado}</span>
             <span class="pn-sp"></span>
             ${!c.reprocann_ok ? `<span class="tag tag-deb" title="El link se manda recién con el trámite subido a REPROCANN (aprobado o en evaluación)">REPROCANN: ${P.esc(c.reprocann_paso)}</span>`
-              : c.plan_link ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
+              : c.plan_link && P.puede('mp_enviar') ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
               data-tel="${P.esc(c.telefono || '')}" data-email="${P.esc(c.email || '')}" data-tier="${P.esc(c.tier)}"
               data-monto="${c.monto || 0}" data-contado="${c.contado || 0}" data-gramos="${c.gramos || 0}" data-link="${P.esc(c.plan_link)}" type="button">${c.link_enviado ? 'Reenviar link' : c.susc_id ? 'Renovar débito' : 'Mandar link'}</button>`
               : '<span class="tag tag-mal">sin plan en MP</span>'}
-            <button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>
+            ${P.puede('mp_gestionar') ? `<button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>` : ''}
           </div>`
         }).join('') : '<div class="vacio">Todos los socios con membresía tienen su débito andando 🎉</div>'}
         ${noInsistir.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">
           ${noInsistir.length} marcado(s) como «no insistir»</summary>
           ${noInsistir.map((c) => `<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)">
             <span>${P.esc(c.nombre)} <span class="tag tag-auto">no insistir</span></span><span class="pn-sp"></span>
-            <button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="0" type="button">Volver a ofrecer</button>
+            ${P.puede('mp_gestionar') ? `<button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="0" type="button">Volver a ofrecer</button>` : ''}
           </div>`).join('')}</details>` : ''}
       </div>
 

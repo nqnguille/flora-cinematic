@@ -7,7 +7,7 @@
 // público no cambia); acá se copian como leads 'nuevo' una sola vez por email
 // (INSERT OR IGNORE). Convertir = dar de alta al socio: el alta unificada
 // marca el lead como convertido sola (ver alta.ts).
-import { requireRol, puede } from './_rol';
+import { requireCap } from './_rol';
 
 interface Env {
   DB: D1Database;
@@ -24,9 +24,8 @@ function json(data: unknown, status = 200): Response {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga']);
+  const auth = await requireCap(request, env, 'leads_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
 
   // 1) espejo de las solicitudes web
   try {
@@ -76,9 +75,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'leads_gestionar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
   let b: Record<string, unknown>;
   try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
   const nombre = String(b.nombre || '').trim().slice(0, 120);
@@ -95,9 +93,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 };
 
 export const onRequestPatch: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, 'leads_gestionar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
   let b: Record<string, unknown>;
   try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
   const id = Number(b.id);

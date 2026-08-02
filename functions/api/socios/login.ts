@@ -25,7 +25,7 @@ async function notificarIntento(env: Env, p: { name: string; email: string }) {
     `👤 ${p.name || '(sin nombre de Google)'}\n` +
     `📧 ${p.email}\n` +
     `Probó entrar a la carta con Google pero no está en la lista.\n` +
-    `Revisá/aprobá acá: https://floraong.ar/socios/admin/?ir=socios`;
+    `Revisá/aprobá acá: https://floraong.ar/admin/`;
   try {
     await fetch(NOTIFY_URL, {
       method: 'POST',

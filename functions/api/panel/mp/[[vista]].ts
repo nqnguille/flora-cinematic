@@ -16,7 +16,7 @@
 //   POST /api/panel/mp/monto         {suscripcion_id}  → solo suscripciones individuales legadas
 //
 // El token vive como secret MP_ACCESS_TOKEN en Cloudflare Pages — nunca en el repo.
-import { requireRol, puede } from '../_rol';
+import { requireCap, puede } from '../_rol';
 import { procesarPagoAprobado, aplicarPreapproval, descubrirPreapproval, asegurarMembresiaDebito } from '../../mp/webhook';
 import { tokens } from '../reprocann/_unificar';
 
@@ -158,7 +158,7 @@ async function enviarMailDebito(
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga']);
+  const auth = await requireCap(request, env, 'finanzas_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
 
@@ -253,7 +253,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   // Suscripciones descubiertas sin socio: el pagador de MP no matcheó con el
   // padrón. Candidatos puntuados — la decisión es siempre del presidente.
   if (vista === 'identificar') {
-    if (auth.rol !== 'dueno') return json({ error: 'Sin permiso' }, 403);
+    if (!puede(auth.rol, 'mp_gestionar')) return json({ error: 'Sin permiso' }, 403);
     const [sinDuenio, pool] = await Promise.all([
       env.DB.prepare(
         `SELECT su.*, (SELECT COUNT(*) FROM movimientos mv WHERE mv.suscripcion_id = su.id) AS pagos
@@ -362,9 +362,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno']);
+  const auth = await requireCap(request, env, ['mp_enviar', 'mp_gestionar']);
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'finanzas_aprobar')) return json({ error: 'Sin permiso' }, 403);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }

@@ -2,7 +2,7 @@
 // retiros de hoy, cobros de hoy, reservas activas (KV) y pendientes de
 // visto bueno. Cada rol ve lo suyo: el front oculta lo que no corresponde,
 // y acá los montos solo viajan si el rol puede verlos.
-import { requireRol, puede } from './_rol';
+import { requireRolAsignado, puede } from './_rol';
 
 interface Env {
   DB: D1Database;
@@ -12,7 +12,7 @@ interface Env {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireRol(request, env, ['dueno', 'socio_ong', 'socio_ong_carga', 'mostrador']);
+  const auth = await requireRolAsignado(request, env);
   if (auth.status !== 200) {
     return Response.json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, { status: auth.status });
   }
@@ -41,15 +41,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
             WHERE substr(fecha, 1, 7) = ? AND estado = 'confirmado' GROUP BY tipo`,
         ).bind(mes).all()
       : Promise.resolve(null),
-    // vencimientos de REPROCANN: recordatorio en el panel (decisión 01/08)
-    env.DB.prepare(
-      `SELECT id, nombre, reprocann_vence,
-              CAST(julianday(reprocann_vence) - julianday('now') AS INTEGER) AS dias
-         FROM socios
-        WHERE reprocann_estado = 'aprobado' AND reprocann_vence IS NOT NULL
-          AND (numero IS NULL OR numero != -1) AND papelera IS NULL
-        ORDER BY reprocann_vence LIMIT 8`,
-    ).all<{ id: number; nombre: string; reprocann_vence: string; dias: number }>(),
+    // vencimientos de REPROCANN: recordatorio en el panel (decisión 01/08).
+    // Solo para quien ve el padrón (nombres de pacientes).
+    puede(rol, 'padron_ver')
+      ? env.DB.prepare(
+          `SELECT id, nombre, reprocann_vence,
+                  CAST(julianday(reprocann_vence) - julianday('now') AS INTEGER) AS dias
+             FROM socios
+            WHERE reprocann_estado = 'aprobado' AND reprocann_vence IS NOT NULL
+              AND (numero IS NULL OR numero != -1) AND papelera IS NULL
+            ORDER BY reprocann_vence LIMIT 8`,
+        ).all<{ id: number; nombre: string; reprocann_vence: string; dias: number }>()
+      : Promise.resolve(null),
     // salud del débito automático, para el tile de Inicio
     puede(rol, 'finanzas_ver')
       ? env.DB.prepare(
@@ -97,10 +100,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     reservas,
     mes: mesTot ? { ingreso: totales.ingreso || 0, egreso: totales.egreso || 0 } : null,
     debitos: debitos || null,
-    vencimientos: {
+    vencimientos: vencen ? {
       vencidos: vencen.results.filter((v) => v.dias < 0).length,
       en60: vencen.results.filter((v) => v.dias >= 0 && v.dias <= 60).length,
       proximos: vencen.results.slice(0, 6),
-    },
+    } : null,
   });
 };

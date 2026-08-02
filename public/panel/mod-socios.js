@@ -225,7 +225,7 @@
   }
 
   function muFila(s, conCheck) {
-    const puedeLink = s.id && !s.papelera && s.tier && !['activa', 'pendiente'].includes(s.debito_estado)
+    const puedeLink = P.puede('mp_enviar') && s.id && !s.papelera && s.tier && !['activa', 'pendiente'].includes(s.debito_estado)
       && !s.debito_no_insistir && ['aprobado', 'en_evaluacion'].includes(s.reprocann_estado)
     if (s.papelera) {
       return `
@@ -235,8 +235,8 @@
           <div style="color:var(--muted);font-size:11px">en la papelera desde ${P.esc(String(s.papelera).slice(0, 10))}</div></div></div></td>
         <td colspan="4" style="color:var(--muted);font-size:12px">${s.tier ? P.esc(s.tier) + ' · ' : ''}${P.esc(s.paso_nombre || '')}${s.nota ? ' · ' + P.esc(String(s.nota).slice(0, 60)) : ''}</td>
         <td class="r" style="white-space:nowrap">
-          <button class="btn mu-restaurar" data-id="${s.id}" type="button">Restaurar</button>
-          <button class="btn btn-peligro mu-purgar" data-id="${s.id}" data-nombre="${P.esc(s.nombre)}" type="button">Borrar</button>
+          ${P.puede('papelera_gestionar') ? `<button class="btn mu-restaurar" data-id="${s.id}" type="button">Restaurar</button>` : ''}
+          ${P.puede('papelera_purgar') ? `<button class="btn btn-peligro mu-purgar" data-id="${s.id}" data-nombre="${P.esc(s.nombre)}" type="button">Borrar</button>` : ''}
         </td>
       </tr>`
     }
@@ -300,7 +300,7 @@
     const cruces = (MU.sugerencias || []).map((g) => ({ tipo: 'google', ...g }))
       .concat((MU.sugerenciasCarta || []).filter((g) => !vistosCarta.includes(g.socio_id + ':' + g.email))
         .map((g) => ({ tipo: 'carta', ...g })))
-    cont.querySelector('#mu-sugerencias').innerHTML = cruces.length ? `
+    cont.querySelector('#mu-sugerencias').innerHTML = cruces.length && editar ? `
       <div class="card" style="margin-bottom:12px;border-left:3px solid var(--vio)">
         <span class="k">Cruces por confirmar (${cruces.length})</span>
         <p class="so-help">La misma persona parece estar dos veces: una ficha del padrón y un acceso a la carta.
@@ -380,11 +380,11 @@
         ${activos.length ? muTabla(activos) : '<div class="vacio">Sin socios activos.</div>'}
         ${dormidos.length ? `<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
           ${dormidos.length} ficha(s) dormida(s) — sin membresía ni retiros recientes</summary>
-          ${editar ? `<div class="fila" style="margin:8px 0 0">
+          ${P.puede('papelera_gestionar') ? `<div class="fila" style="margin:8px 0 0">
             <p class="so-help" style="margin:0">Para depurar el padrón del Excel: marcá las que no correspondan y mandalas a la papelera (siempre se pueden restaurar).</p>
             <span class="pn-sp"></span>
             <button class="btn mu-papelera-bulk" type="button">🗑 A la papelera (<span id="mu-sel-n">0</span>)</button></div>` : ''}
-          <div style="margin-top:8px">${muTabla(dormidos, editar)}</div></details>` : ''}
+          <div style="margin-top:8px">${muTabla(dormidos, P.puede('papelera_gestionar'))}</div></details>` : ''}
         ${soloCarta.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
           ${soloCarta.length} con acceso a la carta y sin ficha</summary>
           <div style="margin-top:8px">${muTabla(soloCarta)}</div></details>` : ''}`
@@ -1175,8 +1175,8 @@
       el.innerHTML = `
         <div class="subs" id="so-subs">
           <button type="button" class="on" data-sub="maestra">Socios</button>
-          <button type="button" data-sub="leads">Leads<span class="cnt" id="ld-cnt" hidden style="margin-left:6px"></span></button>
-          ${editar ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
+          ${P.puede('leads_ver') ? '<button type="button" data-sub="leads">Leads<span class="cnt" id="ld-cnt" hidden style="margin-left:6px"></span></button>' : ''}
+          ${P.puede('reprocann_editar') ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
         </div>
 
         <div id="so-maestra">
@@ -1447,7 +1447,7 @@
       }
 
       muCargar()
-      ldCargar()   // pinta el tablero de fondo y el badge de nuevos
+      if (P.puede('leads_ver')) ldCargar()   // pinta el tablero de fondo y el badge de nuevos
       // volver al sub-tab donde estaba (regla F5 de la casa)
       try {
         const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')

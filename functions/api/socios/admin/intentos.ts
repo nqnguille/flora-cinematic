@@ -1,6 +1,7 @@
-import { requireSuperAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -8,7 +9,7 @@ interface Env {
 }
 
 async function guard(request: Request, env: Env) {
-  const check = await requireSuperAdmin(request, env);
+  const check = await requireCap(request, env, 'carta_gestionar');
   if (check.status !== 200) {
     return Response.json(
       { ok: false, error: check.status === 401 ? 'no autenticado' : 'solo el super admin puede ver los intentos' },

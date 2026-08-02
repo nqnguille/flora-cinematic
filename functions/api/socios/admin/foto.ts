@@ -1,6 +1,7 @@
-import { requireAdmin } from './_guard';
+import { requireCap } from '../../panel/_rol';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   ADMIN_EMAILS: string;
   FOTOS: KVNamespace;
@@ -17,7 +18,7 @@ const EXT_BY_TYPE: Record<string, string> = {
 
 // Sube una imagen a KV y devuelve la URL pública (/foto/<key>).
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const check = await requireAdmin(request, env);
+  const check = await requireCap(request, env, 'catalogo_editar');
   if (check.status !== 200) {
     return Response.json(
       { ok: false, error: check.status === 401 ? 'no autenticado' : 'no autorizado' },

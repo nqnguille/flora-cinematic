@@ -10,7 +10,7 @@
 // pagados en el mes y a fin de mes se van; PLAN prepago acumula dentro de su
 // ventana (total del plan menos retirado); DÉBITO acumulará desde la
 // suscripción (cuando MP esté enchufado).
-import { requireRol, puede } from '../_rol';
+import { requireCap, puede } from '../_rol';
 import { saldoDe } from '../_saldo';
 
 interface Env {
@@ -25,9 +25,8 @@ function json(data: unknown, status = 200): Response {
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'mostrador', 'socio_ong', 'socio_ong_carga']);
+  const auth = await requireCap(request, env, ['mostrador_operar', 'finanzas_ver']);
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  if (!puede(auth.rol, 'mostrador_operar') && !puede(auth.rol, 'padron_ver')) return json({ error: 'Sin permiso' }, 403);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   const url = new URL(request.url);
 
@@ -98,7 +97,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireRol(request, env, ['dueno', 'mostrador']);
+  const auth = await requireCap(request, env, ['mostrador_operar', 'catalogo_editar']);
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
   let body: Record<string, unknown>;
