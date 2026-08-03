@@ -2738,9 +2738,10 @@ body.is-socio .fl-card-shell--socio { display: block; }
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }
 .fl-rp-visual {
   align-self: flex-end;
+  /* sangra hasta el borde: la mano entra en cuadro desde afuera de la pantalla */
   margin-right: calc((100% - 100vw) / 2);
-  /* contenida: con 84vw la credencial dominaba toda la pantalla del teléfono */
-  width: min(68vw, 380px);
+  width: min(96vw, 480px);
+  margin-top: 4px;
 }
 .fl-rp-visual img { width: 100%; height: auto; display: block; }
 @media (min-width: 900px) {
