@@ -581,30 +581,29 @@ const websiteSchema = {
           <p class="fl-reprocann-lead">
             Es más simple de lo que parece: son tres pasos y te acompañamos en cada uno.
           </p>
-        </div>
-        <div class="fl-rp-col">
-          <div class="fl-rp-visual">
-            <img
-              src="/img/reprocann-credencial-v7.webp"
-              alt="Credencial REPROCANN en mano: autoriza 9 plantas florecidas y el transporte de hasta 40 gramos de flores o 6 goteros de aceite"
-              width="660" height="416" loading="lazy" decoding="async"
-            />
+          <div class="fl-rp-agenda">
+            <div class="fl-rp-cal" id="fl-cal" hidden aria-hidden="true">
+              <span class="fl-rp-cal-mes" id="fl-cal-mes">—</span>
+              <span class="fl-rp-cal-num" id="fl-cal-num">–</span>
+            </div>
+            <div class="fl-rp-agenda-txt">
+              <span class="fl-rp-agenda-live" id="fl-agenda-live" hidden>
+                <i></i> Próximo turno libre: <b id="fl-agenda-cuando"></b>
+              </span>
+              <span class="fl-rp-agenda-det">Entrevista online (30 min) con el Dr.&nbsp;Ezequiel&nbsp;Kalb<span id="fl-agenda-precio" hidden></span> — se abona online con <b>Mercado Pago</b>.</span>
+            </div>
           </div>
-          <a class="fl-rp-ticket fl-rp-ticket--col" href="https://consultorio.floraong.ar/?agendar=1" aria-label="Agendar turno ahora con el Dr. Ezequiel Kalb">
-            <div class="fl-tk-fecha" id="fl-tk-fecha" hidden>
-              <span class="fl-tk-dia" id="fl-tk-dia">—</span>
-              <span class="fl-tk-num" id="fl-tk-num">–</span>
-              <span class="fl-tk-mes" id="fl-tk-mes">—</span>
-              <span class="fl-tk-hora" id="fl-tk-hora">–:– h</span>
-            </div>
-            <div class="fl-tk-corte" aria-hidden="true"></div>
-            <div class="fl-tk-info">
-              <span class="fl-tk-live" id="fl-tk-live" hidden><i></i> Próximo turno libre</span>
-              <p class="fl-tk-det">Entrevista online (30 min) con el <strong>Dr.&nbsp;Ezequiel&nbsp;Kalb</strong></p>
-              <p class="fl-tk-pago"><strong class="fl-tk-precio" id="fl-tk-precio" hidden></strong> Se abona online con <strong>Mercado Pago</strong></p>
-              <span class="fl-tk-btn">Agendar turno ahora <span aria-hidden="true">→</span></span>
-            </div>
+          <a class="fl-reprocann-cta fl-rp-agendar" href="https://consultorio.floraong.ar/?agendar=1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+            Agendar turno ahora <span aria-hidden="true">→</span>
           </a>
+        </div>
+        <div class="fl-rp-visual">
+          <img
+            src="/img/reprocann-credencial-v7.webp"
+            alt="Credencial REPROCANN en mano: autoriza 9 plantas florecidas y el transporte de hasta 40 gramos de flores o 6 goteros de aceite"
+            width="660" height="416" loading="lazy" decoding="async"
+          />
         </div>
       </div>
 
@@ -660,18 +659,18 @@ const websiteSchema = {
       const clave = (x) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x)
       const esHoy = clave(d) === clave(new Date())
       const esManiana = clave(d) === clave(new Date(Date.now() + 86400000))
+      const hora = parte({ hour: '2-digit', minute: '2-digit', hour12: false })
       const pon = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt }
-      pon('fl-tk-dia', esHoy ? 'HOY' : esManiana ? 'MAÑANA' : parte({ weekday: 'long' }).toUpperCase())
-      pon('fl-tk-num', parte({ day: 'numeric' }))
-      pon('fl-tk-mes', parte({ month: 'long' }))
-      pon('fl-tk-hora', parte({ hour: '2-digit', minute: '2-digit', hour12: false }) + ' h')
-      document.getElementById('fl-tk-fecha').hidden = false
-      document.getElementById('fl-tk-live').hidden = false
+      pon('fl-cal-mes', parte({ month: 'short' }).replace('.', '').toUpperCase())
+      pon('fl-cal-num', parte({ day: 'numeric' }))
+      pon('fl-agenda-cuando', `${esHoy ? 'hoy' : esManiana ? 'mañana' : parte({ weekday: 'long' })} a las ${hora} h`)
+      document.getElementById('fl-cal').hidden = false
+      document.getElementById('fl-agenda-live').hidden = false
       if (t.precio) {
-        pon('fl-tk-precio', t.precio + ' ·')
-        document.getElementById('fl-tk-precio').hidden = false
+        pon('fl-agenda-precio', ` · ${t.precio}`)
+        document.getElementById('fl-agenda-precio').hidden = false
       }
-    }).catch(() => { /* sin dato en vivo, el ticket queda sin fecha y el CTA sigue */ })
+    }).catch(() => { /* sin dato en vivo, el botón sigue igual */ })
   </script>
 
   <!-- ══════════════════════════════════════════ -->

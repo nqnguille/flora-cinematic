@@ -2701,90 +2701,38 @@ body.is-socio .fl-card-shell--socio { display: block; }
    derecho de la pantalla (margen negativo hasta el viewport; el overflow
    de la sección contiene el sangrado) */
 
-/* ── Ticket de turno: el próximo turno real, como un turno en la mano ──
-   Tarjeta blanca sobre la banda violeta, corte perforado al medio (muescas
-   del color de la banda). Toda la tarjeta es UN link al turnero. Luz
-   ambiente estática — las superficies de la casa nunca pulsan. */
-.fl-rp-ticket {
-  display: flex; align-items: stretch; text-decoration: none;
-  margin-top: 28px; max-width: 560px; width: 100%;
-  background: var(--fl-paper); border-radius: var(--fl-r-card);
-  position: relative; overflow: hidden; text-align: left;
-  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45),
-    0 0 50px -14px rgba(79, 199, 158, 0.16),
-    0 0 70px -18px rgba(129, 92, 181, 0.2);
-  transition: transform 0.18s ease, box-shadow 0.25s ease;
+/* ── Agenda liviana del turnero: mini-almanaque + línea en vivo + botón.
+   Deliberadamente SIN tarjeta: la credencial en mano es la única superficie
+   blanca del módulo. ── */
+.fl-rp-agenda { display: flex; align-items: center; gap: 14px; margin-top: 24px; text-align: left; justify-content: center; }
+.fl-rp-cal {
+  flex: 0 0 auto; width: 56px; border-radius: 12px; overflow: hidden;
+  background: #fff; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.45);
+  display: flex; flex-direction: column; align-items: stretch; text-align: center;
 }
-.fl-rp-ticket:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 28px 54px -18px rgba(0, 0, 0, 0.5),
-    0 0 60px -12px rgba(79, 199, 158, 0.22),
-    0 0 80px -16px rgba(129, 92, 181, 0.26);
+.fl-rp-cal[hidden] { display: none; }
+.fl-rp-cal-mes { background: #4FC79E; color: var(--fl-violet); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; padding: 3px 0 2px; }
+.fl-rp-cal-num { font-family: var(--font-display); font-weight: 500; font-size: 1.9rem; line-height: 1.15; color: var(--fl-violet); padding-bottom: 3px; }
+.fl-rp-agenda-txt { display: flex; flex-direction: column; gap: 3px; max-width: 44ch; }
+.fl-rp-agenda-live {
+  display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #4FC79E;
 }
-.fl-tk-fecha {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; padding: 22px 26px; min-width: 132px;
-  background: var(--fl-paper-2);
+.fl-rp-agenda-live[hidden] { display: none; }
+.fl-rp-agenda-live i { width: 7px; height: 7px; border-radius: 50%; background: #71CE6A; box-shadow: 0 0 0 4px rgba(113, 206, 106, 0.18); }
+.fl-rp-agenda-live b { color: #fff; }
+.fl-rp-agenda-det { font-size: 0.85rem; line-height: 1.55; color: rgba(244, 241, 247, 0.72); }
+.fl-rp-agenda-det b { color: #fff; }
+#fl-agenda-precio { color: #fff; font-weight: 700; }
+#fl-agenda-precio[hidden] { display: none; }
+.fl-rp-agendar {
+  margin-top: 18px; font-size: 1rem; padding: 16px 32px; gap: 10px;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.4);
 }
-.fl-tk-fecha[hidden] { display: none; }
-.fl-tk-dia { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; color: var(--fl-green-2); }
-.fl-tk-num { font-family: var(--font-display); font-weight: 500; font-size: 3.1rem; line-height: 1; color: var(--fl-violet); }
-.fl-tk-mes { font-size: 0.8rem; font-weight: 600; color: rgba(28, 22, 38, 0.6); text-transform: lowercase; }
-.fl-tk-hora {
-  margin-top: 8px; font-size: 0.95rem; font-weight: 700; color: var(--fl-violet);
-  background: #fff; border: 1px solid var(--fl-line); border-radius: 999px; padding: 4px 13px;
-}
-/* corte perforado con las dos muescas del color de la banda */
-.fl-tk-corte { position: relative; width: 0; border-left: 2px dashed rgba(56, 31, 86, 0.18); }
-.fl-tk-corte::before, .fl-tk-corte::after {
-  content: ''; position: absolute; left: 50%; transform: translateX(-50%);
-  width: 18px; height: 18px; border-radius: 50%; background: var(--fl-violet);
-}
-.fl-tk-corte::before { top: -9px; }
-.fl-tk-corte::after { bottom: -9px; }
-.fl-tk-info { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 20px 24px 22px; }
-.fl-tk-live {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--fl-green-2);
-}
-.fl-tk-live[hidden] { display: none; }
-.fl-tk-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 0 4px rgba(113, 206, 106, 0.16); }
-.fl-tk-det { margin: 0; font-size: 0.92rem; line-height: 1.5; color: rgba(28, 22, 38, 0.7); }
-.fl-tk-det strong { color: var(--fl-ink); }
-.fl-tk-pago { margin: 0; font-size: 0.82rem; line-height: 1.5; color: rgba(28, 22, 38, 0.58); }
-.fl-tk-pago strong { color: var(--fl-ink); font-weight: 700; }
-.fl-tk-precio { color: var(--fl-violet); font-weight: 800; font-size: 0.98rem; }
-.fl-tk-precio[hidden] { display: none; }
-.fl-tk-btn {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 6px;
-  background: var(--fl-violet); color: #fff; border-radius: 999px;
-  padding: 14px 26px; font-size: 0.95rem; font-weight: 700;
-  box-shadow: 0 18px 34px -22px rgba(56, 31, 86, 0.7);
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-.fl-rp-ticket:hover .fl-tk-btn { background: var(--fl-violet-2); transform: translateY(-1px); }
-/* Variante C: el ticket vive en la columna de la credencial */
-.fl-rp-col { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; }
-.fl-rp-ticket--col { margin-top: 18px; max-width: 480px; }
-/* compacto junto a la credencial */
-.fl-rp-ticket--col .fl-tk-fecha { min-width: 108px; padding: 16px 18px; }
-.fl-rp-ticket--col .fl-tk-num { font-size: 2.3rem; }
-.fl-rp-ticket--col .fl-tk-info { padding: 15px 18px 17px; gap: 6px; }
-.fl-rp-ticket--col .fl-tk-det { font-size: 0.85rem; }
-.fl-rp-ticket--col .fl-tk-btn { padding: 12px 22px; font-size: 0.9rem; }
-@media (max-width: 899px) { .fl-rp-ticket { margin-left: auto; margin-right: auto; } }
-@media (max-width: 560px) {
-  .fl-rp-ticket { flex-direction: column; }
-  .fl-tk-fecha { flex-direction: row; gap: 10px; padding: 16px 18px; align-items: baseline; }
-  .fl-tk-num { font-size: 2.2rem; }
-  .fl-tk-hora { margin-top: 0; margin-left: auto; }
-  .fl-tk-corte { width: auto; height: 0; border-left: 0; border-top: 2px dashed rgba(56, 31, 86, 0.18); }
-  .fl-tk-corte::before, .fl-tk-corte::after { top: 50%; transform: translateY(-50%); }
-  .fl-tk-corte::before { left: -9px; }
-  .fl-tk-corte::after { left: auto; right: -9px; }
-  .fl-tk-info { align-items: stretch; text-align: left; }
-  .fl-tk-btn { justify-content: center; }
+.fl-rp-agendar svg { width: 19px; height: 19px; }
+@media (min-width: 900px) {
+  .fl-rp-agenda { justify-content: flex-start; }
+  .fl-rp-agendar { align-self: flex-start; }
 }
 
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }
@@ -2797,12 +2745,10 @@ body.is-socio .fl-card-shell--socio { display: block; }
 .fl-rp-visual img { width: 100%; height: auto; display: block; }
 @media (min-width: 900px) {
   .fl-rp-head { flex-direction: row; align-items: center; justify-content: space-between; gap: clamp(24px, 3vw, 48px); }
-  .fl-rp-head-text { text-align: left; flex: 1 1 auto; }
+  .fl-rp-head-text { text-align: left; flex: 1 1 auto; display: flex; flex-direction: column; align-items: flex-start; }
   .fl-reprocann .fl-title { margin: 0; }
   .fl-reprocann-lead { margin-left: 0; margin-right: 0; }
-  .fl-rp-col { flex: 0 0 auto; width: min(40vw, 560px); align-items: stretch; }
-  .fl-rp-visual { align-self: center; margin-right: 0; width: 100%; }
-  .fl-rp-ticket--col { max-width: none; }
+  .fl-rp-visual { align-self: center; flex: 0 0 auto; width: min(42vw, 620px); }
 }
 /* Guía del trámite: 3 pasos editoriales sobre la banda violeta */
 .fl-rp-steps {
