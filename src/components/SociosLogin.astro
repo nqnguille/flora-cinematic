@@ -51,6 +51,7 @@ const {
       {authTitle && <div class="sl-divider" aria-hidden="true"></div>}
       {authTitle && <h2 class="sl-auth-title">{authTitle}</h2>}
       {authSub && <p class="sl-sub">{authSub}</p>}
+      <p class="sl-entrar-k">Si ya sos socio, entrá acá 👇</p>
       <div id="g_id_button" class="sl-gbtn"></div>
       <p id="socios-login-msg" class="sl-msg" hidden></p>
       {!hideNote && <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>}
@@ -58,10 +59,10 @@ const {
       {joinPrompt && (
         <div class="sl-join">
           <div class="sl-join-divider" aria-hidden="true"></div>
-          <p class="sl-join-q">¿Tenés REPROCANN y querés ver nuestra carta?</p>
+          <p class="sl-join-q">¿Todavía no sos socio del club?</p>
           <div class="sl-join-btns">
-            <button type="button" id="sl-solicitud-open" data-intent="acceso" class="sl-join-btn">Sí, tengo REPROCANN</button>
-            <button type="button" id="sl-entrevista-open" data-intent="entrevista" class="sl-join-btn sl-join-btn-ghost">Todavía no</button>
+            <button type="button" id="sl-solicitud-open" data-intent="acceso" class="sl-join-btn">Quiero asociarme · ya tengo REPROCANN</button>
+            <button type="button" id="sl-entrevista-open" data-intent="entrevista" class="sl-join-btn sl-join-btn-ghost">Todavía no tengo REPROCANN</button>
           </div>
         </div>
       )}
@@ -161,12 +162,24 @@ const {
      la acción principal — no se puede tocar el estilo del botón en sí
      (vive dentro de un iframe de Google), así que el énfasis se agrega
      alrededor, en el wrapper */
+  .sl-entrar-k {
+    margin: 0.4rem 0 0.9rem; font-family: var(--font-ui); font-weight: 700;
+    font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--sl-cream); letter-spacing: 0.01em;
+  }
   .sl-gbtn {
     position: relative;
     margin-top: 0.3rem;
     padding: 10px;
     display: flex; justify-content: center;
     width: fit-content; margin-left: auto; margin-right: auto;
+    /* botón MUCHO más grande: se escala el wrapper entero (iframe incluido) */
+    transform: scale(1.35); transform-origin: center top;
+    margin-bottom: 1.4rem;
+  }
+  @media (max-width: 480px) {
+    /* en mobile alcanza con el width:320 del renderButton — sin escala extra
+       para que no se desborde en pantallas de 360px */
+    .sl-gbtn { transform: none; margin-bottom: 0.4rem; }
   }
   /* box-shadow (no radial-gradient) a propósito: un gradiente circular
      centrado en una caja rectangular ancha (el botón es una píldora, no
@@ -194,7 +207,7 @@ const {
   /* Imán para curiosos: puerta de al lado del login, para quien todavía no
      es socio. Deliberadamente más chico y separado — la entrada con Google
      sigue siendo la acción principal de la pantalla. */
-  .sl-join { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-top: 0.4rem; }
+  .sl-join { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-top: 1.1rem; opacity: 0.92; }
   .sl-join-divider { width: 42px; height: 1px; background: rgba(183, 157, 230, 0.35); }
   .sl-join-q { font-size: 0.82rem; color: var(--sl-muted); margin: 0; }
   .sl-join-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

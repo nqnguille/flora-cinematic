@@ -206,6 +206,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       window.onload = () => {
         google.accounts.id.initialize({ client_id: googleClientId, callback: window.handleGoogleCredential })
         google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          width: 320,
           theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with', locale: 'es',
         })
       }

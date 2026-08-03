@@ -1054,6 +1054,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           callback: window.handleGoogleCredential,
         })
         google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          width: 320,
           theme: 'filled_black',
           size: 'large',
           text: 'signin_with',
