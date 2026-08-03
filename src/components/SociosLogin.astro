@@ -51,7 +51,6 @@ const {
       {authTitle && <div class="sl-divider" aria-hidden="true"></div>}
       {authTitle && <h2 class="sl-auth-title">{authTitle}</h2>}
       {authSub && <p class="sl-sub">{authSub}</p>}
-      <p class="sl-entrar-k">Si ya sos socio, entrá acá 👇</p>
       <div id="g_id_button" class="sl-gbtn"></div>
       <p id="socios-login-msg" class="sl-msg" hidden></p>
       {!hideNote && <div class="sl-note"><slot name="note">Verificamos tu cuenta contra el padrón de socios · no compartimos tus datos.</slot></div>}
@@ -162,10 +161,6 @@ const {
      la acción principal — no se puede tocar el estilo del botón en sí
      (vive dentro de un iframe de Google), así que el énfasis se agrega
      alrededor, en el wrapper */
-  .sl-entrar-k {
-    margin: 0.4rem 0 0.9rem; font-family: var(--font-ui); font-weight: 700;
-    font-size: clamp(1rem, 1.6vw, 1.15rem); color: var(--sl-cream); letter-spacing: 0.01em;
-  }
   .sl-gbtn {
     position: relative;
     margin-top: 0.3rem;
