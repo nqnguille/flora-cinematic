@@ -83,11 +83,18 @@ function initSmoothAnchors() {
     } catch {
       return
     }
+    // Solo se interceptan links de ESTE sitio. Sin este chequeo, un link a
+    // otro dominio cuya ruta también sea "/" (consultorio.floraong.ar/?agendar=1)
+    // se tomaba como "misma página": se cancelaba la navegación y el click
+    // terminaba en un scroll al tope.
+    if (url.origin !== location.origin) return
     if (url.pathname !== location.pathname) return
     if (url.hash) {
       if (scrollToHash(url.hash)) e.preventDefault()
       return
     }
+    // misma ruta pero otra query (?algo=1): navegación nativa, no scroll
+    if (url.search !== location.search) return
     // Link a la misma página sin hash (ej. el logo con href="/" estando ya
     // en home): en vez de la navegación/recarga nativa, sube suave arriba.
     lenis.scrollTo(0, {
