@@ -37,7 +37,7 @@ Ya te llevaste tu reserva:
 
 {{items}}
 
-Gracias por elegirnos — que la disfrutes. Cualquier cosa que necesites, escribinos.`,
+Gracias por elegirnos, que la disfrutes. Cualquier cosa que necesites, escribinos.`,
     wa: `Gracias por pasar por Flora, {{nombre}}! 🌿 Que lo disfrutes. Cualquier cosa, escribinos.`,
   },
 };
