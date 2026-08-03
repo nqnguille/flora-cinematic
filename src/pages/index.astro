@@ -581,6 +581,15 @@ const websiteSchema = {
           <p class="fl-reprocann-lead">
             Es más simple de lo que parece: son tres pasos y te acompañamos en cada uno.
           </p>
+          <div class="fl-rp-ya">
+            <a class="fl-reprocann-cta fl-rp-ya-btn" href="https://consultorio.floraong.ar/?agendar=1">
+              Agendar turno ahora <span aria-hidden="true">→</span>
+            </a>
+            <p class="fl-rp-ya-info">
+              <strong id="fl-turno-prox" hidden></strong>
+              Entrevista online con el Dr. Ezequiel Kalb · elegís el horario y <strong>abonás online con Mercado Pago</strong>.
+            </p>
+          </div>
         </div>
         <div class="fl-rp-visual">
           <img
@@ -630,6 +639,26 @@ const websiteSchema = {
       <p class="fl-reprocann-note">Elegís día y horario online, con confirmación al instante — y te orientamos en cada paso del trámite.</p>
     </div>
   </section>
+
+  <script>
+    // "Próximo turno libre: mañana a las 10:30 h" en vivo, vía el puente
+    // /api/turnos (la agenda real del consultorio). Si falla, el CTA queda
+    // igual — solo se pierde la línea del horario.
+    fetch('/api/turnos').then((r) => r.json()).then((t) => {
+      if (!t.ok || !t.proximo || !t.agendaDisponible) return
+      const TZ = 'America/Argentina/Buenos_Aires'
+      const d = new Date(t.proximo)
+      const clave = (x) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x)
+      const cuando = clave(d) === clave(new Date()) ? 'hoy'
+        : clave(d) === clave(new Date(Date.now() + 86400000)) ? 'mañana'
+        : 'el ' + new Intl.DateTimeFormat('es-AR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'numeric' }).format(d)
+      const hora = new Intl.DateTimeFormat('es-AR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(d)
+      const el = document.getElementById('fl-turno-prox')
+      if (!el) return
+      el.textContent = `Próximo turno libre: ${cuando} a las ${hora} h${t.precio ? ' · ' + t.precio : ''} — `
+      el.hidden = false
+    }).catch(() => { /* sin dato en vivo, el CTA sigue */ })
+  </script>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->

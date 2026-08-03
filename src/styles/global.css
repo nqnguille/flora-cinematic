@@ -2700,6 +2700,26 @@ body.is-socio .fl-card-shell--socio { display: block; }
 /* Encabezado: título a la izquierda, credencial entrando desde el borde
    derecho de la pantalla (margen negativo hasta el viewport; el overflow
    de la sección contiene el sangrado) */
+
+/* CTA rápido del turnero: el botón grande + la línea del próximo turno */
+.fl-rp-ya { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.fl-rp-ya-btn {
+  font-size: 1.05rem !important;
+  padding: 17px 38px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  transform: translateZ(0);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.fl-rp-ya-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34); }
+.fl-rp-ya-info { margin: 0; font-size: 0.88rem; line-height: 1.6; color: rgba(244, 241, 247, 0.72); max-width: 46ch; }
+.fl-rp-ya-info strong { color: #fff; font-weight: 700; }
+#fl-turno-prox { color: #7ee2c3; display: block; margin-bottom: 2px; }
+#fl-turno-prox[hidden] { display: none; }
+@media (min-width: 900px) {
+  .fl-rp-ya { align-items: flex-start; }
+  .fl-rp-ya-info { text-align: left; }
+}
+
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }
 .fl-rp-visual {
   align-self: flex-end;
