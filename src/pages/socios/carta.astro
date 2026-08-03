@@ -41,6 +41,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
           <button id="gn-fs" class="gn-ctrl gn-ctrl-fs" type="button" aria-label="Pantalla completa"><svg class="ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 0-1 1h-4"/></svg><svg class="ic-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v3a2 2 0 0 1-2 2H4M15 4v3a2 2 0 0 0 2 2h3M9 20v-3a2 2 0 0 0-2-2H4M15 20v-3a2 2 0 0 1 2-2h3"/></svg></button>
         </div>
+        <a href="/socios/cuenta/" class="gn-logout gn-cuenta">Mi cuenta</a>
         <button id="gn-logout" class="gn-logout" type="button" aria-label="Volver a la home">Salir</button>
         </div>
       </div>
@@ -1168,6 +1169,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: 0.75rem; color: var(--gn-muted);
     max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .gn-cuenta { color: #b79de6 !important; text-decoration: none; display: inline-flex; align-items: center; }
   .gn-logout {
     background: rgba(244, 241, 247, 0.06); border: 1px solid var(--gn-line); border-radius: 999px;
     padding: 0.5rem 1.15rem; font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;

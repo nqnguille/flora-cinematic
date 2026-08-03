@@ -29,7 +29,7 @@ async function notificar(env: Env, sol: { name: string; email: string; phone: st
     `📧 ${sol.email}\n` +
     `📱 ${sol.phone}\n` +
     `${copy.detalle}\n` +
-    `Aprobar acá: https://floraong.ar/socios/admin/?ir=socios`;
+    `Aprobar acá: https://floraong.ar/admin/?ir=socios`;
   try {
     await fetch(NOTIFY_URL, {
       method: 'POST',

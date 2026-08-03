@@ -296,7 +296,7 @@ async function notificar(env: Env, pedido: any) {
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +
       `\n💵 Abona la cuota al retirar en el club` +
-      `\nPanel: https://floraong.ar/socios/admin/geneticas`;
+      `\nPanel: https://floraong.ar/admin/`;
     await fetch(NOTIFY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

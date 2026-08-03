@@ -27,8 +27,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </a>
         <h1 class="pt-title">Hola, <em id="pt-nombre">socio</em>.<br />¿Qué te llevás hoy?</h1>
         <p class="pt-sub pt-sub-head">Elegí una categoría para ver precios y reservar. Retirás en el club.</p>
-        <button id="pt-logout" class="pt-logout" type="button">Salir</button>
+        <div class="pt-head-acciones">
+          <a href="/socios/cuenta/" class="pt-cuenta-link">Mi cuenta</a>
+          <button id="pt-logout" class="pt-logout" type="button">Salir</button>
+        </div>
       </header>
+
+      <!-- resumen del socio: saldo, reserva y REPROCANN de un vistazo -->
+      <div class="pt-resumen" id="pt-resumen" hidden>
+        <a class="pt-res-card" href="/socios/cuenta/" id="pt-card-saldo" hidden>
+          <span class="pt-res-k">Tus gramos</span>
+          <span class="pt-res-fila"><b class="pt-res-big" id="pt-saldo-g">—</b><span class="pt-res-chip" id="pt-saldo-plan" hidden></span></span>
+          <span class="pt-res-bar"><i id="pt-saldo-fill"></i></span>
+          <span class="pt-res-min" id="pt-saldo-sub"></span>
+        </a>
+        <a class="pt-res-card" href="/socios/cuenta/" id="pt-card-reserva" hidden>
+          <span class="pt-res-k">Tu reserva</span>
+          <span class="pt-res-txt" id="pt-reserva-txt"></span>
+          <span class="pt-res-min" id="pt-reserva-min"></span>
+        </a>
+        <a class="pt-res-card" href="/socios/reprocann/" id="pt-card-rp" hidden>
+          <span class="pt-res-k">Tu REPROCANN</span>
+          <span class="pt-res-txt" id="pt-rp-txt"></span>
+          <span class="pt-res-min" id="pt-rp-min"></span>
+        </a>
+      </div>
 
       <SociosGateway class="pt-gw" />
 
@@ -62,7 +85,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     async function loadPrecios() {
       const res = await fetch('/api/socios/precios', { credentials: 'include' })
       if (!res.ok) return false
-      const data = await res.json()
       showContent()
       // Nombre real en el saludo — si falla, se queda el "socio" genérico
       // del markup en vez de romper la carga del portal por esto.
@@ -73,7 +95,65 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           if (primerNombre) document.getElementById('pt-nombre').textContent = primerNombre
         })
         .catch(() => {})
+      cargarResumen()
       return true
+    }
+
+    // El resumen personal: cada tarjeta aparece solo si su dato existe.
+    // Nada de acá rompe el portal si falla — el gateway carga igual.
+    async function cargarResumen() {
+      const RP_TXT = {
+        aprobado: ['✓ Aprobado', 'ok'], autocultivo: ['Autocultivador', 'ok'],
+        en_evaluacion: ['En evaluación del Ministerio', ''], revision_medica: ['En corrección médica', ''],
+        a_vincular: ['Te estamos vinculando', ''], cargado: ['Te toca firmar', 'vos'],
+        observado: ['Hay una observación', 'vos'], codigo_listo: ['El médico carga tu trámite', ''],
+        sin_iniciar: ['Falta tu código', 'vos'], esperando_codigo: ['Falta tu código', 'vos'],
+        revisar: ['Falta tu código', 'vos'], vencido: ['Vencido — hay que renovar', 'mal'],
+        rechazado: ['Rechazado — hablemos', 'mal'],
+      }
+      const ESTADO_RES = { pendiente: 'En preparación', listo: '¡Lista para retirar!' }
+      let alguna = false
+      try {
+        const [sal, ped, rp] = await Promise.all([
+          fetch('/api/socios/saldo', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/socios/pedidos', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/socios/codigo', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).catch(() => null),
+        ])
+        if (sal?.vinculado && sal.saldo) {
+          const s = sal.saldo
+          document.getElementById('pt-saldo-g').innerHTML = `${s.saldo}&nbsp;g <small>${s.base ? 'de ' + s.base : ''}</small>`
+          if (s.tier) {
+            const chip = document.getElementById('pt-saldo-plan')
+            chip.textContent = s.tier.replace(/^PLAN\s+PLAN\s+/i, 'PLAN ') + (s.gramosMes ? ` · ${s.gramosMes} g/mes` : '')
+            chip.hidden = false
+          }
+          if (s.base > 0) document.getElementById('pt-saldo-fill').style.width = Math.min(100, ((s.base - s.saldo) / s.base) * 100).toFixed(1) + '%'
+          document.getElementById('pt-saldo-sub').textContent = s.retiradoMes
+            ? `Retiraste ${s.retiradoMes} g este mes`
+            : (s.alDia ? 'Todavía no retiraste este mes' : 'Este mes todavía no registramos tu cuota')
+          document.getElementById('pt-card-saldo').hidden = false
+          alguna = true
+        }
+        if (ped?.activo) {
+          const n = (ped.activo.items || []).length
+          document.getElementById('pt-reserva-txt').textContent = ESTADO_RES[ped.activo.estado] || ped.activo.estado
+          document.getElementById('pt-reserva-min').textContent = `${n} ítem${n === 1 ? '' : 's'} · tocá para ver o editar`
+          document.getElementById('pt-card-reserva').hidden = false
+          alguna = true
+        }
+        if (rp?.vinculado && rp.estado && RP_TXT[rp.estado]) {
+          const [txt, tono] = RP_TXT[rp.estado]
+          const el = document.getElementById('pt-rp-txt')
+          el.textContent = txt
+          el.className = 'pt-res-txt' + (tono ? ' is-' + tono : '')
+          document.getElementById('pt-rp-min').textContent = rp.vence && ['aprobado', 'autocultivo'].includes(rp.estado)
+            ? 'vence el ' + rp.vence.slice(0, 10).split('-').reverse().join('/')
+            : (RP_TXT[rp.estado][1] === 'vos' ? 'tocá para resolverlo' : '')
+          document.getElementById('pt-card-rp').hidden = false
+          alguna = true
+        }
+      } catch { /* el resumen es un extra: si falla, el portal sigue */ }
+      document.getElementById('pt-resumen').hidden = !alguna
     }
 
     async function submitLogin(credential, tosAccept) {
@@ -191,13 +271,45 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .pt-head-logo { height: 26px; width: auto; margin-bottom: 14px; display: block; }
   .pt-head .pt-title { margin: 12px 0 8px; }
   .pt-sub-head { max-width: 52ch; }
+  .pt-head-acciones { position: absolute; top: 0; right: 0; display: flex; gap: 10px; }
+  .pt-cuenta-link {
+    display: inline-flex; align-items: center;
+    background: rgba(183, 157, 230, 0.1); border: 1px solid rgba(183, 157, 230, 0.35); border-radius: 999px;
+    color: var(--pt-violet); font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+    padding: 8px 18px; text-decoration: none; transition: background 0.2s ease;
+  }
+  .pt-cuenta-link:hover { background: rgba(183, 157, 230, 0.2); }
   .pt-logout {
-    position: absolute; top: 0; right: 0;
     background: none; border: 1px solid var(--pt-line); border-radius: 999px;
     color: var(--pt-muted); font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
     padding: 8px 18px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease;
   }
   .pt-logout:hover { color: var(--pt-cream); border-color: var(--pt-violet); }
+
+  /* resumen personal */
+  .pt-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: clamp(8px, 1.5vw, 16px); }
+  .pt-resumen[hidden] { display: none; }
+  .pt-res-card {
+    display: flex; flex-direction: column; gap: 7px; text-decoration: none;
+    background: var(--pt-card); border: 1px solid var(--pt-line); border-radius: 16px;
+    padding: 16px 18px; color: var(--pt-cream); transition: border-color 0.2s ease, transform 0.15s ease;
+  }
+  .pt-res-card:hover { border-color: rgba(183, 157, 230, 0.45); transform: translateY(-1px); }
+  .pt-res-card[hidden] { display: none; }
+  .pt-res-k { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pt-muted); }
+  .pt-res-fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pt-res-big { font-family: var(--font-display); font-weight: 500; font-size: 2rem; line-height: 1; color: var(--pt-green); }
+  .pt-res-big small { font-size: 0.95rem; color: var(--pt-muted); font-family: var(--font-ui); }
+  .pt-res-chip { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+    background: rgba(183, 157, 230, 0.12); color: var(--pt-violet); border: 1px solid rgba(183, 157, 230, 0.3); }
+  .pt-res-chip[hidden] { display: none; }
+  .pt-res-bar { height: 6px; border-radius: 5px; background: rgba(244, 241, 247, 0.1); overflow: hidden; }
+  .pt-res-bar i { display: block; height: 100%; width: 0; background: var(--pt-green); border-radius: 5px; }
+  .pt-res-txt { font-size: 1.02rem; font-weight: 600; color: var(--pt-cream); }
+  .pt-res-txt.is-ok { color: var(--pt-green); }
+  .pt-res-txt.is-vos { color: #e6a83e; }
+  .pt-res-txt.is-mal { color: #ff9d9d; }
+  .pt-res-min { font-size: 0.8rem; color: var(--pt-muted); }
 
   /* Gateway de la landing sobre fondo nocturno: solo margen propio */
   .pt-gw { margin-top: clamp(20px, 2.6vw, 32px); }

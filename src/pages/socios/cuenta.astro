@@ -38,27 +38,44 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <!-- Saldo de gramos: lo único de finanzas que ve el socio (sin plata) -->
-      <section class="cu-sec">
-        <a class="cu-rp-link" href="/socios/reprocann/">
-          <span><strong>Mi REPROCANN</strong><small>Ver en qué anda tu trámite y cargar tu código</small></span>
-          <span aria-hidden="true">→</span>
-        </a>
-      </section>
-
       <section class="cu-sec" id="cu-saldo-sec" hidden>
-        <h2 class="cu-sec-title">Tus gramos</h2>
+        <h2 class="cu-sec-title">Tu plan</h2>
         <div class="cu-saldo-card">
-          <div class="cu-saldo-num"><b id="cu-saldo-g">—</b><span id="cu-saldo-det"></span></div>
+          <div class="cu-saldo-head">
+            <div class="cu-saldo-num"><b id="cu-saldo-g">—</b><span id="cu-saldo-det"></span></div>
+            <span class="cu-chip" id="cu-plan-chip" hidden></span>
+          </div>
           <div class="cu-saldo-bar"><i id="cu-saldo-fill"></i></div>
           <p class="cu-saldo-sub" id="cu-saldo-sub"></p>
-          <div class="cu-saldo-retiros" id="cu-saldo-retiros"></div>
+          <p class="cu-saldo-sub" id="cu-aldia" hidden></p>
+        </div>
+      </section>
+
+      <!-- REPROCANN: estado, vencimiento y la guantera del certificado -->
+      <section class="cu-sec" id="cu-rp-sec">
+        <h2 class="cu-sec-title">Tu REPROCANN</h2>
+        <div class="cu-saldo-card">
+          <div class="cu-rp-fila">
+            <span class="cu-chip" id="cu-rp-chip">…</span>
+            <span class="cu-rp-vence" id="cu-rp-vence"></span>
+          </div>
+          <a class="cu-cert" id="cu-cert" href="/api/socios/certificado" hidden>📄 Descargar mi certificado (PDF)<small>Tu certificado oficial, siempre a mano.</small></a>
+          <a class="cu-rp-ir" href="/socios/reprocann/">Ver el trámite completo →</a>
         </div>
       </section>
 
       <section class="cu-sec">
         <h2 class="cu-sec-title">Reserva en curso</h2>
         <div id="cu-activo" class="cu-lista"></div>
-        <p id="cu-sin-activo" class="cu-vacio" hidden>Sin reservas en curso.</p>
+        <p id="cu-sin-activo" class="cu-vacio" hidden>Sin reservas en curso. <a href="/socios/carta/">Mirá la carta →</a></p>
+      </section>
+
+      <section class="cu-sec" id="cu-retiros-sec" hidden>
+        <h2 class="cu-sec-title">Tus retiros</h2>
+        <div class="cu-saldo-card">
+          <div class="cu-saldo-retiros" id="cu-saldo-retiros"></div>
+          <button class="cu-vermas" id="cu-vermas" type="button" hidden>Ver historial completo</button>
+        </div>
       </section>
 
       <section class="cu-sec">
@@ -108,6 +125,87 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </article>`
     }
 
+    /* ── Reserva en curso EDITABLE (solo mientras está pendiente) ── */
+    let edicion = null // { id, items: [{id, formato, cantidad, nombre, precio}] }
+
+    function totalEstimado(items) {
+      return items.reduce((s, i) => s + (Number(i.precio) > 0 ? Number(i.precio) * i.cantidad : 0), 0)
+    }
+
+    function reservaEditor(p) {
+      const conPrecio = totalEstimado(p.items)
+      const hayFlores = p.items.some((i) => i.formato === 'flor')
+      return `
+        <article class="cu-pedido is-activo">
+          <div class="cu-pedido-head">
+            <span class="cu-pedido-fecha">${FECHA(p.creado)}</span>
+            ${badge(p.estado)}
+          </div>
+          ${p.items.map((i, ix) => `
+            <div class="cu-ed-item">
+              <div class="cu-ed-nombre">${esc(i.nombre)}${i.formato === 'preroll' ? ' <small>(preroll)</small>' : ''}
+                ${i.formato === 'flor' ? '<small>va contra tus gramos</small>' : ''}</div>
+              <div class="cu-ed-step">
+                <button type="button" data-ix="${ix}" data-d="-1" aria-label="Menos">−</button>
+                <b>${i.cantidad}${i.formato === 'flor' ? ' g' : ''}</b>
+                <button type="button" data-ix="${ix}" data-d="1" aria-label="Más">+</button>
+              </div>
+            </div>`).join('')}
+          ${conPrecio ? `<div class="cu-ed-total"><span>Total estimado${hayFlores ? ' (productos)' : ''}</span><b>$ ${conPrecio.toLocaleString('es-AR')}</b></div>` : ''}
+          ${p.nota ? `<p class="cu-pedido-nota">📝 ${esc(p.nota)}</p>` : ''}
+          <div class="cu-ed-acciones">
+            <button class="cu-ed-btn is-borrar" id="cu-ed-cancelar" type="button">Cancelar reserva</button>
+            <button class="cu-ed-btn is-guardar" id="cu-ed-guardar" type="button" disabled>Guardar cambios</button>
+          </div>
+          <p class="cu-saldo-sub" id="cu-ed-msg" hidden></p>
+        </article>`
+    }
+
+    function pintarActivo(activo) {
+      const caja = document.getElementById('cu-activo')
+      if (!activo) { caja.innerHTML = ''; document.getElementById('cu-sin-activo').hidden = false; return }
+      document.getElementById('cu-sin-activo').hidden = true
+      if (activo.estado !== 'pendiente') { caja.innerHTML = pedidoCard(activo, true); return }
+
+      edicion = { id: activo.id, creado: activo.creado, nota: activo.nota, estado: activo.estado, items: activo.items.map((i) => ({ ...i })) }
+      caja.innerHTML = reservaEditor(edicion)
+
+      const PASO = (i) => (i.formato === 'flor' ? 1 : 1)
+      caja.querySelectorAll('.cu-ed-step button').forEach((b) => b.addEventListener('click', () => {
+        const it = edicion.items[Number(b.dataset.ix)]
+        it.cantidad = Math.max(0, it.cantidad + Number(b.dataset.d) * PASO(it))
+        edicion.items = edicion.items.filter((i) => i.cantidad > 0)
+        caja.innerHTML = edicion.items.length ? reservaEditor(edicion) : ''
+        if (!edicion.items.length) {
+          // sin ítems = cancelar: mejor preguntar antes que mandar
+          if (confirm('¿Cancelar la reserva completa?')) { guardarReserva([]) } else { cargar() }
+          return
+        }
+        pintarActivo({ ...edicion })
+        document.getElementById('cu-ed-guardar').disabled = false
+      }))
+      caja.querySelector('#cu-ed-guardar')?.addEventListener('click', () => guardarReserva(edicion.items))
+      caja.querySelector('#cu-ed-cancelar')?.addEventListener('click', () => {
+        if (confirm('¿Cancelar la reserva completa?')) guardarReserva([])
+      })
+    }
+
+    async function guardarReserva(items) {
+      const msg = document.getElementById('cu-ed-msg')
+      if (msg) { msg.hidden = false; msg.textContent = 'Guardando…' }
+      const r = await fetch('/api/socios/pedidos', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: edicion.id, items: items.map((i) => ({ id: i.id, formato: i.formato, cantidad: i.cantidad })) }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        if (msg) { msg.textContent = d.error || 'No se pudo guardar. Probá de nuevo.' }
+        return
+      }
+      cargar()
+    }
+
     async function cargar() {
       const [yoRes, pedRes] = await Promise.all([
         fetch('/api/socios/yo', { credentials: 'include' }),
@@ -126,8 +224,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
 
       const activo = ped.activo
-      document.getElementById('cu-activo').innerHTML = activo ? pedidoCard(activo, true) : ''
-      document.getElementById('cu-sin-activo').hidden = !!activo
+      pintarActivo(activo)
 
       const resto = (ped.pedidos || []).filter((p) => !activo || p.id !== activo.id)
       document.getElementById('cu-historial').innerHTML = resto.map((p) => pedidoCard(p, false)).join('')
@@ -136,7 +233,38 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       document.getElementById('socios-login').hidden = true
       document.getElementById('cu-content').hidden = false
       cargarSaldo()
+      cargarReprocann()
       return true
+    }
+
+    // Estado del REPROCANN + certificado en la propia cuenta
+    async function cargarReprocann() {
+      try {
+        const res = await fetch('/api/socios/codigo', { credentials: 'include' })
+        if (!res.ok) return
+        const d = await res.json()
+        const chip = document.getElementById('cu-rp-chip')
+        const vence = document.getElementById('cu-rp-vence')
+        if (!d.vinculado) { chip.textContent = 'Sin vincular'; chip.className = 'cu-chip'; return }
+        const TXT = {
+          aprobado: ['✓ Aprobado', 'is-ok'], autocultivo: ['Autocultivador', 'is-ok'],
+          en_evaluacion: ['En evaluación', ''], revision_medica: ['En corrección', ''],
+          a_vincular: ['Vinculándote', ''], cargado: ['Te toca firmar', 'is-vos'],
+          observado: ['Observado', 'is-vos'], codigo_listo: ['Con el médico', ''],
+          sin_iniciar: ['Falta tu código', 'is-vos'], esperando_codigo: ['Falta tu código', 'is-vos'],
+          revisar: ['Falta tu código', 'is-vos'], vencido: ['Vencido', 'is-mal'], rechazado: ['Rechazado', 'is-mal'],
+        }
+        const [txt, cls] = TXT[d.estado] || [d.estado || '—', '']
+        chip.textContent = txt
+        chip.className = 'cu-chip ' + cls
+        if (d.vence && ['aprobado', 'autocultivo', 'vencido'].includes(d.estado)) {
+          const dias = Math.floor((Date.parse(d.vence) - Date.now()) / 86400000)
+          const f = d.vence.slice(0, 10).split('-').reverse().join('/')
+          vence.textContent = dias < 0 ? `venció el ${f}` : `vence el ${f} · faltan ${dias} días`
+          vence.style.color = dias < 0 ? '#ff9d9d' : dias <= 60 ? '#e6a83e' : ''
+        }
+        document.getElementById('cu-cert').hidden = !d.certificado
+      } catch { /* la tarjeta queda con el chip vacío, nada más */ }
     }
 
     // Saldo de gramos (solo gramos — la plata no viaja hasta acá)
@@ -151,14 +279,45 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         document.getElementById('cu-saldo-det').textContent = s.base
           ? (s.tipo === 'plan' ? ` de ${s.base} g de tu plan` : ` de ${s.base} g de este mes`)
           : ''
+        // el plan por fin se ve: MEDIUM · 20 g/mes
+        if (s.tier) {
+          const chip = document.getElementById('cu-plan-chip')
+          chip.textContent = s.tier.replace(/^PLAN\s+PLAN\s+/i, 'PLAN ') + (s.gramosMes ? ` · ${s.gramosMes} g/mes` : '')
+          chip.hidden = false
+        }
         const fill = document.getElementById('cu-saldo-fill')
         if (s.base > 0) fill.style.width = Math.min(100, ((s.base - s.saldo) / s.base) * 100).toFixed(1) + '%'
         document.getElementById('cu-saldo-sub').textContent = s.visitasMes
           ? `Retiraste ${s.retiradoMes} g en ${s.visitasMes} visita${s.visitasMes === 1 ? '' : 's'} este mes.`
           : (s.tipo === 'plan' && s.hasta ? `Tu plan vence en ${s.hasta.slice(0, 7)}.` : 'Todavía no retiraste este mes.')
-        document.getElementById('cu-saldo-retiros').innerHTML = (d.retiros || []).slice(0, 4).map((r) =>
-          `<div><span>${esc(r.fecha.slice(8))}/${esc(r.fecha.slice(5, 7))}</span><span>${esc(r.producto || '')}</span><b>${r.gramos} g</b></div>`).join('')
+        const aldia = document.getElementById('cu-aldia')
+        if (s.tipo === 'contado') {
+          aldia.textContent = s.alDia ? '✓ Cuota de este mes al día' : 'Este mes todavía no registramos tu cuota.'
+          aldia.style.color = s.alDia ? '#3cb492' : '#e6a83e'
+          aldia.hidden = false
+        }
+        // "socio desde" bajo el email
+        if (d.desde) {
+          const el = document.getElementById('cu-email')
+          const mes = new Date(d.desde).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+          if (mes && !el.textContent.includes('·')) el.textContent += ` · en el club desde ${mes}`
+        }
         document.getElementById('cu-saldo-sec').hidden = false
+
+        // Historial de retiros COMPLETO: flores en gramos y productos en
+        // unidades (antes los aceites/cremas eran invisibles acá).
+        const retiros = d.retiros || []
+        if (retiros.length) {
+          const fila = (r) => `<div><span>${esc(r.fecha.slice(8))}/${esc(r.fecha.slice(5, 7))}</span><span>${esc(r.producto || '')}</span><b>${r.gramos ? r.gramos + ' g' : (r.unidades || 1) + ' u.'}</b></div>`
+          const caja = document.getElementById('cu-saldo-retiros')
+          caja.innerHTML = retiros.slice(0, 6).map(fila).join('')
+          const btn = document.getElementById('cu-vermas')
+          if (retiros.length > 6) {
+            btn.hidden = false
+            btn.addEventListener('click', () => { caja.innerHTML = retiros.map(fila).join(''); btn.hidden = true }, { once: true })
+          }
+          document.getElementById('cu-retiros-sec').hidden = false
+        }
       } catch { /* sin saldo no pasa nada: la sección queda oculta */ }
     }
 
@@ -245,12 +404,58 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-vacio[hidden] { display: none; }
     .cu-gw { margin-top: 4px; }
 
-    .cu-rp-link { display: flex; align-items: center; justify-content: space-between; gap: 14px;
-      background: rgba(183, 157, 230, 0.08); border: 1px solid rgba(183, 157, 230, 0.28);
-      border-radius: 14px; padding: 16px 20px; text-decoration: none; color: #f4f1f7; }
-    .cu-rp-link:hover { background: rgba(183, 157, 230, 0.14); }
-    .cu-rp-link small { display: block; color: rgba(244, 241, 247, 0.55); font-size: 0.84rem; margin-top: 2px; }
-    .cu-rp-link span:last-child { color: #b79de6; font-size: 1.2rem; }
+    /* chips compartidos (plan y REPROCANN) */
+    .cu-chip { display: inline-flex; align-items: center; font-size: 0.74rem; font-weight: 700;
+      padding: 5px 12px; border-radius: 999px; background: rgba(183, 157, 230, 0.12);
+      color: #b79de6; border: 1px solid rgba(183, 157, 230, 0.3); white-space: nowrap; }
+    .cu-chip.is-ok { background: rgba(60, 180, 146, 0.14); color: #5ecfae; border-color: rgba(60, 180, 146, 0.35); }
+    .cu-chip.is-vos { background: rgba(230, 168, 62, 0.12); color: #e6a83e; border-color: rgba(230, 168, 62, 0.35); }
+    .cu-chip.is-mal { background: rgba(255, 120, 120, 0.12); color: #ff9d9d; border-color: rgba(255, 120, 120, 0.35); }
+    .cu-chip[hidden] { display: none; }
+    .cu-saldo-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+    /* tarjeta REPROCANN */
+    .cu-rp-fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .cu-rp-vence { color: rgba(244, 241, 247, 0.6); font-size: 0.88rem; }
+    .cu-cert { display: block; margin-top: 14px; text-align: center; text-decoration: none;
+      background: rgba(60, 180, 146, 0.1); border: 1px solid rgba(60, 180, 146, 0.35);
+      border-radius: 14px; padding: 13px 16px; color: #f4f1f7; font-weight: 600; font-size: 0.93rem; }
+    .cu-cert:hover { background: rgba(60, 180, 146, 0.18); }
+    .cu-cert small { display: block; color: rgba(244, 241, 247, 0.55); font-weight: 400; font-size: 0.78rem; margin-top: 2px; }
+    .cu-cert[hidden] { display: none; }
+    .cu-rp-ir { display: inline-block; margin-top: 12px; color: #b79de6; font-size: 0.86rem; text-decoration: none; }
+    .cu-rp-ir:hover { text-decoration: underline; }
+
+    /* editor de la reserva pendiente */
+    .cu-ed-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 0; border-top: 1px solid rgba(244, 241, 247, 0.08); }
+    .cu-ed-item:first-of-type { border-top: none; }
+    .cu-ed-nombre { font-size: 0.95rem; color: #f4f1f7; }
+    .cu-ed-nombre small { display: block; color: rgba(244, 241, 247, 0.45); font-size: 0.76rem; }
+    .cu-ed-step { display: inline-flex; align-items: center; border: 1px solid rgba(183, 157, 230, 0.3);
+      border-radius: 10px; overflow: hidden; }
+    .cu-ed-step b { padding: 6px 12px; font-size: 0.9rem; min-width: 44px; text-align: center; }
+    .cu-ed-step button { background: rgba(183, 157, 230, 0.1); border: none; color: #b79de6;
+      font-size: 1.05rem; padding: 6px 12px; cursor: pointer; line-height: 1; }
+    .cu-ed-step button:hover { background: rgba(183, 157, 230, 0.22); }
+    .cu-ed-total { display: flex; justify-content: space-between; border-top: 1px dashed rgba(244, 241, 247, 0.15);
+      margin-top: 10px; padding-top: 10px; font-size: 0.9rem; color: rgba(244, 241, 247, 0.6); }
+    .cu-ed-total b { color: #f4f1f7; }
+    .cu-ed-acciones { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+    .cu-ed-btn { border-radius: 999px; padding: 10px 18px; font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; font-family: var(--font-ui); }
+    .cu-ed-btn.is-borrar { background: none; border: 1px solid rgba(255, 120, 120, 0.35); color: #ff9d9d; }
+    .cu-ed-btn.is-borrar:hover { background: rgba(255, 120, 120, 0.1); }
+    .cu-ed-btn.is-guardar { background: #b79de6; border: none; color: #1b1326; }
+    .cu-ed-btn.is-guardar:disabled { opacity: 0.45; cursor: default; }
+
+    .cu-vermas { display: block; width: 100%; margin-top: 10px; background: none;
+      border: 1px solid rgba(183, 157, 230, 0.3); border-radius: 10px; color: #b79de6;
+      padding: 9px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: var(--font-ui); }
+    .cu-vermas:hover { background: rgba(183, 157, 230, 0.08); }
+    .cu-vermas[hidden] { display: none; }
+    #cu-retiros-sec[hidden] { display: none; }
+    #cu-aldia[hidden] { display: none; }
 
     /* saldo de gramos — nocturno de marca, verde solo para el dato */
     .cu-saldo-card {

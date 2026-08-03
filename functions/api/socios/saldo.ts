@@ -18,27 +18,32 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!esSocio) return Response.json({ error: 'Sin acceso' }, { status: 403 });
 
   const socio = await env.DB.prepare(
-    `SELECT id, nombre FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
-  ).bind(email.toLowerCase()).first<{ id: number; nombre: string }>();
+    `SELECT id, nombre, alta FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
+  ).bind(email.toLowerCase()).first<{ id: number; nombre: string; alta: string | null }>();
   if (!socio) {
     // Todavía no está enganchado al padrón financiero: sin tarjeta de saldo.
     return Response.json({ ok: true, vinculado: false });
   }
   const [saldo, retiros] = await Promise.all([
     saldoDe(env, socio.id),
+    // TODOS los retiros: flores (gramos) y también aceites/cremas/cartuchos
+    // (unidades) — antes el filtro gramos > 0 los hacía invisibles.
     env.DB.prepare(
       `SELECT fecha, producto, gramos, unidades FROM dispensas
-        WHERE socio_id = ? AND gramos > 0 ORDER BY fecha DESC, id DESC LIMIT 6`,
+        WHERE socio_id = ? ORDER BY fecha DESC, id DESC LIMIT 30`,
     ).bind(socio.id).all(),
   ]);
   // Solo gramos: nada de montos, deuda ni precios en esta respuesta.
+  // (pagoEsteMes es un sí/no de "cuota al día", sin importes.)
   return Response.json({
-    ok: true, vinculado: true, nombre: socio.nombre,
+    ok: true, vinculado: true, nombre: socio.nombre, desde: socio.alta,
     saldo: {
       tipo: saldo.tipo, saldo: Math.max(0, saldo.saldo),
+      tier: saldo.tier || null, gramosMes: saldo.gramosMes || null,
       retiradoMes: saldo.retiradoMes, visitasMes: saldo.visitasMes,
       base: saldo.tipo === 'plan' ? saldo.total : saldo.habilitado,
       hasta: 'hasta' in saldo ? saldo.hasta : null,
+      alDia: saldo.tipo === 'plan' ? true : !!(saldo as { pagoEsteMes?: boolean }).pagoEsteMes,
     },
     retiros: retiros.results,
   });

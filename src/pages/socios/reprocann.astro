@@ -27,7 +27,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div class="td-head">
         <a href="/socios/cuenta/" class="td-back">← Mi cuenta</a>
         <div class="td-brand"><img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" /><span class="td-brand-name"><em>club</em></span></div>
-        <span></span>
+        <button id="rp-logout" class="td-logout" type="button">Cerrar sesión</button>
       </div>
 
       <h1 class="td-title">Tu <em>REPROCANN</em></h1>
@@ -36,9 +36,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <section class="rp-sec">
         <div class="rp-estado" id="rp-estado">
           <span class="rp-punto" id="rp-punto"></span>
-          <p id="rp-mensaje">Cargando…</p>
+          <div>
+            <p id="rp-mensaje">Cargando…</p>
+            <p class="rp-vence" id="rp-vence" hidden></p>
+          </div>
         </div>
         <div class="rp-pasos" id="rp-pasos"></div>
+        <a class="rp-cert" id="rp-cert" href="/api/socios/certificado" hidden>
+          📄 Descargar mi certificado (PDF)
+          <small>Tu certificado oficial, siempre a mano.</small>
+        </a>
       </section>
 
       <!-- cargar el código -->
@@ -111,6 +118,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const punto = document.getElementById('rp-punto')
       punto.className = 'rp-punto' + (d.teToca ? ' is-vos' : d.estado === 'aprobado' ? ' is-ok' : ' is-espera')
 
+      // vencimiento del certificado: el dato clave que antes no se pintaba
+      const vence = document.getElementById('rp-vence')
+      if (d.vence && ['aprobado', 'autocultivo', 'vencido'].includes(d.estado)) {
+        const dias = Math.floor((Date.parse(d.vence) - Date.now()) / 86400000)
+        const f = d.vence.slice(0, 10).split('-').reverse().join('/')
+        vence.textContent = dias < 0
+          ? `Venció el ${f} — hay que renovarlo.`
+          : `Vence el ${f} · faltan ${dias} días.`
+        vence.className = 'rp-vence' + (dias < 0 ? ' is-mal' : dias <= 60 ? ' is-ojo' : '')
+        vence.hidden = false
+      }
+      // certificado PDF: la guantera digital
+      document.getElementById('rp-cert').hidden = !d.certificado
+
       const paso = DONDE[d.estado] ?? 0
       document.getElementById('rp-pasos').innerHTML = VIAJE.map((v, i) => `
         <div class="rp-paso ${i < paso ? 'is-hecho' : i === paso ? 'is-ahora' : ''}">
@@ -172,6 +193,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     }
     window.handleGoogleCredential = (r) => submitLogin(r.credential, false)
+
+    document.getElementById('rp-logout').addEventListener('click', async () => {
+      await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+      location.href = '/'
+    })
+
+    // El botón de Google hay que inicializarlo acá también: esta es la única
+    // página del portal que se manda por link directo (WhatsApp) y sin esto
+    // quien llegaba sin sesión se encontraba un botón vacío.
+    if (googleClientId) {
+      window.onload = () => {
+        google.accounts.id.initialize({ client_id: googleClientId, callback: window.handleGoogleCredential })
+        google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+          theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with', locale: 'es',
+        })
+      }
+    }
     cargar()
   </script>
 
@@ -184,6 +222,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .rp-estado { display: flex; align-items: flex-start; gap: 12px; background: rgba(244, 241, 247, 0.04);
       border: 1px solid rgba(244, 241, 247, 0.12); border-radius: 16px; padding: 18px 20px; }
     .rp-estado p { margin: 0; color: #f4f1f7; font-size: 1rem; line-height: 1.55; }
+    .rp-vence { margin-top: 6px !important; font-size: 0.88rem !important; color: rgba(244,241,247,.6) !important; }
+    .rp-vence.is-ojo { color: #e6a83e !important; }
+    .rp-vence.is-mal { color: #ff9d9d !important; }
+    .rp-vence[hidden] { display: none; }
+    .rp-cert { display: block; margin-top: 14px; text-align: center; text-decoration: none;
+      background: rgba(60, 180, 146, 0.1); border: 1px solid rgba(60, 180, 146, 0.35);
+      border-radius: 14px; padding: 14px 18px; color: #f4f1f7; font-weight: 600; font-size: 0.95rem; }
+    .rp-cert:hover { background: rgba(60, 180, 146, 0.18); }
+    .rp-cert small { display: block; color: rgba(244,241,247,.55); font-weight: 400; font-size: 0.8rem; margin-top: 3px; }
+    .rp-cert[hidden] { display: none; }
     .rp-punto { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; background: rgba(244,241,247,.4); }
     .rp-punto.is-vos { background: #e6a83e; box-shadow: 0 0 0 4px rgba(230,168,62,.18); }
     .rp-punto.is-espera { background: #b79de6; }

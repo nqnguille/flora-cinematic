@@ -170,6 +170,16 @@
             <button class="btn" id="sd-rc-guardar" type="button">Guardar trámite</button></div>
           <p class="msg" id="sd-msg-rc" style="margin:6px 0 0"></p>`
           : (s.telefono ? `<div class="fila" style="margin-top:8px"><a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a></div>` : '')}
+          <div class="fila" id="sd-cert-fila" style="margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--muted)">Certificado PDF:</span>
+            <span id="sd-cert-estado" style="font-size:12px;color:var(--muted)">…</span>
+            <span class="pn-sp"></span>
+            <a class="btn" id="sd-cert-ver" target="_blank" rel="noopener" hidden>Ver</a>
+            ${P.puede('reprocann_editar') ? `
+              <button class="btn" id="sd-cert-subir" type="button">Subir</button>
+              <button class="btn btn-peligro" id="sd-cert-borrar" type="button" hidden>Quitar</button>
+              <input type="file" id="sd-cert-file" accept="application/pdf" hidden />` : ''}
+          </div>
         </details>
 
         <details><summary>Actividad reciente</summary>
@@ -233,6 +243,48 @@
     })
 
     // débito: el mismo modal de link de pago con selector de plan
+    // certificado REPROCANN: estado + subir/ver/quitar (KV CERTIFICADOS)
+    ;(async () => {
+      const est = caja.querySelector('#sd-cert-estado')
+      if (!est) return
+      try {
+        const r = await fetch(`/api/panel/certificado?socio_id=${s.id}`, { credentials: 'include' })
+        const d = r.ok ? await r.json() : { existe: false }
+        est.textContent = d.existe ? `cargado ${String(d.meta?.subido || '').slice(0, 10)}` : 'sin cargar'
+        const ver = caja.querySelector('#sd-cert-ver')
+        if (ver) { ver.hidden = !d.existe; ver.href = `/api/panel/certificado?socio_id=${s.id}&descargar=1` }
+        const borrar = caja.querySelector('#sd-cert-borrar')
+        if (borrar) borrar.hidden = !d.existe
+      } catch { est.textContent = '—' }
+    })()
+    caja.querySelector('#sd-cert-subir')?.addEventListener('click', () => caja.querySelector('#sd-cert-file').click())
+    caja.querySelector('#sd-cert-file')?.addEventListener('change', async (e) => {
+      const f = e.target.files[0]
+      if (!f) return
+      const est = caja.querySelector('#sd-cert-estado')
+      est.textContent = 'subiendo…'
+      const b64 = await new Promise((res, rej) => {
+        const fr = new FileReader()
+        fr.onload = () => res(String(fr.result).split(',')[1])
+        fr.onerror = rej
+        fr.readAsDataURL(f)
+      })
+      const r = await fetch('/api/panel/certificado', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ socio_id: s.id, pdf_base64: b64 }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (r.ok) { abrir(s.id, alCambiar) } else { est.textContent = '✗ ' + (d.error || 'error ' + r.status) }
+    })
+    caja.querySelector('#sd-cert-borrar')?.addEventListener('click', async () => {
+      if (!(await P.confirmar('¿Quitar el certificado PDF de este socio?', 'Sí, quitar'))) return
+      await fetch('/api/panel/certificado', {
+        method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ socio_id: s.id }),
+      })
+      abrir(s.id, alCambiar)
+    })
+
     caja.querySelector('#sd-debito')?.addEventListener('click', () => modalDebito(s))
     caja.querySelector('#sd-no-insistir')?.addEventListener('click', async (e) => {
       e.target.disabled = true

@@ -6,6 +6,7 @@ import { readSessionEmail } from './_session';
 interface Env {
   DB: D1Database;
   SOCIOS: KVNamespace;
+  CERTIFICADOS: KVNamespace;
   SESSION_SECRET: string;
   NOTIFY_TOKEN?: string;
 }
@@ -19,10 +20,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!esSocio) return Response.json({ error: 'Sin acceso' }, { status: 403 });
 
   const s = await env.DB.prepare(
-    `SELECT nombre, reprocann_estado, reprocann_codigo, reprocann_vence
+    `SELECT id, nombre, reprocann_estado, reprocann_codigo, reprocann_vence
        FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
-  ).bind(email.toLowerCase()).first<{ nombre: string; reprocann_estado: string; reprocann_codigo: string | null; reprocann_vence: string | null }>();
+  ).bind(email.toLowerCase()).first<{ id: number; nombre: string; reprocann_estado: string; reprocann_codigo: string | null; reprocann_vence: string | null }>();
   if (!s) return Response.json({ ok: true, vinculado: false });
+
+  // ¿Tiene su certificado PDF guardado? (solo el flag; el PDF va por
+  // /api/socios/certificado). La clave :meta es chica: no lee el PDF entero.
+  let certificado = false;
+  try { certificado = !!(await env.CERTIFICADOS.get(`cert:${s.id}:meta`)); } catch { /* binding ausente en dev viejo */ }
 
   // Al paciente le contamos su paso en su idioma, sin la jerga interna.
   const MENSAJE: Record<string, string> = {
@@ -50,6 +56,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     // el código no se devuelve completo: solo para confirmar que es el suyo
     codigoParcial: s.reprocann_codigo ? s.reprocann_codigo.slice(0, 4) + '•••••' + s.reprocann_codigo.slice(-2) : null,
     vence: s.reprocann_vence,
+    certificado,
   });
 };
 

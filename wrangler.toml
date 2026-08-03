@@ -26,6 +26,11 @@ id = "2d141ca74029483f81490cc81c1490e9"
 binding = "SOLICITUDES"
 id = "e8dfc462239049eb9ce4e2e93425ebe5"
 
+# Certificados REPROCANN (PDF oficial de cada socio, para su "guantera digital")
+[[kv_namespaces]]
+binding = "CERTIFICADOS"
+id = "e480e6c5f8854668b8dfe187ee28c27c"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "flora-finanzas"
