@@ -2701,23 +2701,81 @@ body.is-socio .fl-card-shell--socio { display: block; }
    derecho de la pantalla (margen negativo hasta el viewport; el overflow
    de la sección contiene el sangrado) */
 
-/* CTA rápido del turnero: el botón grande + la línea del próximo turno */
-.fl-rp-ya { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.fl-rp-ya-btn {
-  font-size: 1.05rem !important;
-  padding: 17px 38px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-  transform: translateZ(0);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+/* ── Ticket de turno: el próximo turno real, como un turno en la mano ──
+   Tarjeta blanca sobre la banda violeta, corte perforado al medio (muescas
+   del color de la banda). Toda la tarjeta es UN link al turnero. Luz
+   ambiente estática — las superficies de la casa nunca pulsan. */
+.fl-rp-ticket {
+  display: flex; align-items: stretch; text-decoration: none;
+  margin-top: 28px; max-width: 560px; width: 100%;
+  background: var(--fl-paper); border-radius: var(--fl-r-card);
+  position: relative; overflow: hidden; text-align: left;
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45),
+    0 0 50px -14px rgba(79, 199, 158, 0.16),
+    0 0 70px -18px rgba(129, 92, 181, 0.2);
+  transition: transform 0.18s ease, box-shadow 0.25s ease;
 }
-.fl-rp-ya-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34); }
-.fl-rp-ya-info { margin: 0; font-size: 0.88rem; line-height: 1.6; color: rgba(244, 241, 247, 0.72); max-width: 46ch; }
-.fl-rp-ya-info strong { color: #fff; font-weight: 700; }
-#fl-turno-prox { color: #7ee2c3; display: block; margin-bottom: 2px; }
-#fl-turno-prox[hidden] { display: none; }
-@media (min-width: 900px) {
-  .fl-rp-ya { align-items: flex-start; }
-  .fl-rp-ya-info { text-align: left; }
+.fl-rp-ticket:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 54px -18px rgba(0, 0, 0, 0.5),
+    0 0 60px -12px rgba(79, 199, 158, 0.22),
+    0 0 80px -16px rgba(129, 92, 181, 0.26);
+}
+.fl-tk-fecha {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; padding: 22px 26px; min-width: 132px;
+  background: var(--fl-paper-2);
+}
+.fl-tk-fecha[hidden] { display: none; }
+.fl-tk-dia { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; color: var(--fl-green-2); }
+.fl-tk-num { font-family: var(--font-display); font-weight: 500; font-size: 3.1rem; line-height: 1; color: var(--fl-violet); }
+.fl-tk-mes { font-size: 0.8rem; font-weight: 600; color: rgba(28, 22, 38, 0.6); text-transform: lowercase; }
+.fl-tk-hora {
+  margin-top: 8px; font-size: 0.95rem; font-weight: 700; color: var(--fl-violet);
+  background: #fff; border: 1px solid var(--fl-line); border-radius: 999px; padding: 4px 13px;
+}
+/* corte perforado con las dos muescas del color de la banda */
+.fl-tk-corte { position: relative; width: 0; border-left: 2px dashed rgba(56, 31, 86, 0.18); }
+.fl-tk-corte::before, .fl-tk-corte::after {
+  content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+  width: 18px; height: 18px; border-radius: 50%; background: var(--fl-violet);
+}
+.fl-tk-corte::before { top: -9px; }
+.fl-tk-corte::after { bottom: -9px; }
+.fl-tk-info { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 20px 24px 22px; }
+.fl-tk-live {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fl-green-2);
+}
+.fl-tk-live[hidden] { display: none; }
+.fl-tk-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 0 4px rgba(113, 206, 106, 0.16); }
+.fl-tk-det { margin: 0; font-size: 0.92rem; line-height: 1.5; color: rgba(28, 22, 38, 0.7); }
+.fl-tk-det strong { color: var(--fl-ink); }
+.fl-tk-pago { margin: 0; font-size: 0.82rem; line-height: 1.5; color: rgba(28, 22, 38, 0.58); }
+.fl-tk-pago strong { color: var(--fl-ink); font-weight: 700; }
+.fl-tk-precio { color: var(--fl-violet); font-weight: 800; font-size: 0.98rem; }
+.fl-tk-precio[hidden] { display: none; }
+.fl-tk-btn {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 6px;
+  background: var(--fl-violet); color: #fff; border-radius: 999px;
+  padding: 14px 26px; font-size: 0.95rem; font-weight: 700;
+  box-shadow: 0 18px 34px -22px rgba(56, 31, 86, 0.7);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.fl-rp-ticket:hover .fl-tk-btn { background: var(--fl-violet-2); transform: translateY(-1px); }
+@media (max-width: 899px) { .fl-rp-ticket { margin-left: auto; margin-right: auto; } }
+@media (max-width: 560px) {
+  .fl-rp-ticket { flex-direction: column; }
+  .fl-tk-fecha { flex-direction: row; gap: 10px; padding: 16px 18px; align-items: baseline; }
+  .fl-tk-num { font-size: 2.2rem; }
+  .fl-tk-hora { margin-top: 0; margin-left: auto; }
+  .fl-tk-corte { width: auto; height: 0; border-left: 0; border-top: 2px dashed rgba(56, 31, 86, 0.18); }
+  .fl-tk-corte::before, .fl-tk-corte::after { top: 50%; transform: translateY(-50%); }
+  .fl-tk-corte::before { left: -9px; }
+  .fl-tk-corte::after { left: auto; right: -9px; }
+  .fl-tk-info { align-items: stretch; text-align: left; }
+  .fl-tk-btn { justify-content: center; }
 }
 
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }

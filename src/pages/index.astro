@@ -581,15 +581,21 @@ const websiteSchema = {
           <p class="fl-reprocann-lead">
             Es más simple de lo que parece: son tres pasos y te acompañamos en cada uno.
           </p>
-          <div class="fl-rp-ya">
-            <a class="fl-reprocann-cta fl-rp-ya-btn" href="https://consultorio.floraong.ar/?agendar=1">
-              Agendar turno ahora <span aria-hidden="true">→</span>
-            </a>
-            <p class="fl-rp-ya-info">
-              <strong id="fl-turno-prox" hidden></strong>
-              Entrevista online con el Dr. Ezequiel Kalb · elegís el horario y <strong>abonás online con Mercado Pago</strong>.
-            </p>
-          </div>
+          <a class="fl-rp-ticket" href="https://consultorio.floraong.ar/?agendar=1" aria-label="Agendar turno ahora con el Dr. Ezequiel Kalb">
+            <div class="fl-tk-fecha" id="fl-tk-fecha" hidden>
+              <span class="fl-tk-dia" id="fl-tk-dia">—</span>
+              <span class="fl-tk-num" id="fl-tk-num">–</span>
+              <span class="fl-tk-mes" id="fl-tk-mes">—</span>
+              <span class="fl-tk-hora" id="fl-tk-hora">–:– h</span>
+            </div>
+            <div class="fl-tk-corte" aria-hidden="true"></div>
+            <div class="fl-tk-info">
+              <span class="fl-tk-live" id="fl-tk-live" hidden><i></i> Próximo turno libre</span>
+              <p class="fl-tk-det">Entrevista online (30 min) con el <strong>Dr.&nbsp;Ezequiel&nbsp;Kalb</strong></p>
+              <p class="fl-tk-pago"><strong class="fl-tk-precio" id="fl-tk-precio" hidden></strong> Se abona online con <strong>Mercado Pago</strong></p>
+              <span class="fl-tk-btn">Agendar turno ahora <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
         </div>
         <div class="fl-rp-visual">
           <img
@@ -648,16 +654,22 @@ const websiteSchema = {
       if (!t.ok || !t.proximo || !t.agendaDisponible) return
       const TZ = 'America/Argentina/Buenos_Aires'
       const d = new Date(t.proximo)
+      const parte = (opts) => new Intl.DateTimeFormat('es-AR', { timeZone: TZ, ...opts }).format(d)
       const clave = (x) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(x)
-      const cuando = clave(d) === clave(new Date()) ? 'hoy'
-        : clave(d) === clave(new Date(Date.now() + 86400000)) ? 'mañana'
-        : 'el ' + new Intl.DateTimeFormat('es-AR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'numeric' }).format(d)
-      const hora = new Intl.DateTimeFormat('es-AR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(d)
-      const el = document.getElementById('fl-turno-prox')
-      if (!el) return
-      el.textContent = `Próximo turno libre: ${cuando} a las ${hora} h${t.precio ? ' · ' + t.precio : ''} — `
-      el.hidden = false
-    }).catch(() => { /* sin dato en vivo, el CTA sigue */ })
+      const esHoy = clave(d) === clave(new Date())
+      const esManiana = clave(d) === clave(new Date(Date.now() + 86400000))
+      const pon = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt }
+      pon('fl-tk-dia', esHoy ? 'HOY' : esManiana ? 'MAÑANA' : parte({ weekday: 'long' }).toUpperCase())
+      pon('fl-tk-num', parte({ day: 'numeric' }))
+      pon('fl-tk-mes', parte({ month: 'long' }))
+      pon('fl-tk-hora', parte({ hour: '2-digit', minute: '2-digit' }) + ' h')
+      document.getElementById('fl-tk-fecha').hidden = false
+      document.getElementById('fl-tk-live').hidden = false
+      if (t.precio) {
+        pon('fl-tk-precio', t.precio + ' ·')
+        document.getElementById('fl-tk-precio').hidden = false
+      }
+    }).catch(() => { /* sin dato en vivo, el ticket queda sin fecha y el CTA sigue */ })
   </script>
 
   <!-- ══════════════════════════════════════════ -->
