@@ -662,7 +662,7 @@ const websiteSchema = {
       pon('fl-tk-dia', esHoy ? 'HOY' : esManiana ? 'MAÑANA' : parte({ weekday: 'long' }).toUpperCase())
       pon('fl-tk-num', parte({ day: 'numeric' }))
       pon('fl-tk-mes', parte({ month: 'long' }))
-      pon('fl-tk-hora', parte({ hour: '2-digit', minute: '2-digit' }) + ' h')
+      pon('fl-tk-hora', parte({ hour: '2-digit', minute: '2-digit', hour12: false }) + ' h')
       document.getElementById('fl-tk-fecha').hidden = false
       document.getElementById('fl-tk-live').hidden = false
       if (t.precio) {
