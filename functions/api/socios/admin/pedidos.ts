@@ -1,4 +1,5 @@
 import { requireCap } from '../../panel/_rol';
+import { leerAvisos, enviarMailReserva, interpolar, itemsTexto } from './_avisos';
 
 interface Env {
   DB: D1Database;
@@ -7,6 +8,8 @@ interface Env {
   SUPER_ADMIN_EMAILS?: string;
   PEDIDOS: KVNamespace;
   SOCIOS: KVNamespace;
+  GENETICAS: KVNamespace;
+  RESEND_API_KEY?: string;
 }
 
 const TTL_SECONDS = 90 * 24 * 60 * 60;
@@ -94,5 +97,36 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   pedido.actualizado = new Date().toISOString();
   await env.PEDIDOS.put(`pedido:${id}`, JSON.stringify(pedido), { expirationTtl: TTL_SECONDS });
-  return Response.json({ ok: true, pedido });
+
+  // Aviso al socio: al pasar a 'listo' o 'entregado' sale el mail solo (si
+  // la plantilla está activa) y se le devuelve al panel un link de WhatsApp
+  // prearmado con el mismo texto, para mandarlo en un toque. Nunca bloquea
+  // el cambio de estado — si el mail falla, el panel lo muestra.
+  let avisoNotif: { mail: { enviado: boolean; error?: string } | null; wa: { telefono: string; link: string } | null } | null = null;
+  if (estado === 'listo' || estado === 'entregado') {
+    try {
+      const avisos = await leerAvisos(env.GENETICAS);
+      const plantilla = avisos[estado];
+      const vars = {
+        nombre: String(pedido.name || '').split(/\s+/)[0] || 'socio',
+        items: itemsTexto(pedido),
+        nota: String(pedido.nota || ''),
+      };
+      const mail = plantilla.activo
+        ? await enviarMailReserva(env, String(pedido.email), plantilla, vars, estado)
+        : null;
+      // teléfono para el botón de WhatsApp: la ficha D1 por email
+      let wa: { telefono: string; link: string } | null = null;
+      const s = await env.DB.prepare(
+        `SELECT telefono FROM socios WHERE email = ? AND telefono IS NOT NULL AND (numero IS NULL OR numero != -1)`,
+      ).bind(String(pedido.email).toLowerCase()).first<{ telefono: string }>();
+      if (s?.telefono) {
+        const texto = interpolar(plantilla.wa, vars);
+        wa = { telefono: s.telefono, link: `https://wa.me/${s.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}` };
+      }
+      avisoNotif = { mail, wa };
+    } catch { avisoNotif = { mail: { enviado: false, error: 'falló el armado del aviso' }, wa: null }; }
+  }
+
+  return Response.json({ ok: true, pedido, aviso: avisoNotif });
 };

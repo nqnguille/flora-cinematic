@@ -157,7 +157,7 @@
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
-        aviso('')
+        mostrarAviso(data.aviso)
         await cargar()
       } else {
         if (btn) btn.disabled = false
@@ -168,6 +168,93 @@
       if (btn) btn.disabled = false
       aviso('Error de red — probá de nuevo.', 'err')
     }
+  }
+
+  // Qué pasó con el aviso al socio: mail automático + botón de WhatsApp.
+  function mostrarAviso(a) {
+    if (!a) { aviso(''); return }
+    const mailTxt = a.mail === null ? 'aviso por mail desactivado'
+      : a.mail.enviado ? '✉️ mail enviado al socio'
+      : 'el mail NO salió' + (a.mail.error ? ` (${a.mail.error})` : '')
+    if (a.wa) {
+      P.modal('Aviso al socio', `
+        <p style="color:var(--ink2);margin:0 0 4px">${P.esc(mailTxt)}.</p>
+        <p style="color:var(--muted);font-size:12.5px;margin:0">¿Se lo mandás también por WhatsApp? El texto ya va escrito.</p>
+        <div class="pn-mod-acciones">
+          <button class="btn" onclick="Panel.cerrarModal()" type="button">Listo</button>
+          <a class="btn btn-pri" href="${P.esc(a.wa.link)}" target="_blank" rel="noopener" onclick="Panel.cerrarModal()">Mandar por WhatsApp</a>
+        </div>`)
+      aviso('')
+    } else {
+      aviso(a.mail && !a.mail.enviado && a.mail !== null ? '✗ ' + mailTxt : '✔ ' + mailTxt, a.mail && a.mail.enviado === false ? 'err' : 'ok')
+    }
+  }
+
+  /* ---------- editor de plantillas de avisos ---------- */
+  const NOMBRE_AVISO = { listo: 'Lista para retirar', entregado: 'Entregada (gracias)' }
+
+  async function abrirEditorAvisos() {
+    const r = await fetch('/api/socios/admin/avisos', { credentials: 'include' })
+    if (!r.ok) { aviso('No se pudieron cargar las plantillas (' + r.status + ')', 'err'); return }
+    const d = await r.json()
+    const bloque = (estado) => {
+      const pl = d.avisos[estado]
+      return `
+        <fieldset class="rv-av-bloque" data-estado="${estado}" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 12px;min-width:0">
+          <legend style="padding:0 6px;font-weight:600;font-size:13px">${NOMBRE_AVISO[estado]}</legend>
+          <label class="fila" style="gap:8px;font-size:12.5px;color:var(--ink2);margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" class="rv-av-activo" ${pl.activo ? 'checked' : ''} /> Mandar el mail automáticamente
+          </label>
+          <div class="campo"><label class="lb">Asunto del mail</label>
+            <input class="input rv-av-asunto" maxlength="150" value="${P.esc(pl.asunto)}" /></div>
+          <div class="campo"><label class="lb">Cuerpo del mail (una línea en blanco = párrafo nuevo)</label>
+            <textarea class="input rv-av-cuerpo" rows="6" maxlength="2000" style="resize:vertical">${P.esc(pl.cuerpo)}</textarea></div>
+          <div class="campo"><label class="lb">Texto del WhatsApp (el botón de un toque)</label>
+            <textarea class="input rv-av-wa" rows="3" maxlength="2000" style="resize:vertical">${P.esc(pl.wa)}</textarea></div>
+        </fieldset>`
+    }
+    const ov = P.modal('Avisos al socio', `
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">Variables: <code>{{nombre}}</code> (primer nombre),
+      <code>{{items}}</code> (lo que reservó) y <code>{{nota}}</code>. El mail sale con el diseño de marca (logo, botón «Ver mi reserva» y pie de contacto).</p>
+      <div style="max-height:60vh;overflow-y:auto;padding-right:4px">${bloque('listo')}${bloque('entregado')}</div>
+      <div class="pn-mod-acciones">
+        <button class="btn" id="rv-av-defaults" type="button">Restaurar textos originales</button>
+        <span class="pn-sp"></span>
+        <button class="btn" onclick="Panel.cerrarModal()" type="button">Cancelar</button>
+        <button class="btn btn-pri" id="rv-av-guardar" type="button">Guardar</button>
+      </div>
+      <p class="msg" id="rv-av-msg" style="margin:8px 0 0"></p>`, { fijo: true })
+
+    ov.querySelector('#rv-av-defaults').addEventListener('click', () => {
+      ov.querySelectorAll('.rv-av-bloque').forEach((b) => {
+        const def = d.defaults[b.dataset.estado]
+        b.querySelector('.rv-av-activo').checked = def.activo
+        b.querySelector('.rv-av-asunto').value = def.asunto
+        b.querySelector('.rv-av-cuerpo').value = def.cuerpo
+        b.querySelector('.rv-av-wa').value = def.wa
+      })
+    })
+    ov.querySelector('#rv-av-guardar').addEventListener('click', async () => {
+      const body = {}
+      ov.querySelectorAll('.rv-av-bloque').forEach((b) => {
+        body[b.dataset.estado] = {
+          activo: b.querySelector('.rv-av-activo').checked,
+          asunto: b.querySelector('.rv-av-asunto').value,
+          cuerpo: b.querySelector('.rv-av-cuerpo').value,
+          wa: b.querySelector('.rv-av-wa').value,
+        }
+      })
+      const msg = ov.querySelector('#rv-av-msg')
+      msg.className = 'msg'; msg.textContent = '⏳ guardando…'
+      const rr = await fetch('/api/socios/admin/avisos', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const dd = await rr.json().catch(() => ({}))
+      if (rr.ok) { P.cerrarModal(); aviso('✔ plantillas guardadas', 'ok') }
+      else { msg.className = 'msg err'; msg.textContent = '✗ ' + (dd.error || 'error ' + rr.status) }
+    })
   }
 
   function pintarResultados(q) {
@@ -242,6 +329,7 @@
           <button type="button" class="chip on" data-f="activos">Activas</button>
           <button type="button" class="chip" data-f="">Todas</button>
           <button type="button" class="btn" id="rv-refresh">Actualizar</button>
+          ${P.puede('avisos_editar') ? '<button type="button" class="btn" id="rv-avisos" title="Textos del mail y el WhatsApp que le llegan al socio">✉️ Avisos</button>' : ''}
           <span id="rv-count" class="msg"></span>
           <span class="pn-sp"></span>
           <span id="rv-msg" class="msg"></span>
@@ -250,6 +338,7 @@
         <div id="rv-lista" class="rv-lista"><div class="vacio">⏳ Cargando…</div></div>`
 
       el.querySelector('#rv-refresh').addEventListener('click', () => cargar())
+      el.querySelector('#rv-avisos')?.addEventListener('click', abrirEditorAvisos)
       el.querySelectorAll('.rv-toolbar .chip').forEach((b) => b.addEventListener('click', () => {
         el.querySelectorAll('.rv-toolbar .chip').forEach((x) => x.classList.toggle('on', x === b))
         filtroPed = b.dataset.f

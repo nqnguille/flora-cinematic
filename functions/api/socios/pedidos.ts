@@ -259,7 +259,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 };
 
 // Cancelar el propio pedido mientras siga pendiente.
-export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestDelete: PagesFunction<Env> = async (context) => {
+  const { request, env } = context;
   const socio = await requireSocio(request, env);
   if (!socio) return Response.json({ ok: false, error: 'no autenticado' }, { status: 401 });
 
@@ -279,6 +280,9 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   pedido.estado = 'cancelado';
   pedido.actualizado = new Date().toISOString();
   await env.PEDIDOS.put(`pedido:${id}`, JSON.stringify(pedido), { expirationTtl: TTL_SECONDS });
+  // era el único cambio de estado que no avisaba a nadie: el club se enteraba
+  // recién al preparar una reserva que ya no existía
+  context.waitUntil(notificar(env, { ...pedido, items: [], _cancelada: true }));
   return Response.json({ ok: true, pedido });
 };
 

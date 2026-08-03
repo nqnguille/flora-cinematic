@@ -56,6 +56,8 @@ export const PERMISOS: Record<string, Rol[]> = {
   papelera_purgar: ['dueno'],
   // carta de socios (KV SOCIOS: quién entra a /socios/carta, solicitudes, adjuntos)
   carta_gestionar: ['dueno', 'operacion'],
+  // plantillas de los avisos al socio (reservas): editar textos
+  avisos_editar: ['dueno', 'operacion'],
   // operación diaria
   catalogo_editar: ['dueno', 'operacion'],
   reservas_operar: ['dueno', 'operacion', 'mostrador'],
