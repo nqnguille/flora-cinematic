@@ -2764,6 +2764,15 @@ body.is-socio .fl-card-shell--socio { display: block; }
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .fl-rp-ticket:hover .fl-tk-btn { background: var(--fl-violet-2); transform: translateY(-1px); }
+/* Variante C: el ticket vive en la columna de la credencial */
+.fl-rp-col { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; }
+.fl-rp-ticket--col { margin-top: 18px; max-width: 480px; }
+/* compacto junto a la credencial */
+.fl-rp-ticket--col .fl-tk-fecha { min-width: 108px; padding: 16px 18px; }
+.fl-rp-ticket--col .fl-tk-num { font-size: 2.3rem; }
+.fl-rp-ticket--col .fl-tk-info { padding: 15px 18px 17px; gap: 6px; }
+.fl-rp-ticket--col .fl-tk-det { font-size: 0.85rem; }
+.fl-rp-ticket--col .fl-tk-btn { padding: 12px 22px; font-size: 0.9rem; }
 @media (max-width: 899px) { .fl-rp-ticket { margin-left: auto; margin-right: auto; } }
 @media (max-width: 560px) {
   .fl-rp-ticket { flex-direction: column; }
@@ -2782,7 +2791,8 @@ body.is-socio .fl-card-shell--socio { display: block; }
 .fl-rp-visual {
   align-self: flex-end;
   margin-right: calc((100% - 100vw) / 2);
-  width: min(84vw, 460px);
+  /* contenida: con 84vw la credencial dominaba toda la pantalla del teléfono */
+  width: min(68vw, 380px);
 }
 .fl-rp-visual img { width: 100%; height: auto; display: block; }
 @media (min-width: 900px) {
@@ -2790,7 +2800,9 @@ body.is-socio .fl-card-shell--socio { display: block; }
   .fl-rp-head-text { text-align: left; flex: 1 1 auto; }
   .fl-reprocann .fl-title { margin: 0; }
   .fl-reprocann-lead { margin-left: 0; margin-right: 0; }
-  .fl-rp-visual { align-self: center; flex: 0 0 auto; width: min(42vw, 620px); }
+  .fl-rp-col { flex: 0 0 auto; width: min(40vw, 560px); align-items: stretch; }
+  .fl-rp-visual { align-self: center; margin-right: 0; width: 100%; }
+  .fl-rp-ticket--col { max-width: none; }
 }
 /* Guía del trámite: 3 pasos editoriales sobre la banda violeta */
 .fl-rp-steps {
