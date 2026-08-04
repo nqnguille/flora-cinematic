@@ -10,11 +10,7 @@ interface Env {
 
 const PRECIOS_KEY = 'precios';
 // Categorías que la tienda pública ya sabe leer — el panel edita dentro de estas.
-// 'membresias' son los planes de flores (SMALL/MEDIUM/LARGE/EXTRA LARGE):
-// misma forma que cualquier otro ítem de precio (label, detalle, precio), así
-// que entra en el editor del panel sin tocar nada más. Se publican en
-// /socios/membresias, que solo abre con sesión de socio.
-const CATEGORIAS = ['membresias', 'aceites', 'cremas', 'extracciones'];
+const CATEGORIAS = ['aceites', 'cremas', 'extracciones'];
 const MAX_ITEMS_POR_CATEGORIA = 40;
 
 async function guard(request: Request, env: Env) {

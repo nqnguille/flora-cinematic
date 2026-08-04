@@ -40,28 +40,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <header class="mb-head">
-        <span class="mb-eyebrow">Solo para socios</span>
-        <h1 class="mb-title">Membresías <em>de flores</em></h1>
-        <p class="mb-lead">
-          Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo.
-          El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.
-        </p>
+        <span class="mb-eyebrow" id="mb-eyebrow"></span>
+        <h1 class="mb-title" id="mb-title"></h1>
+        <p class="mb-lead" id="mb-lead"></p>
       </header>
 
       <p id="mb-vacio" class="mb-vacio" hidden>Todavía no hay membresías cargadas.</p>
       <div id="mb-grid" class="mb-grid"></div>
 
-      <section class="mb-nota">
-        <h2>Cómo funciona</h2>
-        <ul>
-          <li>Los gramos se renuevan cada mes y se retiran en la sede, en Neuquén capital.</li>
-          <li>Lo que retirás <strong>no es una compra</strong>: es la entrega de tu propio cultivo,
-            amparado por tu vínculo REPROCANN con la Asociación.</li>
-          <li>Para cambiar de membresía, escribinos y lo coordinamos.</li>
-        </ul>
+      <section class="mb-nota" id="mb-nota-sec" hidden>
+        <h2 id="mb-nota-titulo"></h2>
+        <ul id="mb-notas"></ul>
         <div class="mb-ctas">
-          <a class="mb-cta" href="/socios/carta/">Ver la carta de genéticas</a>
-          <a class="mb-cta mb-cta--ghost" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer">Consultar por WhatsApp</a>
+          <a class="mb-cta" id="mb-cta-carta" href="/socios/carta/"></a>
+          <a class="mb-cta mb-cta--ghost" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
         </div>
       </section>
     </div>
@@ -80,19 +72,42 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     </article>`
   }
 
+  function pintar(d) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '' }
+    set('mb-eyebrow', d.eyebrow)
+    const tit = document.getElementById('mb-title')
+    tit.textContent = d.titulo || ''
+    if (d.tituloEm) {
+      const em = document.createElement('em')
+      em.textContent = ' ' + d.tituloEm
+      tit.appendChild(em)
+    }
+    set('mb-lead', d.lead)
+
+    const planes = Array.isArray(d.planes) ? d.planes : []
+    document.getElementById('mb-grid').innerHTML = planes.map(tarjeta).join('')
+    document.getElementById('mb-vacio').hidden = planes.length > 0
+
+    set('mb-nota-titulo', d.notaTitulo)
+    const notas = Array.isArray(d.notas) ? d.notas : []
+    document.getElementById('mb-notas').innerHTML = notas
+      .map((n) => `<li>${n.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])}</li>`)
+      .join('')
+    set('mb-cta-carta', d.ctaCarta)
+    set('mb-cta-wa', d.ctaWhatsapp)
+    document.getElementById('mb-nota-sec').hidden = !(d.notaTitulo || notas.length)
+  }
+
   async function cargar() {
     // Sin sesión válida no se pinta nada: queda la pantalla de acceso.
     const yoRes = await fetch('/api/socios/yo', { credentials: 'include' })
     if (!yoRes.ok) return false
 
-    let items = []
-    const precRes = await fetch('/api/socios/precios', { credentials: 'include' })
-    if (precRes.ok) {
-      const d = await precRes.json().catch(() => ({}))
-      items = Array.isArray(d?.precios?.membresias) ? d.precios.membresias : []
-    }
-    document.getElementById('mb-grid').innerHTML = items.map(tarjeta).join('')
-    document.getElementById('mb-vacio').hidden = items.length > 0
+    // Todo el contenido de esta página (textos y planes) sale del documento
+    // que se edita en el panel, en Membresías. Acá no hay nada escrito a mano.
+    const res = await fetch('/api/socios/membresias', { credentials: 'include' })
+    const doc = res.ok ? (await res.json().catch(() => ({}))).membresias : null
+    if (doc) pintar(doc)
 
     document.getElementById('socios-login').hidden = true
     document.getElementById('mb-content').hidden = false
@@ -155,6 +170,35 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
 <style is:global>
   html, body { background-color: #130d1c; }
+
+  /* Estas piezas las escribe el JS con el contenido que viene del panel, así
+     que NO pueden ir en el bloque scoped: Astro le pone su atributo de alcance
+     solo a lo que existe al compilar, y el HTML inyectado se quedaba sin
+     estilo. */
+  .mb-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(183, 157, 230, 0.18);
+    border-radius: 18px; padding: 22px 20px; text-align: center;
+  }
+  .mb-card-nom {
+    font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: rgba(244, 241, 247, 0.9); margin: 0 0 6px;
+  }
+  .mb-card-det {
+    font-family: var(--font-ui); font-size: 13.5px;
+    color: rgba(244, 241, 247, 0.55); margin: 0 0 14px;
+  }
+  .mb-card-precio {
+    font-family: var(--font-display); font-size: clamp(26px, 4vw, 32px);
+    color: #3cb492; margin: 0; line-height: 1.1;
+  }
+  .mb-card-precio span {
+    display: block; font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, 0.45); margin-top: 4px;
+  }
+  .mb-nota li { margin-bottom: 7px; }
+  .mb-nota li::marker { color: #3cb492; }
 </style>
 
 <style>
@@ -177,34 +221,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .mb-grid {
     display: grid; gap: 14px; max-width: 900px; margin: 0 auto;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(190px, 230px));
+    justify-content: center;
   }
   .mb-vacio {
     text-align: center; font-family: var(--font-ui); font-size: 14px;
     color: rgba(244, 241, 247, 0.5); margin: 0 0 24px;
-  }
-
-  .mb-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(183, 157, 230, 0.18);
-    border-radius: 18px; padding: 22px 20px; text-align: center;
-  }
-  .mb-card-nom {
-    font-family: var(--font-ui); font-size: 13px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: rgba(244, 241, 247, 0.9); margin: 0 0 6px;
-  }
-  .mb-card-det {
-    font-family: var(--font-ui); font-size: 13.5px;
-    color: rgba(244, 241, 247, 0.55); margin: 0 0 14px;
-  }
-  .mb-card-precio {
-    font-family: var(--font-display); font-size: clamp(26px, 4vw, 32px);
-    color: #3cb492; margin: 0; line-height: 1.1;
-  }
-  .mb-card-precio span {
-    display: block; font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, 0.45); margin-top: 4px;
   }
 
   .mb-nota {

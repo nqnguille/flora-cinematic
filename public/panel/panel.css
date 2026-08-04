@@ -532,3 +532,36 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
 .so-tl-paso.hecho::before { background: var(--grn); }
 .so-tl-paso.actual { color: var(--ink); font-weight: 700; }
 .so-tl-paso.actual::before { background: var(--vio); box-shadow: 0 0 0 3px var(--vio-soft, rgba(110,79,160,0.18)); }
+
+/* ── Membresías: editor del contenido de /socios/membresias ── */
+.mb-url {
+  flex: 1 1 auto; min-width: 0; overflow-x: auto; white-space: nowrap;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
+  background: var(--card2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; color: var(--ink2);
+}
+.mb-plan {
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: nowrap;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.mb-plan:last-child { border-bottom: 0; }
+.mb-plan-campos {
+  flex: 1 1 auto; min-width: 0; display: grid; gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 170px);
+}
+@media (max-width: 720px) { .mb-plan-campos { grid-template-columns: 1fr; } }
+.mb-precio-fmt {
+  display: block; font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 1em;
+}
+.mb-borrar { flex: none; padding: 8px 12px; }
+/* nowrap + min-width:0 para que el textarea (que es width:100%) achique en vez
+   de empujar el botón de borrar al renglón de abajo. */
+.mb-nota-fila { display: flex; gap: 8px; align-items: flex-start; flex-wrap: nowrap; }
+.mb-nota-in { flex: 1 1 auto; min-width: 0; resize: vertical; }
+.mb-nota-borrar { flex: none; padding: 8px 12px; }
+/* La barra de guardar acompaña el fondo claro del panel, no un oscuro suelto. */
+.mb-barra {
+  position: sticky; bottom: 0; z-index: 2;
+  background: var(--bg); border-top: 1px solid var(--line);
+  margin-top: 16px; padding: 12px 0;
+}

@@ -63,6 +63,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button type="button" data-sec="catalogo" data-nom="Catálogo" data-cap="catalogo_editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 12 4l8.5 4.5v7L12 20l-8.5-4.5v-7Z"></path><path d="M12 12v8M3.5 8.5 12 12l8.5-3.5"></path></svg>
         </button>
+        <button type="button" data-sec="membresias" data-nom="Membresías" data-cap="catalogo_editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M3 10h18M7 14h4"></path></svg>
+        </button>
         <button type="button" data-sec="finanzas" data-nom="Finanzas" data-cap="finanzas_ver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"></path></svg>
         </button>
@@ -90,6 +93,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <section class="pn-sec" id="sec-reservas"></section>
           <section class="pn-sec" id="sec-mostrador"></section>
           <section class="pn-sec" id="sec-catalogo"></section>
+          <section class="pn-sec" id="sec-membresias"></section>
           <section class="pn-sec" id="sec-finanzas"></section>
           <section class="pn-sec" id="sec-ajustes"></section>
         </main>
@@ -108,6 +112,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <script src="/panel/mod-socios.js" is:inline></script>
     <script src="/panel/mod-reservas.js" is:inline></script>
     <script src="/panel/mod-catalogo.js" is:inline></script>
+    <script src="/panel/mod-membresias.js" is:inline></script>
     <script src="/panel/mod-mostrador.js" is:inline></script>
     <script src="/panel/mod-ajustes.js" is:inline></script>
     <script src="/panel/mod-placeholders.js" is:inline></script>
