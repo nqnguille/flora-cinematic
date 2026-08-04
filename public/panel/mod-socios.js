@@ -1781,7 +1781,11 @@
           const l = LEADS.find((x) => x.id === Number(card.dataset.id))
           if (!l) return
           const op = []
-          if (l.etapa !== 'convertido') {
+          if (l.etapa === 'convertido') {
+            // ya es socio: lo único que tiene sentido acá es sacar la tarjeta
+            // del embudo si es basura. La ficha del socio no se toca.
+            op.push(`<button class="btn btn-peligro ld-borrar" data-id="${l.id}" data-convertido="1" type="button">🗑 Sacar del embudo</button>`)
+          } else {
             LD_ETAPAS.forEach(([e2, nom2]) => {
               if (e2 === l.etapa || e2 === 'convertido') return
               op.push(`<button class="btn ld-mover" data-id="${l.id}" data-etapa="${e2}" type="button">Mover a ${nom2}</button>`)
@@ -1807,15 +1811,17 @@
           const l = LEADS.find((x) => x.id === Number(ldBorrar.dataset.id))
           if (!l) return
           const quien = l.nombre || l.email || 'este lead'
-          if (!(await P.confirmar(
-            `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`,
-            'Sí, borrar'))) return
+          const yaEsSocio = l.etapa === 'convertido'
+          const texto = yaEsSocio
+            ? `¿Sacar a ${quien} del embudo?\n\nDesaparece esta tarjeta y el rastro de por dónde entró.\n\nSu ficha de socio NO se toca: sigue en el padrón con todo lo suyo.`
+            : `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`
+          if (!(await P.confirmar(texto, yaEsSocio ? 'Sí, sacar' : 'Sí, borrar'))) return
           const r = await fetch('/api/panel/leads', {
             method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: l.id }),
+            body: JSON.stringify({ id: l.id, forzar: yaEsSocio }),
           })
           if (!r.ok) { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo borrar'), 'err'); return }
-          avisoLd(`✔ ${quien} borrado`, 'ok')
+          avisoLd(`✔ ${quien} ${yaEsSocio ? 'salió del embudo' : 'borrado'}`, 'ok')
           ldCargar()
           return
         }

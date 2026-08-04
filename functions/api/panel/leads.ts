@@ -140,9 +140,11 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   const lead = await env.DB.prepare(`SELECT id, email, etapa FROM leads WHERE id = ?`)
     .bind(id).first<{ id: number; email: string | null; etapa: string }>();
   if (!lead) return json({ error: 'El lead no existe' }, 404);
-  // Un convertido ya es socio: borrarlo acá deja la ficha huérfana del embudo.
-  if (lead.etapa === 'convertido') {
-    return json({ error: 'Ese lead ya es socio. Borralo desde el padrón, no desde acá.' }, 409);
+  // Un convertido ya tiene ficha de socio. Borrar el lead NO la toca: solo se
+  // pierde el rastro de por dónde entró esa persona. Igual pedimos `forzar`
+  // para que nadie lo haga de casualidad desde otro cliente.
+  if (lead.etapa === 'convertido' && b.forzar !== true) {
+    return json({ error: 'Ese lead ya es socio: confirmá que querés borrar igual el rastro del embudo.' }, 409);
   }
 
   await env.DB.prepare(`DELETE FROM leads WHERE id = ?`).bind(id).run();
