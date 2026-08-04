@@ -1,20 +1,15 @@
-# tienda.js/tienda.css son scripts compartidos del panel de socios/carrito
-# que se editan seguido — Cloudflare Pages les pone por default un cache de
-# horas al no tener hash en el nombre, así que un navegador con sesión
-# abierta podía quedarse sirviendo una versión vieja sin siquiera volver a
-# preguntarle al server. no-cache obliga a revalidar (ETag/Last-Modified)
-# en cada visita, así el deploy se ve al toque, sin perder el 304 rápido.
+# OJO: Cloudflare Pages IGNORA el Cache-Control de este archivo para los
+# assets estáticos. Se comprobó el 04/08/2026: con estas reglas puestas, la
+# cabecera que sirve sigue siendo max-age=3600. O sea que lo de abajo no hace
+# lo que dice. Para que un archivo sin hash en el nombre se vea al toque
+# después de un deploy hay que VERSIONAR LA URL (ver /admin, que le agrega
+# ?v= a cada archivo del panel). Se deja igual por si algún día lo respetan.
 /socios/tienda.js
   Cache-Control: no-cache
 
 /socios/tienda.css
   Cache-Control: no-cache
 
-# Los módulos del panel se editan seguido y no llevan hash en el nombre, así
-# que Cloudflare les ponía una hora de caché: se corregía algo, se deployaba y
-# el navegador seguía sirviendo la versión vieja. Mismo criterio que arriba.
-/panel/*
-  Cache-Control: no-cache
 
 # Cabeceras de seguridad. Este sitio sirve un portal con sesión y un panel
 # con DNI de terceros, y no tenía ninguna.

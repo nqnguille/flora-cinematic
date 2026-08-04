@@ -13,10 +13,12 @@
 // (asegurarMembresiaDebito en api/mp/webhook). Acá solo se entrega el link.
 import { readSessionEmail } from './_session';
 import { planesVigentes, situacionDelSocio, puedeAdherir } from './_planes';
+import { leerMembresias } from './admin/_membresias';
 
 interface Env {
   SESSION_SECRET: string;
   SOCIOS: KVNamespace;
+  GENETICAS: KVNamespace;
   DB: D1Database;
 }
 
@@ -46,7 +48,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   // La regla de verdad está acá, no en el botón: el navegador puede llamar
   // este endpoint directamente.
-  const veredicto = puedeAdherir(situacion.reprocann);
+  const { estadosAdhesion } = await leerMembresias(env.GENETICAS);
+  const veredicto = puedeAdherir(situacion.reprocann, estadosAdhesion);
   if (!veredicto.puede) {
     return Response.json({ ok: false, error: veredicto.motivo }, { status: 409 });
   }

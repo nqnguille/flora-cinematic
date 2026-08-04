@@ -15,6 +15,9 @@ export interface Membresias {
   titulo: string;
   tituloEm: string;   // la parte del título que va en cursiva y en verde
   lead: string;
+  // Qué estados de REPROCANN habilitan la adhesión al débito. Editable desde
+  // el panel: la regla es del club, no del código.
+  estadosAdhesion: string[];
   etiquetaPrecio: string;    // rótulo de la primera columna de importes
   etiquetaPrecio2: string;   // rótulo de la segunda; vacío = no se muestra
   notaTitulo: string;
@@ -31,6 +34,9 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   titulo: 'Membresías',
   tituloEm: 'de flores',
   lead: 'Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo. El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.',
+  // El default es el criterio que fijó Guille el 04/08: el trámite tiene que
+  // estar presentado ante el Ministerio.
+  estadosAdhesion: ['en_evaluacion', 'aprobado'],
   etiquetaPrecio: 'Contado o transferencia',
   etiquetaPrecio2: 'Débito automático',
   notaTitulo: 'Cómo funciona',
@@ -57,6 +63,9 @@ export async function leerMembresias(kv: KVNamespace): Promise<Membresias> {
     titulo: txt(guardado.titulo, 80, d.titulo),
     tituloEm: txt(guardado.tituloEm, 80, d.tituloEm),
     lead: txt(guardado.lead, 600, d.lead),
+    estadosAdhesion: Array.isArray(guardado.estadosAdhesion)
+      ? guardado.estadosAdhesion.filter((s) => typeof s === 'string').slice(0, 20)
+      : d.estadosAdhesion,
     etiquetaPrecio: txt(guardado.etiquetaPrecio, 40, d.etiquetaPrecio),
     etiquetaPrecio2: typeof guardado.etiquetaPrecio2 === 'string' ? guardado.etiquetaPrecio2.trim().slice(0, 40) : d.etiquetaPrecio2,
     notaTitulo: txt(guardado.notaTitulo, 60, d.notaTitulo),
@@ -86,6 +95,12 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
       titulo: txt(e.titulo, 80, d.titulo),
       tituloEm: String(e.tituloEm ?? '').trim().slice(0, 80),
       lead: txt(e.lead, 600, d.lead),
+      // Sin lista no se guarda un array vacío por error: eso dejaría a TODOS
+      // los socios sin poder adherirse, y es más probable que sea un bug del
+      // formulario que una decisión.
+      estadosAdhesion: Array.isArray(e.estadosAdhesion)
+        ? (e.estadosAdhesion as unknown[]).filter((s): s is string => typeof s === 'string' && !!s.trim()).slice(0, 20)
+        : d.estadosAdhesion,
       etiquetaPrecio: txt(e.etiquetaPrecio, 40, d.etiquetaPrecio),
       etiquetaPrecio2: String(e.etiquetaPrecio2 ?? '').trim().slice(0, 40),
       notaTitulo: txt(e.notaTitulo, 60, d.notaTitulo),

@@ -55,11 +55,10 @@ export async function planesVigentes(env: EnvPlanes): Promise<PlanSocio[]> {
 // El plan que tiene hoy el socio y si ya está adherido al débito. Con esto la
 // página puede marcar "esta es la tuya" y no ofrecerle adherirse a algo que ya
 // tiene andando.
-// Decisión de Guille (04/08/2026): para adherirse al débito, el trámite de
-// REPROCANN tiene que estar presentado ante el Ministerio. Antes de eso el
-// vínculo con Flora como cultivadora todavía no existe, así que no
-// corresponde cobrarle una membresía de flores por débito automático.
-const ESTADOS_HABILITADOS = new Set(['en_evaluacion', 'aprobado']);
+// Qué estados de REPROCANN habilitan la adhesión NO se decide acá: sale del
+// documento que se edita en el panel (Membresías → Quién puede adherirse). El
+// default, si nunca se tocó, es el criterio que fijó Guille el 04/08: el
+// trámite tiene que estar presentado ante el Ministerio.
 
 // Por qué no puede, dicho de forma que la persona sepa qué hacer. La clave es
 // el estado del trámite; el texto va tal cual a la pantalla.
@@ -78,8 +77,8 @@ const MOTIVOS: Record<string, string> = {
 };
 const MOTIVO_SIN_DATO = 'Todavía no tenemos registrado el estado de tu REPROCANN. Escribinos y lo vemos.';
 
-export function puedeAdherir(estado: string | null): { puede: boolean; motivo: string | null } {
-  if (estado && ESTADOS_HABILITADOS.has(estado)) return { puede: true, motivo: null };
+export function puedeAdherir(estado: string | null, habilitados: string[]): { puede: boolean; motivo: string | null } {
+  if (estado && habilitados.includes(estado)) return { puede: true, motivo: null };
   return { puede: false, motivo: (estado && MOTIVOS[estado]) || MOTIVO_SIN_DATO };
 }
 

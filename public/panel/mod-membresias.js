@@ -19,6 +19,7 @@
   let cont = null
   let DOC = null
   let PLANES = []
+  let ESTADOS = []
   let sucio = false
 
   function errHttp(status) {
@@ -51,6 +52,32 @@
       <span class="mb-num">${p.debito ? pesos(p.debito) : '—'}</span>
       <span class="mb-mp">${p.linkDebito ? '✓ débito' : '—'}</span>
     </div>`).join('')
+  }
+
+  /* ---------- quién puede adherirse ---------- */
+  function pintarEstados() {
+    const caja = cont.querySelector('#mb-estados')
+    if (!ESTADOS.length) { caja.innerHTML = '<p class="ct-help" style="margin:0">No se pudieron leer los estados.</p>'; return }
+    const activos = new Set(DOC.estadosAdhesion || [])
+    caja.innerHTML = ESTADOS.map((e) => `<label class="mb-estado${activos.has(e.id) ? ' on' : ''}">
+      <input type="checkbox" class="mb-est-chk" value="${P.esc(e.id)}"${activos.has(e.id) ? ' checked' : ''} />
+      <span class="mb-estado-nom">${P.esc(e.nombre)}</span>
+      <span class="mb-estado-n">${e.conMembresia} con membresía${e.socios !== e.conMembresia ? ` · ${e.socios} en total` : ''}</span>
+      <span class="mb-estado-ay">${P.esc(e.ayuda)}</span>
+    </label>`).join('')
+    pintarTotal()
+  }
+
+  // El número que importa: cuántos socios con membresía activa quedan
+  // habilitados con los estados tildados en este momento.
+  function pintarTotal() {
+    const activos = new Set(DOC.estadosAdhesion || [])
+    const hab = ESTADOS.filter((e) => activos.has(e.id)).reduce((s, e) => s + e.conMembresia, 0)
+    const tot = ESTADOS.reduce((s, e) => s + e.conMembresia, 0)
+    const el = cont.querySelector('#mb-total')
+    if (!el) return
+    el.textContent = `${hab} de ${tot} socios con membresía activa pueden adherirse`
+    el.className = 'mb-total' + (hab === 0 ? ' mal' : '')
   }
 
   /* ---------- textos ---------- */
@@ -107,7 +134,7 @@
       }
       DOC = d.membresias
       sucio = false
-      pintarTextos(); pintarPlanes()
+      pintarTextos(); pintarPlanes(); pintarEstados()
       msg.style.color = ''
       msg.textContent = 'Guardado.'
       btn.textContent = 'Sin cambios'
@@ -131,8 +158,12 @@
         const pr = await fetch('/api/socios/admin/membresias?planes=1', { credentials: 'include' })
         if (pr.ok) PLANES = (await pr.json()).planes || []
       } catch { PLANES = [] }
+      try {
+        const er = await fetch(EP + '?estados=1', { credentials: 'include' })
+        if (er.ok) ESTADOS = (await er.json()).estados || []
+      } catch { ESTADOS = [] }
       caja.hidden = false
-      pintarTextos(); pintarPlanes()
+      pintarTextos(); pintarPlanes(); pintarEstados()
     } catch {
       caja.innerHTML = '<p class="ct-help">No se pudo cargar. Revisá la conexión.</p>'
       caja.hidden = false
@@ -161,6 +192,13 @@
             </div>
             <div id="mb-filas"></div>
             <p class="ct-help" style="margin:12px 0 0">Los planes y sus importes salen de la lista de precios vigente, la misma que usan el alta de socios, la cobranza y el panel de Mercado Pago. Acá se editan solo los rótulos con que se muestran en la página.</p>
+          </div>
+
+          <div class="card">
+            <span class="k">Quién puede adherirse al débito</span>
+            <p class="ct-help" style="margin:6px 0 12px">Solo los socios cuyo trámite de REPROCANN esté en alguno de los estados tildados. El resto ve el motivo y el paso que le falta.</p>
+            <div id="mb-estados" class="mb-estados"></div>
+            <p id="mb-total" class="mb-total"></p>
           </div>
 
           <details class="card mb-textos">
@@ -194,6 +232,17 @@
       el.addEventListener('input', (e) => {
         const t = e.target
         if (t.classList.contains('mb-et') || t.classList.contains('mb-txt')) marcarSucio()
+      })
+
+      el.addEventListener('change', (e) => {
+        const chk = e.target.closest('.mb-est-chk')
+        if (!chk) return
+        const set = new Set(DOC.estadosAdhesion || [])
+        if (chk.checked) set.add(chk.value); else set.delete(chk.value)
+        DOC.estadosAdhesion = [...set]
+        chk.closest('.mb-estado').classList.toggle('on', chk.checked)
+        pintarTotal()
+        marcarSucio()
       })
 
       el.addEventListener('click', async (e) => {

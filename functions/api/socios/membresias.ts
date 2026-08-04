@@ -44,7 +44,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       tier: situacion.tier,
       modalidad: situacion.modalidad,
       debitoActivo: situacion.debitoActivo,
-      ...puedeAdherir(situacion.reprocann),
+      ...puedeAdherir(situacion.reprocann, textos.estadosAdhesion),
     },
   });
 };

@@ -5,6 +5,13 @@
 // Estética CLARA — no importa global.css del sitio a propósito:
 // el panel no hereda el grano cinematográfico ni sus bugs de compositor.
 const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+
+// Los archivos del panel no llevan hash en el nombre y Cloudflare Pages los
+// sirve con una hora de caché. El Cache-Control del _headers NO lo cambia:
+// Pages lo ignora para los assets estáticos (se comprobó el 04/08/2026, la
+// cabecera seguía siendo max-age=3600). Así que se versiona la URL en cada
+// build, que es el mismo truco que usa el consultorio con su global.css.
+const v = Date.now().toString(36)
 ---
 
 <html lang="es">
@@ -14,7 +21,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <meta name="robots" content="noindex, nofollow" />
     <title>Panel del club — Flora</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/panel/panel.css" />
+    <link rel="stylesheet" href={`/panel/panel.css?v=${v}`} />
   </head>
   <body>
     <!-- login -->
@@ -106,15 +113,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
     <script src="/panel/shell.js" is:inline></script>
     <!-- módulos reales primero (primero-gana), placeholders al final cubren lo que falte -->
-    <script src="/panel/mod-inicio.js" is:inline></script>
-    <script src="/panel/mod-finanzas.js" is:inline></script>
-    <script src="/panel/mod-socio-detalle.js" is:inline></script>
-    <script src="/panel/mod-socios.js" is:inline></script>
-    <script src="/panel/mod-reservas.js" is:inline></script>
-    <script src="/panel/mod-catalogo.js" is:inline></script>
-    <script src="/panel/mod-membresias.js" is:inline></script>
-    <script src="/panel/mod-mostrador.js" is:inline></script>
-    <script src="/panel/mod-ajustes.js" is:inline></script>
-    <script src="/panel/mod-placeholders.js" is:inline></script>
+    <script src={`/panel/mod-inicio.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-finanzas.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-socio-detalle.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-socios.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-reservas.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-catalogo.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-membresias.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-mostrador.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-ajustes.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-placeholders.js?v=${v}`} is:inline></script>
   </body>
 </html>
