@@ -2701,6 +2701,39 @@ body.is-socio .fl-card-shell--socio { display: block; }
    derecho de la pantalla (margen negativo hasta el viewport; el overflow
    de la sección contiene el sangrado) */
 
+
+/* ── Consultorio: el médico de Flora en la home ── */
+.fl-consultorio { background: var(--fl-paper-2); }
+.fl-co-grid { display: grid; grid-template-columns: 1fr; gap: clamp(24px, 3.5vw, 52px); align-items: center; }
+@media (min-width: 900px) { .fl-co-grid { grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); } }
+.fl-co-foto { border-radius: var(--fl-r-card); overflow: hidden; background: var(--fl-violet); aspect-ratio: 4 / 3; }
+.fl-co-foto img { width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: luminosity; opacity: .92; }
+.fl-co-texto .fl-title em { font-style: normal; color: var(--fl-green); }
+.fl-co-temas { list-style: none; padding: 0; margin: 20px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.fl-co-temas li { font-size: 13px; font-weight: 600; color: var(--fl-violet); background: rgba(56, 31, 86, .07); border: 1px solid var(--fl-line); border-radius: 999px; padding: 7px 14px; }
+.fl-co-quien { margin: 18px 0 0; font-size: 14px; line-height: 1.55; color: rgba(28, 22, 38, .62); }
+.fl-co-quien b { color: var(--fl-ink); }
+.fl-co-agenda { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+.fl-co-agenda .fl-rp-cal { box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .3); }
+.fl-co-agenda .fl-rp-cal-mes { background: var(--fl-green); color: #fff; }
+.fl-co-live { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: rgba(28, 22, 38, .62); }
+.fl-co-live[hidden] { display: none; }
+.fl-co-live i { width: 7px; height: 7px; border-radius: 50%; background: #3cb492; box-shadow: 0 0 0 4px rgba(60, 180, 146, .18); }
+.fl-co-live b { color: var(--fl-ink); font-weight: 700; }
+.fl-co-ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.fl-co-cta { display: inline-flex; align-items: center; gap: 9px; background: var(--fl-violet); color: #fff;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 700; text-decoration: none;
+  padding: 15px 28px; border-radius: 999px; transition: background .2s ease, transform .15s ease;
+  box-shadow: 0 16px 38px -20px rgba(56, 31, 86, .8); }
+.fl-co-cta:hover { background: var(--fl-violet-2); transform: translateY(-2px); }
+.fl-co-cta svg { width: 18px; height: 18px; }
+.fl-co-cta--ghost { background: transparent; color: var(--fl-violet); border: 1.5px solid var(--fl-line); box-shadow: none; }
+.fl-co-cta--ghost:hover { background: rgba(56, 31, 86, .06); border-color: rgba(56, 31, 86, .3); }
+/* En el modal de perfiles, el turno es la acción principal y el WhatsApp la secundaria */
+.fl-perfil-modal-cta--turno { background: var(--fl-violet) !important; color: #fff !important; }
+.fl-perfil-modal-cta--turno:hover { background: var(--fl-violet-2) !important; }
+@media (prefers-reduced-motion: reduce) { .fl-co-cta { transition: none; } }
+
 /* ── Agenda liviana del turnero: mini-almanaque + línea en vivo + botón.
    Deliberadamente SIN tarjeta: la credencial en mano es la única superficie
    blanca del módulo. ── */

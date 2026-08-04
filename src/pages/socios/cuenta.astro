@@ -60,6 +60,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <span class="cu-rp-vence" id="cu-rp-vence"></span>
           </div>
           <a class="cu-cert" id="cu-cert" href="/api/socios/certificado" hidden>📄 Descargar mi certificado (PDF)<small>Tu certificado oficial, siempre a mano.</small></a>
+          <a class="cu-cert cu-rp-turno" id="cu-rp-turno" href="https://consultorio.floraong.ar/?agendar=1" hidden></a>
           <a class="cu-rp-ir" href="/socios/reprocann/">Ver el trámite completo →</a>
         </div>
       </section>
@@ -264,6 +265,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           vence.style.color = dias < 0 ? '#ff9d9d' : dias <= 60 ? '#e6a83e' : ''
         }
         document.getElementById('cu-cert').hidden = !d.certificado
+        // Turno de consulta según dónde está parado: renovar si vence o venció,
+        // arrancar el trámite si todavía le falta la entrevista.
+        const turno = document.getElementById('cu-rp-turno')
+        if (turno) {
+          const dias = d.vence ? Math.floor((Date.parse(d.vence) - Date.now()) / 86400000) : null
+          const faltaEntrevista = ['sin_iniciar', 'esperando_codigo', 'revisar', 'codigo_listo'].includes(d.estado)
+          if (d.estado === 'vencido' || (dias != null && dias <= 60)) {
+            turno.innerHTML = '📅 Agendar la consulta de renovación<small>Tu certificado ' + (dias != null && dias < 0 ? 'venció' : 'está por vencer') + ': se renueva con una consulta.</small>'
+            turno.hidden = false
+          } else if (faltaEntrevista) {
+            turno.innerHTML = '📅 Agendar tu entrevista médica<small>Es el paso que falta para que salga tu REPROCANN.</small>'
+            turno.hidden = false
+          }
+        }
       } catch { /* la tarjeta queda con el chip vacío, nada más */ }
     }
 

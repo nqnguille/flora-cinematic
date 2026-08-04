@@ -214,7 +214,7 @@ const faqs = [
   },
   {
     q: '¿Cómo doy el primer paso?',
-    a: 'Es muy simple. Escribinos por WhatsApp y coordinamos una entrevista con un profesional. A partir de ahí, te guiamos en cada etapa para que puedas asociarte de forma clara, segura y sin complicaciones.',
+    a: 'Es muy simple: agendás la entrevista médica online, elegís día y horario, y desde ahí te guiamos en cada etapa para que puedas asociarte de forma clara y segura. Si preferís preguntar antes, escribinos por WhatsApp.',
   },
   {
     q: '¿Cuál es la diferencia entre CBD y THC?',
@@ -551,6 +551,10 @@ const websiteSchema = {
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
             <span id="fl-perfil-modal-cta-label">Hablar con Flora sobre este caso</span>
           </a>
+          <a class="fl-perfil-modal-cta fl-perfil-modal-cta--turno" href="https://consultorio.floraong.ar/?agendar=1" data-cta="Perfil modal · agendar turno">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="18" height="18"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+            Agendar la entrevista médica
+          </a>
           <a class="fl-perfil-modal-cta fl-perfil-modal-cta--ghost" href="/reprocann-neuquen/" data-cta="Perfil modal · guia REPROCANN">Cómo empieza el proceso</a>
         </div>
 
@@ -663,15 +667,60 @@ const websiteSchema = {
       const pon = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt }
       pon('fl-cal-mes', parte({ month: 'short' }).replace('.', '').toUpperCase())
       pon('fl-cal-num', parte({ day: 'numeric' }))
-      pon('fl-agenda-cuando', `${esHoy ? 'hoy' : esManiana ? 'mañana' : parte({ weekday: 'long' })} a las ${hora} h`)
+      const cuando = `${esHoy ? 'hoy' : esManiana ? 'mañana' : parte({ weekday: 'long', day: 'numeric' })} a las ${hora} h`
+      pon('fl-agenda-cuando', cuando)
       document.getElementById('fl-cal').hidden = false
       document.getElementById('fl-agenda-live').hidden = false
+      // el módulo del consultorio muestra el mismo dato en vivo
+      pon('fl-cal2-mes', parte({ month: 'short' }).replace('.', '').toUpperCase())
+      pon('fl-cal2-num', parte({ day: 'numeric' }))
+      pon('fl-co-cuando', cuando)
+      if (document.getElementById('fl-cal2')) document.getElementById('fl-cal2').hidden = false
+      if (document.getElementById('fl-co-live')) document.getElementById('fl-co-live').hidden = false
       if (t.precio) {
         pon('fl-agenda-precio', ` · ${t.precio}`)
         document.getElementById('fl-agenda-precio').hidden = false
       }
     }).catch(() => { /* sin dato en vivo, el botón sigue igual */ })
   </script>
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CONSULTORIO — el médico de Flora           -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-section fl-consultorio" id="consultorio" aria-label="Consultorio médico de Flora">
+    <div class="fl-wrap fl-co-grid">
+      <div class="fl-co-foto">
+        <img src="/img/consultorio-kalb.jpg" alt="El Dr. Ezequiel Kalb, director médico del consultorio de Flora" width="1280" height="960" loading="lazy" decoding="async" />
+      </div>
+      <div class="fl-co-texto">
+        <span class="fl-eyebrow">Nuestro consultorio</span>
+        <h2 class="fl-title">La consulta que <em>abre la puerta</em></h2>
+        <p class="fl-lead">Nuestro médico te recibe por videollamada desde cualquier punto del país: evalúa tu caso, define tu tratamiento y presenta tu solicitud al REPROCANN. Es el primer paso para asociarte, y también donde seguimos tu tratamiento después.</p>
+        <ul class="fl-co-temas" role="list">
+          <li>Dolor crónico</li>
+          <li>Insomnio</li>
+          <li>Ansiedad y estrés</li>
+          <li>Acompañamiento integrativo</li>
+        </ul>
+        <p class="fl-co-quien"><b>Dr. Ezequiel Kalb</b> · especialista en endocannabinología y terapéutica cannábica, director médico de Flora.</p>
+        <div class="fl-co-agenda">
+          <div class="fl-rp-cal" id="fl-cal2" hidden aria-hidden="true">
+            <span class="fl-rp-cal-mes" id="fl-cal2-mes">—</span>
+            <span class="fl-rp-cal-num" id="fl-cal2-num">–</span>
+          </div>
+          <span class="fl-co-live" id="fl-co-live" hidden><i></i> Próximo turno libre: <b id="fl-co-cuando"></b></span>
+        </div>
+        <div class="fl-co-ctas">
+          <a class="fl-co-cta" href="https://consultorio.floraong.ar/?agendar=1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+            Agendar turno <span aria-hidden="true">→</span>
+          </a>
+          <a class="fl-co-cta fl-co-cta--ghost" href="https://consultorio.floraong.ar/">Conocer el consultorio</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->
