@@ -459,16 +459,18 @@ function initLoader() {
       return
     }
 
+    // Antes acá se pedía UN GESTO MÁS ("Deslizá para comenzar") para recién
+    // entonces revelar el sitio. Era el segundo de siete gestos obligatorios
+    // antes de que alguien leyera una palabra útil. Confirmar la edad ya
+    // abre: el relato arranca solo del otro lado.
     if (askStep) {
-      gsap.to(askStep, { opacity: 0, duration: 0.3, ease: 'power1.out', onComplete: () => {
+      gsap.to(askStep, { opacity: 0, duration: 0.25, ease: 'power1.out', onComplete: () => {
         askStep.style.visibility = 'hidden'
         askStep.setAttribute('aria-hidden', 'true')
       }})
     }
-    if (slideStep) gsap.to(slideStep, { opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.15 })
-    ;(['wheel', 'touchmove', 'keydown'] as const).forEach(evt =>
-      window.addEventListener(evt, revealSite, { once: true, passive: true })
-    )
+    if (slideStep) gsap.set(slideStep, { opacity: 0 })
+    gsap.delayedCall(0.3, revealSite)
   }
   if (yesBtn) yesBtn.addEventListener('click', confirmYes)
 
@@ -1135,6 +1137,10 @@ function initWelcome() {
       if (!(el instanceof HTMLVideoElement)) return
       if (k === idx) { const p = el.play(); if (p && typeof p.catch === 'function') p.catch(() => {}) }
       else el.pause()
+      // Con auto-avance nadie espera al video: el beat siguiente llega solo
+      // en ~2,7 s. Se le pide al navegador que vaya bajando el próximo clip
+      // mientras se mira el actual, así no aparece un poster congelado.
+      if (k === idx + 1 && el.preload !== 'auto') { el.preload = 'auto'; el.load() }
     })
   }
 
@@ -1207,6 +1213,7 @@ function initWelcome() {
         animating = false
         if (safetyTimer) clearTimeout(safetyTimer)
         scheduleCue()
+        programarSiguiente()
       },
     })
     tl.to(imgs[i], { scale: 1.0, duration: TRANS * 1.8, ease: 'none' }, 0)
@@ -1245,57 +1252,65 @@ function initWelcome() {
     goToStep(current - 1, -1)
   }
 
-  // ── Gestos: rueda, swipe táctil y teclado — cada uno vale por UN paso,
-  //    sin importar la distancia/velocidad del gesto físico. ──
-  let touchStartX = 0
+  // ── Auto-avance ─────────────────────────────────────────────────────────
+  // El relato corre solo. Antes cada beat exigía un gesto (rueda, swipe o
+  // tecla) con el scroll bloqueado: eran siete gestos y ~29 MB de video antes
+  // de la primera palabra accionable, con el scroll de la página secuestrado
+  // todo ese rato. Ahora el relato avanza con un reloj y el scroll nunca se
+  // toca: quien quiere mirarlo lo mira, quien tiene apuro baja y sale.
+  const BEAT_HOLD = 2.2 // segundos que se sostiene cada beat ya asentado
+  let beatTimer: ReturnType<typeof setTimeout> | null = null
+
+  function programarSiguiente() {
+    if (finished) return
+    if (beatTimer) clearTimeout(beatTimer)
+    beatTimer = setTimeout(next, BEAT_HOLD * 1000)
+  }
+  function frenarAuto() {
+    if (beatTimer) { clearTimeout(beatTimer); beatTimer = null }
+  }
+
+  // ── Salir del relato ────────────────────────────────────────────────────
+  // Ya no hay gestos que avancen el relato: el relato avanza solo. Lo único
+  // que escuchamos es la intención de irse. Y no se cancela nada: al primer
+  // movimiento real, el relato termina y la persona sigue scrolleando la
+  // página como en cualquier sitio. El scroll NUNCA se bloquea.
+  const SALIDA_MIN = 24 // px de deslizamiento para contarlo como intención
+
   let touchStartY = 0
-  const SWIPE_MIN = 36 // px — piso para contar como gesto intencional
-
-  function onWheel(e: WheelEvent) {
-    e.preventDefault()
-    if (Math.abs(e.deltaY) < 2) return
-    if (e.deltaY > 0) next(); else prev()
-  }
-  function onTouchStart(e: TouchEvent) {
-    touchStartX = e.touches[0].clientX
-    touchStartY = e.touches[0].clientY
-  }
-  function onTouchMove(e: TouchEvent) {
-    e.preventDefault() // frena el scroll/rebote nativo mientras dura el relato
-  }
+  function onTouchStart(e: TouchEvent) { touchStartY = e.touches[0].clientY }
   function onTouchEnd(e: TouchEvent) {
-    const dy = touchStartY - e.changedTouches[0].clientY
-    const dx = touchStartX - e.changedTouches[0].clientX
-    if (Math.abs(dy) < SWIPE_MIN || Math.abs(dy) < Math.abs(dx)) return // gesto horizontal o muy chico: ignorar
-    if (dy > 0) next(); else prev()
+    if (Math.abs(touchStartY - e.changedTouches[0].clientY) >= SALIDA_MIN) finishIntro()
   }
+  function onWheel(e: WheelEvent) { if (Math.abs(e.deltaY) >= 2) finishIntro() }
+  function onScroll() { if (window.scrollY > 8) finishIntro() }
   function onKeydown(e: KeyboardEvent) {
-    if (['ArrowDown', 'ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next() }
-    else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev() }
-    else if (e.key === 'Escape') finishIntro()
+    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Escape', 'End'].includes(e.key)) finishIntro()
   }
 
-  // Timeout de seguridad extra a nivel de toda la experiencia: si algo
-  // impidiera el hand-off normal, esto libera el scroll solo igual — nunca
-  // más "el sitio entero trabado" por este componente.
+  // Timeout de seguridad: si algo impidiera el cierre normal, el relato se
+  // cierra solo igual. Con el scroll siempre libre esto ya no puede dejar el
+  // sitio trabado, pero se conserva para que la pantalla no quede colgada.
   let globalSafety: ReturnType<typeof setTimeout> | null = null
 
   function startListening() {
-    lockScroll()
-    window.addEventListener('wheel', onWheel, { passive: false })
+    // Sin lockScroll: esa era la raíz del problema.
+    window.addEventListener('wheel', onWheel, { passive: true })
     window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: false })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('keydown', onKeydown)
     scheduleCue()
-    globalSafety = setTimeout(finishIntro, 90_000)
+    programarSiguiente()
+    globalSafety = setTimeout(finishIntro, 40_000)
   }
   function stopListening() {
     window.removeEventListener('wheel', onWheel)
     window.removeEventListener('touchstart', onTouchStart)
-    window.removeEventListener('touchmove', onTouchMove)
     window.removeEventListener('touchend', onTouchEnd)
+    window.removeEventListener('scroll', onScroll)
     window.removeEventListener('keydown', onKeydown)
+    frenarAuto()
     if (cueTimer) clearTimeout(cueTimer)
     if (safetyTimer) clearTimeout(safetyTimer)
     if (globalSafety) clearTimeout(globalSafety)
