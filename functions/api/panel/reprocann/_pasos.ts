@@ -12,7 +12,13 @@ export const PASOS: { id: string; nombre: string; quien: string; ayuda: string }
   { id: 'en_evaluacion', nombre: 'En evaluación', quien: 'organismo', ayuda: 'Ya está todo hecho de nuestro lado; espera al Ministerio.' },
   { id: 'revision_medica', nombre: 'Volvió al médico', quien: 'medico', ayuda: 'El organismo pidió correcciones al profesional.' },
   { id: 'aprobado', nombre: 'Aprobado', quien: '—', ayuda: 'Certificado vigente.' },
-  { id: 'autocultivo', nombre: 'Autocultivo', quien: '—', ayuda: 'Cultiva por su cuenta, no depende de Flora.' },
+  { id: 'autocultivo', nombre: 'Autocultivo', quien: 'club', ayuda: 'Cultiva por su cuenta. Se le puede ofrecer pasarse a Flora con una declaración jurada.' },
+  // Desvío de conversión: sale de 'autocultivo' y vuelve al camino normal en
+  // 'esperando_codigo'. Son las modalidades excluyentes de la Res. 1780/2025:
+  // para vincularse a Flora tiene que renunciar al autocultivo, y eso se
+  // documenta con la declaración jurada firmada.
+  { id: 'ddjj_pendiente', nombre: 'Declaración pendiente', quien: 'paciente', ayuda: 'Le generamos la declaración jurada para pasarse a Flora: falta que la firme y nos la mande.' },
+  { id: 'ddjj_firmada', nombre: 'Declaración firmada', quien: 'club', ayuda: 'Ya firmó: hay que dar de baja su autocultivo y arrancar la vinculación con Flora.' },
   { id: 'revisar', nombre: 'A revisar', quien: 'club', ayuda: 'Viene del Excel sin dato claro: hay que confirmar en qué anda.' },
   { id: 'rechazado', nombre: 'Rechazado', quien: 'club', ayuda: 'El organismo lo rechazó.' },
   { id: 'vencido', nombre: 'Vencido', quien: 'club', ayuda: 'El certificado venció: hay que renovar.' },

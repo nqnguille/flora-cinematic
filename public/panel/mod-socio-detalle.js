@@ -101,6 +101,14 @@
             <div class="campo"><label class="lb">DNI</label>
               <input class="input sd-campo" data-campo="documento" inputmode="numeric" maxlength="10" value="${P.esc(s.documento || '')}" ${editar ? '' : 'disabled'} /></div>
           </div>
+          <div class="campo"><label class="lb">Domicilio</label>
+            <input class="input sd-campo" data-campo="domicilio" placeholder="Calle y número" value="${P.esc(s.domicilio || '')}" ${editar ? '' : 'disabled'} /></div>
+          <div class="grid2" style="gap:10px">
+            <div class="campo"><label class="lb">Localidad</label>
+              <input class="input sd-campo" data-campo="localidad" value="${P.esc(s.localidad || '')}" ${editar ? '' : 'disabled'} /></div>
+            <div class="campo"><label class="lb">Provincia</label>
+              <input class="input sd-campo" data-campo="provincia" value="${P.esc(s.provincia || '')}" ${editar ? '' : 'disabled'} /></div>
+          </div>
           <div class="campo"><label class="lb">Nota</label>
             <input class="input sd-campo" data-campo="nota" value="${P.esc(s.nota || '')}" ${editar ? '' : 'disabled'} /></div>
           ${editar ? '<div class="fila" style="margin-top:10px"><span class="pn-sp"></span><button class="btn" id="sd-guardar-contacto" type="button">Guardar contacto</button></div>' : ''}
@@ -146,7 +154,7 @@
         </details>
 
         <details ${paso && (paso.quien === 'club' || paso.quien === 'paciente' || paso.quien === 'medico') ? 'open' : ''}><summary>REPROCANN</summary>
-          <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
+          <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
           ${P.puede('reprocann_editar') ? `
@@ -181,6 +189,13 @@
               <input type="file" id="sd-cert-file" accept="application/pdf" hidden />` : ''}
           </div>
         </details>
+
+        ${P.puede('reprocann_editar') ? `
+        <details ${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(s.reprocann_estado) ? 'open' : ''}><summary>Declaración jurada</summary>
+          <p class="so-help" style="margin:8px 0 0">Para vincularse a Flora tiene que renunciar al autocultivo: las modalidades
+            son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.</p>
+          <div id="sd-ddjj" style="margin-top:10px"><div style="color:var(--muted);font-size:12px">⏳ buscando…</div></div>
+        </details>` : ''}
 
         <details><summary>Actividad reciente</summary>
           <div style="margin-top:8px;font-size:12.5px;color:var(--ink2)">
@@ -285,6 +300,9 @@
       abrir(s.id, alCambiar)
     })
 
+    // declaración jurada de vinculación (autocultivo → paciente de Flora)
+    pintarDdjj(s)
+
     caja.querySelector('#sd-debito')?.addEventListener('click', () => modalDebito(s))
     caja.querySelector('#sd-no-insistir')?.addEventListener('click', async (e) => {
       e.target.disabled = true
@@ -344,6 +362,114 @@
       })
       aviso('#sd-msg-zona', r.ok ? '✔ acceso quitado' : '✗ no se pudo', r.ok ? 'ok' : 'err')
       if (r.ok) { alCambiar?.(); abrir(s.id, alCambiar) }
+    })
+  }
+
+  // Declaración jurada: el papel con el que un autocultivador se pasa a Flora.
+  // Dos momentos, uno abajo del otro: generar el documento (se abre en una
+  // pestaña para imprimir) y después subir el que volvió firmado.
+  async function pintarDdjj(s) {
+    const zona = caja.querySelector('#sd-ddjj')
+    if (!zona) return
+    let d
+    try {
+      const r = await fetch(`/api/panel/declaracion?socio_id=${s.id}`, { credentials: 'include' })
+      d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'error ' + r.status)
+    } catch (e) {
+      zona.innerHTML = `<div class="msg err">✗ ${P.esc(e.message)}</div>`
+      return
+    }
+    const dec = d.declaracion && d.declaracion.estado !== 'anulada' ? d.declaracion : null
+    const faltaDni = !d.socio.documento
+    const dom = [d.socio.domicilio, d.socio.localidad, d.socio.provincia].filter(Boolean).join(', ')
+
+    zona.innerHTML = `
+      ${dec ? `<div class="fila" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        <span class="tag ${dec.estado === 'firmada' ? 'tag-ok' : 'tag-deb'}">${dec.estado === 'firmada' ? 'firmada' : 'esperando la firma'}</span>
+        <span style="font-size:11.5px;color:var(--muted)">generada ${fFecha(dec.generada)}${dec.generada_por ? ' por ' + P.esc(dec.generada_por) : ''}${dec.firmada ? ' · firmada ' + fFecha(dec.firmada) : ''}</span>
+      </div>` : ''}
+
+      ${faltaDni ? '<div class="msg err" style="margin-bottom:8px">Cargale el DNI en Contacto: sin eso la declaración no sirve.</div>' : ''}
+      ${!dom ? '<div class="msg" style="margin-bottom:8px;color:var(--ink2)">Completá el domicilio acá abajo o en Contacto.</div>' : ''}
+
+      <div class="campo"><label class="lb">Domicilio para la declaración</label>
+        <input class="input" id="sd-dj-dom" placeholder="Calle y número" value="${P.esc(d.socio.domicilio || '')}" /></div>
+      <div class="grid2" style="gap:10px">
+        <div class="campo"><label class="lb">Localidad</label>
+          <input class="input" id="sd-dj-loc" value="${P.esc(d.socio.localidad || '')}" /></div>
+        <div class="campo"><label class="lb">Provincia</label>
+          <input class="input" id="sd-dj-prov" value="${P.esc(d.socio.provincia || '')}" /></div>
+      </div>
+      <div class="campo"><label class="lb">Diagnóstico que funda la prescripción</label>
+        <input class="input" id="sd-dj-diag" maxlength="300" placeholder="Tal cual va en el texto: «…acredita la existencia de ___»" value="${P.esc(dec?.nota || '')}" /></div>
+      <p class="so-help" style="margin:2px 0 0">Lo escribe ${P.esc(d.plantilla.medico)} (${P.esc(d.plantilla.matricula)}), que es quien firma la prescripción. No queda guardado como dato clínico del padrón.</p>
+
+      <div class="fila" style="margin-top:10px;flex-wrap:wrap">
+        ${dec ? '<a class="btn" id="sd-dj-ver" href="/api/panel/declaracion?socio_id=' + s.id + '&ver=1" target="_blank" rel="noopener">Ver / imprimir</a>' : ''}
+        ${dec && dec.estado === 'firmada' ? '<a class="btn" href="/api/panel/declaracion?declaracion_id=' + dec.id + '&firmada=1" target="_blank" rel="noopener">Ver la firmada</a>' : ''}
+        <span class="pn-sp"></span>
+        ${dec && dec.estado !== 'firmada' ? '<button class="btn btn-peligro" id="sd-dj-anular" type="button">Anular</button>' : ''}
+        ${dec ? '<button class="btn" id="sd-dj-adjuntar" type="button">Adjuntar firmada</button>' : ''}
+        <button class="btn btn-pri" id="sd-dj-generar" type="button" ${faltaDni ? 'disabled' : ''}>${dec ? 'Generar de nuevo' : 'Generar declaración'}</button>
+        <input type="file" id="sd-dj-file" accept="application/pdf,image/jpeg,image/png" hidden />
+      </div>
+      <p class="msg" id="sd-msg-dj" style="margin:6px 0 0"></p>`
+
+    const msg = zona.querySelector('#sd-msg-dj')
+    const decir = (t, c) => { msg.className = 'msg ' + (c || ''); msg.textContent = t }
+
+    zona.querySelector('#sd-dj-generar')?.addEventListener('click', async (e) => {
+      const diag = zona.querySelector('#sd-dj-diag').value.trim()
+      if (!diag) { decir('Falta el diagnóstico.', 'err'); return }
+      e.target.disabled = true
+      decir('⏳ armando el documento…')
+      const r = await fetch('/api/panel/declaracion', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          socio_id: s.id, diagnostico: diag,
+          domicilio: zona.querySelector('#sd-dj-dom').value.trim(),
+          localidad: zona.querySelector('#sd-dj-loc').value.trim(),
+          provincia: zona.querySelector('#sd-dj-prov').value.trim(),
+        }),
+      })
+      const res = await r.json().catch(() => ({}))
+      e.target.disabled = false
+      if (!r.ok) { decir('✗ ' + (res.error || 'no se pudo'), 'err'); return }
+      // se abre en una pestaña con el botón de imprimir arriba
+      const w = window.open('', '_blank')
+      if (w) { w.document.write(res.html); w.document.close() }
+      decir('✔ generada' + (w ? ' — se abrió para imprimir' : ' — abrila con «Ver / imprimir»'), 'ok')
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
+
+    zona.querySelector('#sd-dj-adjuntar')?.addEventListener('click', () => zona.querySelector('#sd-dj-file').click())
+    zona.querySelector('#sd-dj-file')?.addEventListener('change', async (ev) => {
+      const f = ev.target.files[0]
+      if (!f || !dec) return
+      decir('⏳ subiendo…')
+      const b64 = await new Promise((res, rej) => {
+        const fr = new FileReader()
+        fr.onload = () => res(String(fr.result).split(',')[1])
+        fr.onerror = rej
+        fr.readAsDataURL(f)
+      })
+      const r = await fetch('/api/panel/declaracion', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ declaracion_id: dec.id, archivo_base64: b64, archivo_tipo: f.type }),
+      })
+      const res = await r.json().catch(() => ({}))
+      if (!r.ok) { decir('✗ ' + (res.error || 'no se pudo'), 'err'); return }
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
+
+    zona.querySelector('#sd-dj-anular')?.addEventListener('click', async () => {
+      if (!(await P.confirmar('¿Anular esta declaración? Queda el registro de que existió, pero deja de valer.', 'Sí, anular'))) return
+      await fetch('/api/panel/declaracion', {
+        method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ declaracion_id: dec.id }),
+      })
+      alCambiar?.(); abrir(s.id, alCambiar)
     })
   }
 

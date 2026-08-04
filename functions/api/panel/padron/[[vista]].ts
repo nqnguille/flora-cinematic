@@ -189,6 +189,11 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
     cambios.push('documento = ?'); valores.push(doc);
   }
   if ('nota' in body) { cambios.push('nota = ?'); valores.push(String(body.nota || '').trim().slice(0, 400) || null); }
+  // domicilio: lo pide la declaración jurada y es el mismo dato que va a hacer
+  // falta el día que entreguemos a domicilio
+  if ('domicilio' in body) { cambios.push('domicilio = ?'); valores.push(String(body.domicilio || '').trim().slice(0, 200) || null); }
+  if ('localidad' in body) { cambios.push('localidad = ?'); valores.push(String(body.localidad || '').trim().slice(0, 80) || null); }
+  if ('provincia' in body) { cambios.push('provincia = ?'); valores.push(String(body.provincia || '').trim().slice(0, 80) || null); }
   if ('estado' in body) {
     const estado = String(body.estado);
     if (estado !== 'activo' && estado !== 'inactivo') return json({ error: 'Estado inválido' }, 400);
