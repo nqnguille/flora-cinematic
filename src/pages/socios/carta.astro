@@ -593,6 +593,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* ── Pedido (carrito + pedido activo) ── */
     const cart = new Map() // "id|formato" → cantidad
     let activePedido = null // pedido pendiente/listo del socio, si hay
+    // El socio pidió empezar OTRA reserva en vez de sumar a la que ya tiene.
+    // Mientras está en true, la carta se comporta como si no hubiera reserva
+    // activa (se ven los +/-) y el POST va marcado con aparte:true.
+    let modoAparte = false
 
     // Carrito COMPARTIDO con la tienda (aceites/cremas/extracciones) vía
     // localStorage: lo que el socio suma en una página sobrevive la
@@ -638,7 +642,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     function setPedidoMode() {
-      document.getElementById('gn-content').classList.toggle('has-pedido', !!activePedido)
+      document.getElementById('gn-content').classList.toggle('has-pedido', !!activePedido && !modoAparte)
       updateCartBar()
     }
 
@@ -647,7 +651,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const badge = document.getElementById('gn-cart-badge')
       let label = ''
       let count = 0
-      if (activePedido) {
+      if (activePedido && !modoAparte) {
         trigger.hidden = false
         trigger.classList.toggle('is-listo', activePedido.estado === 'listo')
         label = ESTADO_TXT[activePedido.estado] || 'Tenés una reserva en curso'
@@ -765,7 +769,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       // La nota sobrevive al re-render (ej: al quitar un ítem de la lista)
       const prevNota = document.getElementById('gn-modal-nota')?.value || ''
       document.getElementById('gn-modal-msg').hidden = true
-      if (activePedido) {
+      if (activePedido && !modoAparte) {
         const p = activePedido
         body.innerHTML = `
           <span class="gn-pedido-badge is-${escapeHtml(p.estado)}">${p.estado === 'listo' ? 'Lista para retirar' : 'En preparación'}</span>
@@ -774,6 +778,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <p class="gn-modal-hint">${p.estado === 'listo' ? 'Acercate al club a retirarla. Recordá abonar tu cuota ahí — por el sitio no se cobra nada.' : 'Te avisamos apenas esté lista. El retiro y el pago de tu cuota son en el club.'}</p>`
         actions.innerHTML = `
           ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar reserva</button>' : ''}
+          <button id="gn-pedido-otra" class="gn-btn-ghost" type="button">Empezar otra aparte</button>
           <button id="gn-modal-close" class="gn-btn-primary" type="button">Cerrar</button>`
       } else {
         const items = cartItems()
@@ -783,6 +788,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             .map((i) => `<li>${escapeHtml(fmtItem(i))}<button class="gn-modal-del" data-key="${escapeHtml(`${i.id}|${i.formato}`)}" type="button" aria-label="Quitar">×</button></li>`)
             .join('')}</ul>
           <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
+          ${modoAparte ? '<p class="gn-modal-hint gn-modal-hint--aparte">Esta va a quedar como una <strong>reserva separada</strong>: no se suma a la que ya tenés. Útil cuando es para otra persona, o cuando querés la misma genética en dos bolsitas.</p>' : ''}
           <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
         actions.innerHTML = `
           <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
@@ -813,7 +819,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ items, nota }),
+          body: JSON.stringify({ items, nota, aparte: modoAparte }),
         })
         const data = await res.json()
         if (res.ok && data.ok) {
@@ -821,14 +827,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           cart.clear()
           persistCart()
           keys.forEach(syncQty)
+          const eraAparte = modoAparte
+          modoAparte = false
           activePedido = data.pedido
           setPedidoMode()
-          openModal('Reserva enviada ✓')
+          openModal(eraAparte ? 'Reserva separada enviada ✓' : 'Reserva enviada ✓')
         } else if (res.status === 409 && data.activo) {
           activePedido = data.activo
           setPedidoMode()
           openModal()
           showModalMsg('Ya tenías una reserva en curso.', true)
+        } else if (res.status === 409) {
+          modoAparte = false
+          setPedidoMode()
+          btn.disabled = false
+          btn.textContent = 'Confirmar reserva'
+          showModalMsg(data.error || 'No se pudo enviar la reserva.', true)
         } else if (res.status === 401) {
           showModalMsg('Tu sesión venció — te llevamos al ingreso…', true)
           setTimeout(() => location.reload(), 1800)
@@ -867,6 +881,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           activePedido = null
           setPedidoMode()
           closeModal()
+        } else if (res.status === 409) {
+          modoAparte = false
+          setPedidoMode()
+          btn.disabled = false
+          btn.textContent = 'Confirmar reserva'
+          showModalMsg(data.error || 'No se pudo enviar la reserva.', true)
         } else if (res.status === 401) {
           showModalMsg('Tu sesión venció — te llevamos al ingreso…', true)
           setTimeout(() => location.reload(), 1800)
@@ -887,6 +907,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (e.target.id === 'gn-modal-close') closeModal()
       else if (e.target.id === 'gn-modal-send') sendPedido()
       else if (e.target.id === 'gn-pedido-cancel') askCancelConfirm()
+      else if (e.target.id === 'gn-pedido-otra') {
+        // Se sale del modo lectura sin tocar la reserva que ya existe: la
+        // carta vuelve a mostrar los +/- y lo que se confirme después nace
+        // como un pedido separado.
+        modoAparte = true
+        setPedidoMode()
+        closeModal()
+      }
       else if (e.target.id === 'gn-pedido-cancel-yes') cancelPedido()
       else if (e.target.id === 'gn-pedido-cancel-no') openModal()
       else if (e.target.classList.contains('gn-modal-del')) {

@@ -11,6 +11,10 @@ interface Env {
 // Un pedido vive 90 días en KV; después se purga solo.
 const TTL_SECONDS = 90 * 24 * 60 * 60;
 const ESTADOS_ACTIVOS = ['pendiente', 'listo'];
+// Tope de reservas abiertas a la vez por cuenta. Existe para que un socio que
+// se olvidó de que ya reservó no deje tres pedidos abiertos y el club prepare
+// de más. La cuenta compartida del living es justamente la que más lo usa.
+const MAX_ACTIVAS = 4;
 const MAX_ITEMS = 12;
 const MAX_CANTIDAD = { flor: 50, preroll: 20, producto: 10 } as Record<string, number>;
 // Tope de la RESERVA COMPLETA, no por línea: bajo ningún concepto una
@@ -204,8 +208,25 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return Response.json({ ok: false, error: 'el pedido no tiene ítems válidos' }, { status: 400 });
   }
 
-  const yaActivo = (await pedidosDe(env, socio.email)).find((p) => ESTADOS_ACTIVOS.includes(p.estado));
-  if (yaActivo && yaActivo.estado !== 'pendiente') {
+  // `aparte` = el socio pidió explícitamente empezar OTRA reserva, en vez de
+  // sumar a la que ya tiene. Hace falta para dos casos reales:
+  //   · la cuenta compartida del living, donde cada reserva es de una persona
+  //     distinta y no tiene sentido fusionarlas;
+  //   · la misma genética en dos bolsitas separadas, que dentro de un mismo
+  //     pedido es imposible: los ítems se deduplican por id|formato y siempre
+  //     terminan sumando cantidad.
+  const aparte = body?.aparte === true;
+
+  const activos = (await pedidosDe(env, socio.email)).filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
+  const yaActivo = aparte ? null : activos.find((p) => ESTADOS_ACTIVOS.includes(p.estado));
+
+  if (aparte && activos.length >= MAX_ACTIVAS) {
+    return Response.json(
+      { ok: false, error: `ya tenés ${activos.length} reservas abiertas: retirá alguna antes de empezar otra` },
+      { status: 409 },
+    );
+  }
+  if (!aparte && yaActivo && yaActivo.estado !== 'pendiente') {
     return Response.json({ ok: false, error: 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra', activo: yaActivo }, { status: 409 });
   }
 
