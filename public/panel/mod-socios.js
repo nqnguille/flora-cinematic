@@ -1105,7 +1105,10 @@
       ${l.telefono ? `<div style="color:var(--muted);font-size:11.5px">${P.esc(l.telefono)}</div>` : ''}
       ${ldTurnoLinea(l)}
       <div style="color:var(--muted);font-size:11px;margin-top:4px">${dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`} en esta etapa</div>
-      ${l.tiene_adjunto ? `<div style="font-size:11.5px;margin-top:3px"><a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a></div>` : ''}
+      ${l.tiene_adjunto ? `<div style="font-size:11.5px;margin-top:3px">
+        <a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a>
+        ${editar ? ` · <a href="#" class="ld-ddjj" data-id="${l.id}">Armar declaración jurada</a>` : ''}
+      </div>` : ''}
       ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:8px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
       <div class="fila" style="margin-top:9px;flex-wrap:wrap;gap:5px">
         ${tel ? `<a class="btn" style="padding:4px 9px;font-size:11.5px" target="_blank" rel="noopener"
@@ -1144,6 +1147,79 @@
       ${perdidos.length ? `<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
         ${perdidos.length} perdido(s)</summary>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:8px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
+  }
+
+  // Declaración jurada directo desde el lead: el REPROCANN que mandó a la
+  // vista mientras se completa lo que falta, y el papel listo para descargar
+  // y mandárselo. No se registra nada todavía — no hay ficha a la cual
+  // colgarlo. Queda anotado cuando vuelve firmada.
+  async function ldDdjj(id) {
+    const ov = P.modal('Declaración jurada', '<div class="vacio">⏳ Buscando lo que cargó…</div>')
+    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
+    const r = await fetch(`/api/panel/declaracion?lead_id=${id}`, { credentials: 'include' })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) { cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>`; return }
+    const L = d.lead
+    const visor = L.tieneAdjunto
+      ? `<iframe src="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(L.email)}"
+           style="width:100%;height:340px;border:1px solid var(--line);border-radius:4px;background:var(--bg2)"
+           title="REPROCANN que mandó"></iframe>
+         <p class="so-help" style="margin:6px 0 0">Chequeá que diga <b>autocultivo</b> y que esté aprobado.</p>`
+      : '<p class="so-help" style="margin:0">No mandó adjunto.</p>'
+
+    cuerpo.innerHTML = `
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start">
+        <div>${visor}</div>
+        <div style="display:grid;gap:9px">
+          <div><label class="lb" for="dj-nom">Nombre completo</label>
+            <input class="input" id="dj-nom" value="${P.esc(L.nombre || '')}" /></div>
+          <div><label class="lb" for="dj-dni">DNI</label>
+            <input class="input" id="dj-dni" inputmode="numeric" maxlength="10" value="${P.esc(L.dni || '')}"
+              placeholder="${L.dni ? '' : 'no lo cargó, pedíselo'}" /></div>
+          <div><label class="lb" for="dj-dom">Domicilio</label>
+            <input class="input" id="dj-dom" placeholder="Calle y número" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+            <div><label class="lb" for="dj-loc">Localidad</label><input class="input" id="dj-loc" /></div>
+            <div><label class="lb" for="dj-prov">Provincia</label><input class="input" id="dj-prov" value="Neuquén" /></div>
+          </div>
+          <div><label class="lb" for="dj-diag">Diagnóstico</label>
+            <input class="input" id="dj-diag" maxlength="300" placeholder="…acredita la existencia de ___" /></div>
+          <p class="so-help" style="margin:0">Firma ${P.esc(d.plantilla.medico)} (${P.esc(d.plantilla.matricula)}) como director médico.</p>
+        </div>
+      </div>
+      <div class="pn-mod-acciones">
+        ${L.telefono ? `<a class="btn" id="dj-wa" target="_blank" rel="noopener" href="#">Abrir WhatsApp</a>` : ''}
+        <button class="btn btn-pri" id="dj-gen" type="button">Generar y descargar</button>
+      </div>
+      <p class="msg" id="dj-msg" style="margin:8px 0 0"></p>`
+
+    const msg = cuerpo.querySelector('#dj-msg')
+    const wa = cuerpo.querySelector('#dj-wa')
+    if (wa) {
+      const nom = String(L.nombre || '').split(' ')[0]
+      wa.href = `https://wa.me/${String(L.telefono).replace(/\D/g, '')}?text=${encodeURIComponent(
+        `Hola ${nom}! Te paso la declaración jurada para que puedas pasarte a Flora. Es el papel que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: no se pueden tener las dos modalidades a la vez.\n\nImprimila, firmala y mandanos una foto. Con eso seguimos nosotros el trámite.`)}`
+    }
+    cuerpo.querySelector('#dj-gen').addEventListener('click', async (ev) => {
+      const val = (sel) => cuerpo.querySelector(sel).value.trim()
+      ev.target.disabled = true
+      msg.className = 'msg'; msg.textContent = '⏳ armando el documento…'
+      const res = await fetch('/api/panel/declaracion', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lead_id: id, nombre: val('#dj-nom'), dni: val('#dj-dni'), domicilio: val('#dj-dom'),
+          localidad: val('#dj-loc'), provincia: val('#dj-prov'), diagnostico: val('#dj-diag'),
+        }),
+      })
+      const dd = await res.json().catch(() => ({}))
+      ev.target.disabled = false
+      if (!res.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (dd.error || 'no se pudo'); return }
+      const w = window.open('', '_blank')
+      if (w) { w.document.write(dd.html); w.document.close() }
+      msg.className = 'msg ok'
+      msg.textContent = w ? '✔ listo — imprimí o guardá como PDF desde la pestaña que se abrió'
+        : '✔ generada, pero el navegador bloqueó la pestaña: permitila y probá de nuevo'
+    })
   }
 
   async function ldPatch(id, body) {
@@ -1354,6 +1430,8 @@
           ldPatch(ldPerd.dataset.id, { etapa: 'perdido' })
           return
         }
+        const ldDj = e.target.closest('.ld-ddjj')
+        if (ldDj) { e.preventDefault(); ldDdjj(Number(ldDj.dataset.id)); return }
         // acceso rápido a la carta, sin pasar por Solicitudes: el lead sigue
         // siendo lead, solo le abrimos la puerta mientras se formaliza
         const ldAcc = e.target.closest('.ld-acceso')

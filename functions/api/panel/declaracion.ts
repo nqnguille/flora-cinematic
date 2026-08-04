@@ -21,6 +21,7 @@ interface Env {
   DB: D1Database;
   GENETICAS: KVNamespace;
   CERTIFICADOS: KVNamespace;
+  SOLICITUDES: KVNamespace;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
 }
@@ -166,8 +167,39 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
+  // Desde un LEAD: todavía no hay ficha, así que el papel se arma con lo que
+  // cargó al inscribirse. Sirve para mandárselo y que lo devuelva firmado; la
+  // declaración se registra recién cuando la persona tiene ficha.
+  const leadId = Number(url.searchParams.get('lead_id'));
+  if (Number.isFinite(leadId)) {
+    const lead = await env.DB.prepare(
+      `SELECT id, nombre, email, telefono, nota FROM leads WHERE id = ?`,
+    ).bind(leadId).first<{ id: number; nombre: string; email: string | null; telefono: string | null; nota: string | null }>();
+    if (!lead) return json({ error: 'El lead no existe' }, 404);
+
+    let dni: string | null = null;
+    let tieneAdjunto = false;
+    if (lead.email) {
+      const mail = String(lead.email).toLowerCase();
+      try {
+        const sol = await env.SOLICITUDES.get(mail, 'json') as Record<string, unknown> | null;
+        if (sol && sol.dni) dni = String(sol.dni).replace(/\D/g, '') || null;
+      } catch { /* sin solicitud, se completa a mano */ }
+      try {
+        const adj = await env.SOLICITUDES.getWithMetadata(`archivo:${mail}`, 'stream');
+        if (adj?.value) { tieneAdjunto = true; try { await adj.value.cancel(); } catch { /* ya cerrado */ } }
+      } catch { /* sin adjunto */ }
+    }
+    const p = await leerPlantilla(env);
+    return json({
+      ok: true,
+      lead: { id: lead.id, nombre: lead.nombre, email: lead.email, telefono: lead.telefono, dni, tieneAdjunto },
+      plantilla: { version: p.version, medico: p.medico, matricula: p.matricula, entidad: p.entidad },
+    });
+  }
+
   const socioId = Number(url.searchParams.get('socio_id'));
-  if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
+  if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id o lead_id' }, 400);
 
   const socio = await env.DB.prepare(
     `SELECT id, nombre, documento, domicilio, localidad, provincia, reprocann_estado FROM socios WHERE id = ?`,
@@ -253,12 +285,40 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ ok: true, bytes: bytes.length });
   }
 
-  // ---- generar una declaración nueva ----
-  const socioId = Number(body.socio_id);
-  if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
   const diagnostico = String(body.diagnostico || '').trim();
   if (!diagnostico) return json({ error: 'Falta el diagnóstico: es lo que funda la prescripción' }, 400);
   if (diagnostico.length > 300) return json({ error: 'El diagnóstico es muy largo (máx. 300)' }, 400);
+
+  // ---- generar desde un LEAD (todavía sin ficha) ----
+  // Devuelve el papel para mandárselo y nada más: no hay a quién colgarle el
+  // registro. Queda anotado cuando vuelva firmada, ya con ficha.
+  const leadId = Number(body.lead_id);
+  if (Number.isFinite(leadId)) {
+    const lead = await env.DB.prepare(`SELECT id, nombre FROM leads WHERE id = ?`)
+      .bind(leadId).first<{ id: number; nombre: string }>();
+    if (!lead) return json({ error: 'El lead no existe' }, 404);
+
+    const nombre = String(body.nombre || lead.nombre || '').trim();
+    const dni = String(body.dni || '').replace(/\D/g, '');
+    const domicilio = String(body.domicilio || '').trim().slice(0, 200);
+    if (!nombre) return json({ error: 'Falta el nombre' }, 400);
+    if (dni.length < 7 || dni.length > 8) return json({ error: 'El DNI tiene 7 u 8 números' }, 400);
+    if (!domicilio) return json({ error: 'Falta el domicilio' }, 400);
+
+    const p = await leerPlantilla(env);
+    const datos: DatosSocio = {
+      nombre, documento: dni, domicilio,
+      localidad: String(body.localidad || '').trim().slice(0, 80),
+      provincia: String(body.provincia || '').trim().slice(0, 80),
+    };
+    const texto = armarTexto(p, datos, diagnostico, new Date());
+    const hash = await sha256([p.version, ...texto.parrafos, texto.cierre].join('\n'));
+    return json({ ok: true, declaracion_id: null, hash, html: documentoHtml(p, texto, hash) });
+  }
+
+  // ---- generar para un socio con ficha ----
+  const socioId = Number(body.socio_id);
+  if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id o lead_id' }, 400);
 
   const socio = await env.DB.prepare(
     `SELECT id, nombre, documento, domicilio, localidad, provincia FROM socios WHERE id = ?`,
