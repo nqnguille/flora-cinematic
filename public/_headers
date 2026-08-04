@@ -10,6 +10,12 @@
 /socios/tienda.css
   Cache-Control: no-cache
 
+# Los módulos del panel se editan seguido y no llevan hash en el nombre, así
+# que Cloudflare les ponía una hora de caché: se corregía algo, se deployaba y
+# el navegador seguía sirviendo la versión vieja. Mismo criterio que arriba.
+/panel/*
+  Cache-Control: no-cache
+
 # Cabeceras de seguridad. Este sitio sirve un portal con sesión y un panel
 # con DNI de terceros, y no tenía ninguna.
 /*

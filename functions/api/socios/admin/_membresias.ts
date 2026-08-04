@@ -1,29 +1,20 @@
-// El documento de /socios/membresias: los textos de la página y los planes.
+// Los TEXTOS de /socios/membresias.
 //
-// Vive entero en KV GENETICAS bajo la clave 'membresias', igual que 'precios'
-// y 'avisos'. Todo lo que se ve en esa página sale de acá, así que se puede
-// cambiar desde el panel sin tocar código ni volver a compilar.
+// Vive en KV GENETICAS bajo la clave 'membresias', igual que 'avisos'. Acá
+// están SOLO los textos: encabezado, bajada y aclaraciones, editables desde el
+// panel sin volver a compilar.
 //
-// Los planes NO se guardan en el documento de precios: si estuvieran en los
-// dos lados habría dos verdades y una se quedaría vieja.
-
-export interface Plan {
-  id: string;
-  label: string;
-  detalle: string;
-  precio: number;
-  // Segundo importe opcional. Los planes de flores se cobran de dos formas
-  // (contado o transferencia, y débito automático con descuento), y publicar
-  // una sola sería publicar media lista.
-  precio2?: number;
-}
+// Los PLANES no están acá: viven en la tabla `precios` de D1, que es la misma
+// que usan el alta de socios, la cobranza de finanzas y el panel de Mercado
+// Pago. Tenerlos también en KV era tener dos verdades sobre lo mismo, y una se
+// iba a quedar vieja: cargar una lista de precios nueva no habría cambiado lo
+// que ve el socio.
 
 export interface Membresias {
   eyebrow: string;
   titulo: string;
   tituloEm: string;   // la parte del título que va en cursiva y en verde
   lead: string;
-  planes: Plan[];
   etiquetaPrecio: string;    // rótulo de la primera columna de importes
   etiquetaPrecio2: string;   // rótulo de la segunda; vacío = no se muestra
   notaTitulo: string;
@@ -33,7 +24,6 @@ export interface Membresias {
 }
 
 export const MEMBRESIAS_KEY = 'membresias';
-export const MAX_PLANES = 12;
 export const MAX_NOTAS = 8;
 
 export const MEMBRESIAS_DEFAULT: Membresias = {
@@ -41,7 +31,6 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   titulo: 'Membresías',
   tituloEm: 'de flores',
   lead: 'Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo. El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.',
-  planes: [],
   etiquetaPrecio: 'Contado o transferencia',
   etiquetaPrecio2: 'Débito automático',
   notaTitulo: 'Cómo funciona',
@@ -68,7 +57,6 @@ export async function leerMembresias(kv: KVNamespace): Promise<Membresias> {
     titulo: txt(guardado.titulo, 80, d.titulo),
     tituloEm: txt(guardado.tituloEm, 80, d.tituloEm),
     lead: txt(guardado.lead, 600, d.lead),
-    planes: Array.isArray(guardado.planes) ? guardado.planes.slice(0, MAX_PLANES) : d.planes,
     etiquetaPrecio: txt(guardado.etiquetaPrecio, 40, d.etiquetaPrecio),
     etiquetaPrecio2: typeof guardado.etiquetaPrecio2 === 'string' ? guardado.etiquetaPrecio2.trim().slice(0, 40) : d.etiquetaPrecio2,
     notaTitulo: txt(guardado.notaTitulo, 60, d.notaTitulo),
@@ -85,36 +73,6 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
   if (typeof entrada !== 'object' || entrada === null) return { ok: false, error: 'falta el documento' };
   const e = entrada as Record<string, unknown>;
 
-  const planesRaw = Array.isArray(e.planes) ? e.planes : [];
-  if (planesRaw.length > MAX_PLANES) return { ok: false, error: `no se pueden cargar más de ${MAX_PLANES} planes` };
-
-  const planes: Plan[] = [];
-  const idsVistos = new Set<string>();
-  for (const raw of planesRaw) {
-    const it = (raw ?? {}) as Record<string, unknown>;
-    const label = String(it.label ?? '').trim().slice(0, 60);
-    if (!label) return { ok: false, error: 'hay un plan sin nombre' };
-
-    const precio = Math.round(Number(it.precio));
-    // precio <= 0 y no solo < 0: un plan en $0 no es un caso legítimo, es un
-    // campo que quedó vacío.
-    if (!Number.isFinite(precio) || precio <= 0 || precio > 100_000_000) {
-      return { ok: false, error: `el importe de "${label}" tiene que ser un número mayor a $0` };
-    }
-
-    let id = String(it.id ?? '').trim().slice(0, 40)
-      || label.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    while (idsVistos.has(id)) id += '-2';
-    idsVistos.add(id);
-
-    // El segundo importe es opcional: vacío o 0 significa "este plan no lo
-    // tiene", y la tarjeta muestra uno solo.
-    const p2 = Math.round(Number(it.precio2));
-    const precio2 = Number.isFinite(p2) && p2 > 0 && p2 <= 100_000_000 ? p2 : undefined;
-
-    planes.push({ id, label, detalle: String(it.detalle ?? '').trim().slice(0, 120), precio, ...(precio2 ? { precio2 } : {}) });
-  }
-
   const notas = (Array.isArray(e.notas) ? e.notas : [])
     .map((n) => String(n ?? '').trim().slice(0, 400))
     .filter(Boolean)
@@ -128,7 +86,6 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
       titulo: txt(e.titulo, 80, d.titulo),
       tituloEm: String(e.tituloEm ?? '').trim().slice(0, 80),
       lead: txt(e.lead, 600, d.lead),
-      planes,
       etiquetaPrecio: txt(e.etiquetaPrecio, 40, d.etiquetaPrecio),
       etiquetaPrecio2: String(e.etiquetaPrecio2 ?? '').trim().slice(0, 40),
       notaTitulo: txt(e.notaTitulo, 60, d.notaTitulo),

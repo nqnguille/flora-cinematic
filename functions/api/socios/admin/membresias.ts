@@ -3,6 +3,7 @@
 // entero. Mismo patrón que precios.ts y avisos.ts: un solo doc JSON en KV.
 import { requireCap } from '../../panel/_rol';
 import { leerMembresias, validarMembresias, MEMBRESIAS_KEY } from './_membresias';
+import { planesVigentes } from '../_planes';
 
 interface Env {
   DB: D1Database;
@@ -25,6 +26,11 @@ async function guard(request: Request, env: Env) {
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const denied = await guard(request, env);
   if (denied) return denied;
+  // ?planes=1 devuelve los planes de la lista de precios vigente, para que el
+  // panel los muestre en solo lectura junto a los textos.
+  if (new URL(request.url).searchParams.get('planes')) {
+    return Response.json({ ok: true, planes: await planesVigentes(env) });
+  }
   return Response.json({ ok: true, membresias: await leerMembresias(env.GENETICAS) });
 };
 

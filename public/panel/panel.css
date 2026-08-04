@@ -534,32 +534,60 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
 .so-tl-paso.actual::before { background: var(--vio); box-shadow: 0 0 0 3px var(--vio-soft, rgba(110,79,160,0.18)); }
 
 /* ── Membresías: editor del contenido de /socios/membresias ── */
+.mb-link { margin-bottom: 4px; }
 .mb-url {
   flex: 1 1 auto; min-width: 0; overflow-x: auto; white-space: nowrap;
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
   background: var(--card2); border: 1px solid var(--line);
-  border-radius: 8px; padding: 8px 10px; color: var(--ink2);
+  border-radius: 8px; padding: 9px 11px; color: var(--ink2);
 }
-.mb-plan {
-  display: flex; align-items: flex-end; gap: 10px; flex-wrap: nowrap;
-  padding: 12px 0; border-bottom: 1px solid var(--line);
+.mb-link-nota { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+
+/* Una fila por plan. Los rótulos de las dos columnas de importe son la propia
+   cabecera, así no se repiten en cada renglón. */
+.mb-fila {
+  display: grid; align-items: center; gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) 130px 130px 40px;
+  padding: 5px 0;
 }
-.mb-plan:last-child { border-bottom: 0; }
-.mb-plan-campos {
-  flex: 1 1 auto; min-width: 0; display: grid; gap: 10px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 170px);
+.mb-cab { padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.mb-cab .lb { margin: 0; }
+.mb-et { font-size: 12.5px; padding: 6px 8px; }
+.mb-num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Filas de solo lectura: los planes salen de la lista de precios. */
+.mb-ro { border-bottom: 1px solid var(--line); }
+.mb-ro:last-child { border-bottom: 0; }
+.mb-ro b { font-size: 13px; letter-spacing: .04em; }
+.mb-ro span { font-size: 13px; color: var(--ink2); }
+.mb-mp { font-size: 12px; color: var(--grn); text-align: center; }
+.mb-borrar { padding: 8px 0; width: 40px; text-align: center; color: var(--muted); }
+.mb-borrar:hover { color: var(--dan); }
+
+/* En pantallas angostas la grilla se apila y cada campo se rotula solo con su
+   placeholder, que ya dice qué va. */
+@media (max-width: 860px) {
+  .mb-fila { grid-template-columns: 1fr 1fr; }
+  .mb-cab { display: none; }
+  .mb-fila > .mb-borrar { grid-column: 2; justify-self: end; }
 }
-@media (max-width: 720px) { .mb-plan-campos { grid-template-columns: 1fr; } }
-.mb-precio-fmt {
-  display: block; font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 1em;
+
+.mb-textos { margin-top: 14px; }
+.mb-textos > summary {
+  cursor: pointer; font-size: 12px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  list-style: none;
 }
-.mb-borrar { flex: none; padding: 8px 12px; }
-/* nowrap + min-width:0 para que el textarea (que es width:100%) achique en vez
-   de empujar el botón de borrar al renglón de abajo. */
-.mb-nota-fila { display: flex; gap: 8px; align-items: flex-start; flex-wrap: nowrap; }
-.mb-nota-in { flex: 1 1 auto; min-width: 0; resize: vertical; }
-.mb-nota-borrar { flex: none; padding: 8px 12px; }
-/* La barra de guardar acompaña el fondo claro del panel, no un oscuro suelto. */
+.mb-textos > summary::-webkit-details-marker { display: none; }
+.mb-textos > summary::before { content: '▸ '; }
+.mb-textos[open] > summary::before { content: '▾ '; }
+.mb-textos-grid {
+  display: grid; gap: 12px; margin-top: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.mb-ancho { grid-column: 1 / -1; }
+.mb-hint { font-weight: 400; color: var(--muted); }
+@media (max-width: 720px) { .mb-textos-grid { grid-template-columns: 1fr; } }
+
 .mb-barra {
   position: sticky; bottom: 0; z-index: 2;
   background: var(--bg); border-top: 1px solid var(--line);

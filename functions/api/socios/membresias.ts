@@ -4,15 +4,19 @@
 // el padrón en cada carga, así un socio dado de baja deja de ver los importes
 // al instante, sin esperar a que su sesión expire.
 //
-// Es a propósito que la página no traiga nada horneado en el HTML: los
-// importes viajan solo por acá, detrás de este chequeo.
+// Los PLANES salen de la tabla `precios` de D1, la misma que usan el alta de
+// socios, la cobranza de finanzas y el panel de Mercado Pago. De KV salen solo
+// los TEXTOS de la página. Nada de esto viaja en el HTML: todo pasa por acá,
+// detrás del chequeo.
 import { readSessionEmail } from './_session';
 import { leerMembresias } from './admin/_membresias';
+import { planesVigentes, situacionDelSocio } from './_planes';
 
 interface Env {
   SESSION_SECRET: string;
   GENETICAS: KVNamespace;
   SOCIOS: KVNamespace;
+  DB: D1Database;
 }
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -24,5 +28,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ ok: false, error: 'ya no sos socio de Flora' }, { status: 403 });
   }
 
-  return Response.json({ ok: true, membresias: await leerMembresias(env.GENETICAS) });
+  const [textos, planes, situacion] = await Promise.all([
+    leerMembresias(env.GENETICAS),
+    planesVigentes(env),
+    situacionDelSocio(env, email),
+  ]);
+
+  return Response.json({
+    ok: true,
+    textos,
+    planes,
+    // Sin socioId: al front no le sirve y es un dato interno.
+    actual: { tier: situacion.tier, modalidad: situacion.modalidad, debitoActivo: situacion.debitoActivo },
+  });
 };
