@@ -25,7 +25,7 @@
         <input type="tel" id="sl-sol-phone" name="phone" autocomplete="tel" placeholder="Tu número de WhatsApp" required />
       </label>
       <label class="sl-solicitud-field">
-        <span>DNI <em>(sin puntos — lo pide el trámite de REPROCANN)</em></span>
+        <span>DNI <em>(sin puntos, lo pide el trámite de REPROCANN)</em></span>
         <input type="text" id="sl-sol-dni" name="dni" inputmode="numeric" pattern="[0-9.\s]{7,10}" maxlength="10" title="Tu número de DNI, 7 u 8 dígitos" required />
       </label>
       <label class="sl-solicitud-field" id="sl-sol-file-field" hidden>
@@ -33,11 +33,19 @@
         <input type="file" id="sl-sol-file" name="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
       </label>
       <input type="text" id="sl-sol-website" name="website" class="sl-solicitud-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <label class="sl-solicitud-consent">
+        <input type="checkbox" id="sl-sol-consent" name="consent" required />
+        <span>
+          Leí y acepto la <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a>,
+          y autorizo a Flora a tratar mis datos, incluidos mi DNI y mi certificado de
+          REPROCANN, para gestionar mi vínculo con el club.
+        </span>
+      </label>
       <p id="sl-solicitud-msg" class="sl-solicitud-msg" hidden></p>
       <button type="submit" id="sl-solicitud-submit" class="sl-solicitud-submit">Solicitar acceso</button>
     </form>
     <div id="sl-solicitud-ok" class="sl-solicitud-ok" hidden>
-      <p id="sl-solicitud-ok-msg">¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.</p>
+      <p id="sl-solicitud-ok-msg">¡Listo! Recibimos tu solicitud. Te contactamos por WhatsApp a la brevedad.</p>
       <button type="button" id="sl-solicitud-ok-close" class="sl-solicitud-submit">Cerrar</button>
     </div>
   </div>
@@ -49,12 +57,12 @@
     acceso: {
       title: 'Solicitar acceso',
       submit: 'Solicitar acceso',
-      ok: '¡Listo! Recibimos tu solicitud — te contactamos por WhatsApp a la brevedad.',
+      ok: '¡Listo! Recibimos tu solicitud. Te contactamos por WhatsApp a la brevedad.',
     },
     entrevista: {
       title: 'Coordinar entrevista médica',
       submit: 'Coordinar entrevista',
-      ok: '¡Listo! Recibimos tu pedido — te contactamos por WhatsApp para coordinar tu entrevista médica.',
+      ok: '¡Listo! Recibimos tu pedido. Te contactamos por WhatsApp para coordinar tu entrevista médica.',
     },
   } as const
   type SlIntent = keyof typeof SL_COPY
@@ -117,6 +125,7 @@
             phone: String(data.get('phone') || ''),
             dni: String(data.get('dni') || ''),
             website: String(data.get('website') || ''),
+            consent: data.get('consent') === 'on',
             intent,
           }),
         })
@@ -137,11 +146,11 @@
           form.hidden = true
           okBlock.hidden = false
         } else {
-          msg.textContent = result.error || 'No se pudo enviar — probá de nuevo.'
+          msg.textContent = result.error || 'No se pudo enviar, probá de nuevo.'
           msg.hidden = false
         }
       } catch {
-        msg.textContent = 'Error de red — probá de nuevo.'
+        msg.textContent = 'Error de red, probá de nuevo.'
         msg.hidden = false
       } finally {
         submitBtn.disabled = false
@@ -191,6 +200,27 @@
   }
   .sl-solicitud-field input:focus-visible { outline: 2px solid var(--sl-violet); outline-offset: 1px; border-color: transparent; }
   .sl-solicitud-hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
+
+  /* Consentimiento del art. 5 de la ley 25.326: sin este tilde no se envía. */
+  .sl-solicitud-consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 4px 0 2px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sl-muted);
+    cursor: pointer;
+  }
+  .sl-solicitud-consent input {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    margin: 2px 0 0;
+    accent-color: var(--sl-green);
+    cursor: pointer;
+  }
+  .sl-solicitud-consent a { color: var(--sl-green); font-weight: 700; text-underline-offset: 2px; }
   .sl-solicitud-msg { color: #ff9d9d; font-size: 0.82rem; margin: 0; }
   .sl-solicitud-submit {
     font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; cursor: pointer;

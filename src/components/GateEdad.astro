@@ -1,0 +1,148 @@
+---
+// Verificación de mayoría de edad para TODAS las páginas públicas.
+//
+// La home tiene su propio gate dentro del page-loader (main.ts), así que ahí
+// este componente no se monta (Layout recibe gateEdad={false}). El resto del
+// sitio (catálogos, guía de REPROCANN, portal de socios) no tenía ninguno: se
+// llegaba directo desde Google a /extracciones/ sin pasar por ninguna
+// verificación, y esas páginas están en el sitemap.
+//
+// Comparte la MISMA clave y el mismo TTL que el gate del loader
+// (flora-edad-ok, 180 días), así quien ya respondió en la home no vuelve a
+// verlo, y viceversa. Y respeta la respuesta negativa (flora-edad-no): quien
+// dijo que no queda del lado de /verificacion-edad hasta que la revierta ahí.
+//
+// El overlay se sirve VISIBLE en el HTML y lo saca un script inline que corre
+// antes de pintar: así nunca se ve el contenido detrás mientras se decide.
+---
+
+<div class="gate18" id="gate18" role="dialog" aria-modal="true" aria-labelledby="gate18-q">
+  <div class="gate18-caja">
+    <img class="gate18-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+    <p class="gate18-q" id="gate18-q">¿Sos mayor de 18 años?</p>
+    <div class="gate18-acciones">
+      <button type="button" class="gate18-si" id="gate18-si">Sí, soy mayor</button>
+      <a class="gate18-no" href="/verificacion-edad">No</a>
+    </div>
+    <p class="gate18-pie">Este sitio informa sobre cannabis medicinal en el marco de la Ley&nbsp;27.350 y el REPROCANN.</p>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var CLAVE = 'flora-edad-ok'
+    var NEGADO = 'flora-edad-no'
+    var TTL = 180 * 24 * 60 * 60 * 1000
+    var el = document.getElementById('gate18')
+    if (!el) return
+
+    function sacar() {
+      el.remove()
+      document.documentElement.classList.remove('gate18-on')
+    }
+
+    var yaRespondio = false
+    try {
+      if (!localStorage.getItem(NEGADO)) {
+        var t = Number(localStorage.getItem(CLAVE) || 0)
+        yaRespondio = !!t && Date.now() - t < TTL
+      }
+    } catch (e) { /* sin storage: se pregunta igual */ }
+
+    if (yaRespondio) { sacar(); return }
+
+    document.documentElement.classList.add('gate18-on')
+    var si = document.getElementById('gate18-si')
+    if (si) {
+      si.addEventListener('click', function () {
+        try {
+          localStorage.setItem(CLAVE, String(Date.now()))
+          localStorage.removeItem(NEGADO)
+        } catch (e) { /* sin storage: vale para esta visita */ }
+        sacar()
+      })
+    }
+  })()
+</script>
+
+<style is:global>
+  html.gate18-on,
+  html.gate18-on body { overflow: hidden; }
+
+  .gate18 {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #381f56;
+    background: linear-gradient(160deg, #43265f 0%, #2b1743 100%);
+  }
+  .gate18-caja {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    color: #fff;
+  }
+  .gate18-logo {
+    display: block;
+    width: 148px;
+    height: auto;
+    margin: 0 auto 34px;
+    opacity: .95;
+  }
+  .gate18-q {
+    margin: 0 0 26px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 500;
+    font-size: clamp(24px, 6vw, 31px);
+    line-height: 1.25;
+    color: #fff;
+  }
+  .gate18-acciones {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .gate18-si,
+  .gate18-no {
+    display: inline-block;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 15px 30px;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease;
+  }
+  .gate18-si {
+    border: 0;
+    background: var(--fl-green, #148A91);
+    color: #fff;
+  }
+  .gate18-si:hover { background: #17a3ab; transform: translateY(-1px); }
+  .gate18-no {
+    border: 1px solid rgba(255, 255, 255, .35);
+    background: transparent;
+    color: #fff;
+  }
+  .gate18-no:hover { border-color: rgba(255, 255, 255, .7); transform: translateY(-1px); }
+  .gate18-si:focus-visible,
+  .gate18-no:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+  .gate18-pie {
+    margin: 28px 0 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, .6);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gate18-si, .gate18-no { transition: none; }
+  }
+</style>

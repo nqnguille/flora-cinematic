@@ -1,0 +1,117 @@
+---
+// Página 404 real. Hasta ahora Cloudflare Pages servía la home entera con
+// código 200 para cualquier dirección inexistente, así que Google veía
+// infinitas URLs distintas con contenido idéntico. Con este archivo, Pages
+// devuelve 404 de verdad y la persona tiene por dónde seguir.
+import Layout from '../layouts/Layout.astro'
+import '../styles/global.css'
+---
+
+<Layout
+  title="Esta página no existe — Flora ONG"
+  description="La dirección que buscabas no existe en floraong.ar."
+  noindex={true}
+  gateEdad={false}
+>
+  <main class="e4-main">
+    <div class="e4-card">
+      <img class="e4-seal" src="/favicon.png" alt="Flora" width="64" height="64" />
+
+      <span class="e4-eyebrow">Error 404</span>
+      <h1 class="e4-title">Esta página <em>no existe.</em></h1>
+      <p class="e4-p">
+        Puede que el link esté viejo o que la dirección tenga un error de tipeo. Te dejamos
+        los caminos más usados:
+      </p>
+
+      <ul class="e4-links">
+        <li><a href="/">Inicio</a><span>Qué es Flora y cómo se accede</span></li>
+        <li><a href="/reprocann-neuquen/">Tramitar el REPROCANN</a><span>La guía completa, paso a paso</span></li>
+        <li><a href="https://consultorio.floraong.ar/?agendar=1">Agendar la entrevista médica</a><span>Elegís día y horario online</span></li>
+        <li><a href="/socios/">Portal de socios</a><span>Tu cuenta, la carta y tus reservas</span></li>
+      </ul>
+
+      <p class="e4-legal">
+        Si llegaste acá desde un link nuestro, escribinos por
+        <a href="https://wa.me/5492996375723">WhatsApp</a> y lo corregimos.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .e4-main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--fl-paper-2, #F6F4F2);
+    padding: clamp(24px, 6vw, 64px) 20px;
+  }
+  .e4-card {
+    max-width: 560px;
+    width: 100%;
+    background: var(--fl-paper, #fff);
+    border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    border-radius: 20px;
+    padding: clamp(28px, 5vw, 48px);
+    box-shadow: 0 32px 64px -40px rgba(56, 31, 86, 0.28);
+  }
+  .e4-seal { display: block; margin: 0 0 20px; }
+  .e4-eyebrow {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fl-green, #148A91);
+    margin-bottom: 10px;
+  }
+  .e4-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    line-height: 1.25;
+    color: var(--fl-ink, #1C1626);
+    margin: 0 0 18px;
+  }
+  .e4-title em { font-style: normal; color: var(--fl-violet, #381F56); }
+  .e4-p {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.65;
+    color: rgba(28, 22, 38, 0.72);
+    margin: 0 0 24px;
+  }
+  .e4-links { list-style: none; margin: 0 0 26px; padding: 0; }
+  .e4-links li {
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    padding: 14px 0;
+  }
+  .e4-links li:last-child { border-bottom: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14)); }
+  .e4-links a {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--fl-violet, #381F56);
+    text-decoration: none;
+  }
+  .e4-links a:hover { text-decoration: underline; }
+  .e4-links span {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    color: rgba(28, 22, 38, 0.55);
+    margin-top: 3px;
+  }
+  .e4-legal {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(28, 22, 38, 0.5);
+    margin: 0;
+  }
+  .e4-legal a { color: var(--fl-green, #148A91); font-weight: 700; }
+</style>

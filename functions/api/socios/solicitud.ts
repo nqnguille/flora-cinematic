@@ -86,6 +86,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   rec.phone = phone;
   if (dni) rec.dni = dni;
   rec.intent = intent;
+  // Constancia del consentimiento del art. 5 de la ley 25.326. El tilde es
+  // obligatorio en el formulario; acá queda la fecha en que se prestó, que es
+  // lo que hace falta poder mostrar si alguna vez lo piden.
+  if (body?.consent === true && !rec.consentimiento) rec.consentimiento = now;
   rec.creado = rec.creado || now;
   rec.actualizado = now;
   await env.SOLICITUDES.put(email, JSON.stringify(rec));

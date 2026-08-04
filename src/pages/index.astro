@@ -260,6 +260,7 @@ const websiteSchema = {
   description="¿Cómo se tramita el REPROCANN? El primer paso es una entrevista médica. Asociación civil de cultivo de cannabis medicinal en Neuquén, bajo Ley 27.350. Material vegetal y aceites con análisis de laboratorio."
   canonical="https://floraong.ar/"
   schema={websiteSchema}
+  gateEdad={false}
 >
 
   <!-- Skip to content para navegación por teclado -->
@@ -431,11 +432,15 @@ const websiteSchema = {
         </div>
 
         <div class="welcome-outro">
+          <!-- El botón principal apunta al PRIMER paso del recorrido, la
+               entrevista médica, que es lo que dice la propia sección de
+               preguntas frecuentes. Asociarse es el último paso y sigue
+               disponible más abajo, en #acceso. -->
           <div class="welcome-ctas">
-            <a href={waAsociarse} class="btn-primary" target="_blank" rel="noopener noreferrer">
-              Quiero asociarme
+            <a href="https://consultorio.floraong.ar/?agendar=1" class="btn-primary" data-cta="hero-agendar">
+              Agendar la entrevista médica
             </a>
-            <a href="#perfiles" class="btn-secondary">Conocer Flora</a>
+            <a href="#perfiles" class="btn-secondary" data-cta="hero-conocer">Conocer Flora</a>
           </div>
         </div>
       </div>
@@ -593,7 +598,7 @@ const websiteSchema = {
               <span class="fl-rp-agenda-live" id="fl-agenda-live" hidden>
                 <i></i> Próximo turno libre: <b id="fl-agenda-cuando"></b>
               </span>
-              <span class="fl-rp-agenda-det">Entrevista por videollamada con el Dr.&nbsp;Ezequiel&nbsp;Kalb<span id="fl-agenda-precio" hidden></span>. Se abona online con <b>Mercado Pago</b>.</span>
+              <span class="fl-rp-agenda-det">Entrevista por videollamada con el Dr.&nbsp;Ezequiel&nbsp;Kalb (MN&nbsp;191182)<span id="fl-agenda-precio" hidden></span>. Se abona online con <b>Mercado Pago</b>.</span>
             </div>
           </div>
           <div class="fl-rp-agendar-fila">
@@ -965,7 +970,7 @@ const websiteSchema = {
       </div>
 
       <p class="fl-channel-lead">
-        Entrevistas entre Guillermo Sandoval —presidente de Flora ONG— y nuestro director médico, el Dr. Ezequiel Kalb, para hablar sin vueltas de cannabis medicinal. Dale play acá o entrá al canal.
+        Entrevistas entre Guillermo Sandoval —presidente de Flora ONG— y nuestro director médico, el Dr. Ezequiel Kalb (MN 191182), para hablar sin vueltas de cannabis medicinal. Dale play acá o entrá al canal.
       </p>
 
       <!-- Episodios estilo YouTube -->
@@ -1161,7 +1166,7 @@ const websiteSchema = {
            muted loop playsinline autoplay aria-hidden="true"></video>
     <div class="fl-cine-wrap">
       <div class="fl-cine-caja">
-        <span class="fl-eyebrow">Consultorio virtual · Dr. Ezequiel Kalb</span>
+        <span class="fl-eyebrow">Consultorio virtual · Dr. Ezequiel Kalb · MN 191182</span>
         <h2 class="fl-title">Sacate todas las dudas <em>antes de comenzar</em></h2>
         <p class="fl-lead">Cannabis y medicina integrativa por videollamada. Salís con tu tratamiento definido y el REPROCANN en marcha.</p>
         <div class="fl-cine-agenda">

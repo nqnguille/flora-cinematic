@@ -1,0 +1,298 @@
+---
+// Política de privacidad de floraong.ar.
+//
+// Hasta ahora el sitio no tenía ninguna página legal, y sin embargo pedía DNI
+// y una foto del certificado REPROCANN, que por su sola existencia revela que
+// la persona tiene una indicación médica: dato de salud bajo la ley 25.326.
+// Esto es el aviso del art. 6 que faltaba.
+//
+// Está escrita para que la lea un socio, no un abogado: segunda persona, sin
+// "el titular de los datos". Todo lo que dice acá se corresponde con lo que el
+// código realmente hace; si cambia el código, cambia esta página.
+import Layout from '../layouts/Layout.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import '../styles/global.css'
+
+const ACTUALIZADA = '4 de agosto de 2026'
+const WA = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero consultar sobre mis datos personales')
+---
+
+<Layout
+  title="Política de privacidad — Flora ONG"
+  description="Qué datos guarda Flora, para qué se usan, quién puede verlos y cómo pedir que se corrijan o se borren. Ley 25.326 de protección de datos personales."
+  canonical="https://floraong.ar/privacidad/"
+>
+  <div class="pv-page">
+  <div class="pv-barra">
+    <a class="pv-marca" href="/">Flora</a>
+    <a class="pv-volver" href="/">Volver al sitio</a>
+  </div>
+
+  <main class="pv-main">
+    <h1 class="pv-h1">Política de privacidad</h1>
+    <p class="pv-fecha">Última actualización: {ACTUALIZADA}</p>
+    <p class="pv-entrada">
+      Para acompañarte en el trámite del REPROCANN necesitamos algunos datos tuyos, y
+      algunos de ellos son datos de salud, que son los más sensibles que existen. Acá está,
+      en castellano claro, qué guardamos, para qué, quién puede verlo y cómo pedir que se
+      corrija o se borre.
+    </p>
+
+    <h2 class="pv-h2">Quién es responsable</h2>
+    <p>
+      <strong>Asociación Civil Cann de Cannabis Medicinal</strong> (Flora), I.G.J.
+      N.º 1994128, CUIT 30-71827609-4, con sede en Neuquén capital, Argentina. Es la
+      responsable de la base de datos y la única que decide qué se hace con ella.
+    </p>
+    <p>
+      Para cualquier consulta sobre tus datos, escribinos por
+      <a href={WA}>WhatsApp al +54 9 299 637 5723</a>. Es el canal por el que te
+      respondemos y por el que podés ejercer los derechos que están más abajo.
+    </p>
+
+    <h2 class="pv-h2">Qué guardamos</h2>
+
+    <h3 class="pv-h3">Cuando pedís acceso al club</h3>
+    <p>
+      El formulario de solicitud pide tu <strong>nombre, correo electrónico, celular y
+      DNI</strong>, y te ofrece adjuntar una <strong>foto o PDF de tu certificado
+      REPROCANN</strong>. El DNI lo pedimos porque es el dato con el que el REPROCANN
+      identifica a cada persona, y sin él no podemos vincular tu trámite con el de la
+      asociación. El certificado es opcional: si lo adjuntás, acelera la vinculación.
+    </p>
+    <p>
+      Tanto el DNI como el certificado son datos sensibles, porque dejan ver que tenés una
+      indicación médica. Se guardan aparte del resto y no se publican en ningún lado.
+    </p>
+
+    <h3 class="pv-h3">Cuando entrás al portal de socios</h3>
+    <p>
+      Usamos el inicio de sesión de Google, de donde tomamos tu <strong>nombre, tu correo y
+      tu foto de perfil</strong>. Nunca vemos ni guardamos tu contraseña de Google.
+    </p>
+
+    <h3 class="pv-h3">Mientras sos socio</h3>
+    <ul class="pv-ul">
+      <li>Tu ficha en el padrón: nombre, DNI, teléfono, plan y aportes.</li>
+      <li>El estado de tu trámite de REPROCANN, su código de vinculación y su fecha de vencimiento.</li>
+      <li>Tu certificado del REPROCANN, si lo cargaste vos o lo cargó el equipo, para que puedas descargarlo desde tu cuenta.</li>
+      <li>Tus reservas y tus retiros, con fecha, cantidades y las notas que escribas.</li>
+    </ul>
+
+    <h3 class="pv-h3">Cuando navegás</h3>
+    <p>
+      Guardamos una cookie de sesión propia para mantenerte identificado dentro del portal,
+      y registramos visitas y clics de forma agregada para saber qué partes del sitio se
+      usan. Ese registro no arma un perfil tuyo ni se cruza con tu ficha de socio.
+    </p>
+
+    <h2 class="pv-h2">Para qué los usamos</h2>
+    <ul class="pv-ul">
+      <li>Vincular tu REPROCANN con el de la asociación, que es la razón de ser del club.</li>
+      <li>Preparar y entregarte lo que reservás, y avisarte cuando está listo.</li>
+      <li>Avisarte si tu credencial está por vencer.</li>
+      <li>Llevar la contabilidad de la asociación y cumplir con las obligaciones que nos exige la normativa del REPROCANN.</li>
+    </ul>
+    <p>
+      No usamos tus datos para publicidad, no armamos perfiles de consumo y
+      <strong>no vendemos ni cedemos tu información a nadie</strong>.
+    </p>
+
+    <h2 class="pv-h2">Quién más los toca</h2>
+    <div class="pv-tabla-wrap">
+      <table class="pv-tabla">
+        <thead>
+          <tr><th>Servicio</th><th>Para qué</th><th>Qué ve</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cloudflare</td><td>Aloja el sitio y la base de datos</td><td>Todo lo guardado, cifrado en reposo por su infraestructura</td></tr>
+          <tr><td>Google</td><td>Inicio de sesión</td><td>Tu nombre, correo y foto de perfil</td></tr>
+          <tr><td>Resend</td><td>Envío de los correos del club</td><td>Tu correo y el texto del aviso</td></tr>
+          <tr><td>Aviso interno al equipo</td><td>Que el club sepa que entró una reserva o una solicitud</td><td>Tu nombre y tu contacto, para poder atenderte</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Dentro de Flora, tu ficha la ven solo las personas del equipo que necesitan verla para
+      atenderte. El acceso al panel está dividido por rol: quien atiende el mostrador no ve
+      las finanzas, y quien lleva las finanzas no ve las fichas médicas.
+    </p>
+
+    <h2 class="pv-h2">La consulta médica es aparte</h2>
+    <p>
+      La entrevista médica no la hace Flora: la hace el consultorio del
+      <strong>Dr. Ezequiel Kalb (MN 191182)</strong>, que es responsable por separado de tu
+      historia clínica y está alcanzado por el secreto profesional. Lo que le contás en la
+      consulta no llega a Flora. Su política está en
+      <a href="https://consultorio.floraong.ar/privacidad">consultorio.floraong.ar/privacidad</a>.
+    </p>
+
+    <h2 class="pv-h2">Cuánto tiempo los guardamos</h2>
+    <p>
+      Mientras seas socio, y después mientras nos lo exija la normativa contable y la del
+      REPROCANN. Si te das de baja y pedís que borremos lo que no estamos obligados a
+      conservar, lo borramos.
+    </p>
+
+    <h2 class="pv-h2">Tus derechos</h2>
+    <p>
+      La <strong>Ley 25.326</strong> te da derecho a pedirnos, en cualquier momento y sin
+      tener que justificarlo:
+    </p>
+    <ul class="pv-ul">
+      <li><strong>Acceso:</strong> que te contemos qué datos tuyos tenemos.</li>
+      <li><strong>Rectificación:</strong> que corrijamos lo que esté mal.</li>
+      <li><strong>Actualización:</strong> que pongamos al día lo que cambió.</li>
+      <li><strong>Supresión:</strong> que borremos lo que ya no corresponda conservar.</li>
+    </ul>
+    <p>
+      Se piden por <a href={WA}>WhatsApp</a> y te respondemos dentro de los plazos que fija
+      la ley: diez días corridos para el acceso, cinco días hábiles para corregir o borrar.
+      El primer pedido de acceso cada seis meses es gratuito.
+    </p>
+    <div class="pv-destacado">
+      <p>
+        Si considerás que no atendimos tu pedido como corresponde, podés reclamar ante la
+        <strong>Agencia de Acceso a la Información Pública</strong>, que es el organismo de
+        control de la Ley 25.326: <a href="https://www.argentina.gob.ar/aaip">argentina.gob.ar/aaip</a>.
+      </p>
+    </div>
+
+    <h2 class="pv-h2">Menores de edad</h2>
+    <p>
+      Este sitio está restringido a personas mayores de 18 años. La Ley 27.350 sí contempla
+      el uso de cannabis medicinal en pacientes de cualquier edad, incluida la población
+      pediátrica: cuando la persona en tratamiento es menor, quien gestiona la inscripción y
+      el vínculo con Flora es la madre, el padre, el tutor o la tutora, y es esa persona
+      adulta la que da los datos y presta el consentimiento.
+    </p>
+
+    <h2 class="pv-h2">Cambios</h2>
+    <p>
+      Si cambiamos algo de esta política, cambiamos la fecha de arriba. Si el cambio afecta
+      cómo usamos datos que ya nos diste, te lo avisamos antes por los canales del club.
+    </p>
+
+    <p class="pv-legal">
+      Asociación Civil Cann de Cannabis Medicinal · I.G.J. N.º 1994128 · CUIT
+      30-71827609-4 · Neuquén, Argentina.
+    </p>
+  </main>
+  </div>
+
+  <SiteFooter />
+</Layout>
+
+<style>
+  /* El sitio corre sobre fondo oscuro; esta página es un documento y va sobre
+     papel claro, como /verificacion-edad. */
+  .pv-page {
+    background: var(--fl-paper, #fff);
+    min-height: 100vh;
+  }
+
+  .pv-barra {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px clamp(20px, 6vw, 64px);
+    background: var(--fl-violet, #381F56);
+  }
+  .pv-marca {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: #fff;
+    text-decoration: none;
+  }
+  .pv-volver {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .8);
+    text-decoration: none;
+  }
+  .pv-volver:hover { color: #fff; text-decoration: underline; }
+
+  .pv-main {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: clamp(36px, 6vw, 72px) clamp(20px, 6vw, 40px) 80px;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.68;
+    color: rgba(28, 22, 38, 0.78);
+  }
+  .pv-main :global(p) { margin: 0 0 15px; }
+  .pv-main :global(a) { color: var(--fl-green, #148A91); font-weight: 600; text-underline-offset: 3px; }
+  .pv-main :global(strong) { color: var(--fl-ink, #1C1626); font-weight: 700; }
+
+  .pv-h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(32px, 6vw, 48px);
+    line-height: 1.12;
+    color: var(--fl-ink, #1C1626);
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .pv-fecha { font-size: 14px; color: rgba(28, 22, 38, 0.5); margin: 0 0 10px; }
+  .pv-entrada { font-size: 18px; color: rgba(28, 22, 38, 0.72); margin: 0 0 8px; }
+
+  .pv-h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(23px, 3.6vw, 30px);
+    line-height: 1.2;
+    color: var(--fl-violet, #381F56);
+    margin: 44px 0 10px;
+    text-wrap: balance;
+  }
+  .pv-h3 { font-size: 16px; font-weight: 700; color: var(--fl-ink, #1C1626); margin: 26px 0 5px; }
+
+  .pv-ul { margin: 0 0 15px; padding-left: 1.15rem; list-style: disc; }
+  .pv-ul li { margin-bottom: 7px; }
+  .pv-ul li::marker { color: var(--fl-green, #148A91); }
+
+  .pv-tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 18px;
+    border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    border-radius: 14px;
+  }
+  .pv-tabla { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 15px; }
+  .pv-tabla th, .pv-tabla td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--fl-line, rgba(56, 31, 86, 0.12));
+    vertical-align: top;
+  }
+  .pv-tabla tr:last-child td { border-bottom: none; }
+  .pv-tabla th {
+    font-size: 11.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: rgba(28, 22, 38, 0.5);
+    font-weight: 700;
+    background: var(--fl-paper-2, #F6F4F2);
+  }
+
+  .pv-destacado {
+    background: var(--fl-paper-2, #F6F4F2);
+    border-radius: 16px;
+    padding: 20px 22px;
+    margin: 22px 0;
+    box-shadow: inset 0 0 0 1px var(--fl-line, rgba(56, 31, 86, 0.14));
+  }
+  .pv-destacado :global(p:last-child) { margin-bottom: 0; }
+
+  .pv-legal {
+    font-size: 12.5px;
+    color: rgba(28, 22, 38, 0.45);
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    padding-top: 16px;
+    margin: 44px 0 0;
+  }
+</style>

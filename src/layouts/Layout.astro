@@ -1,4 +1,6 @@
 ---
+import GateEdad from '../components/GateEdad.astro'
+
 interface Props {
   title?: string
   description?: string
@@ -6,6 +8,9 @@ interface Props {
   canonical?: string
   noindex?: boolean
   schema?: Record<string, unknown> | Record<string, unknown>[]
+  // La home trae su propio gate dentro del page-loader, y /verificacion-edad
+  // es justamente adónde va quien responde que no: esas dos lo apagan.
+  gateEdad?: boolean
 }
 
 const {
@@ -15,6 +20,7 @@ const {
   canonical = 'https://floraong.ar/',
   noindex = false,
   schema = [],
+  gateEdad = true,
 } = Astro.props
 
 const organizationJsonLd = {
@@ -113,6 +119,7 @@ const jsonLd = [organizationJsonLd, ...extraSchemas]
     ))}
   </head>
   <body>
+    {gateEdad && <GateEdad />}
     <slot />
     <script>
       import '../scripts/main.ts'

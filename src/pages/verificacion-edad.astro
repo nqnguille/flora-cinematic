@@ -1,11 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import '../styles/global.css'
 ---
 
 <Layout
   title="Acceso restringido por edad — Flora ONG"
   description="Este sitio está restringido a personas mayores de 18 años. Información sobre el marco legal del cannabis medicinal en Argentina y cómo proceder si sos menor de edad."
   noindex={true}
+  gateEdad={false}
 >
   <main class="ve-main">
     <div class="ve-card">
@@ -45,10 +47,13 @@ import Layout from '../layouts/Layout.astro'
       </p>
       <p class="ve-p">
         Si sos ese adulto responsable, quien tiene que navegar este sitio y gestionar el
-        vínculo con Flora sos vos, no la persona menor de edad a tu cargo. Volvé a la
-        pantalla anterior y respondé <strong>"Sí, soy mayor"</strong>: el acceso está pensado
-        para que lo uses en representación suya.
+        vínculo con Flora sos vos, no la persona menor de edad a tu cargo. El acceso está
+        pensado para que lo uses en representación suya.
       </p>
+
+      <div class="ve-volver">
+        <button type="button" class="ve-btn" id="ve-soy-mayor">Soy mayor de 18: entrar al sitio</button>
+      </div>
 
       <p class="ve-p">
         Si confirmaste que sos menor de 18 años y no estás navegando en representación de un
@@ -64,6 +69,23 @@ import Layout from '../layouts/Layout.astro'
     </div>
   </main>
 </Layout>
+
+<script is:inline>
+  // Llegar acá deja marcada la respuesta negativa: el gate de las demás
+  // páginas la respeta hasta que la persona la revierta desde este botón.
+  (function () {
+    try { localStorage.setItem('flora-edad-no', String(Date.now())) } catch (e) { /* sin storage */ }
+    var b = document.getElementById('ve-soy-mayor')
+    if (!b) return
+    b.addEventListener('click', function () {
+      try {
+        localStorage.removeItem('flora-edad-no')
+        localStorage.setItem('flora-edad-ok', String(Date.now()))
+      } catch (e) { /* sin storage: vale para esta visita */ }
+      location.href = '/'
+    })
+  })()
+</script>
 
 <style>
   .ve-main {
@@ -135,6 +157,24 @@ import Layout from '../layouts/Layout.astro'
     color: var(--fl-green, #0A503C);
     margin-bottom: 8px;
   }
+  .ve-volver { margin: 0 0 22px; }
+  .ve-btn {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: var(--fl-green, #148A91);
+    border: 0;
+    border-radius: 999px;
+    padding: 15px 28px;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease;
+  }
+  .ve-btn:hover { background: #17a3ab; transform: translateY(-1px); }
+  .ve-btn:focus-visible { outline: 2px solid var(--fl-violet, #381F56); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .ve-btn { transition: none; } }
+
   .ve-legal {
     font-family: var(--font-ui);
     font-size: 12px;
