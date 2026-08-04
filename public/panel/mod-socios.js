@@ -50,6 +50,12 @@
   const digitsOnly = (v) => String(v || '').replace(/\D/g, '')
   const ICON_WA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2zm4.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>'
 
+  // Credencial REPROCANN: una tarjeta con foto, que es lo que la persona
+  // manda. Y la declaración jurada: una hoja firmada. Se leen distinto de un
+  // vistazo, que es todo lo que se les pide.
+  const ICON_CARNET = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5 16.5c.6-1.6 2-2.4 3.5-2.4s2.9.8 3.5 2.4"/><path d="M15 10h4M15 13.5h4"/></svg>'
+  const ICON_FIRMA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h8.5L19 7v8"/><path d="M6 2.5A1.5 1.5 0 0 0 4.5 4v12"/><path d="M14 2.5V7h5"/><path d="M4 20c1.6 0 1.9-2.7 3.2-2.7 1 0 1 1.6 2 1.6 1.2 0 1.4-3.2 2.8-3.2 1.1 0 1.1 2.2 2.2 2.2.9 0 1.2-1.3 2-1.3.6 0 .9.6 1.4.9"/></svg>'
+
   // feedback inline del padrón (al lado del buscador)
   let msgT = null
   function aviso(texto, clase, ms) {
@@ -1092,19 +1098,80 @@
   // Etapas (decisión 01/08): nuevo → contactado → entrevista → convertido
   // (+ perdido). Las solicitudes web y los intentos de login entran solos.
   let LEADS = []
+  let ldFiltro = ''
+  let ldMsgT = null
+  let ldPerdidosAbierto = false
+  let ldFirma = ''        // si nada cambió, no se repinta (el poll no parpadea)
+  let ldArrastrando = false
+  // Avisos de la solapa Leads. El #so-msg del padrón vive en otra solapa
+  // oculta, así que todo esto caía en alert() nativo, que bloquea y no se
+  // puede deshacer. `accion` es el botón opcional de la derecha (Deshacer).
+  function avisoLd(texto, clase, ms, accion) {
+    const el = cont.querySelector('#ld-msg')
+    if (!el) return
+    el.className = 'msg' + (clase ? ' ' + clase : '')
+    el.textContent = texto
+    if (accion) {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'btn'
+      b.style.cssText = 'padding:2px 8px;font-size:11px;margin-left:8px'
+      b.textContent = accion.texto
+      b.addEventListener('click', () => { avisoLd(''); accion.hacer() })
+      el.appendChild(b)
+    }
+    clearTimeout(ldMsgT)
+    if (texto) ldMsgT = setTimeout(() => { el.textContent = ''; el.className = 'msg' }, ms || 6000)
+  }
+
+  // El verde queda SOLO para convertidos: en este panel significa dato
+  // positivo (ver panel.css). Las etapas de trabajo van de neutro a cálido
+  // según cuánto avanzaron.
   const LD_ETAPAS = [
-    ['nuevo', 'Nuevos', 'var(--vio)'],
-    ['contactado', 'Contactados', 'var(--amb)'],
-    ['entrevista', 'Entrevista médica', 'var(--grn)'],
+    ['nuevo', 'Nuevos', 'var(--muted)'],
+    ['contactado', 'Contactados', 'var(--vio)'],
+    ['entrevista', 'Entrevista médica', 'var(--amb)'],
     ['convertido', 'Convertidos', 'var(--grn)'],
   ]
+  const LD_VACIO = {
+    nuevo: 'Nadie nuevo por ahora',
+    contactado: 'Ninguno contactado todavía',
+    entrevista: 'Sin entrevistas agendadas',
+    convertido: 'Todavía ninguno',
+  }
+
+  // Cada carga lleva un número: si dos respuestas se cruzan (el poll de 60s y
+  // una acción, por ejemplo), la vieja no pisa a la nueva. Y las tarjetas con
+  // una operación en vuelo mandan sobre lo que traiga el servidor, hasta que
+  // confirme — si no, la tarjeta que acabás de mover salta sola a su lugar
+  // anterior mientras el PATCH todavía viaja.
+  let ldGen = 0
+  const ldEnVuelo = new Map()   // id -> etapa que pusimos nosotros
 
   async function ldCargar() {
     const caja = cont.querySelector('#ld-tablero')
     if (!LEADS.length) caja.innerHTML = '<div class="vacio">⏳ Cargando el embudo…</div>'
-    const r = await fetch('/api/panel/leads', { credentials: 'include' })
-    if (!r.ok) { caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`; return }
-    LEADS = (await r.json()).leads
+    const mio = ++ldGen
+    let r
+    try {
+      r = await fetch('/api/panel/leads', { credentials: 'include' })
+    } catch {
+      // sin red: si ya hay tablero, se deja como está (no tirar lo que sirve)
+      if (!LEADS.length) caja.innerHTML = '<div class="vacio">Sin conexión. Probá de nuevo.</div>'
+      else avisoLd('Sin conexión — el embudo puede estar desactualizado.', 'err', 6000)
+      return
+    }
+    if (mio !== ldGen) return           // llegó tarde, ya hay una carga más nueva
+    if (!r.ok) {
+      if (!LEADS.length) caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`
+      else avisoLd(errHttp(r.status) + ' — el embudo puede estar desactualizado.', 'err', 6000)
+      return
+    }
+    const datos = await r.json().catch(() => ({ leads: [] }))
+    if (mio !== ldGen) return
+    LEADS = datos.leads || []
+    // lo que estamos moviendo gana sobre lo que trae el servidor
+    LEADS.forEach((l) => { if (ldEnVuelo.has(l.id)) l.etapa = ldEnVuelo.get(l.id) })
     ldRender()
   }
 
@@ -1118,16 +1185,21 @@
       return !!sub && !sub.hidden && document.visibilityState === 'visible'
     } catch { return false }
   }
-  function ldTipeando() {
-    return document.activeElement && document.activeElement.classList &&
-      document.activeElement.classList.contains('ld-nota')
+  // Nunca repintar encima de alguien que está trabajando: escribiendo una
+  // nota, con el menú abierto, o arrastrando una tarjeta.
+  function ldOcupado() {
+    const a = document.activeElement
+    if (a && a.classList && a.classList.contains('ld-nota')) return true
+    if (ldArrastrando || ldEnVuelo.size) return true
+    if (cont.querySelector('.ld-menupanel')) return true
+    return false
   }
   setInterval(() => {
-    if (!ldVisible() || ldTipeando()) return
-    ldRender()                     // refresca la cuenta regresiva sin red
+    if (!ldVisible() || ldOcupado()) return
+    ldRender(true)                 // refresca la cuenta regresiva sin red
   }, 30000)
   setInterval(() => {
-    if (!ldVisible() || ldTipeando()) return
+    if (!ldVisible() || ldOcupado()) return
     ldCargar()                     // trae pagos y leads nuevos
   }, 60000)
 
@@ -1165,62 +1237,248 @@
     return `<div style="color:var(--muted);font-size:11.5px">🗓 turno ${P.esc(txt)} hs</div>`
   }
 
+  // El tiempo parado en una etapa es la señal de que algo se está enfriando:
+  // gris hasta una semana, ámbar hasta tres, rojo después.
+  function ldAntiguedad(dias) {
+    const txt = dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`
+    if (dias >= 21) return `<span class="tag tag-mal">${txt} acá</span>`
+    if (dias >= 7) return `<span class="tag tag-deb">${txt} acá</span>`
+    return `<span style="color:var(--muted);font-size:11px">${txt} en esta etapa</span>`
+  }
+
+  // La acción principal cambia según dónde está parado el lead: es lo que
+  // sigue naturalmente, no siempre "dar de alta". Todo lo demás vive en el
+  // menú ⋯ para que la tarjeta no sea una botonera de nueve controles.
+  function ldPrimaria(l) {
+    if (!editar) return ''
+    const b = (cls, txt, extra) => `<button class="btn btn-pri ${cls}" data-id="${l.id}" ${extra || ''} type="button">${txt}</button>`
+    if (l.etapa === 'convertido') {
+      return l.socio_id ? `<button class="btn ld-ficha" data-socio="${l.socio_id}" type="button">Ver ficha →</button>` : ''
+    }
+    if (l.etapa === 'nuevo') return b('ld-mover', '→ Contactados', 'data-etapa="contactado"')
+    if (l.etapa === 'contactado') return b('ld-mover', '→ Entrevista', 'data-etapa="entrevista"')
+    if (l.etapa === 'entrevista') return b('ld-alta', 'Dar de alta')
+    if (l.etapa === 'perdido') return `<button class="btn ld-mover" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>`
+    return ''
+  }
+
+  // Mover de etapa: la tarjeta se va a su columna nueva al instante y el
+  // servidor confirma después. Si falla, vuelve sola y se avisa. Mientras
+  // viaja, `ldEnVuelo` la protege de que un poll la devuelva a su lugar.
+  async function ldMoverEtapa(id, etapa, opts) {
+    const l = LEADS.find((x) => x.id === Number(id))
+    if (!l || l.etapa === etapa) return
+    const desde = l.etapa
+    const nombreEtapa = etapa === 'perdido' ? 'Perdidos'
+      : (LD_ETAPAS.find(([e]) => e === etapa) || [])[1] || etapa
+    l.etapa = etapa
+    ldEnVuelo.set(l.id, etapa)
+    ldRender(true)
+    let ok = false
+    try {
+      const r = await fetch('/api/panel/leads', {
+        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(id), etapa }),
+      })
+      ok = r.ok
+      if (!ok) { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo mover'), 'err') }
+    } catch { avisoLd('✗ sin conexión: no se pudo mover', 'err') }
+    ldEnVuelo.delete(l.id)
+    if (!ok) { l.etapa = desde; ldRender(true); return }
+    const quien = (l.nombre || l.email || 'el lead').split(' ')[0]
+    if (opts && opts.silencioso) avisoLd(`✔ ${quien} pasó a ${nombreEtapa}`, 'ok', 8000)
+    else {
+      avisoLd(`✔ ${quien} pasó a ${nombreEtapa}`, 'ok', 8000,
+        { texto: 'Deshacer', hacer: () => ldMoverEtapa(id, desde, { silencioso: true }) })
+    }
+  }
+
   function ldCard(l) {
     const dias = Math.floor((Date.now() - Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z')) / 86400000)
-    const idx = LD_ETAPAS.findIndex(([e]) => e === l.etapa)
-    const sig = LD_ETAPAS[idx + 1]
     const tel = digitsOnly(l.telefono)
-    return `<div class="card" style="padding:12px 14px;margin-bottom:10px">
+    const nom = String(l.nombre || '').split(' ')[0]
+    const saludo = nom ? `Hola ${nom}! ` : 'Hola! '
+    const color = (LD_ETAPAS.find(([e]) => e === l.etapa) || [])[2] || 'var(--line2)'
+    const puedeArrastrar = editar && l.etapa !== 'convertido'
+    return `<div class="ld-card" data-id="${l.id}" data-etapa="${P.esc(l.etapa)}" style="--ld-color:${color}">
       <div class="fila" style="flex-wrap:wrap;gap:6px">
+        ${puedeArrastrar ? '<span class="ld-handle" title="Arrastrar para mover de etapa" aria-hidden="true">⠿</span>' : ''}
         <b style="font-size:13.5px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}${ldChipPago(l)}
       </div>
-      ${l.email ? `<div style="color:var(--muted);font-size:11.5px;margin-top:2px">${P.esc(l.email)}</div>` : ''}
-      ${l.telefono ? `<div style="color:var(--muted);font-size:11.5px">${P.esc(l.telefono)}</div>` : ''}
+      ${l.email ? `<div class="ld-dato">${P.esc(l.email)}</div>` : ''}
+      ${l.telefono ? `<div class="ld-dato">${P.esc(l.telefono)}</div>` : ''}
       ${ldTurnoLinea(l)}
-      <div style="color:var(--muted);font-size:11px;margin-top:4px">${dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`} en esta etapa</div>
-      ${l.tiene_adjunto ? `<div style="font-size:11.5px;margin-top:3px">
-        <a href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}" target="_blank" rel="noopener">Ver REPROCANN adjunto</a>
-        ${editar ? ` · <a href="#" class="ld-ddjj" data-id="${l.id}">Armar declaración jurada</a>` : ''}
+      <div style="margin-top:5px">${ldAntiguedad(dias)}</div>
+      ${l.tiene_adjunto ? `<div class="ld-docs">
+        <a class="ld-doc" href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}"
+           target="_blank" rel="noopener" aria-label="Ver la credencial REPROCANN que mandó"
+           data-tip="Ver su credencial REPROCANN">${ICON_CARNET}</a>
+        ${editar ? `<button class="ld-doc ld-ddjj" data-id="${l.id}" type="button"
+           aria-label="Armar la declaración jurada" data-tip="Armar la declaración jurada">${ICON_FIRMA}</button>` : ''}
       </div>` : ''}
       ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:8px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
-      <div class="fila" style="margin-top:9px;flex-wrap:wrap;gap:5px">
-        ${tel ? `<a class="btn" style="padding:4px 9px;font-size:11.5px" target="_blank" rel="noopener"
-          href="https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${String(l.nombre || '').split(' ')[0]}! Te escribimos de Flora 🌿`)}">WhatsApp</a>` : ''}
-        ${editar && l.etapa !== 'convertido' ? `<button class="btn btn-pri ld-alta" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" type="button">Dar de alta</button>` : ''}
-        ${editar && l.email && l.etapa !== 'convertido' ? `<button class="btn ld-acceso" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" type="button"
-          title="Le da acceso de prueba a la carta por 7 días y le avisa por mail. El reloj arranca en su primer ingreso.">Acceso 7 días</button>` : ''}
-        ${editar && sig && l.etapa !== 'convertido' && sig[0] !== 'convertido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="${sig[0]}" type="button">→ ${sig[1]}</button>` : ''}
-        ${editar && l.etapa !== 'convertido' && l.etapa !== 'perdido' ? `<button class="btn ld-perdido" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button">Perdido</button>` : ''}
-        ${editar && l.etapa === 'perdido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>` : ''}
-        ${editar && l.etapa !== 'convertido' ? `<button class="btn ld-borrar" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button" title="Borrar del todo: para datos de prueba o basura">🗑</button>` : ''}
+      <div class="fila ld-acciones">
+        ${tel ? `<a class="so-wa" target="_blank" rel="noopener" aria-label="Escribirle por WhatsApp" data-tip="Escribirle por WhatsApp"
+          href="https://wa.me/${tel}?text=${encodeURIComponent(saludo + 'Te escribimos de Flora 🌿')}">${ICON_WA}</a>` : ''}
+        ${ldPrimaria(l)}
+        <span class="pn-sp"></span>
+        ${editar ? `<div class="ld-menu">
+          <button class="btn ld-menubtn" type="button" aria-label="Más acciones" aria-expanded="false">⋯</button>
+        </div>` : ''}
       </div>
     </div>`
   }
 
-  function ldRender() {
+  /* Arrastrar una tarjeta de columna. Va con Pointer Events y no con el drag
+     nativo del navegador por dos razones concretas: el drag nativo no existe
+     en touch (Sofi trabaja del celular) y rompe la selección de texto de la
+     nota que vive adentro de la tarjeta.
+     El gesto arranca solo desde la manija ⠿ y recién después de 6px de
+     movimiento, así un toque para scrollear nunca mueve un lead sin querer.
+     Los botones de mover siguen estando: esto es un atajo, no el único
+     camino, porque un arrastre no se puede hacer con el teclado. */
+  function ldArrastre(ev) {
+    const handle = ev.target.closest('.ld-handle')
+    if (!handle || ev.button > 0) return
+    const card = handle.closest('.ld-card')
+    if (!card) return
+    const id = Number(card.dataset.id)
+    const x0 = ev.clientX, y0 = ev.clientY
+    let activo = false, fantasma = null, hueco = null, destino = null
+
+    const limpiar = () => {
+      document.removeEventListener('pointermove', mover)
+      document.removeEventListener('pointerup', soltar)
+      document.removeEventListener('keydown', porEsc)
+      fantasma?.remove(); hueco?.remove()
+      card.classList.remove('ld-arrastrando')
+      cont.querySelectorAll('.ld-destino').forEach((c) => c.classList.remove('ld-destino'))
+      document.body.style.userSelect = ''
+      ldArrastrando = false
+    }
+    const porEsc = (e) => { if (e.key === 'Escape') { destino = null; limpiar() } }
+
+    const arrancar = () => {
+      activo = true; ldArrastrando = true
+      document.body.style.userSelect = 'none'
+      const r = card.getBoundingClientRect()
+      fantasma = card.cloneNode(true)
+      fantasma.classList.add('ld-fantasma')
+      fantasma.style.width = r.width + 'px'
+      document.body.appendChild(fantasma)
+      hueco = document.createElement('div')
+      hueco.className = 'ld-hueco'
+      card.parentElement.insertBefore(hueco, card)
+      card.classList.add('ld-arrastrando')
+      document.addEventListener('keydown', porEsc)
+    }
+
+    const mover = (e) => {
+      if (!activo) {
+        if (Math.abs(e.clientX - x0) < 6 && Math.abs(e.clientY - y0) < 6) return
+        arrancar()
+      }
+      fantasma.style.left = (e.clientX - 120) + 'px'
+      fantasma.style.top = (e.clientY - 22) + 'px'
+      const bajo = document.elementFromPoint(e.clientX, e.clientY)
+      const col = bajo && bajo.closest('.ld-col')
+      cont.querySelectorAll('.ld-destino').forEach((c) => c.classList.remove('ld-destino'))
+      // Convertidos no es destino: convertir es dar de alta, y un lead
+      // "convertido" sin socio queda roto en el embudo.
+      destino = col && col.dataset.col !== 'convertido' ? col.dataset.col : null
+      if (destino) col.classList.add('ld-destino')
+    }
+
+    const soltar = () => {
+      const d = destino
+      limpiar()
+      if (activo && d) ldMoverEtapa(id, d)
+    }
+
+    document.addEventListener('pointermove', mover)
+    document.addEventListener('pointerup', soltar, { once: true })
+  }
+
+  function ldCoincide(l) {
+    if (!ldFiltro) return true
+    const q = ldFiltro.toLowerCase()
+    return [l.nombre, l.email, l.telefono, l.nota].some((v) => String(v || '').toLowerCase().includes(q))
+  }
+  const ldEnEtapa = (l) => Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z') || 0
+
+  // Dónde está cada tarjeta ahora, para hacerla volar a su lugar nuevo
+  // después del repintado en vez de teletransportarla.
+  function ldPosiciones() {
+    const m = {}
+    cont.querySelectorAll('.ld-card[data-id]').forEach((el) => { m[el.dataset.id] = el.getBoundingClientRect() })
+    return m
+  }
+  function ldVolar(antes) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    cont.querySelectorAll('.ld-card[data-id]').forEach((el) => {
+      const p = antes[el.dataset.id]
+      if (!p) return
+      const n = el.getBoundingClientRect()
+      const dx = p.left - n.left, dy = p.top - n.top
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return
+      const lejos = Math.abs(dx) > 60
+      el.style.transition = 'none'
+      el.style.transform = `translate(${dx}px, ${dy}px)`
+      if (lejos) { el.style.zIndex = '30'; el.style.boxShadow = '0 10px 26px rgba(36,24,51,.28)' }
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = `transform ${lejos ? '.55s' : '.32s'} cubic-bezier(.22,.9,.26,1), box-shadow .55s ease`
+        el.style.transform = ''
+        el.style.boxShadow = ''
+        setTimeout(() => { el.style.transition = ''; el.style.zIndex = '' }, lejos ? 620 : 380)
+      }))
+    })
+  }
+
+  function ldRender(forzar) {
     const caja = cont.querySelector('#ld-tablero')
+    // firma barata: si el tablero no cambió, no se toca el DOM. Sin esto el
+    // poll repinta cada 30s y se cierran los menús, se pierde el foco de una
+    // nota y cualquier arrastre en curso se corta.
+    const firma = LEADS.map((l) => `${l.id}:${l.etapa}:${l.nota || ''}:${l.pago_estado || ''}`).join('|')
+      + '#' + ldFiltro + '#' + ldPerdidosAbierto
+    if (!forzar && firma === ldFirma) return
+    ldFirma = firma
+    const antes = ldPosiciones()
     const por = Object.fromEntries(LD_ETAPAS.map(([e]) => [e, []]))
     const perdidos = []
     for (const l of LEADS) {
+      if (!ldCoincide(l)) continue
       if (l.etapa === 'perdido') perdidos.push(l)
       else (por[l.etapa] || por.nuevo).push(l)
     }
+    // En las columnas de trabajo, primero el que lleva más tiempo parado: es
+    // al que hay que perseguir. En convertidos al revés, interesa el último.
+    LD_ETAPAS.forEach(([e]) => {
+      por[e].sort((a, b) => e === 'convertido' ? ldEnEtapa(b) - ldEnEtapa(a) : ldEnEtapa(a) - ldEnEtapa(b))
+    })
+    const convTotal = por.convertido.length
+    por.convertido = por.convertido.slice(0, 5)
+
     const cnt = cont.querySelector('#ld-cnt')
     if (cnt) { cnt.hidden = !por.nuevo.length; cnt.textContent = por.nuevo.length || '' }
     caja.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;align-items:start">
+      <div class="ld-tablero" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:start">
         ${LD_ETAPAS.map(([etapa, nombre, color]) => `
-          <div>
+          <div class="ld-col" data-col="${etapa}">
             <div class="fila" style="margin-bottom:8px">
               <span class="k" style="border-left:3px solid ${color};padding-left:8px">${nombre}</span>
-              <span class="pn-sp"></span><b style="color:var(--muted);font-size:12px">${por[etapa].length}</b>
+              <span class="pn-sp"></span><b style="color:var(--muted);font-size:12px">${etapa === 'convertido' ? convTotal : por[etapa].length}</b>
             </div>
-            ${por[etapa].length ? por[etapa].map(ldCard).join('') : '<div class="vacio" style="padding:14px;font-size:12px">Vacío</div>'}
+            ${por[etapa].length ? por[etapa].map(ldCard).join('') : `<div class="vacio" style="padding:14px;font-size:12px">${LD_VACIO[etapa] || 'Vacío'}</div>`}
+            ${etapa === 'convertido' && convTotal > 5 ? `<div style="color:var(--muted);font-size:11.5px;padding:2px 4px">y ${convTotal - 5} más</div>` : ''}
           </div>`).join('')}
       </div>
-      ${perdidos.length ? `<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+      ${perdidos.length ? `<details style="margin-top:14px" ${ldPerdidosAbierto ? 'open' : ''} id="ld-perdidos"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
         ${perdidos.length} perdido(s)</summary>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:8px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:8px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
+    const det = caja.querySelector('#ld-perdidos')
+    if (det) det.addEventListener('toggle', () => { ldPerdidosAbierto = det.open })
+    ldVolar(antes)
   }
 
   // Declaración jurada directo desde el lead: el REPROCANN que mandó a la
@@ -1302,7 +1560,7 @@
       body: JSON.stringify({ id: Number(id), ...body }),
     })
     if (r.ok) ldCargar()
-    else { const d = await r.json().catch(() => ({})); alert(d.error || 'No se pudo') }
+    else { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo guardar'), 'err') }
   }
 
   function ldNuevo() {
@@ -1387,6 +1645,12 @@
             alta, el lead se convierte solo.</p>
             <span class="pn-sp"></span>
             ${editar ? '<button class="btn btn-pri" id="ld-nuevo" type="button">+ Lead</button>' : ''}
+          </div>
+          <div class="fila" style="margin-bottom:10px;min-height:22px">
+            <input class="input" id="ld-buscar" type="search" placeholder="Buscar por nombre, mail o teléfono…"
+              style="max-width:280px" autocomplete="off" />
+            <span class="pn-sp"></span>
+            <span class="msg" id="ld-msg" aria-live="polite" style="margin:0"></span>
           </div>
           <div id="ld-tablero"><div class="vacio">⏳ Cargando…</div></div>
         </div>
@@ -1497,13 +1761,47 @@
         }
         // leads
         const ldMover = e.target.closest('.ld-mover')
-        if (ldMover) { ldPatch(ldMover.dataset.id, { etapa: ldMover.dataset.etapa }); return }
+        if (ldMover) { ldMoverEtapa(ldMover.dataset.id, ldMover.dataset.etapa); return }
         const ldPerd = e.target.closest('.ld-perdido')
         if (ldPerd) {
-          if (!(await P.confirmar('¿Marcar este lead como perdido? Queda guardado por si vuelve.', 'Sí, perdido'))) return
-          ldPatch(ldPerd.dataset.id, { etapa: 'perdido' })
+          // sin confirmación: es reversible y queda el «Deshacer» al lado
+          ldMoverEtapa(ldPerd.dataset.id, 'perdido')
           return
         }
+        // menú ⋯ de la tarjeta: se arma al abrirlo, así siempre refleja la
+        // etapa actual del lead
+        const ldMenuBtn = e.target.closest('.ld-menubtn')
+        if (ldMenuBtn) {
+          const cont2 = ldMenuBtn.parentElement
+          const abierto = cont2.querySelector('.ld-menupanel')
+          document.querySelectorAll('.ld-menupanel').forEach((p) => p.remove())
+          document.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
+          if (abierto) return
+          const card = ldMenuBtn.closest('.ld-card')
+          const l = LEADS.find((x) => x.id === Number(card.dataset.id))
+          if (!l) return
+          const op = []
+          if (l.etapa !== 'convertido') {
+            LD_ETAPAS.forEach(([e2, nom2]) => {
+              if (e2 === l.etapa || e2 === 'convertido') return
+              op.push(`<button class="btn ld-mover" data-id="${l.id}" data-etapa="${e2}" type="button">Mover a ${nom2}</button>`)
+            })
+            op.push(`<button class="btn ld-alta" data-id="${l.id}" type="button">Dar de alta</button>`)
+            if (l.email) op.push(`<button class="btn ld-acceso" data-id="${l.id}" type="button">Acceso 7 días a la carta</button>`)
+            if (l.etapa !== 'perdido') op.push(`<button class="btn ld-perdido" data-id="${l.id}" type="button">Marcar perdido</button>`)
+            op.push(`<button class="btn btn-peligro ld-borrar" data-id="${l.id}" type="button">🗑 Borrar del todo</button>`)
+          }
+          if (!op.length) return
+          const panel = document.createElement('div')
+          panel.className = 'ld-menupanel'
+          panel.innerHTML = op.join('')
+          cont2.appendChild(panel)
+          ldMenuBtn.setAttribute('aria-expanded', 'true')
+          return
+        }
+        const ldFicha = e.target.closest('.ld-ficha')
+        if (ldFicha) { window.PanelSocioDetalle.abrir(Number(ldFicha.dataset.socio), () => ldCargar()); return }
+
         const ldBorrar = e.target.closest('.ld-borrar')
         if (ldBorrar) {
           const l = LEADS.find((x) => x.id === Number(ldBorrar.dataset.id))
@@ -1516,7 +1814,8 @@
             method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: l.id }),
           })
-          if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'No se pudo borrar'); return }
+          if (!r.ok) { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo borrar'), 'err'); return }
+          avisoLd(`✔ ${quien} borrado`, 'ok')
           ldCargar()
           return
         }
@@ -1542,11 +1841,11 @@
             ldAcc.disabled = false
             ldAcc.textContent = '✗ no salió'
             setTimeout(() => { ldAcc.textContent = antes }, 3000)
-            alert(res.error || 'No se pudo dar el acceso')
+            avisoLd('✗ ' + (res.error || 'no se pudo dar el acceso'), 'err')
             return
           }
           if (res.mailEnviado === false) {
-            alert(`El acceso quedó dado, pero el mail NO salió (${res.mailError || 'error desconocido'}). Avisale vos por WhatsApp.`)
+            avisoLd(`Acceso dado, pero el mail NO salió (${res.mailError || 'sin detalle'}) — avisale vos por WhatsApp.`, 'err', 12000)
           }
           // queda rastro en la tarjeta, sin pisar lo que ya estaba anotado.
           // La marca va adelante: el servidor corta la nota en 300 y así nunca
@@ -1659,6 +1958,26 @@
       })
       const ldBtn = el.querySelector('#ld-nuevo')
       if (ldBtn) ldBtn.addEventListener('click', ldNuevo)
+
+      // arrastrar tarjetas entre columnas (solo desde la manija)
+      el.addEventListener('pointerdown', ldArrastre)
+      // buscador del embudo: filtra lo que ya está en memoria, sin red
+      const ldBuscar = el.querySelector('#ld-buscar')
+      if (ldBuscar) ldBuscar.addEventListener('input', () => {
+        ldFiltro = ldBuscar.value.trim()
+        ldRender()
+      })
+      // un click en cualquier lado cierra el menú ⋯ abierto
+      document.addEventListener('click', (ev) => {
+        if (ev.target.closest('.ld-menu')) return
+        el.querySelectorAll('.ld-menupanel').forEach((p) => p.remove())
+        el.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
+      })
+      // con la pestaña oculta no tiene sentido seguir pidiendo; al volver,
+      // se refresca de una para no mirar datos viejos
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && ldVisible() && !ldOcupado()) ldCargar()
+      })
 
       // badge de pares pendientes de Unificar, sin abrir la pestaña
       if (editar) {

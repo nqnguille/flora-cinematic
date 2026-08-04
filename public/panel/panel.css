@@ -614,3 +614,67 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
   font-variant-numeric: tabular-nums;
 }
 .mb-total.mal { color: var(--dan); }
+
+/* ============================================================
+   Tablero de LEADS — tarjeta, documentos, menú y arrastre
+   ============================================================ */
+.ld-card {
+  background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--ld-color, var(--line2));
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; position: relative;
+  transition: box-shadow .16s ease, border-color .16s ease, opacity .16s ease;
+}
+.ld-card:hover { box-shadow: var(--sombra-hover) }
+.ld-card.ld-ocupada { opacity: .5; pointer-events: none }
+.ld-dato { color: var(--muted); font-size: 11.5px; margin-top: 2px; overflow-wrap: anywhere }
+
+.ld-handle {
+  cursor: grab; color: var(--line2); font-size: 15px; line-height: 1;
+  padding: 2px 3px; margin-left: -4px; touch-action: none; user-select: none;
+}
+.ld-handle:hover { color: var(--muted) }
+.ld-card.ld-arrastrando { opacity: .35 }
+.ld-fantasma {
+  position: fixed; z-index: 90; pointer-events: none; width: 250px;
+  box-shadow: 0 12px 28px -8px rgba(36, 24, 51, .35); transform: rotate(1.5deg);
+  border-left-width: 3px; margin: 0;
+}
+.ld-col.ld-destino { background: var(--vio-soft); border-radius: 10px; outline: 2px dashed var(--vio); outline-offset: 2px }
+.ld-hueco { height: 54px; border: 2px dashed var(--line2); border-radius: 10px; margin-bottom: 10px }
+
+/* documentos de la tarjeta: credencial y declaración */
+.ld-docs { display: flex; gap: 6px; margin-top: 7px }
+.ld-doc {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink2); display: inline-grid; place-items: center;
+  cursor: pointer; flex-shrink: 0; padding: 0;
+}
+.ld-doc svg { width: 17px; height: 17px }
+.ld-doc:hover { border-color: var(--vio); color: var(--vio); background: var(--vio-soft) }
+.ld-doc:focus-visible { outline: 2px solid var(--vio); outline-offset: 2px }
+
+.ld-acciones { margin-top: 9px; gap: 6px; align-items: center }
+.ld-acciones .btn { padding: 4px 9px; font-size: 11.5px }
+
+.ld-menu { position: relative }
+.ld-menubtn { padding: 3px 8px; font-size: 13px; line-height: 1.2 }
+.ld-menupanel {
+  position: absolute; right: 0; top: calc(100% + 5px); z-index: 30; min-width: 200px;
+  background: var(--card); border: 1px solid var(--line2); border-radius: 10px;
+  box-shadow: var(--sombra-hover); padding: 7px; display: grid; gap: 5px;
+}
+.ld-menupanel .btn { width: 100%; text-align: left; justify-content: flex-start; font-size: 12px; padding: 6px 9px }
+
+/* tooltip que también aparece con foco de teclado, no solo con mouse */
+[data-tip] { position: relative }
+[data-tip]::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 11px;
+  padding: 4px 8px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity .12s ease; z-index: 40;
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ld-card, [data-tip]::after { transition: none }
+  .ld-fantasma { transform: none }
+}
