@@ -46,6 +46,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
       </div>
 
+      <!-- Con una reserva en curso los controles +/- de las tarjetas se ocultan,
+           y sin esto el socio no tiene ninguna pista de por qué ni cómo seguir:
+           el botón para empezar otra estaba enterrado dentro del modal del
+           carrito. Acá queda a la vista, con el motivo dicho. -->
+      <div id="gn-aviso-pedido" class="gn-aviso-pedido" hidden>
+        <span id="gn-aviso-pedido-txt"></span>
+        <button class="gn-aviso-pedido-btn js-otra-reserva" type="button">Empezar otra aparte</button>
+      </div>
+
       <div id="gn-grid" class="gn-track" aria-label="Carrusel de genéticas"></div>
 
       <footer class="gn-pagefoot">
@@ -593,6 +602,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* ── Pedido (carrito + pedido activo) ── */
     const cart = new Map() // "id|formato" → cantidad
     let activePedido = null // pedido pendiente/listo del socio, si hay
+    let activosCount = 0 // cuántas reservas abiertas tiene (puede tener varias)
     // El socio pidió empezar OTRA reserva en vez de sumar a la que ya tiene.
     // Mientras está en true, la carta se comporta como si no hubiera reserva
     // activa (se ven los +/-) y el POST va marcado con aparte:true.
@@ -642,7 +652,27 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     function setPedidoMode() {
-      document.getElementById('gn-content').classList.toggle('has-pedido', !!activePedido && !modoAparte)
+      const bloqueado = !!activePedido && !modoAparte
+      document.getElementById('gn-content').classList.toggle('has-pedido', bloqueado)
+      const av = document.getElementById('gn-aviso-pedido')
+      if (av) {
+        av.hidden = !bloqueado
+        const txt = document.getElementById('gn-aviso-pedido-txt')
+        const btn = av.querySelector('.js-otra-reserva')
+        if (txt && activePedido) {
+          txt.innerHTML = activosCount > 1
+            ? `Tenés <b>${activosCount} reservas abiertas</b>. Por eso no podés sumarles más desde acá.`
+            : activePedido.estado === 'listo'
+              ? 'Tenés una reserva <b>lista para retirar</b>. Por eso no podés sumarle más.'
+              : 'Tenés una reserva <b>en preparación</b>. Por eso no podés sumarle más desde acá.'
+        }
+        // Tope del backend: más de 4 abiertas se rechaza, así que ni ofrecemos el botón.
+        if (btn) {
+          const tope = activosCount >= 4
+          btn.hidden = tope
+          if (tope && txt) txt.innerHTML = 'Tenés <b>4 reservas abiertas</b>, el máximo. Pasá a retirar alguna antes de armar otra.'
+        }
+      }
       updateCartBar()
     }
 
@@ -778,7 +808,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <p class="gn-modal-hint">${p.estado === 'listo' ? 'Acercate al club a retirarla. Recordá abonar tu cuota ahí — por el sitio no se cobra nada.' : 'Te avisamos apenas esté lista. El retiro y el pago de tu cuota son en el club.'}</p>`
         actions.innerHTML = `
           ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar reserva</button>' : ''}
-          <button id="gn-pedido-otra" class="gn-btn-ghost" type="button">Empezar otra aparte</button>
+          <button class="gn-btn-ghost js-otra-reserva" type="button">Empezar otra aparte</button>
           <button id="gn-modal-close" class="gn-btn-primary" type="button">Cerrar</button>`
       } else {
         const items = cartItems()
@@ -830,6 +860,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           const eraAparte = modoAparte
           modoAparte = false
           activePedido = data.pedido
+          activosCount = eraAparte ? activosCount + 1 : Math.max(1, activosCount)
           setPedidoMode()
           openModal(eraAparte ? 'Reserva separada enviada ✓' : 'Reserva enviada ✓')
         } else if (res.status === 409 && data.activo) {
@@ -901,20 +932,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       }
     }
 
+    // Se sale del modo lectura sin tocar la reserva que ya existe: la carta
+    // vuelve a mostrar los +/- y lo que se confirme después nace como un
+    // pedido separado. El disparador vive en dos lados (el aviso de la carta y
+    // el pie del modal), así que el listener va en document y no en el modal.
+    function empezarOtraAparte() {
+      modoAparte = true
+      setPedidoMode()
+      closeModal()
+    }
+    document.addEventListener('click', (e) => {
+      if (e.target.closest?.('.js-otra-reserva')) empezarOtraAparte()
+    })
+
     document.getElementById('gn-cart-trigger').addEventListener('click', () => openModal())
     document.getElementById('gn-modal').addEventListener('click', (e) => {
       if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
       if (e.target.id === 'gn-modal-close') closeModal()
       else if (e.target.id === 'gn-modal-send') sendPedido()
       else if (e.target.id === 'gn-pedido-cancel') askCancelConfirm()
-      else if (e.target.id === 'gn-pedido-otra') {
-        // Se sale del modo lectura sin tocar la reserva que ya existe: la
-        // carta vuelve a mostrar los +/- y lo que se confirme después nace
-        // como un pedido separado.
-        modoAparte = true
-        setPedidoMode()
-        closeModal()
-      }
       else if (e.target.id === 'gn-pedido-cancel-yes') cancelPedido()
       else if (e.target.id === 'gn-pedido-cancel-no') openModal()
       else if (e.target.classList.contains('gn-modal-del')) {
@@ -932,6 +968,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (!res.ok) return
         const data = await res.json()
         activePedido = data.activo || null
+        activosCount = typeof data.activos === 'number' ? data.activos : (activePedido ? 1 : 0)
         setPedidoMode()
       } catch { /* sin red no bloqueamos la carta */ }
     }
@@ -1763,6 +1800,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   /* Con una reserva en curso se reserva una sola vez: se ocultan los steppers */
   .gn-content.has-pedido .gn-order { display: none; }
+
+  /* Aviso de por qué no están los +/-, con la salida a mano. */
+  .gn-aviso-pedido {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 10px 16px;
+    margin: 0 auto; padding: 11px 18px; max-width: min(900px, 92vw);
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    font-size: 0.86rem; line-height: 1.4; color: rgba(255, 255, 255, .74);
+    text-align: center;
+  }
+  .gn-aviso-pedido[hidden] { display: none; }
+  .gn-aviso-pedido b { color: #fff; font-weight: 700; }
+  .gn-aviso-pedido-btn {
+    font: inherit; font-size: 0.84rem; font-weight: 700; line-height: 1;
+    color: #0f1a14; background: #4FC79E; border: 0;
+    border-radius: 999px; padding: 9px 18px; cursor: pointer; white-space: nowrap;
+  }
+  .gn-aviso-pedido-btn:hover { filter: brightness(1.06); }
+  @media (max-width: 560px) {
+    .gn-aviso-pedido { border-radius: 16px; font-size: 0.8rem; }
+  }
   .gn-order-label {
     font-size: 0.6rem;
     font-weight: 700;

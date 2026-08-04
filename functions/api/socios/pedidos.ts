@@ -82,8 +82,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!socio) return Response.json({ ok: false, error: 'no autenticado' }, { status: 401 });
 
   const pedidos = await pedidosDe(env, socio.email);
-  const activo = pedidos.find((p) => ESTADOS_ACTIVOS.includes(p.estado)) || null;
-  return Response.json({ ok: true, activo, pedidos: pedidos.slice(0, 10) });
+  const abiertos = pedidos.filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
+  // `activo` es la más reciente (pedidos viene ordenado desc); `activos` es
+  // cuántas hay abiertas, para que la carta lo pueda decir tal cual.
+  return Response.json({ ok: true, activo: abiertos[0] || null, activos: abiertos.length, pedidos: pedidos.slice(0, 10) });
 };
 
 // Valida y normaliza ítems crudos (genéticas flor/preroll + productos del portal).
