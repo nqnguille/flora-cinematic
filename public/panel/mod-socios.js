@@ -1111,6 +1111,8 @@
         ${tel ? `<a class="btn" style="padding:4px 9px;font-size:11.5px" target="_blank" rel="noopener"
           href="https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${String(l.nombre || '').split(' ')[0]}! Te escribimos de Flora 🌿`)}">WhatsApp</a>` : ''}
         ${editar && l.etapa !== 'convertido' ? `<button class="btn btn-pri ld-alta" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" type="button">Dar de alta</button>` : ''}
+        ${editar && l.email && l.etapa !== 'convertido' ? `<button class="btn ld-acceso" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" type="button"
+          title="Le da acceso de prueba a la carta por 7 días y le avisa por mail. El reloj arranca en su primer ingreso.">Acceso 7 días</button>` : ''}
         ${editar && sig && l.etapa !== 'convertido' && sig[0] !== 'convertido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="${sig[0]}" type="button">→ ${sig[1]}</button>` : ''}
         ${editar && l.etapa !== 'convertido' && l.etapa !== 'perdido' ? `<button class="btn ld-perdido" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button">Perdido</button>` : ''}
         ${editar && l.etapa === 'perdido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>` : ''}
@@ -1350,6 +1352,39 @@
         if (ldPerd) {
           if (!(await P.confirmar('¿Marcar este lead como perdido? Queda guardado por si vuelve.', 'Sí, perdido'))) return
           ldPatch(ldPerd.dataset.id, { etapa: 'perdido' })
+          return
+        }
+        // acceso rápido a la carta, sin pasar por Solicitudes: el lead sigue
+        // siendo lead, solo le abrimos la puerta mientras se formaliza
+        const ldAcc = e.target.closest('.ld-acceso')
+        if (ldAcc) {
+          const l = LEADS.find((x) => x.id === Number(ldAcc.dataset.id))
+          if (!l || !l.email) return
+          if (!(await P.confirmar(
+            `¿Darle a ${l.nombre || l.email} acceso de prueba a la carta por 7 días?\n\nLe llega un mail avisándole. Los 7 días arrancan recién en su primer ingreso.`,
+            'Sí, dar acceso'))) return
+          const antes = ldAcc.textContent
+          ldAcc.disabled = true
+          ldAcc.textContent = 'Dando acceso…'
+          const hoy = new Date().toLocaleDateString('es-AR')
+          const res = await saveSocio(l.email, `Acceso de prueba (7 días desde el primer login) · desde Leads`, {
+            name: l.nombre || '', telefono: l.telefono || '', temporal: true, temporal_dias: 7,
+          })
+          if (!res.ok) {
+            ldAcc.disabled = false
+            ldAcc.textContent = '✗ no salió'
+            setTimeout(() => { ldAcc.textContent = antes }, 3000)
+            alert(res.error || 'No se pudo dar el acceso')
+            return
+          }
+          if (res.mailEnviado === false) {
+            alert(`El acceso quedó dado, pero el mail NO salió (${res.mailError || 'error desconocido'}). Avisale vos por WhatsApp.`)
+          }
+          // queda rastro en la tarjeta, sin pisar lo que ya estaba anotado.
+          // La marca va adelante: el servidor corta la nota en 300 y así nunca
+          // se pierde justo lo que acabamos de hacer.
+          const marca = `Acceso carta 7 días (${hoy})`
+          ldPatch(l.id, { nota: (marca + (l.nota ? ' · ' + l.nota : '')).slice(0, 300) })
           return
         }
         const ldAlta = e.target.closest('.ld-alta')
