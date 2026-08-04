@@ -4,10 +4,11 @@ interface Env {
 }
 
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
-// Tiene que ser Gmail sí o sí: el login del portal es con Google, y así se
-// evita el caso de alguien vinculando un email que después no coincide con
-// la cuenta con la que realmente entra.
-const EMAIL_RE = /^[^\s@]+@gmail\.com$/i;
+// Cualquier correo válido. Exigir Gmail dejaba estructuralmente afuera a
+// quien tiene Hotmail, Outlook o Yahoo, que es buena parte del público al
+// que apunta el club. Que el login del portal sea con Google es un tema
+// aparte: se resuelve al dar de alta, no cerrando la puerta de entrada.
+const EMAIL_RE = /^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/;
 const INTENTS = ['acceso', 'entrevista'] as const;
 type Intent = (typeof INTENTS)[number];
 
@@ -73,7 +74,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const intent: Intent = (INTENTS as readonly string[]).includes(intentRaw) ? (intentRaw as Intent) : 'acceso';
 
   if (!name) return Response.json({ ok: false, error: 'falta el nombre' }, { status: 400 });
-  if (!EMAIL_RE.test(email)) return Response.json({ ok: false, error: 'tiene que ser un email de Gmail (terminado en @gmail.com)' }, { status: 400 });
+  if (!EMAIL_RE.test(email)) return Response.json({ ok: false, error: 'revisá el email: parece que falta algo' }, { status: 400 });
   if (!phone) return Response.json({ ok: false, error: 'falta el celular' }, { status: 400 });
   if (dni && dni.length < 7) return Response.json({ ok: false, error: 'el DNI tiene 7 u 8 números' }, { status: 400 });
 

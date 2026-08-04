@@ -14,7 +14,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
   <main class="gn-main">
-    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
       <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
     </SociosLogin>
 
@@ -928,7 +928,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const msg = document.getElementById('socios-login-msg')
       if (message === '__NOSOCIO__') {
         const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
-        msg.innerHTML = `Flora funciona por invitación: para entrar a la carta, primero conocé el club. Escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a> y coordinamos una visita.`
+        msg.innerHTML = `Todavía no estás en el padrón del club, así que la carta no se te abre. <button type="button" class="sl-msg-cta" data-intent="acceso">Pedí tu acceso acá</button> y te contactamos, o escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>.`
       } else {
         msg.textContent = message
       }

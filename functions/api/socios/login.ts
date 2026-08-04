@@ -40,7 +40,7 @@ async function notificarIntento(env: Env, p: { name: string; email: string }) {
 // Bump esta fecha cuando el texto legal en carta.astro (#gn-tos-modal) cambie
 // de forma sustancial: los socios que ya aceptaron una versión anterior
 // vuelven a ver el modal de aceptación en su próximo login.
-const TOS_VERSION = '2026-07-05';
+const TOS_VERSION = '2026-08-04';
 
 function emailList(v?: string): string[] {
   return (v || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);

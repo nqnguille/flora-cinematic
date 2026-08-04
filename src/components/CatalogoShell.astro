@@ -156,6 +156,24 @@ const breadcrumbSchema = {
     <div id="td-activo" class="td-activo td-activo-pub"></div>
 
     <slot />
+
+    <!-- El mismo descargo que ya usa el panel de perfiles clínicos de la
+         home. Estas páginas listan patologías bajo "Puede acompañar en" y
+         hasta ahora no tenían ninguna aclaración: se leían como un
+         vademécum de un producto que no tiene registro sanitario. -->
+    <aside class="td-legal">
+      <p>
+        Lo que ves acá es información general y educativa sobre los perfiles de cannabinoides.
+        <strong>No reemplaza la consulta con un profesional de la salud</strong>, que es quien evalúa
+        cada caso y define si corresponde un tratamiento, con qué perfil y con qué seguimiento.
+      </p>
+      <p>
+        Flora es una asociación civil inscripta como cultivadora en el REPROCANN. Lo que retirás en
+        el club <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por
+        tu vínculo REPROCANN con la Asociación. <a href="/como-funciona/">Cómo funciona</a> ·
+        <a href="/privacidad/">Política de privacidad</a>
+      </p>
+    </aside>
   </main>
 
   <SiteFooter />
@@ -165,3 +183,23 @@ const breadcrumbSchema = {
   </script>
   <script src="/socios/tienda.js" is:inline></script>
 </Layout>
+
+<style>
+  /* Va acá y no en tienda.css: esa hoja es compartida, no lleva hash en el
+     nombre y los navegadores se quedaban con la copia vieja. Astro le pone
+     hash a este bloque, así el deploy se ve al toque. */
+  .td-legal {
+    max-width: 780px;
+    margin: 48px auto 0;
+    padding: 24px 24px 40px;
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: rgba(28, 22, 38, 0.62);
+  }
+  .td-legal :global(p) { margin: 0 0 10px; }
+  .td-legal :global(p:last-child) { margin-bottom: 0; }
+  .td-legal :global(strong) { color: rgba(28, 22, 38, 0.85); font-weight: 700; }
+  .td-legal :global(a) { color: var(--fl-green, #148A91); font-weight: 600; text-underline-offset: 2px; }
+</style>

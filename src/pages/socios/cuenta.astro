@@ -16,7 +16,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-main">
     <!-- ── Login ── -->
-    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>">
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
       <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
     </SociosLogin>
     <SociosTos />
@@ -360,7 +360,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const msg = document.getElementById('socios-login-msg')
         if (res.status === 403) {
           const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
-          msg.innerHTML = `Flora funciona por invitación: para entrar, primero conocé el club. Escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a> y coordinamos una visita.`
+          msg.innerHTML = `Todavía no estás en el padrón del club. <button type="button" class="sl-msg-cta" data-intent="acceso">Pedí tu acceso acá</button> y te contactamos, o escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>.`
         } else {
           msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
         }

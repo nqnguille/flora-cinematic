@@ -9,3 +9,11 @@
 
 /socios/tienda.css
   Cache-Control: no-cache
+
+# Cabeceras de seguridad. Este sitio sirve un portal con sesión y un panel
+# con DNI de terceros, y no tenía ninguna.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()

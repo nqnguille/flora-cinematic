@@ -17,8 +17,8 @@
         <input type="text" id="sl-sol-name" name="name" autocomplete="name" required />
       </label>
       <label class="sl-solicitud-field">
-        <span>Email</span>
-        <input type="email" id="sl-sol-email" name="email" autocomplete="email" placeholder="tu@gmail.com" pattern="[^\s@]+@gmail\.com" title="Tiene que ser un email de Gmail (terminado en @gmail.com)" required />
+        <span>Email <em>(si tenés cuenta de Google, usá esa: el portal entra con ella)</em></span>
+        <input type="email" id="sl-sol-email" name="email" autocomplete="email" placeholder="tunombre@correo.com" required />
       </label>
       <label class="sl-solicitud-field">
         <span>Celular (WhatsApp)</span>
@@ -69,7 +69,7 @@
 
   const slModal = document.getElementById('sl-solicitud-modal')
   if (slModal) {
-    const openBtns = document.querySelectorAll<HTMLButtonElement>('[data-intent]')
+
     const closeBtn = document.getElementById('sl-solicitud-close')
     const okCloseBtn = document.getElementById('sl-solicitud-ok-close')
     const form = document.getElementById('sl-solicitud-form') as HTMLFormElement
@@ -100,9 +100,14 @@
     function close() {
       slModal!.hidden = true
     }
-    openBtns.forEach((btn) => {
-      const btnIntent = (btn.dataset.intent as SlIntent) || 'acceso'
-      btn.addEventListener('click', () => open(btnIntent))
+    // Delegado en el documento, no una foto del DOM al cargar: los mensajes
+    // de "todavía no estás en el padrón" inyectan su propio botón después,
+    // y con querySelectorAll ese botón nacía muerto.
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement)?.closest?.('[data-intent]') as HTMLElement | null
+      if (!btn) return
+      e.preventDefault()
+      open(((btn.dataset.intent as SlIntent) || 'acceso'))
     })
     closeBtn?.addEventListener('click', close)
     okCloseBtn?.addEventListener('click', close)
@@ -221,6 +226,12 @@
     cursor: pointer;
   }
   .sl-solicitud-consent a { color: var(--sl-green); font-weight: 700; text-underline-offset: 2px; }
+  /* Botón que aparece dentro de un mensaje de error: se lee como link,
+     pero abre el formulario en vez de mandar a WhatsApp. */
+  .sl-msg-cta {
+    font: inherit; font-weight: 700; color: inherit; background: none; border: 0;
+    padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  }
   .sl-solicitud-msg { color: #ff9d9d; font-size: 0.82rem; margin: 0; }
   .sl-solicitud-submit {
     font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; cursor: pointer;

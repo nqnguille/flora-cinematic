@@ -1,0 +1,223 @@
+---
+// Cómo funciona Flora, en público.
+//
+// La frase más importante del proyecto, "lo que retirás no es una compra",
+// vivía solamente en los Términos de Uso, o sea que la leían únicamente
+// quienes ya se habían logueado y ya habían entendido todo. Para el que
+// llega de Google, el sitio se veía como una tienda de cannabis: menú
+// "Servicios", botón "Carrito", "Reservar" en cada ficha.
+//
+// Esta página existe para que el encuadre esté a la vista antes del login.
+import Layout from '../layouts/Layout.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import '../styles/global.css'
+
+const WA = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero saber cómo asociarme 🌿')
+---
+
+<Layout
+  title="Cómo funciona Flora: cultivo solidario bajo REPROCANN | Neuquén"
+  description="Flora no vende cannabis. Como cultivadora designada en tu REPROCANN, cultivamos en tu nombre y te entregamos tu propio cultivo en la sede. Cómo se asocia, qué se aporta y qué ampara la credencial."
+  canonical="https://floraong.ar/como-funciona/"
+>
+  <div class="cf-page">
+    <div class="cf-barra">
+      <a class="cf-marca" href="/">Flora</a>
+      <a class="cf-volver" href="/">Volver al sitio</a>
+    </div>
+
+    <main class="cf-main">
+      <span class="cf-eyebrow">Cómo funciona</span>
+      <h1 class="cf-h1">Flora no vende cannabis. <em>Cultiva el tuyo.</em></h1>
+      <p class="cf-entrada">
+        Es la diferencia que más cuesta explicar y la que ordena todo lo demás. Acá está en
+        limpio, antes de que tengas que registrarte en ningún lado.
+      </p>
+
+      <div class="cf-destacado">
+        <p>
+          El REPROCANN te permite cultivar para tu tratamiento. Si no podés o no querés hacerlo
+          vos, te deja <strong>designar a un cultivador</strong>, que puede ser una persona o una
+          organización civil como Flora. A partir de ahí, las plantas que cultivamos en tu nombre
+          <strong>son tuyas</strong>. Cuando pasás por la sede no estás comprando: estás retirando
+          tu propio cultivo.
+        </p>
+      </div>
+
+      <h2 class="cf-h2">Entonces, ¿qué es el aporte?</h2>
+      <p>
+        Es la cuota asociativa que sostiene el cultivo: la tierra, la luz, el agua, los insumos,
+        el trabajo de quienes cuidan las plantas y los análisis de laboratorio de cada lote. No es
+        el precio de un producto, porque el producto ya es tuyo. Es lo que cuesta producirlo.
+      </p>
+      <p>
+        Los aportes y los planes se conversan en persona, según lo que cada socio necesite y lo
+        que su credencial ampare. Por eso no hay una lista de precios pública: no hay nada a la
+        venta.
+      </p>
+
+      <h2 class="cf-h2">El camino, de punta a punta</h2>
+      <ol class="cf-pasos">
+        <li>
+          <h3>Entrevista médica</h3>
+          <p>
+            Una videollamada con el Dr. Ezequiel Kalb (MN 191182). Evalúa tu caso y, si
+            corresponde, define un tratamiento y presenta tu solicitud al REPROCANN.
+            <a href="https://consultorio.floraong.ar/?agendar=1">Elegís día y horario online</a>.
+          </p>
+        </li>
+        <li>
+          <h3>Tu credencial</h3>
+          <p>
+            La aprobación la da el Ministerio de Salud. Cuando sale, tenés tu credencial y podés
+            transportar hasta 40 gramos de flores secas o 6 goteros de aceite por todo el país.
+            Los plazos los define el REPROCANN, no nosotros.
+          </p>
+        </li>
+        <li>
+          <h3>Nos designás como cultivadores</h3>
+          <p>
+            Con tu código de vinculación quedás asociado al registro de la asociación. Desde ese
+            momento cultivamos en tu nombre.
+          </p>
+        </li>
+        <li>
+          <h3>Retirás en la sede</h3>
+          <p>
+            Reservás desde el portal de socios y pasás a buscarlo por el club, en Neuquén capital.
+            <strong>El sitio no procesa pagos ni hace envíos</strong>: el aporte y el retiro
+            siempre se coordinan en persona.
+          </p>
+        </li>
+      </ol>
+
+      <h2 class="cf-h2">Qué somos, en papeles</h2>
+      <p>
+        <strong>Asociación Civil Cann de Cannabis Medicinal</strong>, personería jurídica
+        I.G.J. N.º 1994128, CUIT 30-71827609-4, con sede en Neuquén capital. Estamos inscriptos en
+        el REPROCANN como organización civil cultivadora, en el marco de la
+        <a href="https://www.argentina.gob.ar/normativa/nacional/ley-27350-273801" target="_blank" rel="noopener noreferrer">Ley 27.350</a>
+        y su decreto reglamentario 883/2020.
+      </p>
+      <p>
+        Cada lote se analiza por cromatografía y los informes están publicados: podés
+        <a href="/aceites/">verlos y descargarlos</a> sin ser socio.
+      </p>
+
+      <h2 class="cf-h2">Lo que esto no es</h2>
+      <ul class="cf-ul">
+        <li>No es una compra: es la entrega de tu propio cultivo.</li>
+        <li>No es un tratamiento por nuestra cuenta: quien indica y hace el seguimiento es tu médico o médica.</li>
+        <li>No es acceso libre: hace falta tu REPROCANN vigente y la vinculación con la asociación.</li>
+        <li>No hay envíos: el retiro es en persona, en la sede de Neuquén.</li>
+      </ul>
+
+      <div class="cf-cierre">
+        <h2 class="cf-h2">¿Por dónde empezás?</h2>
+        <p>
+          Si todavía no tenés REPROCANN, el primer paso es la entrevista médica. Si ya lo tenés,
+          escribinos y coordinamos.
+        </p>
+        <div class="cf-ctas">
+          <a class="cf-cta" href="https://consultorio.floraong.ar/?agendar=1">Agendar la entrevista médica</a>
+          <a class="cf-cta cf-cta--ghost" href={WA} target="_blank" rel="noopener noreferrer">Ya tengo REPROCANN</a>
+        </div>
+      </div>
+
+      <p class="cf-legal">
+        La información de esta página es general y educativa. No reemplaza la consulta con un
+        profesional de la salud, que es quien evalúa cada caso y define si corresponde un
+        tratamiento. · <a href="/privacidad/">Política de privacidad</a>
+      </p>
+    </main>
+  </div>
+
+  <SiteFooter />
+</Layout>
+
+<style>
+  .cf-page { background: var(--fl-paper, #fff); min-height: 100vh; }
+
+  .cf-barra {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    padding: 18px clamp(20px, 6vw, 64px);
+    background: var(--fl-violet, #381F56);
+  }
+  .cf-marca { font-family: var(--font-display); font-size: 22px; color: #fff; text-decoration: none; }
+  .cf-volver { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: rgba(255,255,255,.8); text-decoration: none; }
+  .cf-volver:hover { color: #fff; text-decoration: underline; }
+
+  .cf-main {
+    max-width: 44rem; margin: 0 auto;
+    padding: clamp(36px, 6vw, 72px) clamp(20px, 6vw, 40px) 80px;
+    font-family: var(--font-ui); font-size: 16px; line-height: 1.68;
+    color: rgba(28, 22, 38, 0.78);
+  }
+  .cf-main :global(p) { margin: 0 0 15px; }
+  .cf-main :global(a) { color: var(--fl-green, #148A91); font-weight: 600; text-underline-offset: 3px; }
+  .cf-main :global(strong) { color: var(--fl-ink, #1C1626); font-weight: 700; }
+
+  .cf-eyebrow {
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--fl-green, #148A91); margin-bottom: 10px;
+  }
+  .cf-h1 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(30px, 5.6vw, 46px); line-height: 1.14;
+    color: var(--fl-ink, #1C1626); margin: 0 0 14px; text-wrap: balance;
+  }
+  .cf-h1 em { font-style: normal; color: var(--fl-violet, #381F56); }
+  .cf-entrada { font-size: 18px; color: rgba(28, 22, 38, 0.72); margin: 0 0 26px; }
+
+  .cf-h2 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(23px, 3.6vw, 30px); line-height: 1.2;
+    color: var(--fl-violet, #381F56); margin: 44px 0 10px; text-wrap: balance;
+  }
+
+  .cf-destacado {
+    background: var(--fl-paper-2, #F6F4F2); border-radius: 16px;
+    padding: 22px 24px; margin: 0 0 8px;
+    box-shadow: inset 0 0 0 1px var(--fl-line, rgba(56, 31, 86, 0.14));
+    font-size: 17px;
+  }
+  .cf-destacado :global(p:last-child) { margin-bottom: 0; }
+
+  .cf-pasos { list-style: none; counter-reset: paso; margin: 0; padding: 0; }
+  .cf-pasos li {
+    counter-increment: paso; position: relative;
+    padding: 0 0 4px 46px; margin: 0 0 22px;
+  }
+  .cf-pasos li::before {
+    content: counter(paso, decimal-leading-zero);
+    position: absolute; left: 0; top: 1px;
+    font-family: var(--font-display); font-size: 19px;
+    color: var(--fl-green, #148A91);
+  }
+  .cf-pasos h3 { font-size: 17px; font-weight: 700; color: var(--fl-ink, #1C1626); margin: 0 0 4px; }
+
+  .cf-ul { margin: 0 0 15px; padding-left: 1.15rem; list-style: disc; }
+  .cf-ul li { margin-bottom: 7px; }
+  .cf-ul li::marker { color: var(--fl-green, #148A91); }
+
+  .cf-cierre { margin-top: 50px; }
+  .cf-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+  .cf-cta {
+    display: inline-block; font-size: 15px; font-weight: 700; line-height: 1;
+    padding: 15px 26px; border-radius: 999px; text-decoration: none;
+    background: var(--fl-green, #148A91); color: #fff !important;
+  }
+  .cf-cta:hover { filter: brightness(1.08); }
+  .cf-cta--ghost {
+    background: transparent; color: var(--fl-violet, #381F56) !important;
+    box-shadow: inset 0 0 0 1.5px var(--fl-line, rgba(56, 31, 86, 0.22));
+  }
+  .cf-cta--ghost:hover { box-shadow: inset 0 0 0 1.5px var(--fl-violet, #381F56); filter: none; }
+
+  .cf-legal {
+    font-size: 12.5px; color: rgba(28, 22, 38, 0.45);
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    padding-top: 16px; margin: 48px 0 0;
+  }
+</style>

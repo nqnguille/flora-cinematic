@@ -14,7 +14,7 @@ export const aceites = [
     id: 'aceite-q1',
     codigo: 'Q1',
     sub: 'Quimiotipo I · THC predominante',
-    desc: 'Perfil de THC alto con presencia de CBG. Pensado para uso nocturno y dolor intenso, siempre con el equipo orientando la dosis.',
+    desc: 'Perfil con THC predominante y presencia de CBG. Es el de mayor carga psicoactiva de los tres. La dosis y el momento del día los define tu médico o médica tratante.',
     perfil: [
       { k: 'CBD', v: '21,8' },
       { k: 'THC', v: '51,0' },
@@ -31,7 +31,7 @@ export const aceites = [
     id: 'aceite-q2',
     codigo: 'Q2',
     sub: 'Quimiotipo II · CBD:THC balanceado',
-    desc: 'Relación equilibrada entre CBD y THC. Acompaña el día y la noche. El elegido por quienes ya tienen su tratamiento calibrado.',
+    desc: 'Relación equilibrada entre CBD y THC: el perfil intermedio de los tres.',
     perfil: [
       { k: 'CBD', v: '23,9' },
       { k: 'THC', v: '17,0' },
@@ -48,7 +48,7 @@ export const aceites = [
     id: 'aceite-q3',
     codigo: 'Q3',
     sub: 'Quimiotipo III · CBD predominante',
-    desc: 'CBD alto y THC casi nulo, de efecto suave. Ideal para el día, la ansiedad y para empezar con un perfil liviano.',
+    desc: 'CBD predominante y THC casi nulo: el perfil de menor carga psicoactiva de los tres. Cuál corresponde a cada tratamiento lo define el profesional tratante.',
     perfil: [
       { k: 'CBD', v: '32,6' },
       { k: 'THC', v: '1,2' },
@@ -69,7 +69,7 @@ export const cremas = [
     nombre: 'Crema de CBD premium',
     presentacion: '30 ml',
     desc: 'Para alivio localizado, en tu rutina diaria.',
-    claim: '1 gramo de CBD puro en cada pote.',
+    claim: 'Formulada con CBD, para aplicación localizada.',
     para: ['Dolores articulares y musculares', 'Contracturas y tensión localizada', 'Uso diario, sin efecto psicoactivo'],
     img: '/img/prod-cremas.jpg',
     href: wa('Hola Flora, quiero consultar por la crema 🌿'),
