@@ -2748,11 +2748,32 @@ body.is-socio .fl-card-shell--socio { display: block; }
   border-radius: 999px; padding: 8px 16px; backdrop-filter: blur(4px);
 }
 @media (max-width: 760px) {
-  .fl-cine-wrap { justify-content: flex-start; padding-bottom: clamp(28px, 5vw, 44px); }
-  .fl-cine-caja { text-align: left; }
+  /* La altura la manda el contenido: con min-height fijo quedaba un colchón
+     de video vacío debajo de la píldora. */
+  .fl-cine { min-height: auto; padding: clamp(36px, 7vw, 56px) clamp(24px, 6vw, 80px); }
+  /* Aire arriba para que la cara entre en cuadro antes del texto: es un
+     bloque cinematográfico, no una tarjeta. */
+  .fl-cine-wrap { justify-content: flex-start; align-items: flex-end; padding: clamp(96px, 26vw, 168px) 0 clamp(24px, 5vw, 40px); }
+  .fl-cine-caja { text-align: left; max-width: none; }
+  .fl-cine .fl-eyebrow { font-size: 11px; letter-spacing: .12em; margin-bottom: 14px; }
   .fl-cine .fl-title, .fl-cine .fl-lead { margin-left: 0; max-width: none; }
-  .fl-cine-ctas { justify-content: flex-start; }
-  .fl-cine-proximo { margin-left: 0; }
+  .fl-cine .fl-lead { margin-top: 16px; }
+  /* Botones parejos, uno debajo del otro y a todo el ancho: apilados con
+     anchos distintos quedaban dentados. */
+  .fl-cine-ctas { justify-content: stretch; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 26px; }
+  .fl-cine-cta { justify-content: center; width: 100%; padding: 16px 24px; }
+  /* La píldora entraba partida en dos líneas y ocupaba todo el ancho:
+     en el teléfono va como línea suelta con un punto verde. */
+  .fl-cine-proximo { margin: 16px 0 0; font-size: 13.5px; font-weight: 600; }
+  .fl-cine-proximo:not(:empty) {
+    width: auto; display: flex; align-items: baseline; gap: 8px;
+    background: none; border: 0; border-radius: 0; padding: 0; backdrop-filter: none;
+    color: rgb(255 255 255 / .82); line-height: 1.45;
+  }
+  .fl-cine-proximo:not(:empty)::before {
+    content: ''; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
+    background: #4FC79E; box-shadow: 0 0 0 4px rgb(79 199 158 / .18); transform: translateY(-2px);
+  }
   .fl-cine::after { background: linear-gradient(to top, rgb(19 13 28 / .94) 34%, rgb(19 13 28 / .5) 72%, rgb(19 13 28 / .22)); }
 }
 /* igual que en su web: el video se congela, no desaparece */
