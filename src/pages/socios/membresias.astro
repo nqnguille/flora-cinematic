@@ -39,6 +39,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button id="mb-logout" class="td-logout" type="button">Cerrar sesión</button>
       </div>
 
+      <!-- LA PRIMERA PANTALLA.
+           Esto se muestra en la TV del living, donde nadie scrollea: tiene que
+           entrar entero y bastarse solo. De 1200px para arriba se compone en
+           una sola pantalla con tipografía de lejos; abajo de eso apila normal
+           y el socio lo lee en el celular. Todo lo demás (el ciclo, los
+           beneficios, las notas) queda debajo del pliegue a propósito.
+           Referencia de la casa: /socios/carta, que ya es la pantalla de la TV. -->
+      <div class="mb-primera">
+
       <!-- Hero con el video del sitio (421 KB) y el mismo velo oscuro que usa
            el resto de floraong.ar. La clase .reveal es el movimiento por
            defecto del sitio: IntersectionObserver, sin GSAP, y ya respeta
@@ -63,6 +72,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button type="button" class="mb-modo" data-modo="debito" aria-pressed="false">Débito automático <em>· 20% menos</em></button>
       </div>
       <div id="mb-grid" class="mb-grid"></div>
+
+      <!-- Las tres razones, en frases cortas. En la TV esto es lo único que se
+           lee además de los precios, así que no puede ser un párrafo. -->
+      <p class="mb-clave" id="mb-clave" hidden>
+        <span><b>20% menos</b> con débito, por 3 meses</span>
+        <span><b>No perdés</b> los gramos que no retirás</span>
+        <span><b>Sin trámite</b>: se debita solo</span>
+      </p>
+
+      </div><!-- /mb-primera -->
 
       <!-- El ciclo, con el patrón de pasos numerados de la home (número en
            serif verde sobre línea superior). Cuenta lo que hoy no se explicaba
@@ -193,6 +212,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // funciona lo que ya tiene andando.
     const cic = document.getElementById('mb-ciclo')
     if (cic) cic.hidden = !ACTUAL.puede && !ACTUAL.debitoActivo
+    const cla = document.getElementById('mb-clave')
+    if (cla) cla.hidden = oculto
   }
 
   function pintar(d) {
@@ -438,6 +459,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-card-comp b { color: rgba(244, 241, 247, .78); font-weight: 700; }
   .mb-nota li { margin-bottom: 7px; }
+
+  /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
+     porque las tarjetas las escribe el JS con lo que viene de la base: Astro
+     le pone su atributo de alcance solo a lo que existe al compilar, así que
+     desde el scoped estas reglas no las alcanzaban. */
+  @media (min-width: 1200px) {
+    .mb-card { padding: clamp(20px, 3vh, 34px) clamp(16px, 1.4vw, 26px); }
+    .mb-card-nom { font-size: clamp(13px, 1.7vh, 18px); letter-spacing: .12em; }
+    .mb-card-det { font-size: clamp(13px, 1.8vh, 19px); }
+    .mb-card-precio { font-size: clamp(34px, 5.4vh, 64px); }
+    .mb-card-precio span { font-size: clamp(11px, 1.5vh, 15px); }
+    .mb-card-gramo { font-size: clamp(11px, 1.5vh, 15px); }
+    .mb-gancho { margin-top: clamp(12px, 2vh, 22px); padding: clamp(11px, 1.8vh, 18px) 14px clamp(12px, 2vh, 18px); }
+    .mb-gancho-precio { font-size: clamp(22px, 3.4vh, 40px); }
+    .mb-gancho-lb { font-size: clamp(10px, 1.3vh, 13px); }
+    .mb-gancho-ahorro { font-size: clamp(11px, 1.5vh, 15px); }
+    .mb-adherir { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(10px, 1.6vh, 16px) 14px; }
+    .mb-mia { font-size: clamp(10px, 1.3vh, 13px); line-height: clamp(13px, 1.7vh, 17px); }
+  }
   .mb-nota li::marker { color: #3cb492; }
 </style>
 
@@ -514,6 +554,34 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-paso h3 { font-family: var(--font-ui); font-size: 16px; font-weight: 700; color: #fff; margin: 9px 0 5px; }
   .mb-paso p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, .7); margin: 0; }
   @media (min-width: 760px) { .mb-pasos { grid-template-columns: repeat(4, 1fr); gap: clamp(18px, 2.4vw, 30px); } }
+
+  /* ── La franja de las tres razones ── */
+  .mb-clave {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 34px;
+    max-width: 1000px; margin: clamp(20px, 3vh, 34px) auto 0;
+    font-family: var(--font-ui); font-size: 14px; line-height: 1.4;
+    color: rgba(244, 241, 247, .5); text-align: center;
+  }
+  .mb-clave[hidden] { display: none; }
+  .mb-clave b { color: #4FC79E; font-weight: 700; }
+
+  .mb-selector { margin-bottom: clamp(14px, 2vh, 22px); }
+
+    /* El contenedor de socios está capado en 1020px. En una TV eso deja la
+       composición usando el 55% de la pantalla, con las tarjetas tan angostas
+       que "Adherir al débito" partía en dos renglones. Acá se ensancha. */
+    .td-content { max-width: min(1560px, 94vw); }
+    .mb-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 1.6vw, 26px); max-width: 100%; }
+    .mb-selector button { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(9px, 1.4vh, 14px) 22px; }
+    .mb-clave { font-size: clamp(14px, 1.8vh, 19px); gap: 10px clamp(30px, 3vw, 56px); margin-top: clamp(14px, 2vh, 24px); }
+  }
+
+  /* En pantallas muy anchas (la TV del living) el contenido deja de quedar
+     apretado en el medio. 1680px es el mismo umbral que ya usa la carta para
+     su layout de pantalla grande. */
+  @media (min-width: 1680px) {
+    .td-content { max-width: min(1720px, 92vw); }
+  }
 
   .mb-selector {
     display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
@@ -617,4 +685,61 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border-color: rgba(183, 157, 230, 0.28);
   }
   .mb-cta--ghost:hover { border-color: rgba(183, 157, 230, 0.55); }
+
+  /* ══ LA PANTALLA DE LA TV ══
+     De 1200px para arriba la primera pantalla se compone para mirarse de
+     lejos: entra entera sin scroll y la tipografía crece con la ALTURA de la
+     pantalla (vh), no con el ancho. Con vw, una TV ancha y baja rompía el
+     encuadre; con vh el bloque siempre entra.
+
+     Los selectores van anidados bajo .mb-primera a propósito: las reglas base
+     tienen la misma especificidad y el CSS compilado las deja DESPUÉS, así que
+     sin anidar ganaban ellas. Un media query no suma especificidad.
+
+     El resto del sitio topea sus clamp cerca de 1360px y no crece más; acá se
+     rompe esa regla porque es la única página que se mira a varios metros. */
+  @media (min-width: 1200px) {
+    /* max-height además de min-height: si la TV tiene barra de navegador o
+       otra relación de aspecto, el bloque se comprime en vez de empujar el
+       contenido fuera de pantalla. */
+    .mb-primera {
+      min-height: calc(100dvh - 120px);
+      max-height: calc(100dvh - 60px);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    /* El contenedor de socios está capado en 1020px: en una TV eso dejaba la
+       composición usando poco más de la mitad del ancho, con las tarjetas tan
+       angostas que el botón partía en dos renglones. */
+    #mb-content.td-content { max-width: min(1560px, 94vw); }
+
+    /* El hero se lleva menos aire que en el celular: acá lo que tiene que
+       pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
+    .mb-primera .mb-hero { margin-bottom: clamp(14px, 2vh, 24px); padding: clamp(18px, 2.6vh, 34px) 32px; }
+    .mb-primera .mb-title { font-size: clamp(38px, 5.6vh, 68px); margin-bottom: 8px; }
+    .mb-primera .mb-lead { font-size: clamp(14px, 1.7vh, 18px); max-width: 68ch; margin-top: 10px; }
+    .mb-primera .mb-eyebrow { font-size: clamp(11px, 1.3vh, 13px); margin-bottom: 8px; }
+
+    .mb-primera .mb-selector { margin-bottom: clamp(14px, 2vh, 22px); }
+    .mb-primera .mb-selector button { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(9px, 1.4vh, 14px) 22px; }
+
+    .mb-primera .mb-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(16px, 1.6vw, 26px);
+      max-width: 100%;
+    }
+
+    .mb-primera .mb-clave {
+      font-size: clamp(14px, 1.8vh, 19px);
+      gap: 10px clamp(30px, 3vw, 56px);
+      margin-top: clamp(14px, 2vh, 24px);
+      max-width: 100%;
+    }
+  }
+
+  /* En la TV del living. 1680px es el mismo umbral que ya usa /socios/carta
+     para su layout de pantalla grande. */
+  @media (min-width: 1680px) {
+    #mb-content.td-content { max-width: min(1720px, 92vw); }
+  }
 </style>
