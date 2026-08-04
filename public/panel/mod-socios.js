@@ -435,8 +435,8 @@
           <button class="btn btn-pri so-sol-add" data-email="${P.esc(i.email)}" type="button">Agregar como socio</button>
           <select class="sel so-sol-dias" data-email="${P.esc(i.email)}" title="Cuánto le dura el acceso de prueba" style="max-width:118px">
             <option value="1">por 24 horas</option>
-            <option value="7">por 7 días</option>
-            <option value="30" selected>por 30 días</option>
+            <option value="7" selected>por 7 días</option>
+            <option value="30">por 30 días</option>
             <option value="60">por 60 días</option>
           </select>
           <button class="btn so-sol-temp" data-email="${P.esc(i.email)}" data-name="${P.esc(i.name || '')}" type="button">Dar acceso de prueba</button>
