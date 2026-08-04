@@ -1,4 +1,7 @@
 ---
+import PwaHead from '../components/PwaHead.astro'
+import PwaInstall from '../components/PwaInstall.astro'
+
 interface Props {
   title?: string
   description?: string
@@ -6,6 +9,9 @@ interface Props {
   canonical?: string
   noindex?: boolean
   schema?: Record<string, unknown> | Record<string, unknown>[]
+  /** Activa la PWA (manifest + service worker + banner de instalación) en esta página.
+   *  Se usa solo en el portal de socios, no en el sitio público de marketing. */
+  pwa?: boolean
 }
 
 const {
@@ -15,6 +21,7 @@ const {
   canonical = 'https://floraong.ar/',
   noindex = false,
   schema = [],
+  pwa = false,
 } = Astro.props
 
 const organizationJsonLd = {
@@ -53,6 +60,12 @@ const organizationJsonLd = {
 
 const extraSchemas = Array.isArray(schema) ? schema : [schema]
 const jsonLd = [organizationJsonLd, ...extraSchemas]
+// Precomputado como HTML (en vez de un .map inline en el <head>): el .map con arrow
+// function junto a otra expresión-componente en el head dispara un bug de codegen de
+// Astro ("item is not defined"). Como string + set:html el problema desaparece.
+const jsonLdHtml = jsonLd
+  .map((item) => `<script type="application/ld+json">${JSON.stringify(item)}</script>`)
+  .join('\n')
 ---
 
 <!doctype html>
@@ -97,6 +110,8 @@ const jsonLd = [organizationJsonLd, ...extraSchemas]
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+    {pwa ? <PwaHead /> : null}
+
     <!-- Preconnect fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -108,9 +123,7 @@ const jsonLd = [organizationJsonLd, ...extraSchemas]
     />
 
     <!-- Schema.org JSON-LD -->
-    {jsonLd.map((item) => (
-      <script type="application/ld+json" set:html={JSON.stringify(item)} />
-    ))}
+    <Fragment set:html={jsonLdHtml} />
   </head>
   <body>
     <slot />
@@ -160,5 +173,7 @@ const jsonLd = [organizationJsonLd, ...extraSchemas]
         }, true);
       })();
     </script>
+
+    {pwa ? <PwaInstall /> : null}
   </body>
 </html>

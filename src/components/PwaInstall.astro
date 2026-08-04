@@ -1,0 +1,121 @@
+---
+// Banner de instalación de la PWA + registro del service worker.
+// Se renderiza SOLO en el portal de socios (Layout con pwa={true}).
+---
+
+<div id="flora-pwa-banner" class="flora-pwa-banner" role="dialog" aria-live="polite" hidden>
+  <img class="flora-pwa-ic" src="/icons/icon-192.png" alt="" />
+  <div class="flora-pwa-tx">
+    <strong id="flora-pwa-title">Instalá Flora en tu celular</strong>
+    <span id="flora-pwa-sub">Acceso directo y pantalla completa.</span>
+  </div>
+  <button id="flora-pwa-install" class="flora-pwa-btn" type="button">Instalar</button>
+  <button id="flora-pwa-close" class="flora-pwa-x" type="button" aria-label="Ahora no">&times;</button>
+</div>
+
+<style is:global>
+  .flora-pwa-banner {
+    position: fixed;
+    left: 12px; right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 9999;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(56, 31, 86, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(56, 31, 86, 0.16);
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
+    color: #2a2140;
+    animation: floraPwaUp .32s ease both;
+  }
+  @keyframes floraPwaUp { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .flora-pwa-ic { width: 40px; height: 40px; border-radius: 10px; flex: 0 0 auto; }
+  .flora-pwa-tx { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+  .flora-pwa-tx strong { font-size: 14px; font-weight: 700; color: #381F56; }
+  .flora-pwa-tx span { font-size: 12.5px; color: #5b5470; }
+  .flora-pwa-btn {
+    margin-left: auto; flex: 0 0 auto;
+    background: #381F56; color: #fff; border: 0;
+    padding: 9px 16px; border-radius: 999px;
+    font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer;
+  }
+  .flora-pwa-btn:active { transform: translateY(1px); }
+  .flora-pwa-x {
+    flex: 0 0 auto; background: transparent; border: 0;
+    color: #9a93a8; font-size: 20px; line-height: 1; cursor: pointer;
+    padding: 4px; margin: -4px -4px -4px 0;
+  }
+  .flora-pwa-ios .flora-pwa-btn { display: none; }
+  @media (min-width: 620px) { .flora-pwa-banner { left: auto; right: 20px; max-width: 380px; } }
+</style>
+
+<script is:inline>
+  (function () {
+    // Registro del service worker (la cáscara para que abra offline / como app)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+
+    var DISMISS_KEY = 'flora_pwa_dismissed_at';
+    var DISMISS_DAYS = 14;
+    function dismissedRecently() {
+      try {
+        var t = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+        return t && (Date.now() - t) < DISMISS_DAYS * 864e5;
+      } catch (e) { return false; }
+    }
+    function isStandalone() {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+        || window.navigator.standalone === true;
+    }
+    function isIOS() {
+      var ua = navigator.userAgent || '';
+      var iOS = /iphone|ipad|ipod/i.test(ua)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
+      var safari = /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+      return iOS && safari;
+    }
+
+    var banner = document.getElementById('flora-pwa-banner');
+    if (!banner) return;
+    var installBtn = document.getElementById('flora-pwa-install');
+    var closeBtn = document.getElementById('flora-pwa-close');
+    var subEl = document.getElementById('flora-pwa-sub');
+    var deferred = null;
+
+    function show() { banner.hidden = false; }
+    function hide() { banner.hidden = true; }
+    if (closeBtn) closeBtn.addEventListener('click', function () {
+      try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
+      hide();
+    });
+
+    if (!isStandalone() && !dismissedRecently()) {
+      // Android / Chromium: esperamos el evento nativo y ahí ofrecemos "Instalar".
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferred = e;
+        show();
+      });
+      if (installBtn) installBtn.addEventListener('click', function () {
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.finally(function () { deferred = null; hide(); });
+      });
+      // iPhone: no hay evento; mostramos la instrucción manual de Apple.
+      if (isIOS()) {
+        banner.classList.add('flora-pwa-ios');
+        if (subEl) subEl.innerHTML = 'Tocá Compartir y luego <b>“Agregar a inicio”</b>.';
+        setTimeout(show, 1200);
+      }
+      // Si el navegador ya la instaló, ocultamos.
+      window.addEventListener('appinstalled', function () {
+        try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
+        hide();
+      });
+    }
+  })();
+</script>
