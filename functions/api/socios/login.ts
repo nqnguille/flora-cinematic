@@ -205,7 +205,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // primer login (no antes) — para que "temporal" signifique 24h de uso
     // real, no 24h desde que Sofi lo aprobó y quizás tardó en entrar.
     if (rec.temporal && !rec.tempExpiraEn) {
-      rec.tempExpiraEn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      // por defecto 24h; el panel puede haber pedido más días al aprobarlo
+      const dias = Number(rec.tempDias) >= 1 ? Math.min(180, Math.round(Number(rec.tempDias))) : 1;
+      rec.tempExpiraEn = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
     }
     rec.lastLogin = now;
     rec.logins = (rec.logins || 0) + 1;

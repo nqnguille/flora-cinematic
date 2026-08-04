@@ -178,8 +178,25 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (nombre && !rec.name) rec.name = nombre;
   if (esAltaNueva) rec.alta = new Date().toISOString(); // fecha real de alta en el club
 
+  // Cuánto dura el acceso de prueba. Nació en 24h fijas, pero cuando alguien
+  // viene de autocultivo la conversión lleva semanas: el acceso tiene que
+  // durar lo que dura el trámite, si no lo perdemos justo mientras lo
+  // estamos ayudando. Se manda en días; sin dato, sigue siendo 1.
+  const diasPedidos = Number(body?.temporal_dias);
+  const dias = Number.isFinite(diasPedidos) && diasPedidos >= 1 && diasPedidos <= 180
+    ? Math.round(diasPedidos) : null;
+
   const marcarTemporal = body?.temporal === true && esAltaNueva;
-  if (marcarTemporal) rec.temporal = true;
+  if (marcarTemporal) {
+    rec.temporal = true;
+    if (dias) rec.tempDias = dias;
+  } else if (dias && rec.temporal === true) {
+    // Extender uno que ya existe (incluso vencido): se recuenta desde hoy.
+    // Solo toca a los que YA son temporales, así nunca degrada a un
+    // permanente.
+    rec.tempDias = dias;
+    rec.tempExpiraEn = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  }
 
   const payload = JSON.stringify(rec);
   await env.SOCIOS.put(email, payload);

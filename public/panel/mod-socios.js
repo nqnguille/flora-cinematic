@@ -89,11 +89,13 @@
 
   function tempTag(s) {
     if (!s.temporal) return ''
-    if (!s.tempExpiraEn) return ' <span class="tag tag-deb" title="Las 24hs corren desde su primer ingreso">Prueba sin usar</span>'
+    const dur = Number(s.tempDias) >= 1 ? (Number(s.tempDias) === 1 ? '24hs' : Number(s.tempDias) + ' días') : '24hs'
+    if (!s.tempExpiraEn) return ` <span class="tag tag-deb" title="Los ${dur} corren desde su primer ingreso">Prueba sin usar</span>`
     const ms = new Date(s.tempExpiraEn).getTime() - Date.now()
     if (ms <= 0) return ` <span class="tag tag-mal" title="Venció ${P.esc(fmtFecha(s.tempExpiraEn))}">Prueba vencida</span>`
-    const h = Math.max(1, Math.round(ms / 3600000))
-    return ` <span class="tag tag-deb" title="Vence ${P.esc(fmtFecha(s.tempExpiraEn))}">Prueba · vence en ${h}h</span>`
+    const h = Math.round(ms / 3600000)
+    const queda = h >= 48 ? `${Math.round(h / 24)} días` : `${Math.max(1, h)}h`
+    return ` <span class="tag tag-deb" title="Vence ${P.esc(fmtFecha(s.tempExpiraEn))}">Prueba · vence en ${queda}</span>`
   }
   function estadoHtml(s) {
     const base = s.lastLogin
@@ -431,7 +433,13 @@
     const acciones = editar
       ? `<div class="so-sol-acts">
           <button class="btn btn-pri so-sol-add" data-email="${P.esc(i.email)}" type="button">Agregar como socio</button>
-          <button class="btn so-sol-temp" data-email="${P.esc(i.email)}" data-name="${P.esc(i.name || '')}" type="button">Aprobar temporal 24h</button>
+          <select class="sel so-sol-dias" data-email="${P.esc(i.email)}" title="Cuánto le dura el acceso de prueba" style="max-width:118px">
+            <option value="1">por 24 horas</option>
+            <option value="7">por 7 días</option>
+            <option value="30" selected>por 30 días</option>
+            <option value="60">por 60 días</option>
+          </select>
+          <button class="btn so-sol-temp" data-email="${P.esc(i.email)}" data-name="${P.esc(i.name || '')}" type="button">Dar acceso de prueba</button>
           <button class="btn btn-peligro so-sol-del" data-email="${P.esc(i.email)}" data-tipo="${P.esc(i.tipo)}" type="button">Descartar</button>
         </div>`
       : ''
@@ -523,10 +531,13 @@
       const email = temp.dataset.email
       const name = temp.dataset.name || ''
       const item = SOLICITUDES.find((i) => i.email === email)
-      if (!(await P.confirmar(`¿Darle a ${name || email} acceso temporal de 24hs a la carta? Le llega un mail avisándole que ya puede entrar.`, 'Sí, aprobar'))) return
+      const selDias = temp.parentElement?.querySelector('.so-sol-dias')
+      const dias = Number(selDias?.value) || 1
+      const cuanto = dias === 1 ? '24 horas' : `${dias} días`
+      if (!(await P.confirmar(`¿Darle a ${name || email} acceso de prueba a la carta por ${cuanto}? Le llega un mail avisándole que ya puede entrar. El reloj arranca en su primer ingreso.`, 'Sí, dar acceso'))) return
       temp.disabled = true
-      temp.textContent = 'Aprobando…'
-      const { ok, error, mailEnviado, mailError } = await saveSocio(email, 'Acceso temporal (24h desde el primer login)', { name, temporal: true })
+      temp.textContent = 'Dando acceso…'
+      const { ok, error, mailEnviado, mailError } = await saveSocio(email, `Acceso de prueba (${cuanto} desde el primer login)`, { name, temporal: true, temporal_dias: dias })
       if (ok) {
         await descartarSolicitud(email, item)
         muCargar(true); cargarSolicitudes()
@@ -537,7 +548,7 @@
         }
       } else {
         temp.disabled = false
-        temp.textContent = 'Aprobar temporal 24h'
+        temp.textContent = 'Dar acceso de prueba'
         avisoSol(`✗ ${error || 'no se pudo aprobar'} — probá de nuevo`, 'err')
       }
       return
