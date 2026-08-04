@@ -22,6 +22,7 @@ Allow: /
 Disallow: /socios/admin/
 Disallow: /socios/carta/
 Disallow: /socios/cuenta/
+Disallow: /socios/membresias
 Disallow: /admin/
 Disallow: /biblioteca/
 Disallow: /verificacion-edad

@@ -12,7 +12,7 @@
   let cont = null
   let CATALOG = []
   let CATALOG_VERSION = 0 // control de concurrencia optimista (409 si otro guardó)
-  let PRECIOS = { aceites: [], cremas: [], extracciones: [] }
+  let PRECIOS = { membresias: [], aceites: [], cremas: [], extracciones: [] }
   let PRECIOS_ORIG = {}   // para detectar saltos de precio >50% al guardar
   let genDirty = 0
   let prodDirty = 0
@@ -20,7 +20,7 @@
   let filtroDisp = ''     // '' | 'on' | 'off'
   let q = ''
 
-  const CAT_LABEL = { aceites: 'Aceites', cremas: 'Cremas', extracciones: 'Extracciones · cartuchos y baterías' }
+  const CAT_LABEL = { membresias: 'Membresías · planes de flores', aceites: 'Aceites', cremas: 'Cremas', extracciones: 'Extracciones · cartuchos y baterías' }
 
   /* ---------- helpers ---------- */
   function errHttp(status) {
@@ -480,6 +480,7 @@
       el.innerHTML = `
         <div class="subs" id="ct-subs">
           <button type="button" class="on" data-sub="flores">Flores</button>
+          <button type="button" data-sub="membresias">Membresías</button>
           <button type="button" data-sub="aceites">Aceites</button>
           <button type="button" data-sub="cremas">Cremas</button>
           <button type="button" data-sub="extracciones">Extracciones</button>

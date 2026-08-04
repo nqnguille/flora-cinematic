@@ -1,0 +1,240 @@
+---
+// Membresías de flores, para socios.
+//
+// No está enlazada en ningún menú y lleva noindex, pero eso NO es lo que la
+// protege: la protege la sesión. Sin cookie de socio válida, acá no hay más
+// que la pantalla de acceso, porque los precios los sirve
+// /api/socios/precios, que exige sesión Y revalida contra el padrón (un socio
+// dado de baja deja de verlos al instante, sin esperar a que expire nada).
+//
+// La lista se carga y se edita desde el panel, en Catálogo → Membresías: los
+// números no viven acá.
+import Layout from '../../layouts/Layout.astro'
+import SociosLogin from '../../components/SociosLogin.astro'
+import SociosTos from '../../components/SociosTos.astro'
+import '../../styles/global.css'
+
+const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
+---
+
+<Layout
+  title="Membresías — socios | Flora ONG"
+  description="Planes de flores para socios de Flora."
+  noindex={true}
+>
+  <link rel="stylesheet" href="/socios/tienda.css" />
+  <main class="td-main">
+    <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
+      <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
+    </SociosLogin>
+    <SociosTos />
+
+    <div id="mb-content" class="td-content" hidden>
+      <div class="td-head">
+        <a href="/socios/cuenta/" class="td-back">← Mi cuenta</a>
+        <div class="td-brand">
+          <img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
+          <span class="td-brand-name"><em>club</em></span>
+        </div>
+        <button id="mb-logout" class="td-logout" type="button">Cerrar sesión</button>
+      </div>
+
+      <header class="mb-head">
+        <span class="mb-eyebrow">Solo para socios</span>
+        <h1 class="mb-title">Membresías <em>de flores</em></h1>
+        <p class="mb-lead">
+          Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo.
+          El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.
+        </p>
+      </header>
+
+      <p id="mb-vacio" class="mb-vacio" hidden>Todavía no hay membresías cargadas.</p>
+      <div id="mb-grid" class="mb-grid"></div>
+
+      <section class="mb-nota">
+        <h2>Cómo funciona</h2>
+        <ul>
+          <li>Los gramos se renuevan cada mes y se retiran en la sede, en Neuquén capital.</li>
+          <li>Lo que retirás <strong>no es una compra</strong>: es la entrega de tu propio cultivo,
+            amparado por tu vínculo REPROCANN con la Asociación.</li>
+          <li>Para cambiar de membresía, escribinos y lo coordinamos.</li>
+        </ul>
+        <div class="mb-ctas">
+          <a class="mb-cta" href="/socios/carta/">Ver la carta de genéticas</a>
+          <a class="mb-cta mb-cta--ghost" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer">Consultar por WhatsApp</a>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ googleClientId }}>
+  const pesos = (n) => '$' + Number(n).toLocaleString('es-AR')
+
+  function tarjeta(m) {
+    const detalle = m.detalle ? `<p class="mb-card-det">${m.detalle}</p>` : ''
+    return `<article class="mb-card">
+      <h3 class="mb-card-nom">${m.label}</h3>
+      ${detalle}
+      <p class="mb-card-precio">${pesos(m.precio)}<span>por mes</span></p>
+    </article>`
+  }
+
+  async function cargar() {
+    // Sin sesión válida no se pinta nada: queda la pantalla de acceso.
+    const yoRes = await fetch('/api/socios/yo', { credentials: 'include' })
+    if (!yoRes.ok) return false
+
+    let items = []
+    const precRes = await fetch('/api/socios/precios', { credentials: 'include' })
+    if (precRes.ok) {
+      const d = await precRes.json().catch(() => ({}))
+      items = Array.isArray(d?.precios?.membresias) ? d.precios.membresias : []
+    }
+    document.getElementById('mb-grid').innerHTML = items.map(tarjeta).join('')
+    document.getElementById('mb-vacio').hidden = items.length > 0
+
+    document.getElementById('socios-login').hidden = true
+    document.getElementById('mb-content').hidden = false
+    return true
+  }
+
+  // Mismo flujo de acceso que /socios/cuenta: Google, aceptación de términos
+  // y el mensaje de "todavía no estás en el padrón" con el formulario a mano.
+  async function submitLogin(credential, tosAccept) {
+    try {
+      const res = await fetch('/api/socios/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ credential, tosAccept: !!tosAccept }),
+      })
+      const data = await res.json()
+      if (res.ok && data.ok) {
+        window.hideSociosTos()
+        await cargar()
+        return
+      }
+      if (data.needsTos) {
+        window.showSociosTos({ mode: 'accept', onAccept: () => submitLogin(credential, true) })
+        return
+      }
+      const msg = document.getElementById('socios-login-msg')
+      if (res.status === 403) {
+        const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero conocer el club 🌿')
+        msg.innerHTML = `Todavía no estás en el padrón del club. <button type="button" class="sl-msg-cta" data-intent="acceso">Pedí tu acceso acá</button> y te contactamos, o escribinos por <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>.`
+      } else {
+        msg.textContent = data.error || 'No se pudo verificar tu cuenta.'
+      }
+      msg.hidden = false
+    } catch {
+      const msg = document.getElementById('socios-login-msg')
+      msg.textContent = 'Error de red al verificar con Google.'
+      msg.hidden = false
+    }
+  }
+
+  window.handleGoogleCredential = (response) => submitLogin(response.credential, false)
+
+  document.getElementById('mb-logout').addEventListener('click', async () => {
+    await fetch('/api/socios/logout', { method: 'POST', credentials: 'include' })
+    location.href = '/'
+  })
+
+  if (googleClientId) {
+    window.onload = () => {
+      google.accounts.id.initialize({ client_id: googleClientId, callback: window.handleGoogleCredential })
+      google.accounts.id.renderButton(document.getElementById('g_id_button'), {
+        width: 320, theme: 'filled_black', size: 'large', text: 'signin_with',
+      })
+    }
+  }
+
+  cargar()
+</script>
+
+<style is:global>
+  html, body { background-color: #130d1c; }
+</style>
+
+<style>
+  .mb-head { max-width: 720px; margin: 0 auto; padding: 8px 0 28px; text-align: center; }
+  .mb-eyebrow {
+    display: inline-block; font-family: var(--font-ui);
+    font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: #3cb492; margin-bottom: 12px;
+  }
+  .mb-title {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(28px, 5.4vw, 42px); line-height: 1.15;
+    color: #f4f1f7; margin: 0 0 14px; text-wrap: balance;
+  }
+  .mb-title em { font-style: italic; color: #3cb492; }
+  .mb-lead {
+    font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
+    color: rgba(244, 241, 247, 0.66); margin: 0;
+  }
+
+  .mb-grid {
+    display: grid; gap: 14px; max-width: 900px; margin: 0 auto;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .mb-vacio {
+    text-align: center; font-family: var(--font-ui); font-size: 14px;
+    color: rgba(244, 241, 247, 0.5); margin: 0 0 24px;
+  }
+
+  .mb-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(183, 157, 230, 0.18);
+    border-radius: 18px; padding: 22px 20px; text-align: center;
+  }
+  .mb-card-nom {
+    font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: rgba(244, 241, 247, 0.9); margin: 0 0 6px;
+  }
+  .mb-card-det {
+    font-family: var(--font-ui); font-size: 13.5px;
+    color: rgba(244, 241, 247, 0.55); margin: 0 0 14px;
+  }
+  .mb-card-precio {
+    font-family: var(--font-display); font-size: clamp(26px, 4vw, 32px);
+    color: #3cb492; margin: 0; line-height: 1.1;
+  }
+  .mb-card-precio span {
+    display: block; font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, 0.45); margin-top: 4px;
+  }
+
+  .mb-nota {
+    max-width: 720px; margin: 36px auto 0; padding-top: 24px;
+    border-top: 1px solid rgba(183, 157, 230, 0.16);
+    font-family: var(--font-ui); font-size: 14px; line-height: 1.7;
+    color: rgba(244, 241, 247, 0.6);
+  }
+  .mb-nota h2 {
+    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(244, 241, 247, 0.45); margin: 0 0 10px;
+  }
+  .mb-nota ul { margin: 0 0 20px; padding-left: 1.1rem; list-style: disc; }
+  .mb-nota li { margin-bottom: 7px; }
+  .mb-nota li::marker { color: #3cb492; }
+  .mb-nota strong { color: rgba(244, 241, 247, 0.88); font-weight: 700; }
+
+  .mb-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+  .mb-cta {
+    display: inline-flex; align-items: center; font-family: var(--font-ui);
+    font-size: 0.82rem; font-weight: 700; text-decoration: none;
+    padding: 11px 20px; border-radius: 999px;
+    border: 1px solid rgba(60, 180, 146, 0.5);
+    background: rgba(60, 180, 146, 0.14); color: #3cb492;
+  }
+  .mb-cta:hover { background: rgba(60, 180, 146, 0.24); }
+  .mb-cta--ghost {
+    background: transparent; color: rgba(244, 241, 247, 0.75);
+    border-color: rgba(183, 157, 230, 0.28);
+  }
+  .mb-cta--ghost:hover { border-color: rgba(183, 157, 230, 0.55); }
+</style>
