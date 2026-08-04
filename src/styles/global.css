@@ -2702,55 +2702,61 @@ body.is-socio .fl-card-shell--socio { display: block; }
    de la sección contiene el sangrado) */
 
 
-/* ── Consultorio: cierre cinematográfico de la home ──
-   Mismo lenguaje que el hero de consultorio.floraong.ar: video de fondo,
-   velo que oscurece donde va el texto, y el turno como acción principal. */
+/* ── Consultorio en la home: el mismo hero que consultorio.floraong.ar ──
+   Mismo video, mismo velo, mismo copy. Dos ajustes propios de la home:
+   el título y el lead entran en dos líneas, y el bloque oscuro marca el
+   corte de color entre el gris de Instagram y el blanco de las preguntas. */
 .fl-cine {
   position: relative; isolation: isolate; overflow: hidden;
   display: grid; align-items: center;
-  min-height: min(76svh, 700px);
-  padding: clamp(48px, 6vw, 96px) clamp(24px, 6vw, 80px);
+  min-height: min(78svh, 720px);
+  padding: clamp(44px, 5.5vw, 84px) clamp(24px, 6vw, 80px);
 }
 .fl-cine-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
 .fl-cine::after {
   content: ''; position: absolute; inset: 0; z-index: -1;
   background: linear-gradient(260deg, rgb(30 15 48 / .92) 0%, rgb(38 20 60 / .72) 44%, rgb(38 20 60 / .28) 100%);
 }
-.fl-cine-caja { max-width: 560px; margin-left: auto; text-align: right; position: relative; }
+/* la misma columna de 1240px que usa todo el sitio: sin esto, en pantallas
+   anchas el texto se pega al borde en vez de acompañar al resto de la home */
+.fl-cine-wrap { max-width: 1240px; margin: 0 auto; width: 100%; padding: clamp(44px, 6vw, 84px) 0; display: flex; justify-content: flex-end; }
+.fl-cine-caja { max-width: 740px; text-align: right; }
 .fl-cine .fl-eyebrow { color: #CBE8E2; }
-.fl-cine .fl-title { color: #fff; max-width: 15ch; margin: 0 0 0 auto; text-shadow: 0 2px 28px rgb(0 0 0 / .6); }
+/* 22ch parte el título en dos líneas exactas: «Sacate todas las dudas» / «antes de comenzar» */
+.fl-cine .fl-title { color: #fff; font-size: clamp(28px, 4.6vw, 58px); max-width: 24ch; margin: 0 0 0 auto;
+  text-shadow: 0 2px 28px rgb(0 0 0 / .6); text-wrap: balance; }
 .fl-cine .fl-title em { font-style: normal; color: #4FC79E; }
-.fl-cine .fl-lead { color: rgb(255 255 255 / .85); max-width: 46ch; margin: 18px 0 0 auto; }
+.fl-cine .fl-lead { color: rgb(255 255 255 / .85); max-width: 58ch; margin: 20px 0 0 auto; text-wrap: pretty; }
 .fl-cine-ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; justify-content: flex-end; }
 .fl-cine-cta {
-  display: inline-flex; align-items: center; gap: 9px;
+  display: inline-flex; align-items: center; gap: 8px;
   background: #fff; color: var(--fl-violet);
   font-family: var(--font-ui); font-size: 15px; font-weight: 700; text-decoration: none;
   padding: 16px 30px; border-radius: 999px;
   box-shadow: 0 16px 38px -16px rgb(0 0 0 / .55);
-  transition: transform .2s ease, background .2s ease;
+  transition: transform .2s ease;
 }
 .fl-cine-cta:hover { transform: translateY(-2px); }
 .fl-cine-cta svg { width: 18px; height: 18px; }
 .fl-cine-cta--ghost { background: transparent; color: #fff; border: 1.5px solid rgb(255 255 255 / .55); box-shadow: none; }
 .fl-cine-cta--ghost:hover { background: rgb(255 255 255 / .12); border-color: #fff; }
-.fl-cine-proximo {
-  margin: 16px 0 0 auto; width: fit-content;
-  font-size: 14px; font-weight: 600; color: #fff;
+/* min-height reserva la línea: cuando llega el dato de la agenda no salta el layout */
+.fl-cine-proximo { margin: 14px 0 0 auto; min-height: 1lh; font-size: 14px; font-weight: 600; color: #fff; }
+.fl-cine-proximo:not(:empty) {
+  width: fit-content;
   background: rgb(0 0 0 / .34); border: 1px solid rgb(255 255 255 / .22);
   border-radius: 999px; padding: 8px 16px; backdrop-filter: blur(4px);
 }
-.fl-cine-proximo[hidden] { display: none; }
-.fl-cine-proximo b { color: #7ee2c3; }
-/* Mobile: el velo oscurece abajo y el texto se lee desde la izquierda. */
 @media (max-width: 760px) {
-  .fl-cine-caja { margin-left: 0; text-align: left; }
+  .fl-cine-wrap { justify-content: flex-start; padding-bottom: clamp(28px, 5vw, 44px); }
+  .fl-cine-caja { text-align: left; }
   .fl-cine .fl-title, .fl-cine .fl-lead { margin-left: 0; max-width: none; }
   .fl-cine-ctas { justify-content: flex-start; }
   .fl-cine-proximo { margin-left: 0; }
   .fl-cine::after { background: linear-gradient(to top, rgb(19 13 28 / .94) 34%, rgb(19 13 28 / .5) 72%, rgb(19 13 28 / .22)); }
 }
-@media (prefers-reduced-motion: reduce) { .fl-cine-cta { transition: none; } .fl-cine-video { display: none; } }
+/* igual que en su web: el video se congela, no desaparece */
+@media (prefers-reduced-motion: reduce) { .fl-cine-cta { transition: none; } }
 
 /* ── Agenda liviana del turnero: mini-almanaque + línea en vivo + botón.
    Deliberadamente SIN tarjeta: la credencial en mano es la única superficie
