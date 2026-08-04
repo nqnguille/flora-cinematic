@@ -1542,9 +1542,17 @@
         if (ldAlta) {
           const l = LEADS.find((x) => x.id === Number(ldAlta.dataset.id))
           if (!l) return
-          sessionStorage.setItem('so-alta-prefill', JSON.stringify({
+          const pre = {
             nombre: l.nombre || '', email: l.email || '', telefono: l.telefono || '', nota: l.nota || '',
-          }))
+          }
+          // El DNI lo cargó al inscribirse pero vive en su solicitud, no en el
+          // lead. Traerlo evita tener que pedírselo de nuevo — y sin DNI no se
+          // puede armar la declaración jurada.
+          try {
+            const rd = await fetch(`/api/panel/declaracion?lead_id=${l.id}`, { credentials: 'include' })
+            if (rd.ok) { const dd = await rd.json(); if (dd.lead?.dni) pre.documento = dd.lead.dni }
+          } catch { /* sin DNI se completa a mano, el alta sigue igual */ }
+          sessionStorage.setItem('so-alta-prefill', JSON.stringify(pre))
           altaAbrir()
           return
         }
