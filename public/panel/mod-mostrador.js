@@ -73,6 +73,10 @@
     }
     const { socio, saldo, ultimos } = socioActual
     const esPlan = saldo.tipo === 'plan'
+    // Débito: `saldo` ya viene topeado en 40 g (lo que la credencial ampara
+    // transportar), y `acumulado` es todo lo que tiene guardado. Hay que
+    // mostrar los dos o el mostrador cree que perdió gramos.
+    const esDebito = saldo.tipo === 'debito'
     const saldoColor = saldo.saldo > 0 ? 'var(--grn)' : 'var(--amb)'
     cuerpo.innerHTML = `
       <div class="fila" style="margin-bottom:12px">
@@ -86,7 +90,7 @@
         <div style="display:grid;gap:12px">
           ${avisoReprocann(socio)}
           <div class="card">
-            <span class="k">${esPlan ? `Saldo del plan (${P.esc(saldo.tier)})` : 'Le queda este mes'}</span>
+            <span class="k">${esPlan ? `Saldo del plan (${P.esc(saldo.tier)})` : esDebito ? `Puede retirar hoy (${P.esc(saldo.tier)} · débito)` : 'Le queda este mes'}</span>
             <div class="fila" style="align-items:baseline;gap:10px;margin:10px 0 4px">
               <b style="font-family:var(--font-display);font-size:42px;line-height:1;color:${saldoColor}">${Math.max(0, saldo.saldo)} g</b>
               <span style="color:var(--muted)">${esPlan

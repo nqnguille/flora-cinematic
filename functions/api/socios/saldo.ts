@@ -41,9 +41,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       tipo: saldo.tipo, saldo: Math.max(0, saldo.saldo),
       tier: saldo.tier || null, gramosMes: saldo.gramosMes || null,
       retiradoMes: saldo.retiradoMes, visitasMes: saldo.visitasMes,
-      base: saldo.tipo === 'plan' ? saldo.total : saldo.habilitado,
+      // Referencia contra la que se dibuja la barra. En débito es lo acumulado,
+      // no lo del mes: si no, alguien que juntó dos meses vería la barra llena.
+      base: saldo.tipo === 'plan' ? saldo.total : saldo.tipo === 'debito' ? saldo.acumulado : saldo.habilitado,
+      acumulado: saldo.tipo === 'debito' ? saldo.acumulado : null,
+      tope: saldo.tipo === 'debito' ? saldo.tope : null,
       hasta: 'hasta' in saldo ? saldo.hasta : null,
-      alDia: saldo.tipo === 'plan' ? true : !!(saldo as { pagoEsteMes?: boolean }).pagoEsteMes,
+      // En débito la cuota la cobra Mercado Pago sola: no tiene sentido
+      // mostrarle "sin pago este mes" a quien tiene el débito andando.
+      alDia: saldo.tipo === 'plan' || saldo.tipo === 'debito' ? true : !!(saldo as { pagoEsteMes?: boolean }).pagoEsteMes,
     },
     retiros: retiros.results,
   });

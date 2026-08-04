@@ -292,7 +292,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const s = d.saldo
         document.getElementById('cu-saldo-g').textContent = `${s.saldo} g`
         document.getElementById('cu-saldo-det').textContent = s.base
-          ? (s.tipo === 'plan' ? ` de ${s.base} g de tu plan` : ` de ${s.base} g de este mes`)
+          ? (s.tipo === 'plan' ? ` de ${s.base} g de tu plan`
+             : s.tipo === 'debito' ? ` de ${s.base} g que tenés acumulados`
+             : ` de ${s.base} g de este mes`)
           : ''
         // el plan por fin se ve: MEDIUM · 20 g/mes
         if (s.tier) {
@@ -304,7 +306,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (s.base > 0) fill.style.width = Math.min(100, ((s.base - s.saldo) / s.base) * 100).toFixed(1) + '%'
         document.getElementById('cu-saldo-sub').textContent = s.visitasMes
           ? `Retiraste ${s.retiradoMes} g en ${s.visitasMes} visita${s.visitasMes === 1 ? '' : 's'} este mes.`
-          : (s.tipo === 'plan' && s.hasta ? `Tu plan vence en ${s.hasta.slice(0, 7)}.` : 'Todavía no retiraste este mes.')
+          : (s.tipo === 'plan' && s.hasta ? `Tu plan vence en ${s.hasta.slice(0, 7)}.`
+             : s.tipo === 'debito' && s.acumulado > s.saldo ? `Tenés ${s.acumulado} g acumulados. Podés llevarte hasta ${s.tope} g por visita.`
+             : 'Todavía no retiraste este mes.')
         const aldia = document.getElementById('cu-aldia')
         if (s.tipo === 'contado') {
           aldia.textContent = s.alDia ? '✓ Cuota de este mes al día' : 'Este mes todavía no registramos tu cuota.'
