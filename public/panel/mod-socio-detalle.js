@@ -33,6 +33,18 @@
     return `https://wa.me/${String(s.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(txt)}`
   }
 
+  // El mensaje con el que le mandamos la declaración para firmar. El archivo
+  // se adjunta a mano: wa.me solo lleva texto.
+  function waDdjj(s) {
+    const nom = (s.nombre || '').split(' ')[0]
+    const txt = `Hola ${nom}! Te paso la declaración jurada para que puedas pasarte a Flora. `
+      + `Es el papel que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: `
+      + `no se pueden tener las dos modalidades a la vez.\n\n`
+      + `Lo que tenés que hacer es imprimirla, firmarla y mandarnos una foto. Con eso seguimos nosotros el trámite.\n\n`
+      + `Cualquier duda antes de firmar, escribime.`
+    return `https://wa.me/${String(s.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(txt)}`
+  }
+
   let velo = null
   let caja = null
   let alCambiar = null
@@ -412,6 +424,7 @@
       <p class="so-help" style="margin:2px 0 0">Lo escribe ${P.esc(d.plantilla.medico)} (${P.esc(d.plantilla.matricula)}), que es quien firma la prescripción. No queda guardado como dato clínico del padrón.</p>
 
       <div class="fila" style="margin-top:10px;flex-wrap:wrap">
+        ${dec && s.telefono ? `<a class="btn" href="${P.esc(waDdjj(s))}" target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito. El PDF lo adjuntás vos.">WhatsApp para mandarla</a>` : ''}
         ${dec ? '<a class="btn" id="sd-dj-ver" href="/api/panel/declaracion?socio_id=' + s.id + '&ver=1" target="_blank" rel="noopener">Ver / imprimir</a>' : ''}
         ${dec && dec.estado === 'firmada' ? '<a class="btn" href="/api/panel/declaracion?declaracion_id=' + dec.id + '&firmada=1" target="_blank" rel="noopener">Ver la firmada</a>' : ''}
         <span class="pn-sp"></span>
