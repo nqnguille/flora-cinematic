@@ -55,16 +55,45 @@ export async function planesVigentes(env: EnvPlanes): Promise<PlanSocio[]> {
 // El plan que tiene hoy el socio y si ya está adherido al débito. Con esto la
 // página puede marcar "esta es la tuya" y no ofrecerle adherirse a algo que ya
 // tiene andando.
+// Decisión de Guille (04/08/2026): para adherirse al débito, el trámite de
+// REPROCANN tiene que estar presentado ante el Ministerio. Antes de eso el
+// vínculo con Flora como cultivadora todavía no existe, así que no
+// corresponde cobrarle una membresía de flores por débito automático.
+const ESTADOS_HABILITADOS = new Set(['en_evaluacion', 'aprobado']);
+
+// Por qué no puede, dicho de forma que la persona sepa qué hacer. La clave es
+// el estado del trámite; el texto va tal cual a la pantalla.
+const MOTIVOS: Record<string, string> = {
+  sin_iniciar: 'Todavía no arrancamos tu trámite de REPROCANN. Escribinos y lo empezamos.',
+  esperando_codigo: 'Falta que generes tu código de vinculación en Mi Argentina.',
+  codigo_listo: 'Ya tenemos tu código: el médico tiene que cargar el trámite.',
+  cargado: 'El médico cargó tu trámite: falta que aceptes el consentimiento desde tu cuenta.',
+  observado: 'Objetaste algo de tu trámite. Escribinos y lo resolvemos.',
+  a_vincular: 'Ya firmaste: nos toca a nosotros vincularte. Lo hacemos en estos días.',
+  revision_medica: 'El organismo pidió correcciones al médico. Está en sus manos.',
+  revisar: 'Estamos confirmando en qué anda tu trámite de REPROCANN. Escribinos y lo destrabamos.',
+  rechazado: 'Tu solicitud de REPROCANN fue rechazada. Escribinos para ver cómo seguir.',
+  vencido: 'Tu REPROCANN venció: hay que renovarlo antes de adherirte.',
+  autocultivo: 'Figurás como autocultivo, así que no dependés de Flora para tu cultivo.',
+};
+const MOTIVO_SIN_DATO = 'Todavía no tenemos registrado el estado de tu REPROCANN. Escribinos y lo vemos.';
+
+export function puedeAdherir(estado: string | null): { puede: boolean; motivo: string | null } {
+  if (estado && ESTADOS_HABILITADOS.has(estado)) return { puede: true, motivo: null };
+  return { puede: false, motivo: (estado && MOTIVOS[estado]) || MOTIVO_SIN_DATO };
+}
+
 export async function situacionDelSocio(env: EnvPlanes, email: string): Promise<{
   socioId: number | null;
   tier: string | null;
   modalidad: string | null;
   debitoActivo: boolean;
+  reprocann: string | null;
 }> {
   const socio = await env.DB.prepare(
-    `SELECT id FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
-  ).bind(email.toLowerCase()).first<{ id: number }>();
-  if (!socio) return { socioId: null, tier: null, modalidad: null, debitoActivo: false };
+    `SELECT id, reprocann_estado FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
+  ).bind(email.toLowerCase()).first<{ id: number; reprocann_estado: string | null }>();
+  if (!socio) return { socioId: null, tier: null, modalidad: null, debitoActivo: false, reprocann: null };
 
   const [memb, susc] = await Promise.all([
     env.DB.prepare(
@@ -82,5 +111,6 @@ export async function situacionDelSocio(env: EnvPlanes, email: string): Promise<
     tier: memb?.tier ?? null,
     modalidad: memb?.modalidad ?? null,
     debitoActivo: !!susc,
+    reprocann: socio.reprocann_estado ?? null,
   };
 }

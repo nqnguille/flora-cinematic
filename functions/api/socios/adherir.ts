@@ -12,7 +12,7 @@
 // lo hace el webhook de MP recién cuando el pago se acredita de verdad
 // (asegurarMembresiaDebito en api/mp/webhook). Acá solo se entrega el link.
 import { readSessionEmail } from './_session';
-import { planesVigentes, situacionDelSocio } from './_planes';
+import { planesVigentes, situacionDelSocio, puedeAdherir } from './_planes';
 
 interface Env {
   SESSION_SECRET: string;
@@ -43,6 +43,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const situacion = await situacionDelSocio(env, email);
+
+  // La regla de verdad está acá, no en el botón: el navegador puede llamar
+  // este endpoint directamente.
+  const veredicto = puedeAdherir(situacion.reprocann);
+  if (!veredicto.puede) {
+    return Response.json({ ok: false, error: veredicto.motivo }, { status: 409 });
+  }
+
   if (situacion.debitoActivo) {
     return Response.json({ ok: false, error: 'ya tenés el débito automático activo' }, { status: 409 });
   }

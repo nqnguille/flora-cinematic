@@ -68,7 +68,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
   let ETIQUETAS = { uno: '', dos: '' }
-  let ACTUAL = { tier: null, debitoActivo: false }
+  let ACTUAL = { tier: null, debitoActivo: false, puede: false, motivo: null }
 
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
@@ -76,9 +76,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const dos = p.debito
       ? `<p class="mb-card-alt"><b>${pesos(p.debito)}</b><span>${esc(ETIQUETAS.dos) || 'Débito automático'}</span></p>`
       : ''
-    // El botón solo aparece si este plan tiene su suscripción de Mercado Pago
-    // cargada y el socio todavía no está adherido a ninguna.
-    const cta = p.linkDebito && !ACTUAL.debitoActivo
+    // El botón aparece si este plan tiene su suscripción de Mercado Pago
+    // cargada, el socio no está ya adherido, y su REPROCANN está presentado.
+    const cta = p.linkDebito && !ACTUAL.debitoActivo && ACTUAL.puede
       ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}">Adherir al débito</button>`
       : ''
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
@@ -111,9 +111,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     document.getElementById('mb-grid').innerHTML = planes.map(tarjeta).join('')
     document.getElementById('mb-vacio').hidden = planes.length > 0
 
+    // Quien no puede adherirse ve POR QUÉ y adónde ir. Un botón que
+    // simplemente no está deja a la persona sin saber qué le falta.
     const av = document.getElementById('mb-aviso')
     if (ACTUAL.debitoActivo) {
-      av.textContent = 'Ya tenés el débito automático activo. Para cambiar de membresía, escribinos.'
+      av.innerHTML = 'Ya tenés el débito automático activo. Para cambiar de membresía, escribinos.'
+      av.hidden = false
+    } else if (!ACTUAL.puede) {
+      const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero adherirme al débito automático')
+      av.innerHTML = `<b>Para adherirte al débito automático, tu REPROCANN tiene que estar presentado.</b><br />`
+        + esc(ACTUAL.motivo || '')
+        + ` <a href="/socios/reprocann/">Ver mi trámite</a> · <a href="${wa}" target="_blank" rel="noopener">Escribinos</a>`
       av.hidden = false
     } else { av.hidden = true }
 
@@ -318,6 +326,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     background: rgba(255, 255, 255, .04); border: 1px solid rgba(183, 157, 230, .18);
     border-radius: 12px; padding: 12px 16px;
   }
+  .mb-aviso :global(b) { color: rgba(244, 241, 247, 0.92); }
+  .mb-aviso :global(a) { color: #3cb492; font-weight: 700; text-underline-offset: 3px; }
   .mb-vacio {
     text-align: center; font-family: var(--font-ui); font-size: 14px;
     color: rgba(244, 241, 247, 0.5); margin: 0 0 24px;

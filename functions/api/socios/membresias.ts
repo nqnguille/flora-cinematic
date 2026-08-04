@@ -10,7 +10,7 @@
 // detrás del chequeo.
 import { readSessionEmail } from './_session';
 import { leerMembresias } from './admin/_membresias';
-import { planesVigentes, situacionDelSocio } from './_planes';
+import { planesVigentes, situacionDelSocio, puedeAdherir } from './_planes';
 
 interface Env {
   SESSION_SECRET: string;
@@ -38,7 +38,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     ok: true,
     textos,
     planes,
-    // Sin socioId: al front no le sirve y es un dato interno.
-    actual: { tier: situacion.tier, modalidad: situacion.modalidad, debitoActivo: situacion.debitoActivo },
+    // Sin socioId: al front no le sirve y es un dato interno. El estado del
+    // REPROCANN tampoco viaja: viaja el veredicto y el motivo en castellano.
+    actual: {
+      tier: situacion.tier,
+      modalidad: situacion.modalidad,
+      debitoActivo: situacion.debitoActivo,
+      ...puedeAdherir(situacion.reprocann),
+    },
   });
 };
