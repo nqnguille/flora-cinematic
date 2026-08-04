@@ -47,7 +47,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       <p id="mb-vacio" class="mb-vacio" hidden>Todavía no hay membresías cargadas.</p>
       <p id="mb-aviso" class="mb-aviso" hidden></p>
+
+      <div id="mb-selector" class="mb-selector" role="group" aria-label="Forma de pago" hidden>
+        <button type="button" class="mb-modo on" data-modo="contado" aria-pressed="true">Contado o transferencia</button>
+        <button type="button" class="mb-modo" data-modo="debito" aria-pressed="false">Débito automático <em>· 20% menos</em></button>
+      </div>
       <div id="mb-grid" class="mb-grid"></div>
+
+      <section class="mb-beneficios" id="mb-beneficios" hidden>
+        <h2>Lo que ganás adhiriéndote al débito</h2>
+        <ul>
+          <li><b>20% menos durante 3 cuotas.</b> Ese precio queda fijo aunque suba la lista. Al terminar te ofrecemos renovar al valor de ese momento.</li>
+          <li><b>Sin trámite cada mes.</b> Se debita solo: no hay que transferir ni avisarnos nada.</li>
+          <li><b>Tus gramos se habilitan solos.</b> Apenas se acredita el pago quedan disponibles, sin esperar a que alguien del club lo confirme.</li>
+          <li><b>Lo cortás cuando quieras.</b> Se cancela desde tu cuenta de Mercado Pago, sin llamar a nadie.</li>
+        </ul>
+      </section>
 
       <section class="mb-nota" id="mb-nota-sec" hidden>
         <h2 id="mb-nota-titulo"></h2>
@@ -69,26 +84,62 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   let ETIQUETAS = { uno: '', dos: '' }
   let ACTUAL = { tier: null, debitoActivo: false, puede: false, motivo: null }
+  let PLANES = []
+  // El contado arranca seleccionado: es el precio de referencia. El descuento
+  // no es "otro precio", es lo que se desbloquea al suscribirse al débito.
+  let modo = 'contado'
 
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
     const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} g por mes</p>` : ''
-    const dos = p.debito
-      ? `<p class="mb-card-alt"><b>${pesos(p.debito)}</b><span>${esc(ETIQUETAS.dos) || 'Débito automático'}</span></p>`
-      : ''
-    // El botón aparece si este plan tiene su suscripción de Mercado Pago
-    // cargada, el socio no está ya adherido, y su REPROCANN está presentado.
-    const cta = p.linkDebito && !ACTUAL.debitoActivo && ACTUAL.puede
+    const ofreceDebito = !!(p.debito && p.linkDebito)
+    const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo && ACTUAL.puede
+    const btn = puedeBoton
       ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}">Adherir al débito</button>`
       : ''
+
+    if (modo === 'debito' && ofreceDebito) {
+      const ahorro = p.contado ? p.contado - p.debito : 0
+      return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
+        <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? 'Tu membresía' : ''}</span>
+        <h3 class="mb-card-nom">${esc(p.item)}</h3>
+        ${detalle}
+        <p class="mb-card-precio">${pesos(p.debito)}<span>por mes, 3 cuotas</span></p>
+        ${ahorro > 0 ? `<p class="mb-card-comp">En contado son <b>${pesos(p.contado)}</b></p>` : ''}
+        ${btn}
+      </article>`
+    }
+
+    // Modo contado: el precio de referencia arriba, y el débito abajo como el
+    // beneficio que se desbloquea, con su propio bloque.
+    const gancho = ofreceDebito
+      ? `<div class="mb-gancho">
+          <span class="mb-gancho-lb">Con débito automático</span>
+          <b class="mb-gancho-precio">${pesos(p.debito)}</b>
+          ${p.contado ? `<span class="mb-gancho-ahorro">ahorrás ${pesos(p.contado - p.debito)} por mes</span>` : ''}
+          ${btn}
+        </div>`
+      : ''
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
-      ${esMia ? '<span class="mb-mia">Tu membresía</span>' : ''}
+      <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? 'Tu membresía' : ''}</span>
       <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(ETIQUETAS.uno) || 'Contado o transferencia'}</span></p>
-      ${dos}
-      ${cta}
+      ${gancho}
     </article>`
+  }
+
+  function pintarPlanes() {
+    document.getElementById('mb-grid').innerHTML = PLANES.map(tarjeta).join('')
+    document.getElementById('mb-vacio').hidden = PLANES.length > 0
+    document.querySelectorAll('.mb-modo').forEach((b) => {
+      const on = b.dataset.modo === modo
+      b.classList.toggle('on', on)
+      b.setAttribute('aria-pressed', String(on))
+    })
+    // Los beneficios solo tienen sentido para quien todavía puede adherirse.
+    const ben = document.getElementById('mb-beneficios')
+    if (ben) ben.hidden = ACTUAL.debitoActivo || !ACTUAL.puede
   }
 
   function pintar(d) {
@@ -107,9 +158,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     ETIQUETAS = { uno: tx.etiquetaPrecio || '', dos: tx.etiquetaPrecio2 || '' }
     ACTUAL = d.actual || { tier: null, debitoActivo: false }
 
-    const planes = Array.isArray(d.planes) ? d.planes : []
-    document.getElementById('mb-grid').innerHTML = planes.map(tarjeta).join('')
-    document.getElementById('mb-vacio').hidden = planes.length > 0
+    PLANES = Array.isArray(d.planes) ? d.planes : []
+    document.getElementById('mb-selector').hidden = !PLANES.some((p) => p.debito && p.linkDebito)
+    pintarPlanes()
 
     // Quien no puede adherirse ve POR QUÉ y adónde ir. Un botón que
     // simplemente no está deja a la persona sin saber qué le falta.
@@ -161,7 +212,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('.mb-adherir')
-    if (b) adherir(b)
+    if (b) { adherir(b); return }
+    const m = e.target.closest('.mb-modo')
+    if (m && m.dataset.modo !== modo) { modo = m.dataset.modo; pintarPlanes() }
   })
 
   async function cargar() {
@@ -276,11 +329,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, 0.45); margin-top: 3px;
   }
   .mb-card--mia { border-color: rgba(60, 180, 146, .5); background: rgba(60, 180, 146, .06); }
+  /* El chip se renderiza SIEMPRE, vacío cuando no corresponde: así reserva el
+     mismo alto en las cuatro tarjetas y no desalinea la marcada. */
   .mb-mia {
     display: inline-block; font-family: var(--font-ui); font-size: 10px; font-weight: 700;
     letter-spacing: .12em; text-transform: uppercase; color: #3cb492;
-    background: rgba(60, 180, 146, .14); border-radius: 999px; padding: 4px 10px; margin-bottom: 10px;
+    background: rgba(60, 180, 146, .14); border-radius: 999px;
+    /* line-height fijo para que el chip vacío mida exactamente lo mismo que el
+       que tiene texto: sin esto las tarjetas quedaban 8px desalineadas. */
+    padding: 4px 10px; margin-bottom: 10px; line-height: 13px; min-width: 1px;
   }
+  /* Un inline-block VACÍO no genera caja de línea, así que medía 8px contra
+     los 21px del que tiene texto. El espacio de ancho cero le da esa caja
+     sin verse. */
+  .mb-mia:empty { background: none; }
+  .mb-mia:empty::before { content: "\200b"; }
   .mb-adherir {
     display: block; width: 100%; margin-top: 14px;
     font: inherit; font-family: var(--font-ui); font-size: 13px; font-weight: 700;
@@ -289,6 +352,33 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-adherir:hover { filter: brightness(1.08); }
   .mb-adherir:disabled { opacity: .6; cursor: default; }
+  /* El bloque que desbloquea el descuento. Va con el celeste de Mercado Pago
+     para que se lea como "esto es lo que pasa si te suscribís", separado del
+     precio de referencia de arriba. */
+  .mb-gancho {
+    margin: 16px -4px 0; padding: 13px 12px 14px;
+    background: rgba(0, 158, 227, .09);
+    border: 1px solid rgba(0, 158, 227, .28);
+    border-radius: 14px;
+  }
+  .mb-gancho-lb {
+    display: block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: #4cb8e8; margin-bottom: 4px;
+  }
+  .mb-gancho-precio {
+    display: block; font-family: var(--font-display); font-weight: 400;
+    font-size: 24px; color: #f4f1f7; line-height: 1.1;
+  }
+  .mb-gancho-ahorro {
+    display: block; font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, .55); margin-top: 3px;
+  }
+  .mb-gancho .mb-adherir { margin-top: 11px; }
+  .mb-card-comp {
+    font-family: var(--font-ui); font-size: 12.5px;
+    color: rgba(244, 241, 247, .5); margin: 11px 0 0;
+  }
+  .mb-card-comp b { color: rgba(244, 241, 247, .78); font-weight: 700; }
   .mb-nota li { margin-bottom: 7px; }
   .mb-nota li::marker { color: #3cb492; }
 </style>
@@ -310,6 +400,48 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
     color: rgba(244, 241, 247, 0.66); margin: 0;
   }
+
+  .mb-selector {
+    display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+    max-width: 560px; margin: 0 auto 22px; padding: 5px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid rgba(183, 157, 230, .18); border-radius: 999px;
+  }
+  .mb-selector[hidden] { display: none; }
+  .mb-selector button {
+    font: inherit; font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+    color: rgba(244, 241, 247, .5); background: none; border: 0;
+    border-radius: 999px; padding: 9px 18px; cursor: pointer;
+    transition: background .18s ease, color .18s ease;
+  }
+  .mb-selector button em { font-style: normal; font-weight: 400; opacity: .7; }
+  .mb-selector button:hover { color: rgba(244, 241, 247, .8); }
+  .mb-selector button.on { background: #009ee3; color: #fff; }
+  .mb-selector button.on em { opacity: 1; }
+
+  .mb-beneficios {
+    max-width: 720px; margin: 34px auto 0; padding-top: 26px;
+    border-top: 1px solid rgba(183, 157, 230, 0.16);
+  }
+  .mb-beneficios[hidden] { display: none; }
+  .mb-beneficios h2 {
+    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(244, 241, 247, 0.45); margin: 0 0 14px;
+  }
+  .mb-beneficios ul {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .mb-beneficios li {
+    font-family: var(--font-ui); font-size: 13.5px; line-height: 1.6;
+    color: rgba(244, 241, 247, 0.58); padding-left: 20px; position: relative;
+  }
+  .mb-beneficios li::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 7px; height: 7px; border-radius: 50%; background: #009ee3;
+  }
+  .mb-beneficios b { color: rgba(244, 241, 247, 0.9); font-weight: 700; }
 
   .mb-grid {
     display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
