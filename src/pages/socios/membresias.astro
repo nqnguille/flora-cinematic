@@ -57,10 +57,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <section class="mb-beneficios" id="mb-beneficios" hidden>
         <h2>Lo que ganás adhiriéndote al débito</h2>
         <ul>
-          <li><b>20% menos durante 3 cuotas.</b> Ese precio queda fijo aunque suba la lista. Al terminar te ofrecemos renovar al valor de ese momento.</li>
+          <li><b>20% menos durante 3 meses.</b> Ese precio queda fijo aunque suba la lista. Al terminar te ofrecemos renovar al valor de ese momento.</li>
           <li><b>Sin trámite cada mes.</b> Se debita solo: no hay que transferir ni avisarnos nada.</li>
           <li><b>Tus gramos se habilitan solos.</b> Apenas se acredita el pago quedan disponibles, sin esperar a que alguien del club lo confirme.</li>
-          <li><b>Lo cortás cuando quieras.</b> Se cancela desde tu cuenta de Mercado Pago, sin llamar a nadie.</li>
+          <li><b>Botón de arrepentimiento.</b> Si cambiás de idea, lo das de baja vos mismo desde Mercado Pago, sin explicaciones ni llamados. Queremos que te quedes porque te conviene, no porque sea difícil salir.</li>
         </ul>
       </section>
 
@@ -104,7 +104,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? 'Tu membresía' : ''}</span>
         <h3 class="mb-card-nom">${esc(p.item)}</h3>
         ${detalle}
-        <p class="mb-card-precio">${pesos(p.debito)}<span>por mes, 3 cuotas</span></p>
+        <p class="mb-card-precio">${pesos(p.debito)}<span>durante 3 meses</span></p>
         ${ahorro > 0 ? `<p class="mb-card-comp">En contado son <b>${pesos(p.contado)}</b></p>` : ''}
         ${btn}
       </article>`
