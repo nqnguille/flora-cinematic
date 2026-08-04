@@ -46,9 +46,14 @@
           <input class="input mb-in" id="mb-det-${i}" data-campo="detalle" type="text" maxlength="120" value="${P.esc(p.detalle || '')}" placeholder="10 g por mes" />
         </div>
         <div>
-          <label class="lb" for="mb-pre-${i}">Aporte mensual</label>
+          <label class="lb" for="mb-pre-${i}">${P.esc(DOC.etiquetaPrecio || 'Importe')}</label>
           <input class="input mb-in mb-precio" id="mb-pre-${i}" data-campo="precio" type="number" min="1" step="1" value="${p.precio || ''}" placeholder="0" />
           <span class="mb-precio-fmt">${p.precio ? pesos(p.precio) : ''}</span>
+        </div>
+        <div>
+          <label class="lb" for="mb-pre2-${i}">${P.esc(DOC.etiquetaPrecio2 || 'Segundo importe')} <span style="font-weight:400;opacity:.7">(opcional)</span></label>
+          <input class="input mb-in mb-precio" id="mb-pre2-${i}" data-campo="precio2" type="number" min="1" step="1" value="${p.precio2 || ''}" placeholder="—" />
+          <span class="mb-precio-fmt">${p.precio2 ? pesos(p.precio2) : ''}</span>
         </div>
       </div>
       <button class="btn mb-borrar" type="button" data-i="${i}" title="Quitar este plan">✕</button>
@@ -86,6 +91,8 @@
     v('#mb-titulo', DOC.titulo)
     v('#mb-titulo-em', DOC.tituloEm)
     v('#mb-lead', DOC.lead)
+    v('#mb-et1', DOC.etiquetaPrecio)
+    v('#mb-et2', DOC.etiquetaPrecio2)
     v('#mb-nota-titulo', DOC.notaTitulo)
     v('#mb-cta-carta', DOC.ctaCarta)
     v('#mb-cta-wa', DOC.ctaWhatsapp)
@@ -97,6 +104,8 @@
     DOC.titulo = g('#mb-titulo')
     DOC.tituloEm = g('#mb-titulo-em')
     DOC.lead = g('#mb-lead')
+    DOC.etiquetaPrecio = g('#mb-et1')
+    DOC.etiquetaPrecio2 = g('#mb-et2')
     DOC.notaTitulo = g('#mb-nota-titulo')
     DOC.ctaCarta = g('#mb-cta-carta')
     DOC.ctaWhatsapp = g('#mb-cta-wa')
@@ -171,7 +180,13 @@
         <div id="mb-cuerpo" hidden>
           <div class="card" style="margin-bottom:14px">
             <span class="k">Planes</span>
-            <p class="ct-help" style="margin:6px 0 12px">El importe es lo que el socio aporta por mes. Un plan sin importe no se guarda.</p>
+            <p class="ct-help" style="margin:6px 0 12px">El importe es lo que el socio aporta por mes. Un plan sin importe no se guarda; el segundo es opcional.</p>
+            <div class="grid2" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:6px">
+              <div><label class="lb" for="mb-et1">Rótulo del primer importe</label>
+                <input class="input mb-txt mb-et" id="mb-et1" type="text" maxlength="40" /></div>
+              <div><label class="lb" for="mb-et2">Rótulo del segundo</label>
+                <input class="input mb-txt mb-et" id="mb-et2" type="text" maxlength="40" placeholder="Vacío = no se muestra" /></div>
+            </div>
             <div id="mb-planes"></div>
             <div class="fila" style="margin-top:12px">
               <button class="btn" id="mb-agregar" type="button">+ Agregar plan</button>
@@ -220,15 +235,20 @@
       // ── textos ──
       el.addEventListener('input', (e) => {
         const t = e.target
-        if (t.classList.contains('mb-txt')) { marcarSucio(); return }
+        if (t.classList.contains('mb-txt')) {
+          marcarSucio()
+          if (t.classList.contains('mb-et')) { leerTextos(); pintarPlanes() }
+          return
+        }
         // ── planes ──
         if (t.classList.contains('mb-in')) {
           const fila = t.closest('.mb-plan')
           const i = Number(fila.dataset.i)
           const campo = t.dataset.campo
-          DOC.planes[i][campo] = campo === 'precio' ? Number(t.value) : t.value
-          if (campo === 'precio') {
-            const fmt = fila.querySelector('.mb-precio-fmt')
+          const esImporte = campo === 'precio' || campo === 'precio2'
+          DOC.planes[i][campo] = esImporte ? Number(t.value) : t.value
+          if (esImporte) {
+            const fmt = t.parentElement.querySelector('.mb-precio-fmt')
             if (fmt) fmt.textContent = t.value ? pesos(t.value) : ''
           }
           marcarSucio()
@@ -252,7 +272,7 @@
           return
         }
         if (e.target.closest('#mb-agregar')) {
-          DOC.planes.push({ id: '', label: '', detalle: '', precio: 0 })
+          DOC.planes.push({ id: '', label: '', detalle: '', precio: 0, precio2: 0 })
           pintarPlanes(); marcarSucio(); return
         }
         const borrar = e.target.closest('.mb-borrar')

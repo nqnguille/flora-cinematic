@@ -60,15 +60,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   </main>
 </Layout>
 
+<script src="https://accounts.google.com/gsi/client" async defer is:inline></script>
+
 <script define:vars={{ googleClientId }}>
   const pesos = (n) => '$' + Number(n).toLocaleString('es-AR')
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+  let ETIQUETAS = { uno: '', dos: '' }
 
   function tarjeta(m) {
-    const detalle = m.detalle ? `<p class="mb-card-det">${m.detalle}</p>` : ''
+    const detalle = m.detalle ? `<p class="mb-card-det">${esc(m.detalle)}</p>` : ''
+    // El segundo importe solo aparece si el plan lo tiene Y hay rótulo que lo
+    // explique: un número suelto sin decir de qué es confunde más que ayuda.
+    const dos = m.precio2 && ETIQUETAS.dos
+      ? `<p class="mb-card-alt"><b>${pesos(m.precio2)}</b><span>${esc(ETIQUETAS.dos)}</span></p>`
+      : ''
     return `<article class="mb-card">
-      <h3 class="mb-card-nom">${m.label}</h3>
+      <h3 class="mb-card-nom">${esc(m.label)}</h3>
       ${detalle}
-      <p class="mb-card-precio">${pesos(m.precio)}<span>por mes</span></p>
+      <p class="mb-card-precio">${pesos(m.precio)}<span>${esc(ETIQUETAS.uno) || 'por mes'}</span></p>
+      ${dos}
     </article>`
   }
 
@@ -84,6 +95,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     set('mb-lead', d.lead)
 
+    ETIQUETAS = { uno: d.etiquetaPrecio || '', dos: d.etiquetaPrecio2 || '' }
     const planes = Array.isArray(d.planes) ? d.planes : []
     document.getElementById('mb-grid').innerHTML = planes.map(tarjeta).join('')
     document.getElementById('mb-vacio').hidden = planes.length > 0
@@ -197,6 +209,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-ui); font-size: 12px;
     color: rgba(244, 241, 247, 0.45); margin-top: 4px;
   }
+  .mb-card-alt {
+    margin: 12px 0 0; padding-top: 10px;
+    border-top: 1px solid rgba(183, 157, 230, 0.16);
+  }
+  .mb-card-alt b {
+    display: block; font-family: var(--font-display); font-weight: 400;
+    font-size: 20px; color: rgba(244, 241, 247, 0.9); line-height: 1.15;
+  }
+  .mb-card-alt span {
+    display: block; font-family: var(--font-ui); font-size: 11.5px;
+    color: rgba(244, 241, 247, 0.45); margin-top: 3px;
+  }
   .mb-nota li { margin-bottom: 7px; }
   .mb-nota li::marker { color: #3cb492; }
 </style>
@@ -220,8 +244,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   .mb-grid {
-    display: grid; gap: 14px; max-width: 900px; margin: 0 auto;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 230px));
+    display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
+    /* Tope de 220px: con el padding del contenedor quedan 956px útiles, así
+       que cuatro tarjetas (4x220 + 3 de gap = 922) entran en una fila. Y el
+       tope evita que una sola se estire a lo ancho de la pantalla. */
+    grid-template-columns: repeat(auto-fit, minmax(170px, 220px));
     justify-content: center;
   }
   .mb-vacio {
@@ -241,6 +268,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, 0.45); margin: 0 0 10px;
   }
   .mb-nota ul { margin: 0 0 20px; padding-left: 1.1rem; list-style: disc; }
+  .mb-card-alt {
+    margin: 12px 0 0; padding-top: 10px;
+    border-top: 1px solid rgba(183, 157, 230, 0.16);
+  }
+  .mb-card-alt b {
+    display: block; font-family: var(--font-display); font-weight: 400;
+    font-size: 20px; color: rgba(244, 241, 247, 0.9); line-height: 1.15;
+  }
+  .mb-card-alt span {
+    display: block; font-family: var(--font-ui); font-size: 11.5px;
+    color: rgba(244, 241, 247, 0.45); margin-top: 3px;
+  }
   .mb-nota li { margin-bottom: 7px; }
   .mb-nota li::marker { color: #3cb492; }
   .mb-nota strong { color: rgba(244, 241, 247, 0.88); font-weight: 700; }

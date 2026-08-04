@@ -12,6 +12,10 @@ export interface Plan {
   label: string;
   detalle: string;
   precio: number;
+  // Segundo importe opcional. Los planes de flores se cobran de dos formas
+  // (contado o transferencia, y débito automático con descuento), y publicar
+  // una sola sería publicar media lista.
+  precio2?: number;
 }
 
 export interface Membresias {
@@ -20,6 +24,8 @@ export interface Membresias {
   tituloEm: string;   // la parte del título que va en cursiva y en verde
   lead: string;
   planes: Plan[];
+  etiquetaPrecio: string;    // rótulo de la primera columna de importes
+  etiquetaPrecio2: string;   // rótulo de la segunda; vacío = no se muestra
   notaTitulo: string;
   notas: string[];
   ctaCarta: string;
@@ -36,6 +42,8 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   tituloEm: 'de flores',
   lead: 'Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo. El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.',
   planes: [],
+  etiquetaPrecio: 'Contado o transferencia',
+  etiquetaPrecio2: 'Débito automático',
   notaTitulo: 'Cómo funciona',
   notas: [
     'Los gramos se renuevan cada mes y se retiran en la sede, en Neuquén capital.',
@@ -61,6 +69,8 @@ export async function leerMembresias(kv: KVNamespace): Promise<Membresias> {
     tituloEm: txt(guardado.tituloEm, 80, d.tituloEm),
     lead: txt(guardado.lead, 600, d.lead),
     planes: Array.isArray(guardado.planes) ? guardado.planes.slice(0, MAX_PLANES) : d.planes,
+    etiquetaPrecio: txt(guardado.etiquetaPrecio, 40, d.etiquetaPrecio),
+    etiquetaPrecio2: typeof guardado.etiquetaPrecio2 === 'string' ? guardado.etiquetaPrecio2.trim().slice(0, 40) : d.etiquetaPrecio2,
     notaTitulo: txt(guardado.notaTitulo, 60, d.notaTitulo),
     notas: Array.isArray(guardado.notas) ? guardado.notas.slice(0, MAX_NOTAS) : d.notas,
     ctaCarta: txt(guardado.ctaCarta, 60, d.ctaCarta),
@@ -97,7 +107,12 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
     while (idsVistos.has(id)) id += '-2';
     idsVistos.add(id);
 
-    planes.push({ id, label, detalle: String(it.detalle ?? '').trim().slice(0, 120), precio });
+    // El segundo importe es opcional: vacío o 0 significa "este plan no lo
+    // tiene", y la tarjeta muestra uno solo.
+    const p2 = Math.round(Number(it.precio2));
+    const precio2 = Number.isFinite(p2) && p2 > 0 && p2 <= 100_000_000 ? p2 : undefined;
+
+    planes.push({ id, label, detalle: String(it.detalle ?? '').trim().slice(0, 120), precio, ...(precio2 ? { precio2 } : {}) });
   }
 
   const notas = (Array.isArray(e.notas) ? e.notas : [])
@@ -114,6 +129,8 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
       tituloEm: String(e.tituloEm ?? '').trim().slice(0, 80),
       lead: txt(e.lead, 600, d.lead),
       planes,
+      etiquetaPrecio: txt(e.etiquetaPrecio, 40, d.etiquetaPrecio),
+      etiquetaPrecio2: String(e.etiquetaPrecio2 ?? '').trim().slice(0, 40),
       notaTitulo: txt(e.notaTitulo, 60, d.notaTitulo),
       notas,
       ctaCarta: txt(e.ctaCarta, 60, d.ctaCarta),
