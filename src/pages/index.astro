@@ -671,11 +671,8 @@ const websiteSchema = {
       pon('fl-agenda-cuando', cuando)
       document.getElementById('fl-cal').hidden = false
       document.getElementById('fl-agenda-live').hidden = false
-      // el módulo del consultorio muestra el mismo dato en vivo
-      pon('fl-cal2-mes', parte({ month: 'short' }).replace('.', '').toUpperCase())
-      pon('fl-cal2-num', parte({ day: 'numeric' }))
+      // el cierre cinematográfico muestra el mismo dato en vivo
       pon('fl-co-cuando', cuando)
-      if (document.getElementById('fl-cal2')) document.getElementById('fl-cal2').hidden = false
       if (document.getElementById('fl-co-live')) document.getElementById('fl-co-live').hidden = false
       if (t.precio) {
         pon('fl-agenda-precio', ` · ${t.precio}`)
@@ -685,42 +682,6 @@ const websiteSchema = {
   </script>
 
 
-  <!-- ══════════════════════════════════════════ -->
-  <!-- CONSULTORIO — el médico de Flora           -->
-  <!-- ══════════════════════════════════════════ -->
-  <section class="fl-section fl-consultorio" id="consultorio" aria-label="Consultorio médico de Flora">
-    <div class="fl-wrap fl-co-grid">
-      <div class="fl-co-foto">
-        <img src="/img/consultorio-kalb.jpg" alt="El Dr. Ezequiel Kalb, director médico del consultorio de Flora" width="1280" height="960" loading="lazy" decoding="async" />
-      </div>
-      <div class="fl-co-texto">
-        <span class="fl-eyebrow">Nuestro consultorio</span>
-        <h2 class="fl-title">La consulta que <em>abre la puerta</em></h2>
-        <p class="fl-lead">Nuestro médico te recibe por videollamada desde cualquier punto del país: evalúa tu caso, define tu tratamiento y presenta tu solicitud al REPROCANN. Es el primer paso para asociarte, y también donde seguimos tu tratamiento después.</p>
-        <ul class="fl-co-temas" role="list">
-          <li>Dolor crónico</li>
-          <li>Insomnio</li>
-          <li>Ansiedad y estrés</li>
-          <li>Acompañamiento integrativo</li>
-        </ul>
-        <p class="fl-co-quien"><b>Dr. Ezequiel Kalb</b> · especialista en endocannabinología y terapéutica cannábica, director médico de Flora.</p>
-        <div class="fl-co-agenda">
-          <div class="fl-rp-cal" id="fl-cal2" hidden aria-hidden="true">
-            <span class="fl-rp-cal-mes" id="fl-cal2-mes">—</span>
-            <span class="fl-rp-cal-num" id="fl-cal2-num">–</span>
-          </div>
-          <span class="fl-co-live" id="fl-co-live" hidden><i></i> Próximo turno libre: <b id="fl-co-cuando"></b></span>
-        </div>
-        <div class="fl-co-ctas">
-          <a class="fl-co-cta" href="https://consultorio.floraong.ar/?agendar=1">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
-            Agendar turno <span aria-hidden="true">→</span>
-          </a>
-          <a class="fl-co-cta fl-co-cta--ghost" href="https://consultorio.floraong.ar/">Conocer el consultorio</a>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- PRODUCTOS — Flores / Aceites / Crema       -->
@@ -1218,6 +1179,28 @@ const websiteSchema = {
       acceptedAnswer: { '@type': 'Answer', text: f.a },
     })),
   })} />
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- CONSULTORIO — cierre cinematográfico       -->
+  <!-- ══════════════════════════════════════════ -->
+  <section class="fl-cine" id="consultorio" aria-label="Consultorio médico de Flora">
+    <video class="fl-cine-video" src="/video/consultorio-kalb.webm" poster="/img/consultorio-kalb-poster.jpg"
+           muted loop playsinline autoplay preload="none" aria-hidden="true"></video>
+    <div class="fl-cine-caja">
+      <span class="fl-eyebrow">Nuestro consultorio · Dr. Ezequiel Kalb</span>
+      <h2 class="fl-title">Sacate todas las dudas <em>antes de comenzar</em></h2>
+      <p class="fl-lead">Cannabis y medicina integrativa por videollamada. El primer paso para tu REPROCANN y para asociarte a Flora.</p>
+      <div class="fl-cine-ctas">
+        <a class="fl-cine-cta" href="https://consultorio.floraong.ar/?agendar=1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+          Agendar turno
+        </a>
+        <a class="fl-cine-cta fl-cine-cta--ghost" href="https://consultorio.floraong.ar/">Conocer el consultorio</a>
+      </div>
+      <p class="fl-cine-proximo" id="fl-co-live" hidden>Próximo turno libre: <b id="fl-co-cuando"></b></p>
+    </div>
+  </section>
 
   <!-- ══════════════════════════════════════════ -->
   <!-- FOOTER                                     -->
