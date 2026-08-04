@@ -76,6 +76,9 @@ const v = Date.now().toString(36)
         <button type="button" data-sec="finanzas" data-nom="Finanzas" data-cap="finanzas_ver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"></path></svg>
         </button>
+        <button type="button" data-sec="notificaciones" data-nom="Avisos" data-cap="avisos_editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9Z"></path><path d="M10.3 20a2 2 0 0 0 3.4 0"></path></svg>
+        </button>
         <div class="pn-sp"></div>
         <button type="button" data-sec="ajustes" data-nom="Accesos" data-cap="accesos_gestionar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg>
@@ -102,6 +105,7 @@ const v = Date.now().toString(36)
           <section class="pn-sec" id="sec-catalogo"></section>
           <section class="pn-sec" id="sec-membresias"></section>
           <section class="pn-sec" id="sec-finanzas"></section>
+          <section class="pn-sec" id="sec-notificaciones"></section>
           <section class="pn-sec" id="sec-ajustes"></section>
         </main>
       </div>
@@ -121,6 +125,7 @@ const v = Date.now().toString(36)
     <script src={`/panel/mod-catalogo.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-membresias.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-mostrador.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-notificaciones.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-ajustes.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-placeholders.js?v=${v}`} is:inline></script>
   </body>

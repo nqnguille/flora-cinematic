@@ -678,3 +678,27 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
   .ld-card, [data-tip]::after { transition: none }
   .ld-fantasma { transform: none }
 }
+
+/* ============================================================
+   Avisos al socio (módulo notificaciones)
+   ============================================================ */
+.nt-grupo { margin-bottom: 22px }
+.nt-item {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+  margin-bottom: 8px; overflow: hidden; transition: border-color .16s ease;
+}
+.nt-item.nt-on { border-left: 3px solid var(--grn) }
+.nt-item:hover { border-color: var(--line2) }
+.nt-cab { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer }
+.nt-meta { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; max-width: 46% }
+.nt-chev { color: var(--muted); font-size: 12px; flex-shrink: 0 }
+.nt-cuerpo { padding: 4px 14px 14px; border-top: 1px solid var(--line); display: grid; gap: 10px }
+.nt-cuerpo textarea.input { resize: vertical; min-height: 84px; font-family: inherit; line-height: 1.5 }
+.nt-cuerpo code {
+  background: var(--vio-soft); color: var(--vio); padding: 1px 5px;
+  border-radius: 4px; font-size: 11.5px;
+}
+@media (max-width: 700px) {
+  .nt-cab { flex-wrap: wrap }
+  .nt-meta { max-width: 100%; justify-content: flex-start }
+}
