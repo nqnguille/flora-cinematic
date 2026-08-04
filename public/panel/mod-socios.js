@@ -659,6 +659,34 @@
             <div><label class="lb" for="al-vence">Vence</label>
               <input class="input" id="al-vence" type="date" value="${P.esc(datos.reprocann_vence)}" /></div>
           </div>`
+        } else if (e === 'autocultivo') {
+          // Viene con credencial propia: para vincularse a Flora tiene que
+          // renunciar al autocultivo (las modalidades son excluyentes), y eso
+          // se firma. Pedimos acá lo único que falta para armar el papel, así
+          // sale junto con el alta y no hay que volver después.
+          box.innerHTML = `<div class="card" style="box-shadow:none;background:var(--card2);padding:12px 14px">
+            <b style="font-size:13px">Se quiere pasar a Flora</b>
+            <p class="so-help" style="margin:4px 0 10px">Para vincularse tiene que renunciar al autocultivo: no se pueden
+              tener las dos modalidades a la vez. Completá esto y al terminar el alta te sale la declaración jurada
+              lista para mandarle.</p>
+            <div class="grid2" style="gap:10px">
+              <div><label class="lb" for="al-dom">Domicilio</label>
+                <input class="input" id="al-dom" value="${P.esc(datos.domicilio || '')}" placeholder="Calle y número" /></div>
+              <div><label class="lb" for="al-vence">Vence su credencial</label>
+                <input class="input" id="al-vence" type="date" value="${P.esc(datos.reprocann_vence)}" /></div>
+            </div>
+            <div class="grid2" style="gap:10px;margin-top:10px">
+              <div><label class="lb" for="al-loc">Localidad</label>
+                <input class="input" id="al-loc" value="${P.esc(datos.localidad || '')}" /></div>
+              <div><label class="lb" for="al-prov">Provincia</label>
+                <input class="input" id="al-prov" value="${P.esc(datos.provincia || 'Neuquén')}" /></div>
+            </div>
+            <div style="margin-top:10px"><label class="lb" for="al-diag">Diagnóstico</label>
+              <input class="input" id="al-diag" maxlength="300" value="${P.esc(datos.diagnostico || '')}"
+                placeholder="…acredita la existencia de ___" /></div>
+            <p class="so-help" style="margin:6px 0 0">Lo define el médico. Si todavía no lo tenés, dejalo vacío:
+              el alta sigue igual y la declaración la generás después desde su ficha.</p>
+          </div>`
         } else if (e === 'esperando_codigo') {
           box.innerHTML = `<p class="so-help" style="margin:0">Al terminar el alta te damos el mensaje listo para pedirle
             que genere su código de vinculación en Mi Argentina.</p>`
@@ -683,6 +711,12 @@
         datos.reprocann_codigo = campoCod ? campoCod.value.trim().toUpperCase() : ''
         const campoVence = cuerpo.querySelector('#al-vence')
         datos.reprocann_vence = campoVence ? campoVence.value : ''
+        // datos de la declaración jurada (solo existen si eligió autocultivo)
+        const val = (sel) => { const el = cuerpo.querySelector(sel); return el ? el.value.trim() : '' }
+        datos.domicilio = val('#al-dom')
+        datos.localidad = val('#al-loc')
+        datos.provincia = val('#al-prov')
+        datos.diagnostico = val('#al-diag')
         if (datos.reprocann_codigo && datos.reprocann_codigo.length !== 13) {
           const aviso = cuerpo.querySelector('#al-precarga')
           aviso.className = 'msg err'; aviso.textContent = 'El código de vinculación tiene 13 caracteres.'; return
@@ -831,6 +865,24 @@
           extra = `<p class="msg err" style="margin-top:12px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el socio quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
         }
       }
+      // Autocultivador que se pasa: la declaración jurada sale acá mismo,
+      // contra la ficha que se acaba de crear. El domicilio viaja con ella y
+      // queda guardado. Si falta el diagnóstico, el alta igual queda hecha.
+      let ddjj = null
+      if (datos.reprocann_estado === 'autocultivo' && datos.diagnostico && datos.domicilio && d.socioId) {
+        try {
+          const rd = await fetch('/api/panel/declaracion', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              socio_id: d.socioId, diagnostico: datos.diagnostico, domicilio: datos.domicilio,
+              localidad: datos.localidad, provincia: datos.provincia,
+            }),
+          })
+          const dd = await rd.json().catch(() => ({}))
+          ddjj = rd.ok ? { ok: true, html: dd.html } : { ok: false, error: dd.error || 'error ' + rd.status }
+        } catch { ddjj = { ok: false, error: 'no se pudo conectar' } }
+      }
+
       const nom = datos.nombre.split(' ')[0]
       const faltaCodigo = datos.reprocann_estado === 'esperando_codigo' ||
         (['codigo_listo', 'cargado', 'en_evaluacion'].includes(datos.reprocann_estado) && !datos.reprocann_codigo)
@@ -851,10 +903,31 @@
           </div>` : ''}
         </div>
         ${extra}
+        ${ddjj ? (ddjj.ok
+          ? `<div style="margin-top:14px;padding:12px 16px;background:var(--card2);border-radius:10px;text-align:left">
+              <b style="font-size:13px">Declaración jurada lista</b>
+              <p class="so-help" style="margin:4px 0 10px">Guardala como PDF y mandásela para que la firme.
+                Cuando vuelva firmada, la subís desde su ficha.</p>
+              <button class="btn btn-pri" id="al-ddjj-ver" type="button">Abrir para imprimir</button>
+              ${datos.telefono ? `<a class="btn" id="al-ddjj-wa" target="_blank" rel="noopener" href="#" style="margin-left:6px">Mandar por WhatsApp</a>` : ''}
+            </div>`
+          : `<p class="msg err" style="margin-top:12px">El socio quedó dado de alta, pero la declaración no salió
+              (${P.esc(ddjj.error)}). Generala desde su ficha.</p>`) : ''}
         <div class="pn-mod-acciones">
           ${datos.telefono ? `<a class="btn ${faltaCodigo ? 'btn-pri' : ''}" href="${P.esc(wa)}" target="_blank" rel="noopener">${faltaCodigo ? 'Pedirle el código' : 'Saludar por WhatsApp'}</a>` : ''}
           <button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
         </div>`
+      if (ddjj && ddjj.ok) {
+        cuerpo.querySelector('#al-ddjj-ver')?.addEventListener('click', () => {
+          const w = window.open('', '_blank')
+          if (w) { w.document.write(ddjj.html); w.document.close() }
+        })
+        const waDj = cuerpo.querySelector('#al-ddjj-wa')
+        if (waDj) {
+          waDj.href = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+            `Hola ${nom}! Te paso la declaración jurada para que puedas pasarte a Flora. Es el papel que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: no se pueden tener las dos modalidades a la vez.\n\nImprimila, firmala y mandanos una foto. Con eso seguimos nosotros el trámite.`)}`
+        }
+      }
       muCargar(true)
     }
 
