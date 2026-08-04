@@ -118,3 +118,41 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env }) => {
   ).bind(...vals, id).run();
   return json({ ok: true });
 };
+
+// Borrado definitivo de un lead basura o de prueba.
+//
+// Ojo con el espejo: los leads de la web se re-crean solos desde KV en cada
+// carga del tablero (ver GET, "INSERT OR IGNORE"). Si solo se borra la fila,
+// el lead reaparece al recargar. Por eso acá se limpian las tres puntas: la
+// fila, el registro de origen en KV y el adjunto que hubiera subido.
+//
+// No es la papelera de socios: un lead basura no tiene nada que conservar, y
+// para el que existía pero no cerró ya está la etapa 'perdido'.
+export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
+  const auth = await requireCap(request, env, 'leads_gestionar');
+  if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
+
+  let b: Record<string, unknown>;
+  try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const id = Number(b.id);
+  if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
+
+  const lead = await env.DB.prepare(`SELECT id, email, etapa FROM leads WHERE id = ?`)
+    .bind(id).first<{ id: number; email: string | null; etapa: string }>();
+  if (!lead) return json({ error: 'El lead no existe' }, 404);
+  // Un convertido ya es socio: borrarlo acá deja la ficha huérfana del embudo.
+  if (lead.etapa === 'convertido') {
+    return json({ error: 'Ese lead ya es socio. Borralo desde el padrón, no desde acá.' }, 409);
+  }
+
+  await env.DB.prepare(`DELETE FROM leads WHERE id = ?`).bind(id).run();
+
+  // el origen, para que el espejo no lo resucite
+  if (lead.email) {
+    const mail = String(lead.email).toLowerCase();
+    await env.SOLICITUDES.delete(mail).catch(() => { /* puede no existir */ });
+    await env.SOLICITUDES.delete(`archivo:${mail}`).catch(() => { /* idem */ });
+    await env.INTENTOS.delete(mail).catch(() => { /* idem */ });
+  }
+  return json({ ok: true });
+};

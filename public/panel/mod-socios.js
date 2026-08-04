@@ -1192,6 +1192,7 @@
         ${editar && sig && l.etapa !== 'convertido' && sig[0] !== 'convertido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="${sig[0]}" type="button">→ ${sig[1]}</button>` : ''}
         ${editar && l.etapa !== 'convertido' && l.etapa !== 'perdido' ? `<button class="btn ld-perdido" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button">Perdido</button>` : ''}
         ${editar && l.etapa === 'perdido' ? `<button class="btn ld-mover" style="padding:4px 9px;font-size:11.5px" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>` : ''}
+        ${editar && l.etapa !== 'convertido' ? `<button class="btn ld-borrar" style="padding:4px 9px;font-size:11.5px;color:var(--muted)" data-id="${l.id}" type="button" title="Borrar del todo: para datos de prueba o basura">🗑</button>` : ''}
       </div>
     </div>`
   }
@@ -1501,6 +1502,22 @@
         if (ldPerd) {
           if (!(await P.confirmar('¿Marcar este lead como perdido? Queda guardado por si vuelve.', 'Sí, perdido'))) return
           ldPatch(ldPerd.dataset.id, { etapa: 'perdido' })
+          return
+        }
+        const ldBorrar = e.target.closest('.ld-borrar')
+        if (ldBorrar) {
+          const l = LEADS.find((x) => x.id === Number(ldBorrar.dataset.id))
+          if (!l) return
+          const quien = l.nombre || l.email || 'este lead'
+          if (!(await P.confirmar(
+            `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`,
+            'Sí, borrar'))) return
+          const r = await fetch('/api/panel/leads', {
+            method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: l.id }),
+          })
+          if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'No se pudo borrar'); return }
+          ldCargar()
           return
         }
         const ldDj = e.target.closest('.ld-ddjj')
