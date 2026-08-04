@@ -1,7 +1,29 @@
+# Flora ONG · floraong.ar
+#
+# Cloudflare venía inyectando su "Managed robots.txt", que le ponía
+# Disallow: / a ClaudeBot, GPTBot, Google-Extended, CCBot, Bytespider,
+# Amazonbot, Applebot-Extended y meta-externalagent. Consecuencia: cuando
+# alguien le preguntaba a una IA dónde tramitar el REPROCANN en Neuquén,
+# Flora no podía aparecer en la respuesta.
+#
+# La distinción que hacemos acá, con la señal de contenido de Cloudflare:
+#   search   = sí        que nos indexen y nos muestren en resultados
+#   ai-input = sí        que puedan leernos para RESPONDER una pregunta
+#   ai-train = NO        pero no para entrenar modelos con este contenido
+#   use      = reference citándonos, sin reproducir el sitio entero
+#
+# Se abre la puerta para que nos encuentren, sin regalar el contenido para
+# entrenamiento. Si alguna vez se vuelve a prender el "Managed robots.txt"
+# en el panel de Cloudflare, este archivo queda tapado por el de ellos.
+
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference
 Allow: /
 Disallow: /socios/admin/
 Disallow: /socios/carta/
 Disallow: /socios/cuenta/
+Disallow: /admin/
+Disallow: /biblioteca/
+Disallow: /verificacion-edad
 
 Sitemap: https://floraong.ar/sitemap.xml

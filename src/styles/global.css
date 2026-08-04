@@ -2791,6 +2791,17 @@ body.is-socio .fl-card-shell--socio { display: block; }
 .fl-rp-agenda-live b { color: #fff; }
 .fl-rp-agenda-det { font-size: 0.85rem; line-height: 1.55; color: rgba(244, 241, 247, 0.72); }
 .fl-rp-agenda-det b { color: #fff; }
+/* El logo oficial de Mercado Pago es azul sobre transparente: sobre este
+   fondo oscuro necesita su pastilla blanca para leerse. Va en su propia
+   línea para no romper el renglón del detalle. */
+.fl-rp-agenda-mp {
+  display: flex; align-items: center; gap: 8px; margin-top: 7px;
+  font-size: 0.8rem; color: rgba(244, 241, 247, 0.6);
+}
+.fl-rp-agenda-mp img {
+  height: 18px; width: auto; display: block;
+  background: #fff; border-radius: 4px; padding: 4px 6px;
+}
 #fl-agenda-precio { color: #fff; font-weight: 700; }
 #fl-agenda-precio[hidden] { display: none; }
 .fl-rp-agendar {
