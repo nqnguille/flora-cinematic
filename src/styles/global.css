@@ -2797,14 +2797,17 @@ body.is-socio .fl-card-shell--socio { display: block; }
   margin-top: 18px; font-size: 1rem; padding: 16px 32px; gap: 10px;
   box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.4);
 }
-/* En el teléfono el botón va a todo el ancho, como en el bloque del
-   consultorio: centrado y angosto quedaba flotando bajo el almanaque. */
+.fl-rp-agendar-fila { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+/* En el teléfono los botones van a todo el ancho, uno debajo del otro, como
+   en el bloque del consultorio: centrados y angostos quedaban flotando. */
 @media (max-width: 899px) {
-  .fl-rp-agendar { display: flex; width: 100%; justify-content: center; }
+  .fl-rp-agendar-fila { flex-direction: column; align-items: stretch; }
+  .fl-rp-agendar { display: flex; width: 100%; justify-content: center; margin-top: 0; }
+  .fl-rp-agendar-fila { margin-top: 18px; }
 }
 @media (min-width: 900px) {
   .fl-rp-agenda { justify-content: flex-start; }
-  .fl-rp-agendar { align-self: flex-start; }
+  .fl-rp-agendar-fila { justify-content: flex-start; }
 }
 
 .fl-rp-head { display: flex; flex-direction: column; align-items: center; gap: 24px; }
