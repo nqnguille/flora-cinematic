@@ -2727,7 +2727,15 @@ body.is-socio .fl-card-shell--socio { display: block; }
   text-shadow: 0 2px 28px rgb(0 0 0 / .6); text-wrap: balance; }
 .fl-cine .fl-title em { font-style: normal; color: #4FC79E; }
 .fl-cine .fl-lead { color: rgb(255 255 255 / .85); max-width: 58ch; margin: 20px 0 0 auto; text-wrap: pretty; }
-.fl-cine-ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; justify-content: flex-end; }
+/* el mismo almanaque del módulo REPROCANN, alineado a la derecha como el
+   resto del bloque. El calendario visual reemplaza al ícono del botón. */
+.fl-cine-agenda { display: flex; align-items: center; gap: 14px; margin-top: 26px; justify-content: flex-end; text-align: left; }
+.fl-cine-live { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 0.74rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #4FC79E; }
+.fl-cine-live[hidden] { display: none; }
+.fl-cine-live i { width: 7px; height: 7px; border-radius: 50%; background: #71CE6A; box-shadow: 0 0 0 4px rgb(113 206 106 / .18); }
+.fl-cine-live b { color: #fff; }
+.fl-cine-ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 .fl-cine-cta {
   display: inline-flex; align-items: center; gap: 8px;
   background: #fff; color: var(--fl-violet);
@@ -2740,13 +2748,6 @@ body.is-socio .fl-card-shell--socio { display: block; }
 .fl-cine-cta svg { width: 18px; height: 18px; }
 .fl-cine-cta--ghost { background: transparent; color: #fff; border: 1.5px solid rgb(255 255 255 / .55); box-shadow: none; }
 .fl-cine-cta--ghost:hover { background: rgb(255 255 255 / .12); border-color: #fff; }
-/* min-height reserva la línea: cuando llega el dato de la agenda no salta el layout */
-.fl-cine-proximo { margin: 14px 0 0 auto; min-height: 1lh; font-size: 14px; font-weight: 600; color: #fff; }
-.fl-cine-proximo:not(:empty) {
-  width: fit-content;
-  background: rgb(0 0 0 / .34); border: 1px solid rgb(255 255 255 / .22);
-  border-radius: 999px; padding: 8px 16px; backdrop-filter: blur(4px);
-}
 @media (max-width: 760px) {
   /* La altura la manda el contenido: con min-height fijo quedaba un colchón
      de video vacío debajo de la píldora. */
@@ -2762,18 +2763,7 @@ body.is-socio .fl-card-shell--socio { display: block; }
      anchos distintos quedaban dentados. */
   .fl-cine-ctas { justify-content: stretch; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 26px; }
   .fl-cine-cta { justify-content: center; width: 100%; padding: 16px 24px; }
-  /* La píldora entraba partida en dos líneas y ocupaba todo el ancho:
-     en el teléfono va como línea suelta con un punto verde. */
-  .fl-cine-proximo { margin: 16px 0 0; font-size: 13.5px; font-weight: 600; }
-  .fl-cine-proximo:not(:empty) {
-    width: auto; display: flex; align-items: baseline; gap: 8px;
-    background: none; border: 0; border-radius: 0; padding: 0; backdrop-filter: none;
-    color: rgb(255 255 255 / .82); line-height: 1.45;
-  }
-  .fl-cine-proximo:not(:empty)::before {
-    content: ''; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
-    background: #4FC79E; box-shadow: 0 0 0 4px rgb(79 199 158 / .18); transform: translateY(-2px);
-  }
+  .fl-cine-agenda { justify-content: flex-start; margin-top: 22px; }
   .fl-cine::after { background: linear-gradient(to top, rgb(19 13 28 / .94) 34%, rgb(19 13 28 / .5) 72%, rgb(19 13 28 / .22)); }
 }
 /* igual que en su web: el video se congela, no desaparece */
