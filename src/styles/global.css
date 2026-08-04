@@ -2797,7 +2797,11 @@ body.is-socio .fl-card-shell--socio { display: block; }
   margin-top: 18px; font-size: 1rem; padding: 16px 32px; gap: 10px;
   box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.4);
 }
-.fl-rp-agendar svg { width: 19px; height: 19px; }
+/* En el teléfono el botón va a todo el ancho, como en el bloque del
+   consultorio: centrado y angosto quedaba flotando bajo el almanaque. */
+@media (max-width: 899px) {
+  .fl-rp-agendar { display: flex; width: 100%; justify-content: center; }
+}
 @media (min-width: 900px) {
   .fl-rp-agenda { justify-content: flex-start; }
   .fl-rp-agendar { align-self: flex-start; }
