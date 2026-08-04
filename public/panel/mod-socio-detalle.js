@@ -196,6 +196,10 @@
             <button class="btn" id="sd-rc-guardar" type="button">Guardar trámite</button></div>
           <p class="msg" id="sd-msg-rc" style="margin:6px 0 0"></p>`
           : (s.telefono ? `<div class="fila" style="margin-top:8px"><a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a></div>` : '')}
+          ${s.email ? `<div class="fila" id="sd-adj-fila" style="margin-top:10px;flex-wrap:wrap" hidden>
+            <span style="font-size:12px;color:var(--muted)">Lo que subió al inscribirse:</span>
+            <a class="btn" href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(s.email)}" target="_blank" rel="noopener">Ver adjunto</a>
+          </div>` : ''}
           <div class="fila" id="sd-cert-fila" style="margin-top:10px;flex-wrap:wrap">
             <span style="font-size:12px;color:var(--muted)">Certificado PDF:</span>
             <span id="sd-cert-estado" style="font-size:12px;color:var(--muted)">…</span>
@@ -290,6 +294,18 @@
         if (borrar) borrar.hidden = !d.existe
       } catch { est.textContent = '—' }
     })()
+    // el adjunto de la inscripción: solo se muestra si de verdad hay archivo
+    ;(async () => {
+      const fila = caja.querySelector('#sd-adj-fila')
+      if (!fila || !s.email) return
+      try {
+        const r = await fetch(`/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(s.email)}`, {
+          method: 'HEAD', credentials: 'include',
+        })
+        fila.hidden = !r.ok
+      } catch { fila.hidden = true }
+    })()
+
     caja.querySelector('#sd-cert-subir')?.addEventListener('click', () => caja.querySelector('#sd-cert-file').click())
     caja.querySelector('#sd-cert-file')?.addEventListener('change', async (e) => {
       const f = e.target.files[0]

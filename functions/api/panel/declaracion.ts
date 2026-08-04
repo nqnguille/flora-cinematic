@@ -32,7 +32,7 @@ const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png'];
 // que se pueda corregir sin tocar código cuando la abogada revise el texto.
 // Esto de acá es el default: la plantilla del estudio, adaptada a Flora.
 const PLANTILLA_DEFAULT = {
-  version: '2026-08-04',
+  version: '2026-08-04b',
   titulo: 'DECLARACIÓN JURADA DEL PACIENTE',
   subtitulo: 'Res. 1780/2025 · Ministerio de Salud de la Nación',
   entidad: 'ASOCIACIÓN CIVIL CANN DE CANNABIS MEDICINAL',
@@ -42,7 +42,7 @@ const PLANTILLA_DEFAULT = {
   ciudad: 'Neuquén',
   cuerpo: [
     'Yo, {nombre}, DNI N° {dni}, con domicilio en {domicilio}, declaro bajo juramento lo siguiente:',
-    'Que me encuentro bajo tratamiento médico supervisado por {medico}, Matrícula Profesional N° {matricula}, quien ha prescripto el uso de cannabis medicinal con fines terapéuticos y/o paliativos del dolor, en virtud de un diagnóstico fundado que acredita la existencia de {diagnostico}, conforme a lo previsto por la Ley N° 27.350 y su normativa reglamentaria.',
+    'Que me encuentro bajo tratamiento médico supervisado por {medico}, Matrícula Profesional N° {matricula}, en su carácter de Director Médico de la {entidad}, quien ha prescripto el uso de cannabis medicinal con fines terapéuticos y/o paliativos del dolor, en virtud de un diagnóstico fundado que acredita la existencia de {diagnostico}, conforme a lo previsto por la Ley N° 27.350 y su normativa reglamentaria.',
     'Que he otorgado al referido profesional mi consentimiento informado, habiendo sido debidamente asesorado respecto de los alcances, beneficios, limitaciones y riesgos del tratamiento prescripto, en cumplimiento de los principios de autonomía y acceso informado a terapias reguladas por el Estado Nacional.',
     'Que, en virtud de lo anterior, he solicitado voluntariamente ser incorporado como usuario vinculado a la {entidad}, CUIT N° {cuit}, organización inscripta en el REPROCANN y dedicada al acompañamiento de pacientes que requieren cannabis medicinal.',
     'Que presto mi conformidad expresa para que dicha organización solicite mi vinculación como paciente ante el REPROCANN, y renuncio de manera voluntaria e informada a ejercer el rol de autocultivador, así como a delegar el cultivo en otro sujeto autorizado por ley, distinto de la organización mencionada.',

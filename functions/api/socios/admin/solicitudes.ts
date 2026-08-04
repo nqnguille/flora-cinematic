@@ -67,6 +67,14 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   if (!email) return Response.json({ ok: false, error: 'falta email' }, { status: 400 });
 
   await env.SOLICITUDES.delete(email);
-  await env.SOLICITUDES.delete(`archivo:${email}`).catch(() => {});
+  // El adjunto (foto/PDF del REPROCANN) NO siempre se va con la solicitud.
+  // Cuando la sacamos de la lista porque la persona entró (alta o acceso de
+  // prueba), ese archivo es justo lo que necesitamos después para verificar
+  // la modalidad y armarle el legajo: borrarlo ahí nos dejaba sin el papel.
+  // Solo se borra en el descarte de verdad, que además es una limpieza de
+  // datos personales de alguien que no entró.
+  if (body?.conservar_adjunto !== true) {
+    await env.SOLICITUDES.delete(`archivo:${email}`).catch(() => {});
+  }
   return Response.json({ ok: true });
 };

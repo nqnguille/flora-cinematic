@@ -8,6 +8,24 @@ interface Env {
   SOLICITUDES: KVNamespace;
 }
 
+// ¿Hay adjunto para este email? Responde sin traer el archivo, para que la
+// ficha del socio pueda decidir si muestra el botón sin bajarse la foto
+// entera cada vez que se abre el cajón.
+export const onRequestHead: PagesFunction<Env> = async ({ request, env }) => {
+  const check = await requireCap(request, env, 'carta_gestionar');
+  if (check.status !== 200) return new Response(null, { status: check.status });
+
+  const email = (new URL(request.url).searchParams.get('email') || '').trim().toLowerCase();
+  if (!email) return new Response(null, { status: 400 });
+
+  // el KV no tiene un "existe?": pedimos la metadata, que es chica
+  const obj = await env.SOLICITUDES.getWithMetadata(`archivo:${email}`, 'stream');
+  if (!obj || !obj.value) return new Response(null, { status: 404 });
+  // el cuerpo se descarta: HEAD no lo lleva
+  try { await obj.value.cancel(); } catch { /* ya cerrado */ }
+  return new Response(null, { status: 200, headers: { 'Cache-Control': 'private, no-store' } });
+};
+
 // Sirve el adjunto (foto/PDF del REPROCANN) de una solicitud — a diferencia
 // de /foto/*, esto es privado: dato personal, no un asset de marketing.
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {

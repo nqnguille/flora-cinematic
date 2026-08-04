@@ -494,11 +494,16 @@
     }
   }
 
-  async function descartarSolicitud(email, item) {
+  // `conservarAdjunto`: la sacamos de la lista porque entró (alta o acceso de
+  // prueba), así que su REPROCANN adjunto tiene que sobrevivir — es el papel
+  // con el que después verificamos la modalidad y armamos el legajo. Sin el
+  // flag (descarte de verdad) el archivo se borra, que es lo que corresponde
+  // con los datos de alguien que no entró.
+  async function descartarSolicitud(email, item, conservarAdjunto) {
     await fetch(endpointDe(item), {
       method: 'DELETE', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, conservar_adjunto: conservarAdjunto === true }),
     })
   }
 
@@ -516,7 +521,7 @@
       add.textContent = 'Agregando…'
       const { ok, error } = await saveSocio(email, notaBase)
       if (ok) {
-        await descartarSolicitud(email, item)
+        await descartarSolicitud(email, item, true)
         avisoSol('✔ agregado al padrón', 'ok')
         muCargar(true); cargarSolicitudes()
       } else {
@@ -539,7 +544,7 @@
       temp.textContent = 'Dando acceso…'
       const { ok, error, mailEnviado, mailError } = await saveSocio(email, `Acceso de prueba (${cuanto} desde el primer login)`, { name, temporal: true, temporal_dias: dias })
       if (ok) {
-        await descartarSolicitud(email, item)
+        await descartarSolicitud(email, item, true)
         muCargar(true); cargarSolicitudes()
         if (mailEnviado === false) {
           avisoSol(`Se aprobó, pero el mail NO salió (${mailError || 'error desconocido'}) — avisale vos por WhatsApp.`, 'err', 12000)
