@@ -39,10 +39,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button id="mb-logout" class="td-logout" type="button">Cerrar sesión</button>
       </div>
 
-      <header class="mb-head">
-        <span class="mb-eyebrow" id="mb-eyebrow"></span>
-        <h1 class="mb-title" id="mb-title"></h1>
-        <p class="mb-lead" id="mb-lead"></p>
+      <!-- Hero con el video del sitio (421 KB) y el mismo velo oscuro que usa
+           el resto de floraong.ar. La clase .reveal es el movimiento por
+           defecto del sitio: IntersectionObserver, sin GSAP, y ya respeta
+           prefers-reduced-motion desde el CSS global. -->
+      <header class="mb-hero">
+        <video class="mb-hero-video" src="/hero/cannabis-hero-720.webm"
+               poster="/hero/cannabis-hero-poster.jpg"
+               muted loop playsinline autoplay preload="none" aria-hidden="true"></video>
+        <div class="mb-hero-velo" aria-hidden="true"></div>
+        <div class="mb-hero-txt">
+          <span class="mb-eyebrow reveal" id="mb-eyebrow"></span>
+          <h1 class="mb-title reveal" data-reveal-delay="90" id="mb-title"></h1>
+          <p class="mb-lead reveal" data-reveal-delay="180" id="mb-lead"></p>
+        </div>
       </header>
 
       <p id="mb-vacio" class="mb-vacio" hidden>Todavía no hay membresías cargadas.</p>
@@ -54,13 +64,48 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
       <div id="mb-grid" class="mb-grid"></div>
 
+      <!-- El ciclo, con el patrón de pasos numerados de la home (número en
+           serif verde sobre línea superior). Cuenta lo que hoy no se explicaba
+           en ningún lado: qué pasa después de adherirse. -->
+      <section class="mb-ciclo" id="mb-ciclo" hidden aria-label="Cómo funciona el débito">
+        <header class="mb-sec-head reveal">
+          <span class="mb-eyebrow-v">Una vez adherido</span>
+          <h2 class="mb-h2">Se ocupa solo, <em>mes a mes</em></h2>
+        </header>
+        <ol class="mb-pasos">
+          <li class="mb-paso reveal">
+            <span class="mb-paso-num" aria-hidden="true">01</span>
+            <h3>Mercado Pago cobra</h3>
+            <p>El primer día de cada mes, sin que tengas que transferir ni avisarnos nada.</p>
+          </li>
+          <li class="mb-paso reveal" data-reveal-delay="90">
+            <span class="mb-paso-num" aria-hidden="true">02</span>
+            <h3>Tus gramos se habilitan</h3>
+            <p>Apenas se acredita el pago quedan disponibles, sin esperar a que alguien del club lo confirme.</p>
+          </li>
+          <li class="mb-paso reveal" data-reveal-delay="180">
+            <span class="mb-paso-num" aria-hidden="true">03</span>
+            <h3>Retirás cuando puedas</h3>
+            <p>En la sede, en Neuquén capital. Hasta 40&nbsp;g por visita, que es lo que ampara tu credencial para transportar.</p>
+          </li>
+          <li class="mb-paso reveal" data-reveal-delay="270">
+            <span class="mb-paso-num" aria-hidden="true">04</span>
+            <h3>Lo que no retirás, queda</h3>
+            <p>Si un mes no podés pasar no se pierde: se te acumula y lo retirás más adelante.</p>
+          </li>
+        </ol>
+      </section>
+
       <section class="mb-beneficios" id="mb-beneficios" hidden>
-        <h2>Lo que ganás adhiriéndote al débito</h2>
+        <header class="mb-sec-head reveal">
+          <span class="mb-eyebrow-v">Por qué conviene</span>
+          <h2 class="mb-h2">Lo que ganás <em>adhiriéndote</em></h2>
+        </header>
+        <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de arriba.
+             Repetirlo en los dos lados hacía que ninguno de los dos pesara. -->
         <ul>
           <li><b>20% menos durante 3 meses.</b> Ese precio queda fijo aunque suba la lista. Al terminar te ofrecemos renovar al valor de ese momento.</li>
-          <li><b>Sin trámite cada mes.</b> Se debita solo: no hay que transferir ni avisarnos nada.</li>
-          <li><b>Si un mes no podés pasar, no lo perdés.</b> Los gramos se te acumulan y los retirás más adelante. Por visita podés llevarte hasta 40 g, que es lo que ampara tu credencial para transportar.</li>
-          <li><b>Tus gramos se habilitan solos.</b> Apenas se acredita el pago quedan disponibles, sin esperar a que alguien del club lo confirme.</li>
+          <li><b>El gramo te sale menos.</b> Cuanto más grande la membresía, más baja el precio por gramo. Con débito va de $16.000 en SMALL a $12.500 en EXTRA&nbsp;LARGE.</li>
           <li><b>Botón de arrepentimiento.</b> Si cambiás de idea, lo das de baja vos mismo desde Mercado Pago, sin explicaciones ni llamados. Queremos que te quedes porque te conviene, no porque sea difícil salir.</li>
         </ul>
       </section>
@@ -106,6 +151,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <h3 class="mb-card-nom">${esc(p.item)}</h3>
         ${detalle}
         <p class="mb-card-precio">${pesos(p.debito)}<span>durante 3 meses</span></p>
+        ${p.porGramoDebito ? `<p class="mb-card-gramo">${pesos(p.porGramoDebito)} el gramo</p>` : ''}
         ${ahorro > 0 ? `<p class="mb-card-comp">En contado son <b>${pesos(p.contado)}</b></p>` : ''}
         ${btn}
       </article>`
@@ -126,6 +172,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(ETIQUETAS.uno) || 'Contado o transferencia'}</span></p>
+      ${p.porGramo ? `<p class="mb-card-gramo">${pesos(p.porGramo)} el gramo</p>` : ''}
       ${gancho}
     </article>`
   }
@@ -139,8 +186,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       b.setAttribute('aria-pressed', String(on))
     })
     // Los beneficios solo tienen sentido para quien todavía puede adherirse.
+    const oculto = ACTUAL.debitoActivo || !ACTUAL.puede
     const ben = document.getElementById('mb-beneficios')
-    if (ben) ben.hidden = ACTUAL.debitoActivo || !ACTUAL.puede
+    if (ben) ben.hidden = oculto
+    // El ciclo se muestra igual a quien ya está adherido: le explica cómo
+    // funciona lo que ya tiene andando.
+    const cic = document.getElementById('mb-ciclo')
+    if (cic) cic.hidden = !ACTUAL.puede && !ACTUAL.debitoActivo
   }
 
   function pintar(d) {
@@ -375,6 +427,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, .55); margin-top: 3px;
   }
   .mb-gancho .mb-adherir { margin-top: 11px; }
+  .mb-card-gramo {
+    font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, .42); margin: 6px 0 0;
+    font-variant-numeric: tabular-nums;
+  }
   .mb-card-comp {
     font-family: var(--font-ui); font-size: 12.5px;
     color: rgba(244, 241, 247, .5); margin: 11px 0 0;
@@ -385,6 +442,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 </style>
 
 <style>
+  .mb-hero {
+    position: relative; overflow: hidden;
+    margin: 0 -24px 34px; padding: clamp(52px, 9vw, 96px) 24px clamp(44px, 7vw, 72px);
+    border-radius: 22px;
+  }
+  .mb-hero-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0;
+  }
+  /* Dos capas: un oscurecido parejo para que el texto se lea siempre, y un
+     degradado desde abajo que funde el hero con el fondo de la página. */
+  .mb-hero-velo {
+    position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(to top, #130d1c 0%, rgba(19, 13, 28, .55) 42%, rgba(19, 13, 28, .35) 100%),
+      rgba(19, 13, 28, .35);
+  }
+  .mb-hero-txt { position: relative; z-index: 2; }
+
   .mb-head { max-width: 720px; margin: 0 auto; padding: 8px 0 28px; text-align: center; }
   .mb-eyebrow {
     display: inline-block; font-family: var(--font-ui);
@@ -401,6 +477,43 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
     color: rgba(244, 241, 247, 0.66); margin: 0;
   }
+
+  /* Sobre video el texto necesita sombra sí o sí, igual que en el resto del
+     sitio: 0 2px 28px para títulos, 0 1px 16px para párrafos. */
+  .mb-hero .mb-title { text-shadow: 0 2px 28px rgba(0, 0, 0, .6); }
+  .mb-hero .mb-lead { text-shadow: 0 1px 16px rgba(0, 0, 0, .65); }
+
+  /* Encabezado de sección interna, con el gesto tipográfico del sitio: el
+     título partido y la segunda mitad en verde. */
+  .mb-sec-head { max-width: 720px; margin: 0 auto clamp(24px, 3vw, 34px); text-align: center; }
+  .mb-eyebrow-v {
+    display: inline-block; font-family: var(--font-ui);
+    font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: #4FC79E; margin-bottom: 14px;
+  }
+  /* Serif, como el título del hero y como todo el portal de socios. En la home
+     los títulos son sans 800, pero acá adentro la voz es la otra. */
+  .mb-h2 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(27px, 3.8vw, 42px); line-height: 1.12;
+    color: #fff; margin: 0; text-wrap: balance;
+  }
+  .mb-h2 em { font-style: italic; color: #4FC79E; }
+
+  /* Pasos: mismo patrón que la home. Línea arriba, número en serif verde,
+     sin caja. Es lo que hace que se lea como una sección editorial y no como
+     una lista de features. */
+  .mb-ciclo { max-width: 1020px; margin: clamp(48px, 7vw, 84px) auto 0; padding-top: clamp(34px, 5vw, 52px); border-top: 1px solid rgba(183, 157, 230, .16); }
+  .mb-ciclo[hidden] { display: none; }
+  .mb-pasos { display: grid; grid-template-columns: 1fr; gap: 22px; list-style: none; padding: 0; margin: 0; text-align: left; }
+  .mb-paso { border-top: 1px solid rgba(255, 255, 255, .18); padding-top: 16px; }
+  .mb-paso-num {
+    display: block; font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(26px, 3vw, 34px); line-height: 1; color: #4FC79E;
+  }
+  .mb-paso h3 { font-family: var(--font-ui); font-size: 16px; font-weight: 700; color: #fff; margin: 9px 0 5px; }
+  .mb-paso p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, .7); margin: 0; }
+  @media (min-width: 760px) { .mb-pasos { grid-template-columns: repeat(4, 1fr); gap: clamp(18px, 2.4vw, 30px); } }
 
   .mb-selector {
     display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
@@ -421,18 +534,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-selector button.on em { opacity: 1; }
 
   .mb-beneficios {
-    max-width: 720px; margin: 34px auto 0; padding-top: 26px;
+    max-width: 900px; margin: clamp(48px, 7vw, 84px) auto 0; padding-top: clamp(34px, 5vw, 52px);
     border-top: 1px solid rgba(183, 157, 230, 0.16);
   }
   .mb-beneficios[hidden] { display: none; }
-  .mb-beneficios h2 {
-    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    color: rgba(244, 241, 247, 0.45); margin: 0 0 14px;
-  }
+
   .mb-beneficios ul {
-    list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    list-style: none; margin: 0; padding: 0; text-align: left;
+    display: grid; gap: 14px 26px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
   .mb-beneficios li {
     font-family: var(--font-ui); font-size: 13.5px; line-height: 1.6;
@@ -440,7 +549,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-beneficios li::before {
     content: ''; position: absolute; left: 0; top: 8px;
-    width: 7px; height: 7px; border-radius: 50%; background: #009ee3;
+    width: 6px; height: 6px; border-radius: 50%; background: #4FC79E;
   }
   .mb-beneficios b { color: rgba(244, 241, 247, 0.9); font-weight: 700; }
 

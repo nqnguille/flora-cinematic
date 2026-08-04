@@ -17,6 +17,11 @@ export interface PlanSocio {
   debito: number | null;
   cupo: number | null;
   linkDebito: string | null;
+  // Cuánto sale el gramo en cada modalidad. Es el dato que hace comparables a
+  // los planes entre sí, y nadie lo calcula de memoria: en la lista vigente el
+  // gramo va de $20.000 en SMALL a $12.500 en EXTRA LARGE con débito.
+  porGramo: number | null;
+  porGramoDebito: number | null;
 }
 
 interface EnvPlanes { DB: D1Database }
@@ -45,6 +50,8 @@ export async function planesVigentes(env: EnvPlanes): Promise<PlanSocio[]> {
       linkDebito: r.mp_plan_id
         ? `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${r.mp_plan_id}`
         : null,
+      porGramo: r.gramos && r.contado ? Math.round(r.contado / r.gramos) : null,
+      porGramoDebito: r.gramos && r.debito ? Math.round(r.debito / r.gramos) : null,
     });
   }
   // De menor a mayor, que es como se leen: SMALL, MEDIUM, LARGE, EXTRA LARGE.
