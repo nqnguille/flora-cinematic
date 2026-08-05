@@ -69,7 +69,7 @@ async function enviarBienvenida(
           <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px;line-height:1.3;color:#381f56;">${saludo ? `Bienvenido al club, ${saludo}` : 'Bienvenido al club'}</h1>
         </td></tr>
         <tr><td style="padding:16px 36px 0;text-align:center;">
-          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Gracias por elegirnos &mdash; desde hoy, esta tambi&eacute;n es tu casa. ${linea} En la carta te esperan las gen&eacute;ticas de la casa: mir&aacute;, eleg&iacute; y dej&aacute; tu reserva para pasar a retirar cuando te quede bien.</p>
+          <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">Gracias por elegirnos &mdash; desde hoy, esta tambi&eacute;n es tu casa. ${linea} En la carta te esperan las gen&eacute;ticas de la casa: mir&aacute;, eleg&iacute; y dej&aacute; tu reserva. La retir&aacute;s en la sede o te la llevamos, como prefieras.</p>
         </td></tr>
         <tr><td style="padding:28px 36px 0;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">

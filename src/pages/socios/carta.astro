@@ -79,7 +79,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <div class="gn-modal-card gn-tos-card" role="dialog" aria-modal="true" aria-labelledby="gn-tos-title">
         <h2 id="gn-tos-title" class="gn-modal-title">Términos de <em>uso</em></h2>
         <div class="gn-tos-body">
-          <p class="gn-tos-meta">Última actualización: 5 de julio de 2026</p>
+          <p class="gn-tos-meta">Última actualización: 5 de agosto de 2026</p>
 
           <h3>1. Quién puede usar esta carta</h3>
           <p>Esta carta es exclusiva para socios y socias <strong>mayores de 18 años</strong> de la Asociación Civil Cann de Cannabis Medicinal, con vínculo asociativo vigente y en el marco del programa REPROCANN (Ley 27.350). Al aceptar estos términos, declarás ser mayor de edad.</p>
@@ -88,7 +88,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <p>La Ley 27.350 y su reglamentación (REPROCANN) reconocen el derecho de cada paciente a cultivar su propio cannabis medicinal, y prevén que una organización civil inscripta cultive en su nombre —de forma solidaria— cuando, por el motivo que sea, no pueda ejercer ese derecho en su domicilio. La Asociación Civil Cann de Cannabis Medicinal (CUIT 30-71827609-4) está inscripta en REPROCANN como organización civil cultivadora, con sitios de cultivo declarados en las provincias de Neuquén y Río Negro, y cuenta con Director Médico y responsable técnico designados conforme la normativa vigente. Para retirar en el club, cada socio debe contar con su propio trámite REPROCANN vigente, que designe a la Asociación como su cultivadora.</p>
 
           <h3>3. Qué es (y qué no es) este servicio</h3>
-          <p>Por eso, lo que reservás y retirás en el club <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por tu vínculo REPROCANN con la Asociación. Este sitio no procesa pagos ni hace envíos — tu aporte y el retiro siempre se coordinan en persona, en la sede del club.</p>
+          <p>Por eso, lo que reservás <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por tu vínculo REPROCANN con la Asociación. Podés retirarlo en la sede del club o, si tu membresía lo incluye, pedir que te lo llevemos a tu domicilio dentro de Neuquén capital. El traslado lo hace la Asociación con la carta de porte que exige la Resolución 1780/2025, y la cantidad que se traslada nunca supera lo que ampara tu credencial. Este sitio no procesa pagos: tu aporte se coordina aparte.</p>
 
           <h3>4. Tus datos personales</h3>
           <p>Para identificarte usamos el inicio de sesión con tu cuenta de Google, de donde tomamos tu nombre, foto y email. Guardamos también el historial de tus reservas para poder atenderte. Cuando reservás, le avisamos al equipo del club por WhatsApp usando un servicio de mensajería de terceros — solo se comparte el contenido de la reserva, nunca tu email ni tus datos personales. No vendemos ni compartimos tus datos con nadie más.</p>
@@ -821,7 +821,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <span class="gn-pedido-badge is-${escapeHtml(p.estado)}">${p.estado === 'listo' ? 'Lista para retirar' : 'En preparación'}</span>
           <ul class="gn-modal-list">${p.items.map((i) => `<li>${escapeHtml(fmtItem(i))}</li>`).join('')}</ul>
           ${p.nota ? `<p class="gn-modal-nota">Nota: ${escapeHtml(p.nota)}</p>` : ''}
-          <p class="gn-modal-hint">${p.estado === 'listo' ? 'Acercate al club a retirarla. Recordá abonar tu cuota ahí — por el sitio no se cobra nada.' : 'Te avisamos apenas esté lista. El retiro y el pago de tu cuota son en el club.'}</p>`
+          <p class="gn-modal-hint">${p.estado === 'listo' ? 'Ya la podés pasar a buscar por el club, o te la llevamos si elegiste envío.' : 'Te avisamos apenas esté lista.'}</p>`
         actions.innerHTML = `
           ${p.estado === 'pendiente' ? '<button id="gn-pedido-cancel" class="gn-btn-ghost" type="button">Cancelar reserva</button>' : ''}
           <button class="gn-btn-ghost js-otra-reserva" type="button">Empezar otra aparte</button>
@@ -836,7 +836,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           ${esMostrador ? bloqueDestino() : ''}
           <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="${esMostrador ? 'Nota del mostrador (opcional)' : 'Nota para el club (opcional)'}" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
           ${modoAparte ? '<p class="gn-modal-hint gn-modal-hint--aparte">Esta va a quedar como una <strong>reserva separada</strong>: no se suma a la que ya tenés. Útil cuando es para otra persona, o cuando querés la misma genética en dos bolsitas.</p>' : ''}
-          <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
+          <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo recibís. Por el sitio no se cobra nada, el aporte se coordina aparte.</p>`
         // Falta decidir si se suma o va aparte: sin eso el backend rechaza el
         // pedido igual, así que el botón lo dice antes de que lo aprieten.
         const faltaDecidir = !!destinoSocio && abiertasDestino.length > 0 && !modoDestino

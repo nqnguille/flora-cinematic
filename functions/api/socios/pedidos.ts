@@ -294,14 +294,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (aparte && activos.length >= MAX_ACTIVAS) {
     const quien = destino.mostrador ? `${destino.name || destino.email} ya tiene` : 'ya tenés';
     return Response.json(
-      { ok: false, error: `${quien} ${activos.length} reservas abiertas: retirá alguna antes de empezar otra` },
+      { ok: false, error: `${quien} ${activos.length} reservas abiertas: cerrá alguna antes de empezar otra` },
       { status: 409 },
     );
   }
   if (!aparte && yaActivo && yaActivo.estado !== 'pendiente') {
     const error = destino.mostrador
-      ? `la reserva de ${destino.name || destino.email} ya está lista para retirar: entregala antes de sumarle, o cargá esto aparte`
-      : 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra';
+      ? `la reserva de ${destino.name || destino.email} ya está lista: entregala antes de sumarle, o cargá esto aparte`
+      : 'tenés una reserva lista; recibila antes de sumar otra';
     return Response.json({ ok: false, error, activo: yaActivo }, { status: 409 });
   }
 
@@ -399,7 +399,7 @@ async function notificar(env: Env, pedido: any) {
       (pedido.mostrador ? `🏪 Cargada en el mostrador\n` : '') +
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +
-      `\n💵 Abona la cuota al retirar en el club` +
+      `\n💵 El aporte se coordina aparte` +
       `\nPanel: https://floraong.ar/admin/`;
     await fetch(NOTIFY_URL, {
       method: 'POST',

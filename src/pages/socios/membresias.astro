@@ -103,8 +103,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           </li>
           <li class="mb-paso reveal" data-reveal-delay="180">
             <span class="mb-paso-num" aria-hidden="true">03</span>
-            <h3>Retirás cuando puedas</h3>
-            <p>En la sede, en Neuquén capital. Hasta 40&nbsp;g por visita, lo que ampara tu credencial.</p>
+            <h3>Lo recibís sin moverte</h3>
+            <p>Te lo llevamos a tu casa en Neuquén capital, al siguiente día hábil. O lo pasás a buscar por la sede, como prefieras.</p>
           </li>
         </ol>
       </section>
@@ -122,7 +122,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
              porque en la TV esto se lee a varios metros. -->
         <ul>
           <li><b>20% menos, por 3 meses.</b> Ese precio queda fijo aunque suba la lista.</li>
-          <li><b>El gramo te sale menos.</b> De $16.000 en SMALL a $12.500 en EXTRA&nbsp;LARGE.</li>
+          <li><b>Envío sin cargo.</b> Te lo llevamos a tu domicilio en Neuquén capital, al siguiente día hábil.</li>
+          <li><b>Cuanto más grande, más rinde.</b> El ahorro por mes crece con la membresía.</li>
           <li><b>No perdés lo que no retirás.</b> Si un mes no podés pasar, se te acumula.</li>
           <li><b>Botón de arrepentimiento.</b> Lo das de baja vos mismo desde Mercado Pago, sin llamados.</li>
         </ul>
@@ -172,7 +173,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <h3 class="mb-card-nom">${esc(p.item)}</h3>
         ${detalle}
         <p class="mb-card-precio">${pesos(p.debito)}<span>durante 3 meses</span></p>
-        ${p.porGramoDebito ? `<p class="mb-card-gramo">${pesos(p.porGramoDebito)} el gramo</p>` : ''}
         ${ahorro > 0 ? `<p class="mb-card-comp">En contado son <b>${pesos(p.contado)}</b></p>` : ''}
         ${btn}
       </article>`
@@ -185,6 +185,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <span class="mb-gancho-lb">Con débito automático</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
           ${p.contado ? `<span class="mb-gancho-ahorro">ahorrás ${pesos(p.contado - p.debito)} por mes</span>` : ''}
+          <span class="mb-gancho-envio">+ envío sin cargo</span>
           ${btn}
         </div>`
       : ''
@@ -193,7 +194,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(ETIQUETAS.uno) || 'Contado o transferencia'}</span></p>
-      ${p.porGramo ? `<p class="mb-card-gramo">${pesos(p.porGramo)} el gramo</p>` : ''}
+      <p class="mb-card-retiro">Lo retirás en la sede</p>
       ${gancho}
     </article>`
   }
@@ -458,6 +459,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, .5); margin: 11px 0 0;
   }
   .mb-card-comp b { color: rgba(244, 241, 247, .78); font-weight: 700; }
+  /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
+  .mb-card-retiro {
+    font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, .4); margin: 5px 0 0;
+  }
+  .mb-gancho-envio {
+    display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+    color: #4cb8e8; margin-top: 3px;
+  }
   .mb-nota li { margin-bottom: 7px; }
 
   /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
@@ -474,6 +484,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { font-size: clamp(10px, 1.2vh, 13px); margin-top: 2px; }
     .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
     .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
+    .mb-card-retiro { font-size: clamp(10px, 1.15vh, 13px); margin-top: 4px; }
+    .mb-gancho-envio { font-size: clamp(10px, 1.2vh, 13px); }
     .mb-gancho { margin-top: clamp(8px, 1.3vh, 16px); padding: clamp(8px, 1.3vh, 14px) 14px clamp(9px, 1.4vh, 15px); }
     .mb-gancho-precio { font-size: clamp(20px, 3vh, 34px); }
     .mb-gancho-lb { font-size: clamp(9px, 1.1vh, 12px); margin-bottom: 2px; }

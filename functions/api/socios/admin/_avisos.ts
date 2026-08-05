@@ -21,24 +21,24 @@ export const AVISOS_DEFAULT: Avisos = {
     asunto: 'Tu reserva está lista 🌿',
     cuerpo: `Hola {{nombre}}!
 
-Tu reserva ya está preparada y te espera en el club:
+Tu reserva ya está preparada:
 
 {{items}}
 
-Pasá a retirarla cuando te quede bien, en el horario de siempre. Se abona al retirar.`,
-    wa: `Hola {{nombre}}! Tu reserva de Flora ya está lista para retirar 🌿 ({{items}}). Te esperamos en el club!`,
+Si pediste envío, te la llevamos al siguiente día hábil. Si no, pasá a buscarla por el club cuando te quede bien.`,
+    wa: `Hola {{nombre}}! Tu reserva de Flora ya está lista 🌿 ({{items}}). Si pediste envío te la llevamos al siguiente día hábil; si no, te esperamos en el club.`,
   },
   entregado: {
     activo: true,
-    asunto: 'Gracias por tu visita 🌿',
+    asunto: 'Ya lo tenés 🌿',
     cuerpo: `Hola {{nombre}}!
 
-Ya te llevaste tu reserva:
+Ya recibiste tu reserva:
 
 {{items}}
 
 Gracias por elegirnos, que la disfrutes. Cualquier cosa que necesites, escribinos.`,
-    wa: `Gracias por pasar por Flora, {{nombre}}! 🌿 Que lo disfrutes. Cualquier cosa, escribinos.`,
+    wa: `Listo, {{nombre}}! 🌿 Que lo disfrutes. Cualquier cosa, escribinos.`,
   },
 };
 
@@ -130,8 +130,8 @@ export async function enviarMailReserva(
     `<tr><td style="padding:16px 36px 0;text-align:center;">
       <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#4a4356;">${p.replace(/\n/g, '<br>')}</p>
     </td></tr>`).join('');
-  const eyebrow = estado === 'listo' ? 'Tu reserva te espera' : 'Gracias por venir';
-  const titulo = estado === 'listo' ? 'Lista para retirar' : 'Hasta la próxima';
+  const eyebrow = estado === 'listo' ? 'Tu reserva está lista' : 'Ya lo tenés';
+  const titulo = estado === 'listo' ? 'Lista' : 'Hasta la próxima';
 
   const html = `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
