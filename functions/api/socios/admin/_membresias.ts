@@ -33,7 +33,7 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   eyebrow: 'Solo para socios',
   titulo: 'Membresías',
   tituloEm: 'de flores',
-  lead: 'Cada membresía define cuántos gramos mensuales te corresponden de tu propio cultivo. El aporte sostiene ese cultivo: la tierra, la luz, el trabajo y los análisis de cada lote.',
+  lead: 'Cada membresía define tus gramos del mes. El aporte es la cuota asociativa que sostiene el cultivo que los produce: la tierra, la luz, el agua, los insumos, el trabajo de quienes cuidan las plantas y los análisis de laboratorio de cada lote. Es lo que cuesta producirlo.',
   // El default es el criterio que fijó Guille el 04/08: el trámite tiene que
   // estar presentado ante el Ministerio.
   estadosAdhesion: ['en_evaluacion', 'aprobado'],
