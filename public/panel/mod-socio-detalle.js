@@ -155,6 +155,11 @@
               Este mes: retiró <b>${sal.retiradoMes} g</b>${sal.habilitado ? ` de ${sal.habilitado} habilitados — saldo <b style="color:${sal.saldo < 0 ? 'var(--dan)' : 'var(--grn)'}">${sal.saldo} g</b>` : ''}
               ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
           })() : ''}
+          ${editar ? `<div class="fila" style="margin-top:10px">
+            ${d.membresia && d.membresia.modalidad === 'plan'
+              ? '<button class="btn btn-peligro" id="sd-plan-cancelar" type="button">Cancelar el plan prepago</button>'
+              : '<button class="btn" id="sd-plan-vender" type="button">Venderle un plan prepago</button>'}
+          </div>` : ''}
           <p class="msg" id="sd-msg-memb" style="margin:6px 0 0"></p>
         </details>
 
@@ -337,6 +342,18 @@
     // declaración jurada de vinculación (autocultivo → paciente de Flora)
     pintarDdjj(s)
 
+    caja.querySelector('#sd-plan-vender')?.addEventListener('click', () => modalPlan(s))
+    caja.querySelector('#sd-plan-cancelar')?.addEventListener('click', async () => {
+      if (!(await P.confirmar(
+        `¿Cancelar el plan prepago de ${s.nombre}?\n\nSe corta hoy. Los retiros que ya hizo quedan como están.`,
+        'Sí, cancelar'))) return
+      const r = await fetch('/api/panel/plan-socio', {
+        method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ membresia_id: d.membresia?.id }),
+      })
+      if (!r.ok) { aviso('#sd-msg-memb', '✗ no se pudo cancelar', 'err'); return }
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
     caja.querySelector('#sd-debito')?.addEventListener('click', () => modalDebito(s))
     caja.querySelector('#sd-no-insistir')?.addEventListener('click', async (e) => {
       e.target.disabled = true
@@ -504,6 +521,78 @@
         method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ declaracion_id: dec.id }),
       })
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
+  }
+
+  /* Venderle un plan prepago: paga todo junto y le queda un saldo de gramos a
+     favor para retirar durante N meses. Lo que no retira, se acumula. */
+  async function modalPlan(s) {
+    const ov = P.modal(`Plan prepago — ${s.nombre}`, '<div class="vacio">⏳ Buscando los planes…</div>')
+    const cuerpo = ov.querySelector('.pn-mod-cuerpo')
+    const r = await fetch(`/api/panel/plan-socio?socio_id=${s.id}`, { credentials: 'include' })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) { cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>`; return }
+    if (!d.planes.length) {
+      cuerpo.innerHTML = `<p style="margin:0">No hay planes prepagos cargados. Creá uno en <b>Membresías</b>.</p>
+        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
+      return
+    }
+    const hoy = new Date().toISOString().slice(0, 10)
+    cuerpo.innerHTML = `
+      <div class="campo"><label class="lb">Qué plan compró</label>
+        <select class="sel" id="pl-item">${d.planes.map((p) => {
+          const total = (p.plan_gramos_mes || 0) * (p.plan_meses || 0)
+          return `<option value="${P.esc(p.item)}" data-contado="${p.contado || 0}">${P.esc(p.item)} · ${p.plan_gramos_mes} g/mes × ${p.plan_meses} meses = ${total} g · ${P.fmt(p.contado || 0)}</option>`
+        }).join('')}</select></div>
+      <div class="grid2" style="gap:10px">
+        <div class="campo"><label class="lb">Desde</label>
+          <input class="input" id="pl-desde" type="date" value="${hoy}" /></div>
+        <div class="campo"><label class="lb">Cuánto cobraste</label>
+          <input class="input" id="pl-monto" type="number" min="0" step="10000" /></div>
+      </div>
+      <div class="campo"><label class="lb">Cómo pagó</label>
+        <select class="sel" id="pl-cobro">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="mp">Mercado Pago</option>
+          <option value="ninguno">Ya lo había pagado antes (no registrar el ingreso)</option>
+        </select></div>
+      ${d.mensual ? `<p class="so-help" style="margin:8px 0 0">Tiene la membresía <b>${P.esc(d.mensual.tier)}</b> vigente: se cierra al arrancar el plan, porque el prepago la reemplaza.</p>` : ''}
+      <p class="so-help" style="margin:6px 0 0" id="pl-resumen"></p>
+      <div class="pn-mod-acciones">
+        <button class="btn btn-pri" id="pl-guardar" type="button">Asignar el plan</button>
+      </div>
+      <p class="msg" id="pl-msg" style="margin:8px 0 0"></p>`
+
+    const sel = cuerpo.querySelector('#pl-item')
+    const monto = cuerpo.querySelector('#pl-monto')
+    const resumen = cuerpo.querySelector('#pl-resumen')
+    const pintar = () => {
+      const p = d.planes.find((x) => x.item === sel.value)
+      if (!p) return
+      monto.value = p.contado || ''
+      const total = (p.plan_gramos_mes || 0) * (p.plan_meses || 0)
+      resumen.textContent = `Le quedan ${total} gramos para retirar cuando quiera durante ${p.plan_meses} meses. Lo que no retira en un mes, se acumula.`
+    }
+    sel.addEventListener('change', pintar)
+    pintar()
+
+    cuerpo.querySelector('#pl-guardar').addEventListener('click', async (e) => {
+      const msg = cuerpo.querySelector('#pl-msg')
+      e.target.disabled = true
+      msg.className = 'msg'; msg.textContent = '⏳ asignando…'
+      const rr = await fetch('/api/panel/plan-socio', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          socio_id: s.id, item: sel.value, desde: cuerpo.querySelector('#pl-desde').value,
+          cobro: cuerpo.querySelector('#pl-cobro').value, monto: monto.value,
+        }),
+      })
+      const dd = await rr.json().catch(() => ({}))
+      e.target.disabled = false
+      if (!rr.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (dd.error || 'no se pudo'); return }
+      P.cerrarModal()
       alCambiar?.(); abrir(s.id, alCambiar)
     })
   }
