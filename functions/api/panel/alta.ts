@@ -17,7 +17,24 @@ interface Env {
   RESEND_API_KEY?: string;
 }
 
-const GRAMOS: Record<string, number> = { SMALL: 10, MEDIUM: 20, LARGE: 30, 'EXTRA LARGE': 40 };
+// Los gramos de cada membresía salen de la lista de precios vigente, no de una
+// constante: si acá quedaran fijos, editar un plan desde el panel asignaría los
+// gramos viejos y el socio terminaría con un saldo que no es el que compró.
+// El default sólo cubre el arranque en frío si la lista todavía no existe.
+const GRAMOS_BASE: Record<string, number> = { SMALL: 10, MEDIUM: 20, LARGE: 30, 'EXTRA LARGE': 40 };
+
+async function gramosVigentes(env: { DB: D1Database }): Promise<Record<string, number>> {
+  try {
+    const r = await env.DB.prepare(
+      `SELECT p.item, p.gramos FROM precios p JOIN listas_precios l ON l.id = p.lista_id
+        WHERE p.tipo = 'membresia' AND p.gramos IS NOT NULL AND l.vigente_desde <= date('now')
+          AND l.id = (SELECT id FROM listas_precios WHERE vigente_desde <= date('now')
+                       ORDER BY vigente_desde DESC, id DESC LIMIT 1)`,
+    ).all<{ item: string; gramos: number }>();
+    if (r.results.length) return Object.fromEntries(r.results.map((x) => [x.item, x.gramos]));
+  } catch { /* sin lista, vale el default */ }
+  return GRAMOS_BASE;
+}
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function json(data: unknown, status = 200): Response {
@@ -131,6 +148,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let b: Record<string, unknown>;
   try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
 
+  const GRAMOS = await gramosVigentes(env);
   const email = String(b.email || '').trim().toLowerCase();
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   const telefono = String(b.telefono || '').trim().slice(0, 30) || null;

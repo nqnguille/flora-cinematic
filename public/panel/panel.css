@@ -704,3 +704,12 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
   .nt-cab { flex-wrap: wrap }
   .nt-meta { max-width: 100%; justify-content: flex-start }
 }
+
+/* Planes de membresía editables (módulo Membresías) */
+.mb-plan { border-bottom: 1px solid var(--line) }
+.mb-plan:last-child { border-bottom: 0 }
+.mb-plan.on { background: var(--vio-soft); border-radius: 10px }
+.mb-tap { cursor: pointer }
+.mb-tap:hover { color: var(--vio) }
+.mb-edit { padding: 4px 14px 16px; display: grid; gap: 10px }
+.mb-edit .campo { margin: 0 }

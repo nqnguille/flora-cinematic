@@ -38,20 +38,74 @@
     if (m) { m.textContent = ''; m.style.color = '' }
   }
 
-  /* ---------- planes (solo lectura: viven en la lista de precios) ---------- */
+  /* ---------- planes: gramos, importes y el link de Mercado Pago ---------- */
+  let SUSCRIPTOS = {}
+  let LISTA = null
+  let abierto = null
+
   function pintarPlanes() {
     const caja = cont.querySelector('#mb-filas')
     if (!PLANES.length) {
       caja.innerHTML = '<p class="ct-help" style="margin:8px 0 0">No hay membresías en la lista de precios vigente.</p>'
       return
     }
-    caja.innerHTML = PLANES.map((p) => `<div class="mb-fila mb-ro">
-      <b>${P.esc(p.item)}</b>
-      <span>${p.gramos ? p.gramos + ' g/mes' : '—'}</span>
-      <span class="mb-num">${p.contado ? pesos(p.contado) : '—'}</span>
-      <span class="mb-num">${p.debito ? pesos(p.debito) : '—'}</span>
-      <span class="mb-mp">${p.linkDebito ? '✓ débito' : '—'}</span>
-    </div>`).join('')
+    caja.innerHTML = PLANES.map((p) => {
+      const n = SUSCRIPTOS[p.item] || 0
+      const abre = abierto === p.item
+      return `<div class="mb-plan ${abre ? 'on' : ''}">
+        <div class="mb-fila mb-ro mb-tap" data-plan="${P.esc(p.item)}">
+          <b>${P.esc(p.item)}</b>
+          <span>${p.gramos ? p.gramos + ' g/mes' : '—'}</span>
+          <span class="mb-num">${p.contado ? pesos(p.contado) : '—'}</span>
+          <span class="mb-num">${p.debito ? pesos(p.debito) : '—'}</span>
+          <span class="mb-mp">${p.mp_plan_id || p.linkDebito ? '✓ débito' : '<span style="color:var(--dan)">sin link</span>'}</span>
+        </div>
+        ${abre ? `<div class="mb-edit">
+          <div class="grid2" style="gap:10px">
+            <div class="campo"><label class="lb">Gramos por mes</label>
+              <input class="input mb-c" data-c="gramos" type="number" min="0" step="1" value="${p.gramos ?? ''}" /></div>
+            <div class="campo"><label class="lb">Contado o transferencia</label>
+              <input class="input mb-c" data-c="contado" type="number" min="0" step="1000" value="${p.contado ?? ''}" /></div>
+          </div>
+          <div class="campo"><label class="lb">Débito automático</label>
+            <input class="input mb-c" data-c="debito" type="number" min="0" step="1000" value="${p.debito ?? ''}" />
+            <p class="ct-help" style="margin:4px 0 0">Tiene que coincidir con lo que cobra el plan en Mercado Pago. Al guardar se verifica.</p></div>
+          <div class="campo"><label class="lb">Link del plan de Mercado Pago</label>
+            <input class="input mb-c" data-c="link" placeholder="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=…"
+              value="${P.esc(p.linkDebito || '')}" />
+            <p class="ct-help" style="margin:4px 0 0">Pegá el link del plan que creaste en Mercado Pago. Se comprueba que exista y cuánto cobra.</p></div>
+          ${n ? `<p class="ct-help" style="margin:8px 0 0;color:var(--amb)">⚠ ${n} socio${n > 1 ? 's' : ''} con este plan activo. Cambiar el importe en Mercado Pago les actualiza la cuota a todos.</p>` : ''}
+          <div class="fila" style="margin-top:10px">
+            <button class="btn mb-verificar" type="button">Verificar el link</button>
+            <span class="pn-sp"></span>
+            <button class="btn btn-pri mb-guardar-plan" type="button">Guardar ${P.esc(p.item)}</button>
+          </div>
+          <p class="msg" style="margin:8px 0 0" id="mb-msg-plan"></p>
+        </div>` : ''}
+      </div>`
+    }).join('')
+  }
+
+  async function cargarPlanes() {
+    const r = await fetch('/api/panel/planes', { credentials: 'include' }).catch(() => null)
+    if (!r || !r.ok) return
+    const d = await r.json()
+    LISTA = d.lista || null
+    SUSCRIPTOS = d.suscripciones || {}
+    // se mezcla con lo que ya vino de /membresias?planes=1 para conservar linkDebito
+    const porItem = Object.fromEntries((d.planes || []).map((x) => [x.item, x]))
+    PLANES = PLANES.map((p) => ({ ...p, ...(porItem[p.item] || {}) }))
+    for (const x of d.planes || []) if (!PLANES.some((p) => p.item === x.item)) PLANES.push(x)
+    const info = cont.querySelector('#mb-lista-info')
+    if (info && LISTA) info.textContent = `Lista vigente desde ${LISTA.vigente_desde}.`
+    pintarPlanes()
+  }
+
+  function msgPlan(t, c) {
+    const el = cont.querySelector('#mb-msg-plan')
+    if (!el) return
+    el.className = 'msg ' + (c || '')
+    el.textContent = t
   }
 
   /* ---------- quién puede adherirse ---------- */
@@ -164,6 +218,7 @@
       } catch { ESTADOS = [] }
       caja.hidden = false
       pintarTextos(); pintarPlanes(); pintarEstados()
+      cargarPlanes()
     } catch {
       caja.innerHTML = '<p class="ct-help">No se pudo cargar. Revisá la conexión.</p>'
       caja.hidden = false
@@ -191,7 +246,7 @@
               <span class="lb">MP</span>
             </div>
             <div id="mb-filas"></div>
-            <p class="ct-help" style="margin:12px 0 0">Los planes y sus importes salen de la lista de precios vigente, la misma que usan el alta de socios, la cobranza y el panel de Mercado Pago. Acá se editan solo los rótulos con que se muestran en la página.</p>
+            <p class="ct-help" style="margin:12px 0 0">Tocá una membresía para editar sus gramos, sus importes y el link de Mercado Pago. <span id="mb-lista-info"></span> Cambiar un importe crea una lista nueva con la fecha de hoy: la cobranza de los meses anteriores sigue calculándose con la lista que regía entonces.</p>
           </div>
 
           <div class="card">
@@ -253,6 +308,49 @@
             copiar.textContent = 'Copiado'
             setTimeout(() => { copiar.textContent = 'Copiar link' }, 1600)
           } catch { /* sin portapapeles: el link está a la vista igual */ }
+          return
+        }
+        // --- planes: abrir, verificar el link, guardar ---
+        const tap = e.target.closest('.mb-tap')
+        if (tap) {
+          abierto = abierto === tap.dataset.plan ? null : tap.dataset.plan
+          pintarPlanes()
+          return
+        }
+        const ver = e.target.closest('.mb-verificar')
+        if (ver) {
+          const link = cont.querySelector('.mb-c[data-c="link"]').value.trim()
+          if (!link) { msgPlan('Pegá primero el link del plan.', 'err'); return }
+          ver.disabled = true
+          msgPlan('⏳ preguntándole a Mercado Pago…')
+          const r = await fetch('/api/panel/planes', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ verificar: true, link }),
+          }).catch(() => null)
+          const d = r ? await r.json().catch(() => ({})) : {}
+          ver.disabled = false
+          if (!r || !r.ok) { msgPlan('✗ ' + (d.error || 'no se pudo verificar'), 'err'); return }
+          const imp = d.importe != null ? '$' + Number(d.importe).toLocaleString('es-AR') : 'sin importe'
+          msgPlan(`✔ ${d.nombre || 'plan'} · cobra ${imp}${d.adheridos != null ? ` · ${d.adheridos} adheridos` : ''}${d.estado && d.estado !== 'active' ? ` · ${d.estado}` : ''}`, 'ok')
+          return
+        }
+        const gp = e.target.closest('.mb-guardar-plan')
+        if (gp) {
+          const item = abierto
+          const val = (c) => { const el = cont.querySelector(`.mb-c[data-c="${c}"]`); return el ? el.value.trim() : undefined }
+          gp.disabled = true
+          msgPlan('⏳ guardando…')
+          const r = await fetch('/api/panel/planes', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item, gramos: val('gramos'), contado: val('contado'), debito: val('debito'), link: val('link') }),
+          }).catch(() => null)
+          const d = r ? await r.json().catch(() => ({})) : {}
+          gp.disabled = false
+          if (!r || !r.ok) { msgPlan('✗ ' + (d.error || 'no se pudo guardar'), 'err'); return }
+          msgPlan(d.aviso ? '✔ guardado · ' + d.aviso : '✔ guardado', d.aviso ? 'err' : 'ok')
+          const pr = await fetch('/api/socios/admin/membresias?planes=1', { credentials: 'include' }).catch(() => null)
+          if (pr && pr.ok) PLANES = (await pr.json()).planes || []
+          cargarPlanes()
           return
         }
         if (e.target.closest('#mb-guardar')) guardar()
