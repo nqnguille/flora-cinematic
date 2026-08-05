@@ -7,9 +7,13 @@
 
   const EP_PEDIDOS = '/api/socios/admin/pedidos'
   const EP_SOCIOS = '/api/socios/admin/socios'
-  // Cuenta que se usa en el living del club: varios socios reservan con ESTA
-  // sesión, no la propia — por eso al entregar se ofrece asignar al socio real.
-  const CUENTA_COMPARTIDA = 'floraclubdecultivo@gmail.com'
+  const EP_MOSTRADOR = '/api/socios/admin/mostrador'
+  // Cuentas que se usan para atender en el living: varios socios reservan con
+  // ESA sesión, no la propia. Ahora se configuran desde el botón "Mostrador"
+  // de esta misma pestaña y las lee también el backend, que es quien decide
+  // si una cuenta puede reservar a nombre de otra. Antes era una constante
+  // acá adentro: el mismo dato escrito en dos lados y solo el front lo sabía.
+  let CUENTAS_MOSTRADOR = ['floraclubdecultivo@gmail.com']
 
   let cont = null
   let PEDIDOS = []
@@ -37,7 +41,10 @@
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
       ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
   }
-  function esCompartida(p) { return p.email === CUENTA_COMPARTIDA || !!p.reasignadoDe }
+  function esCompartida(p) { return CUENTAS_MOSTRADOR.includes(p.email) || !!p.reasignadoDe }
+  // Reserva cargada en el mostrador YA a nombre del socio: no hay nada que
+  // reasignar, el aviso de "lista" le va a llegar a él.
+  function esDeMostrador(p) { return !!p.mostrador }
 
   let msgT = null
   function aviso(texto, clase, ms) {
@@ -58,7 +65,7 @@
   // Una sola acción primaria (triage rápido); Cancelar y Asignar a socio
   // viven en el menú secundario de tres puntos.
   function accionesHtml(p) {
-    const reasignarBtn = esCompartida(p)
+    const reasignarBtn = esCompartida(p) && !esDeMostrador(p)
       ? `<button type="button" class="btn rv-reasignar" data-id="${P.esc(p.id)}">${p.reasignadoDe ? 'Reasignar de nuevo' : 'Asignar a socio'}</button>`
       : ''
     const esFinal = p.estado === 'entregado' || p.estado === 'cancelado'
@@ -86,6 +93,7 @@
           <strong>${P.esc(p.name || p.email)}</strong>
           <span class="tag ${cls}">${P.esc(label)}</span>
           <span class="rv-fecha">${P.esc(fmtFecha(p.creado))}</span>
+          ${esDeMostrador(p) ? '<span class="tag tag-auto">Mostrador</span>' : ''}
         </div>
         <div class="rv-mail">${P.esc(p.email)}</div>
         ${p.reasignadoDe ? `<div class="rv-meta">Reasignada — pedido original de ${P.esc(p.reasignadoDe)}</div>` : ''}
@@ -130,6 +138,96 @@
     lista.innerHTML = filtradas.length
       ? filtradas.map(tarjeta).join('')
       : `<div class="vacio">${filtroPed === 'activos' ? 'No hay reservas activas ahora mismo.' : 'Todavía no entró ninguna reserva.'}</div>`
+  }
+
+  // Qué cuentas atienden mostrador. Si el GET falla (rol sin permiso, red),
+  // se sigue con el default: el panel solo pierde el marcado, no se rompe.
+  async function cargarMostrador() {
+    try {
+      const res = await fetch(EP_MOSTRADOR, { credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) CUENTAS_MOSTRADOR = (data.cuentas || []).map((c) => c.email)
+    } catch { /* queda el default */ }
+  }
+
+  function abrirMostrador() {
+    const pintar = (cuentas) => `
+      <p class="rv-help">Estas cuentas atienden en el living: al reservar desde la carta pueden elegir a qué socio le queda la reserva, y el aviso de "lista para retirar" le llega a esa persona.</p>
+      <div id="rv-mo-lista" class="rv-res-resultados">${
+        cuentas.length
+          ? cuentas.map((c) => `
+              <div class="rv-mo-fila">
+                <span><b>${P.esc(c.name || c.email)}</b>${c.name ? `<span class="rv-res-mail"> · ${P.esc(c.email)}</span>` : ''}${c.existe ? '' : '<span class="tag tag-off">ya no es socia</span>'}</span>
+                <button type="button" class="btn btn-peligro rv-mo-quitar" data-email="${P.esc(c.email)}">Quitar</button>
+              </div>`).join('')
+          : '<div class="vacio" style="padding:14px">Ninguna cuenta atiende mostrador. Sin esto, las reservas del living quedan a nombre del club.</div>'
+      }</div>
+      <label class="k" style="display:block;margin-top:14px">Sumar una cuenta</label>
+      <input class="input" id="rv-mo-buscar" type="search" placeholder="Nombre o email…" autocomplete="off" />
+      <div id="rv-mo-resultados" class="rv-res-resultados"></div>
+      <div class="pn-mod-acciones"><button type="button" class="btn" id="rv-mo-cerrar">Listo</button></div>`
+
+    let cuentas = []
+    const ov = P.modal('Cuentas que atienden en el living', pintar(cuentas))
+    // Solo el cuerpo: reescribir la tarjeta entera se lleva puesto el <h3>
+    // que arma P.modal y el envoltorio .pn-mod-cuerpo del que cuelga el CSS.
+    const refrescar = () => { ov.querySelector('.pn-mod-cuerpo').innerHTML = pintar(cuentas); wire() }
+
+    const guardar = async (emails) => {
+      try {
+        const res = await fetch(EP_MOSTRADOR, {
+          method: 'PUT', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cuentas: emails }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.ok) { aviso(data.error || errHttp(res.status), 'err'); return false }
+        cuentas = data.cuentas || []
+        CUENTAS_MOSTRADOR = cuentas.map((c) => c.email)
+        render()
+        return true
+      } catch { aviso('Error de red al guardar.', 'err'); return false }
+    }
+
+    function wire() {
+      const buscar = ov.querySelector('#rv-mo-buscar')
+      if (buscar) buscar.addEventListener('input', (e) => {
+        const caja = ov.querySelector('#rv-mo-resultados')
+        const term = e.target.value.trim().toLowerCase()
+        if (!term) { caja.innerHTML = ''; return }
+        const yaEstan = cuentas.map((c) => c.email)
+        const matches = SOCIOS
+          .filter((s) => !yaEstan.includes(s.email))
+          .filter((s) => s.email.toLowerCase().includes(term) || (s.name || '').toLowerCase().includes(term))
+          .slice(0, 8)
+        caja.innerHTML = matches.length
+          ? matches.map((s) => `<button type="button" class="rv-res-opt rv-mo-sumar" data-email="${P.esc(s.email)}"><span>${P.esc(s.name || s.email)}</span>${s.name ? `<span class="rv-res-mail">${P.esc(s.email)}</span>` : ''}</button>`).join('')
+          : '<div class="vacio" style="padding:14px">Sin coincidencias.</div>'
+      })
+    }
+
+    ov.addEventListener('click', async (e) => {
+      if (e.target.id === 'rv-mo-cerrar') { P.cerrarModal(); return }
+      const sumar = e.target.closest('.rv-mo-sumar')
+      if (sumar) { if (await guardar([...cuentas.map((c) => c.email), sumar.dataset.email])) refrescar(); return }
+      const quitar = e.target.closest('.rv-mo-quitar')
+      if (quitar) {
+        if (!(await P.confirmar('¿Sacar esta cuenta del mostrador? Va a dejar de poder reservar a nombre de otros socios.', 'Sí, sacarla'))) return
+        if (await guardar(cuentas.filter((c) => c.email !== quitar.dataset.email).map((c) => c.email))) refrescar()
+      }
+    })
+
+    ;(async () => {
+      try {
+        const [rm, rs] = await Promise.all([
+          fetch(EP_MOSTRADOR, { credentials: 'include' }).then((r) => r.json()).catch(() => ({})),
+          SOCIOS.length ? Promise.resolve(null) : fetch(EP_SOCIOS, { credentials: 'include' }).then((r) => r.json()).catch(() => ({})),
+        ])
+        if (rm && rm.ok) cuentas = rm.cuentas || []
+        if (rs && rs.ok) SOCIOS = rs.socios || []
+        refrescar()
+      } catch { /* el modal queda con lo que haya */ }
+    })()
   }
 
   async function cargar() {
@@ -263,7 +361,7 @@
     const term = q.trim().toLowerCase()
     if (!term) { caja.innerHTML = '' ; return }
     const matches = SOCIOS
-      .filter((s) => s.email !== CUENTA_COMPARTIDA)
+      .filter((s) => !CUENTAS_MOSTRADOR.includes(s.email))
       .filter((s) => s.email.toLowerCase().includes(term) || (s.name || '').toLowerCase().includes(term))
       .slice(0, 8)
     caja.innerHTML = matches.length
@@ -330,6 +428,7 @@
           <button type="button" class="chip" data-f="">Todas</button>
           <button type="button" class="btn" id="rv-refresh">Actualizar</button>
           ${P.puede('avisos_editar') ? '<button type="button" class="btn" id="rv-avisos" title="Textos del mail y el WhatsApp que le llegan al socio">✉️ Avisos</button>' : ''}
+          ${P.puede('carta_gestionar') ? '<button type="button" class="btn" id="rv-mostrador" title="Cuentas que atienden en el living y reservan a nombre de un socio">🏪 Cuentas del living</button>' : ''}
           <span id="rv-count" class="msg"></span>
           <span class="pn-sp"></span>
           <span id="rv-msg" class="msg"></span>
@@ -357,6 +456,8 @@
         }
         if (!e.target.closest('.rv-menupanel')) el.querySelectorAll('.rv-menupanel').forEach((p) => { p.hidden = true })
 
+        if (e.target.id === 'rv-mostrador') { abrirMostrador(); return }
+
         const rbtn = e.target.closest('.rv-reasignar')
         if (rbtn) {
           el.querySelectorAll('.rv-menupanel').forEach((p) => { p.hidden = true })
@@ -372,7 +473,7 @@
         // se ofrece asignarlo al socio real que se lo llevó.
         if (estado === 'entregado') {
           const pedido = PEDIDOS.find((p) => p.id === btn.dataset.id)
-          if (pedido && esCompartida(pedido)) {
+          if (pedido && esCompartida(pedido) && !esDeMostrador(pedido)) {
             abrirReasignar(btn.dataset.id, 'entregado')
             return
           }
@@ -387,6 +488,7 @@
         if (document.visibilityState === 'visible' && cont.closest('.pn-sec').classList.contains('on')) cargar()
       }, 60000)
 
+      cargarMostrador()
       cargar()
     },
   })

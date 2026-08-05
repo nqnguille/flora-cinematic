@@ -1,5 +1,5 @@
 import { requireCap } from '../../panel/_rol';
-import { leerAvisos, enviarMailReserva, interpolar, itemsTexto } from './_avisos';
+import { leerAvisos, enviarMailReserva, interpolar, itemsTexto, waNumero } from './_avisos';
 
 interface Env {
   DB: D1Database;
@@ -120,9 +120,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       const s = await env.DB.prepare(
         `SELECT telefono FROM socios WHERE email = ? AND telefono IS NOT NULL AND (numero IS NULL OR numero != -1)`,
       ).bind(String(pedido.email).toLowerCase()).first<{ telefono: string }>();
-      if (s?.telefono) {
+      const numero = s?.telefono ? waNumero(s.telefono) : null;
+      if (numero) {
         const texto = interpolar(plantilla.wa, vars);
-        wa = { telefono: s.telefono, link: `https://wa.me/${s.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}` };
+        wa = { telefono: s!.telefono, link: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}` };
       }
       avisoNotif = { mail, wa };
     } catch { avisoNotif = { mail: { enviado: false, error: 'falló el armado del aviso' }, wa: null }; }

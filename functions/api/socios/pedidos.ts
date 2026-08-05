@@ -1,4 +1,5 @@
 import { readSessionEmail } from './_session';
+import { esMostrador } from './_mostrador';
 
 interface Env {
   SESSION_SECRET: string;
@@ -217,14 +218,40 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   //   · la misma genética en dos bolsitas separadas, que dentro de un mismo
   //     pedido es imposible: los ítems se deduplican por id|formato y siempre
   //     terminan sumando cantidad.
-  const aparte = body?.aparte === true;
+  // MOSTRADOR: la cuenta del living atiende y reserva EN NOMBRE del socio que
+  // tiene enfrente. La reserva nace con dueño real, así los avisos de "lista"
+  // y "entregada" le llegan a esa persona sin que nadie tenga que reasignar
+  // nada después, y el panel muestra su nombre en vez del de la cuenta.
+  const paraSocio = String(body?.paraSocio || '').trim().toLowerCase();
+  let destino = { email: socio.email, name: socio.rec.name || '', mostrador: '' };
 
-  const activos = (await pedidosDe(env, socio.email)).filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
+  if (paraSocio && paraSocio !== socio.email) {
+    if (!(await esMostrador(env.GENETICAS, socio.email))) {
+      return Response.json({ ok: false, error: 'esta cuenta no puede reservar a nombre de otro socio' }, { status: 403 });
+    }
+    const rawDestino = await env.SOCIOS.get(paraSocio);
+    if (rawDestino === null) return Response.json({ ok: false, error: 'ese email no es un socio cargado' }, { status: 400 });
+    let recDestino: any = {};
+    try { recDestino = JSON.parse(rawDestino); } catch { /* valor legado "ok" */ }
+    if (typeof recDestino !== 'object' || recDestino === null) recDestino = {};
+    if (recDestino.temporal) {
+      return Response.json({ ok: false, error: 'ese socio tiene acceso de prueba: todavía no puede reservar' }, { status: 400 });
+    }
+    destino = { email: paraSocio, name: recDestino.name || paraSocio, mostrador: socio.email };
+  }
+
+  // En el mostrador cada atención es una reserva propia: dos personas
+  // distintas, o la misma volviendo más tarde, nunca se fusionan en un bolso
+  // solo. Por eso ahí `aparte` es siempre verdadero.
+  const aparte = body?.aparte === true || !!destino.mostrador;
+
+  const activos = (await pedidosDe(env, destino.email)).filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
   const yaActivo = aparte ? null : activos.find((p) => ESTADOS_ACTIVOS.includes(p.estado));
 
   if (aparte && activos.length >= MAX_ACTIVAS) {
+    const quien = destino.mostrador ? `${destino.name || destino.email} ya tiene` : 'ya tenés';
     return Response.json(
-      { ok: false, error: `ya tenés ${activos.length} reservas abiertas: retirá alguna antes de empezar otra` },
+      { ok: false, error: `${quien} ${activos.length} reservas abiertas: retirá alguna antes de empezar otra` },
       { status: 409 },
     );
   }
@@ -267,8 +294,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const id = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
   const pedido = {
     id,
-    email: socio.email,
-    name: socio.rec.name || '',
+    email: destino.email,
+    name: destino.name,
+    // Queda la traza de quién la cargó: sirve para el chip "Mostrador" del
+    // panel y para saber que la reserva no la hizo el socio desde su celular.
+    ...(destino.mostrador ? { mostrador: destino.mostrador } : {}),
     items,
     nota: String(body?.nota || '').slice(0, 400),
     estado: 'pendiente',
@@ -320,6 +350,7 @@ async function notificar(env: Env, pedido: any) {
     const text =
       (pedido._cancelada ? `🌿 RESERVA CANCELADA — Portal Flora\n` : pedido._actualizada ? `🌿 RESERVA ACTUALIZADA — Portal Flora\n` : `🌿 RESERVA NUEVA — Portal Flora\n`) +
       `👤 ${pedido.name || pedido.email} (${pedido.email})\n` +
+      (pedido.mostrador ? `🏪 Cargada en el mostrador\n` : '') +
       lineas +
       (pedido.nota ? `\n📝 ${pedido.nota}` : '') +
       `\n💵 Abona la cuota al retirar en el club` +

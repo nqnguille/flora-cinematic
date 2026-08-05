@@ -1,4 +1,5 @@
 import { readSessionEmail } from './_session';
+import { esMostrador } from './_mostrador';
 
 interface Env {
   SESSION_SECRET: string;
@@ -30,5 +31,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const catalogo = raw ? JSON.parse(raw) : [];
   const activas = catalogo.filter((g: any) => g.activo);
 
-  return Response.json({ ok: true, geneticas: activas });
+  // La carta no consulta ningún endpoint de identidad: la sesión es pura
+  // cookie y este GET es su portero. Por eso la señal de mostrador viaja
+  // acá, sin sumarle otro pedido de red al arranque del TV.
+  const mostrador = await esMostrador(env.GENETICAS, email);
+
+  return Response.json({ ok: true, geneticas: activas, mostrador });
 };

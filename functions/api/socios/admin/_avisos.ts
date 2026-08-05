@@ -93,6 +93,28 @@ interface EnvMail { RESEND_API_KEY?: string }
 // El mail con el layout claro de marca. La plantilla aporta asunto y cuerpo
 // (texto plano → párrafos); el marco (logo, chip, CTA verde, pie con íconos)
 // es fijo, igual al del mail de bienvenida.
+// wa.me exige el número completo con país, sin signos. En el padrón conviven
+// tres formas de cargar lo mismo: "2995320964" (10 dígitos locales, como
+// quedaron los importados del Excel), "+54 9 299 532-0964" y "5492995320964".
+// Sin esto, la primera forma generaba wa.me/2995320964 — un link muerto, que
+// es justamente el que más hay cargado.
+export function waNumero(telefono: string): string | null {
+  let d = String(telefono || '').replace(/\D/g, '');
+  if (!d) return null;
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('54')) {
+    const resto = d.slice(2);
+    // Argentina móvil: 54 + 9 + área + número. Si vino sin el 9, se lo ponemos.
+    return resto.startsWith('9') ? `54${resto}` : `549${resto}`;
+  }
+  // Sin país: 10 dígitos es el formato nacional (área + número).
+  if (d.length === 10) return `549${d}`;
+  if (d.length === 11 && d.startsWith('9')) return `54${d}`;
+  // Cualquier otra cosa (un fijo corto, un número de otro país a medio cargar)
+  // no la adivinamos: mejor sin botón de WhatsApp que con un link a un tercero.
+  return null;
+}
+
 export async function enviarMailReserva(
   env: EnvMail,
   destino: string,

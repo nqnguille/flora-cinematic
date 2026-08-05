@@ -603,6 +603,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const cart = new Map() // "id|formato" → cantidad
     let activePedido = null // pedido pendiente/listo del socio, si hay
     let activosCount = 0 // cuántas reservas abiertas tiene (puede tener varias)
+    // MOSTRADOR: la cuenta del living atiende gente. La carta no consulta
+    // ningún endpoint de identidad (la sesión es pura cookie), así que la
+    // señal viaja en la respuesta del catálogo, que ya hace de portero.
+    let esMostrador = false
+    let destinoSocio = null // {email, name} a quien se le asigna la reserva
+    let buscarTimer = null
     // El socio pidió empezar OTRA reserva en vez de sumar a la que ya tiene.
     // Mientras está en true, la carta se comporta como si no hubiera reserva
     // activa (se ven los +/-) y el POST va marcado con aparte:true.
@@ -652,7 +658,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     function setPedidoMode() {
-      const bloqueado = !!activePedido && !modoAparte
+      // En el mostrador los +/- no se ocultan nunca: la fila no puede frenarse
+      // porque la cuenta del club tenga una reserva suya dando vueltas.
+      const bloqueado = !esMostrador && !!activePedido && !modoAparte
       document.getElementById('gn-content').classList.toggle('has-pedido', bloqueado)
       const av = document.getElementById('gn-aviso-pedido')
       if (av) {
@@ -817,7 +825,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <ul class="gn-modal-list">${items
             .map((i) => `<li>${escapeHtml(fmtItem(i))}<button class="gn-modal-del" data-key="${escapeHtml(`${i.id}|${i.formato}`)}" type="button" aria-label="Quitar">×</button></li>`)
             .join('')}</ul>
-          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="Nota para el club (opcional)" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
+          ${esMostrador ? bloqueDestino() : ''}
+          <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="${esMostrador ? 'Nota del mostrador (opcional)' : 'Nota para el club (opcional)'}" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
           ${modoAparte ? '<p class="gn-modal-hint gn-modal-hint--aparte">Esta va a quedar como una <strong>reserva separada</strong>: no se suma a la que ya tenés. Útil cuando es para otra persona, o cuando querés la misma genética en dos bolsitas.</p>' : ''}
           <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
         actions.innerHTML = `
@@ -830,6 +839,54 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (successText) showModalMsg(successText, false)
       ;(document.getElementById('gn-modal-send') || document.getElementById('gn-modal-close'))?.focus()
     }
+    /* ── Mostrador: a nombre de quién queda la reserva ── */
+    // El campo arranca vacío y no lista a nadie: la pantalla del living la ve
+    // cualquiera que esté en el sillón, así que el padrón solo aparece de a
+    // ocho y recién cuando alguien tipea.
+    function bloqueDestino() {
+      if (destinoSocio) {
+        return `
+          <div class="gn-destino">
+            <span class="gn-destino-label">Reserva de</span>
+            <div class="gn-destino-chip">
+              <span>${escapeHtml(destinoSocio.name || destinoSocio.email)}</span>
+              <button id="gn-destino-quitar" type="button" aria-label="Elegir otro socio">×</button>
+            </div>
+          </div>`
+      }
+      return `
+        <div class="gn-destino">
+          <span class="gn-destino-label">¿Para quién es esta reserva?</span>
+          <input id="gn-destino-q" class="gn-destino-input" type="search" placeholder="Nombre o mail del socio…" autocomplete="off" />
+          <div id="gn-destino-res" class="gn-destino-res"></div>
+          <p class="gn-destino-hint">Si no elegís a nadie queda a nombre del club, como hasta ahora.</p>
+        </div>`
+    }
+
+    async function buscarSocios(q) {
+      const caja = document.getElementById('gn-destino-res')
+      if (!caja) return
+      const term = q.trim()
+      if (term.length < 2) { caja.innerHTML = ''; return }
+      try {
+        const res = await fetch(`/api/socios/buscar?q=${encodeURIComponent(term)}`, { credentials: 'include' })
+        const data = await res.json()
+        // Puede haber tipeado más mientras volvía la respuesta.
+        const actual = document.getElementById('gn-destino-q')
+        if (!actual || actual.value.trim() !== term) return
+        const lista = (res.ok && data.ok && data.socios) || []
+        caja.innerHTML = lista.length
+          ? lista.map((s) => `
+              <button class="gn-destino-opt" type="button" data-email="${escapeHtml(s.email)}" data-name="${escapeHtml(s.name || '')}">
+                <span>${escapeHtml(s.name || s.email)}</span>
+                ${s.name ? `<small>${escapeHtml(s.email)}</small>` : ''}
+              </button>`).join('')
+          : '<p class="gn-destino-hint">Sin coincidencias en el padrón.</p>'
+      } catch {
+        caja.innerHTML = '<p class="gn-destino-hint">No se pudo buscar. Probá de nuevo.</p>'
+      }
+    }
+
     function closeModal() {
       document.getElementById('gn-modal').hidden = true
       document.getElementById('gn-cart-trigger').setAttribute('aria-expanded', 'false')
@@ -849,7 +906,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ items, nota, aparte: modoAparte }),
+          body: JSON.stringify({ items, nota, aparte: modoAparte, paraSocio: destinoSocio?.email || '' }),
         })
         const data = await res.json()
         if (res.ok && data.ok) {
@@ -858,11 +915,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           persistCart()
           keys.forEach(syncQty)
           const eraAparte = modoAparte
+          const asignadaA = destinoSocio
           modoAparte = false
-          activePedido = data.pedido
-          activosCount = eraAparte ? activosCount + 1 : Math.max(1, activosCount)
-          setPedidoMode()
-          openModal(eraAparte ? 'Reserva separada enviada ✓' : 'Reserva enviada ✓')
+          destinoSocio = null
+          if (asignadaA) {
+            // La reserva quedó a nombre del socio, no de la cuenta del living:
+            // tomarla como propia dejaría al mostrador mirando el pedido ajeno
+            // en vez de listo para atender al que sigue.
+            const nombre = (asignadaA.name || asignadaA.email).split(/\s+/)[0]
+            closeModal()
+            avisoMostrador(`Reserva de ${nombre} enviada ✓`)
+          } else {
+            activePedido = data.pedido
+            activosCount = eraAparte ? activosCount + 1 : Math.max(1, activosCount)
+            setPedidoMode()
+            openModal(eraAparte ? 'Reserva separada enviada ✓' : 'Reserva enviada ✓')
+          }
         } else if (res.status === 409 && data.activo) {
           activePedido = data.activo
           setPedidoMode()
@@ -945,12 +1013,41 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (e.target.closest?.('.js-otra-reserva')) empezarOtraAparte()
     })
 
+    // Confirmación que no obliga a cerrar nada: en el mostrador hay alguien
+    // esperando del otro lado y el modal ya se fue solo.
+    function avisoMostrador(texto) {
+      let el = document.getElementById('gn-mostrador-ok')
+      if (!el) {
+        el = document.createElement('div')
+        el.id = 'gn-mostrador-ok'
+        el.className = 'gn-mostrador-ok'
+        document.getElementById('gn-content').appendChild(el)
+      }
+      el.textContent = texto
+      el.classList.add('is-on')
+      clearTimeout(el._t)
+      el._t = setTimeout(() => el.classList.remove('is-on'), 3200)
+    }
+
+    document.getElementById('gn-modal').addEventListener('input', (e) => {
+      if (e.target.id !== 'gn-destino-q') return
+      clearTimeout(buscarTimer)
+      const q = e.target.value
+      buscarTimer = setTimeout(() => buscarSocios(q), 250)
+    })
+
     document.getElementById('gn-cart-trigger').addEventListener('click', () => openModal())
     document.getElementById('gn-modal').addEventListener('click', (e) => {
       if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
       if (e.target.id === 'gn-modal-close') closeModal()
       else if (e.target.id === 'gn-modal-send') sendPedido()
       else if (e.target.id === 'gn-pedido-cancel') askCancelConfirm()
+      else if (e.target.id === 'gn-destino-quitar') { destinoSocio = null; openModal() }
+      else if (e.target.closest?.('.gn-destino-opt')) {
+        const opt = e.target.closest('.gn-destino-opt')
+        destinoSocio = { email: opt.dataset.email, name: opt.dataset.name }
+        openModal()
+      }
       else if (e.target.id === 'gn-pedido-cancel-yes') cancelPedido()
       else if (e.target.id === 'gn-pedido-cancel-no') openModal()
       else if (e.target.classList.contains('gn-modal-del')) {
@@ -1004,6 +1101,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const res = await fetch('/api/socios/geneticas', { credentials: 'include' })
       if (!res.ok) return false
       const data = await res.json()
+      esMostrador = data.mostrador === true
+      document.getElementById('gn-content').classList.toggle('es-mostrador', esMostrador)
       showContent(data.geneticas || [])
       return true
     }
@@ -2072,6 +2171,123 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .gn-modal-textarea::placeholder { color: rgba(244, 241, 247, 0.35); }
   .gn-modal-textarea:focus { outline: none; border-color: var(--gn-violet); }
+
+  /* ── Mostrador: a nombre de quién queda la reserva ── */
+  .gn-destino {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 0.9rem;
+    padding: 0.85rem 0.9rem;
+    background: var(--gn-card-2);
+    border: 1px solid var(--gn-line);
+    border-radius: 14px;
+  }
+  .gn-destino-label {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--gn-muted);
+  }
+  .gn-destino-input {
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    color: var(--gn-cream);
+    background: var(--gn-bg);
+    border: 1px solid var(--gn-line);
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+  }
+  .gn-destino-input::placeholder { color: rgba(244, 241, 247, 0.35); }
+  .gn-destino-input:focus { outline: none; border-color: var(--gn-green); }
+  .gn-destino-res {
+    display: grid;
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .gn-destino-res:empty { display: none; }
+  .gn-destino-opt {
+    display: grid;
+    gap: 1px;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+    color: var(--gn-cream);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.5rem 0.6rem;
+    cursor: pointer;
+  }
+  .gn-destino-opt:hover,
+  .gn-destino-opt:focus-visible {
+    outline: none;
+    border-color: var(--gn-green);
+    background: rgba(60, 180, 146, 0.1);
+  }
+  .gn-destino-opt small { font-size: 0.74rem; color: var(--gn-muted); }
+  .gn-destino-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    justify-self: start;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gn-bg);
+    background: var(--gn-green);
+    border-radius: 999px;
+    padding: 0.42rem 0.55rem 0.42rem 0.95rem;
+  }
+  .gn-destino-chip button {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--gn-bg);
+    background: rgba(19, 13, 28, 0.16);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .gn-destino-chip button:hover { background: rgba(19, 13, 28, 0.3); }
+  .gn-destino-hint {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: 0.76rem;
+    line-height: 1.4;
+    color: var(--gn-muted);
+  }
+
+  /* Confirmación del mostrador: el modal ya se cerró solo, así que el "listo"
+     aparece flotando y se va, sin robarle el foco a quien está atendiendo. */
+  .gn-mostrador-ok {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translate(-50%, 14px);
+    z-index: 60;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gn-bg);
+    background: var(--gn-green);
+    border-radius: 999px;
+    padding: 0.7rem 1.5rem;
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .gn-mostrador-ok.is-on { opacity: 1; transform: translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) {
+    .gn-mostrador-ok { transition: opacity 0.25s ease; transform: translate(-50%, 0); }
+  }
   .gn-pedido-badge {
     display: inline-block;
     font-size: 0.68rem;
