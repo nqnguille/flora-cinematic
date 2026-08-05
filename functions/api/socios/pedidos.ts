@@ -82,6 +82,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const socio = await requireSocio(request, env);
   if (!socio) return Response.json({ ok: false, error: 'no autenticado' }, { status: 401 });
 
+  // Mostrador: para saber si lo que se está por cargar se suma a algo que el
+  // socio ya tenía o va en bolsa aparte, hay que poder mirar SUS reservas.
+  // Solo una cuenta de mostrador puede pedirlas, y solo devuelve las abiertas.
+  const otro = String(new URL(request.url).searchParams.get('socio') || '').trim().toLowerCase();
+  if (otro && otro !== socio.email) {
+    if (!(await esMostrador(env.GENETICAS, socio.email))) {
+      return Response.json({ ok: false, error: 'esta cuenta no puede ver reservas de otro socio' }, { status: 403 });
+    }
+    const suyos = (await pedidosDe(env, otro)).filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
+    return Response.json({
+      ok: true,
+      abiertas: suyos.map((p) => ({ id: p.id, estado: p.estado, creado: p.creado, items: p.items })),
+    });
+  }
+
   const pedidos = await pedidosDe(env, socio.email);
   const abiertos = pedidos.filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
   // `activo` es la más reciente (pedidos viene ordenado desc); `activos` es
@@ -240,13 +255,41 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     destino = { email: paraSocio, name: recDestino.name || paraSocio, mostrador: socio.email };
   }
 
-  // En el mostrador cada atención es una reserva propia: dos personas
-  // distintas, o la misma volviendo más tarde, nunca se fusionan en un bolso
-  // solo. Por eso ahí `aparte` es siempre verdadero.
-  const aparte = body?.aparte === true || !!destino.mostrador;
-
+  const aparte = body?.aparte === true;
   const activos = (await pedidosDe(env, destino.email)).filter((p) => ESTADOS_ACTIVOS.includes(p.estado));
-  const yaActivo = aparte ? null : activos.find((p) => ESTADOS_ACTIVOS.includes(p.estado));
+
+  // En el mostrador, con el socio parado enfrente, sumar a una reserva que ya
+  // estaba armada o abrirle una bolsa aparte son cosas muy distintas y ninguna
+  // es un default seguro. Si tiene algo abierto, la decisión viaja explícita o
+  // no se guarda nada.
+  const sumarA = String(body?.sumarA || '').trim();
+  if (destino.mostrador && activos.length && !aparte && !sumarA) {
+    return Response.json({
+      ok: false,
+      error: `${destino.name || destino.email} ya tiene una reserva abierta: elegí a cuál sumarle o abrile una bolsa aparte`,
+      necesitaDecision: true,
+    }, { status: 400 });
+  }
+
+  // A CUÁL sumarle lo decide la pantalla, por id, nunca el servidor buscando
+  // "la primera activa": el listado de KV es de consistencia eventual, así que
+  // lo que se ve y lo que el servidor elegiría pueden no ser la misma reserva,
+  // y ahí se le termina agregando cosas a la reserva de otra persona.
+  let yaActivo: any = null;
+  if (!aparte) {
+    if (destino.mostrador) {
+      if (sumarA) {
+        const raw = await env.PEDIDOS.get(`pedido:${sumarA}`);
+        const cand = raw ? JSON.parse(raw) : null;
+        if (!cand || cand.email !== destino.email || !ESTADOS_ACTIVOS.includes(cand.estado)) {
+          return Response.json({ ok: false, error: 'esa reserva ya no está abierta: actualizá la pantalla', necesitaDecision: true }, { status: 409 });
+        }
+        yaActivo = cand;
+      }
+    } else {
+      yaActivo = activos.find((p) => ESTADOS_ACTIVOS.includes(p.estado)) || null;
+    }
+  }
 
   if (aparte && activos.length >= MAX_ACTIVAS) {
     const quien = destino.mostrador ? `${destino.name || destino.email} ya tiene` : 'ya tenés';
@@ -256,7 +299,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     );
   }
   if (!aparte && yaActivo && yaActivo.estado !== 'pendiente') {
-    return Response.json({ ok: false, error: 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra', activo: yaActivo }, { status: 409 });
+    const error = destino.mostrador
+      ? `la reserva de ${destino.name || destino.email} ya está lista para retirar: entregala antes de sumarle, o cargá esto aparte`
+      : 'tenés una reserva lista para retirar; pasá por el club antes de sumar otra';
+    return Response.json({ ok: false, error, activo: yaActivo }, { status: 409 });
   }
 
   const v = await validarItems(env, rawItems);
@@ -287,7 +333,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     if (body?.nota) yaActivo.nota = String(body.nota).slice(0, 400);
     yaActivo.actualizado = now;
     await env.PEDIDOS.put(`pedido:${yaActivo.id}`, JSON.stringify(yaActivo), { expirationTtl: TTL_SECONDS });
-    context.waitUntil(notificar(env, { ...yaActivo, _actualizada: true }));
+    context.waitUntil(notificar(env, { ...yaActivo, _actualizada: true, mostrador: destino.mostrador || yaActivo.mostrador }));
     return Response.json({ ok: true, pedido: yaActivo, fusionado: true });
   }
 

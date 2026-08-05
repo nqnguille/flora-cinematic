@@ -608,6 +608,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // señal viaja en la respuesta del catálogo, que ya hace de portero.
     let esMostrador = false
     let destinoSocio = null // {email, name} a quien se le asigna la reserva
+    let abiertasDestino = [] // reservas que ese socio ya tiene en curso
+    let cargandoAbiertas = false
+    let modoDestino = null // 'sumar' | 'aparte' — sin default a propósito
+    let sumarAId = null // id EXACTO de la reserva a la que se le suma
+    // El listado de reservas del KV es de consistencia eventual: la que se
+    // acaba de cargar en el mostrador puede tardar en aparecer. Lo que se creó
+    // en esta sesión se recuerda acá para que el que atiende la vea enseguida.
+    const recienCreadas = new Map()
     let buscarTimer = null
     // El socio pidió empezar OTRA reserva en vez de sumar a la que ya tiene.
     // Mientras está en true, la carta se comporta como si no hubiera reserva
@@ -829,9 +837,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <textarea id="gn-modal-nota" class="gn-modal-textarea" placeholder="${esMostrador ? 'Nota del mostrador (opcional)' : 'Nota para el club (opcional)'}" maxlength="400" rows="2">${escapeHtml(prevNota)}</textarea>
           ${modoAparte ? '<p class="gn-modal-hint gn-modal-hint--aparte">Esta va a quedar como una <strong>reserva separada</strong>: no se suma a la que ya tenés. Útil cuando es para otra persona, o cuando querés la misma genética en dos bolsitas.</p>' : ''}
           <p class="gn-modal-hint">Esto es una <strong>reserva</strong>: te lo preparamos y lo retirás en el club, donde abonás tu cuota. Por el sitio no se cobra nada.</p>`
+        // Falta decidir si se suma o va aparte: sin eso el backend rechaza el
+        // pedido igual, así que el botón lo dice antes de que lo aprieten.
+        const faltaDecidir = !!destinoSocio && abiertasDestino.length > 0 && !modoDestino
         actions.innerHTML = `
           <button id="gn-modal-close" class="gn-btn-ghost" type="button">Seguir mirando</button>
-          <button id="gn-modal-send" class="gn-btn-primary" type="button">Confirmar reserva</button>`
+          <button id="gn-modal-send" class="gn-btn-primary" type="button"${faltaDecidir ? ' disabled title="Elegí si se suma a la que ya tiene o va aparte"' : ''}>Confirmar reserva</button>`
       }
       syncTopbarHeight()
       document.getElementById('gn-modal').hidden = false
@@ -852,6 +863,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               <span>${escapeHtml(destinoSocio.name || destinoSocio.email)}</span>
               <button id="gn-destino-quitar" type="button" aria-label="Elegir otro socio">×</button>
             </div>
+            ${cargandoAbiertas ? '<p class="gn-destino-hint">Viendo si ya tiene algo reservado…</p>' : bloqueDecision()}
           </div>`
       }
       return `
@@ -861,6 +873,52 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div id="gn-destino-res" class="gn-destino-res"></div>
           <p class="gn-destino-hint">Si no elegís a nadie queda a nombre del club, como hasta ahora.</p>
         </div>`
+    }
+
+    // Con una reserva ya armada de por medio, sumarle o abrirle una bolsa
+    // aparte son cosas distintas y ninguna es un default seguro: hasta que no
+    // se elija una, Confirmar queda apagado.
+    function bloqueDecision() {
+      if (!abiertasDestino.length) return ''
+      const varias = abiertasDestino.length > 1
+      const lista = abiertasDestino.map((p) => {
+        const lista_ = escapeHtml(p.items.map(fmtItem).join(' · '))
+        // A una reserva ya preparada no se le suma: se entrega y se arma otra.
+        if (p.estado === 'listo') {
+          return `<li class="gn-abierta es-listo">
+            <span class="gn-abierta-estado">Lista para retirar · entregala antes de sumarle</span>${lista_}</li>`
+        }
+        return `<li><button type="button" class="gn-abierta gn-abierta-btn${sumarAId === p.id ? ' is-on' : ''}" data-sumar="${escapeHtml(p.id)}">
+          <span class="gn-abierta-estado">En preparación · sumarle a esta</span>${lista_}</button></li>`
+      }).join('')
+      return `
+        <p class="gn-destino-abiertas-tit">Ya tiene ${varias ? `${abiertasDestino.length} reservas abiertas` : 'una reserva abierta'}. Tocá a cuál sumarle, o abrile una bolsa aparte:</p>
+        <ul class="gn-destino-abiertas">${lista}</ul>
+        <div class="gn-destino-modos" role="group" aria-label="Qué hacer con esto">
+          <button type="button" class="gn-destino-modo${modoDestino === 'aparte' ? ' is-on' : ''}" data-modo="aparte">Bolsa aparte</button>
+        </div>`
+    }
+
+    async function cargarAbiertas() {
+      abiertasDestino = []
+      modoDestino = null
+      sumarAId = null
+      if (!destinoSocio) return
+      cargandoAbiertas = true
+      openModal()
+      let delServidor = []
+      try {
+        const res = await fetch(`/api/socios/pedidos?socio=${encodeURIComponent(destinoSocio.email)}`, { credentials: 'include' })
+        const data = await res.json()
+        if (res.ok && data.ok) delServidor = data.abiertas || []
+      } catch { /* sin red se sigue: el backend igual exige la decisión */ }
+      // Unión con lo cargado recién en este mostrador, que el listado del
+      // servidor todavía puede no estar devolviendo.
+      const porId = new Map()
+      for (const p of [...(recienCreadas.get(destinoSocio.email) || []), ...delServidor]) porId.set(p.id, p)
+      abiertasDestino = [...porId.values()].sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
+      cargandoAbiertas = false
+      openModal()
     }
 
     async function buscarSocios(q) {
@@ -906,7 +964,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ items, nota, aparte: modoAparte, paraSocio: destinoSocio?.email || '' }),
+          body: JSON.stringify(destinoSocio
+            // Con reservas abiertas manda la decisión que se tomó; sin ninguna
+            // abierta siempre nace una nueva y el valor da igual.
+            ? { items, nota, paraSocio: destinoSocio.email, aparte: !abiertasDestino.length || modoDestino === 'aparte', sumarA: modoDestino === 'sumar' ? sumarAId : '' }
+            : { items, nota, aparte: modoAparte }),
         })
         const data = await res.json()
         if (res.ok && data.ok) {
@@ -916,15 +978,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           keys.forEach(syncQty)
           const eraAparte = modoAparte
           const asignadaA = destinoSocio
+          const seSumo = !!destinoSocio && modoDestino === 'sumar'
+          if (destinoSocio && data.pedido) {
+            // Se recuerda para que, si el mismo socio vuelve en el momento, su
+            // reserva ya aparezca aunque el listado del KV todavía no la traiga.
+            const previas = (recienCreadas.get(destinoSocio.email) || []).filter((x) => x.id !== data.pedido.id)
+            recienCreadas.set(destinoSocio.email, [{ id: data.pedido.id, estado: data.pedido.estado, creado: data.pedido.creado, items: data.pedido.items }, ...previas])
+          }
           modoAparte = false
           destinoSocio = null
+          abiertasDestino = []
+          modoDestino = null
+          sumarAId = null
           if (asignadaA) {
             // La reserva quedó a nombre del socio, no de la cuenta del living:
             // tomarla como propia dejaría al mostrador mirando el pedido ajeno
             // en vez de listo para atender al que sigue.
             const nombre = (asignadaA.name || asignadaA.email).split(/\s+/)[0]
             closeModal()
-            avisoMostrador(`Reserva de ${nombre} enviada ✓`)
+            avisoMostrador(seSumo ? `Reserva de ${nombre} actualizada ✓` : `Reserva de ${nombre} enviada ✓`)
           } else {
             activePedido = data.pedido
             activosCount = eraAparte ? activosCount + 1 : Math.max(1, activosCount)
@@ -1042,11 +1114,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       if (e.target.id === 'gn-modal-close') closeModal()
       else if (e.target.id === 'gn-modal-send') sendPedido()
       else if (e.target.id === 'gn-pedido-cancel') askCancelConfirm()
-      else if (e.target.id === 'gn-destino-quitar') { destinoSocio = null; openModal() }
+      else if (e.target.id === 'gn-destino-quitar') { destinoSocio = null; abiertasDestino = []; modoDestino = null; openModal() }
+      else if (e.target.closest?.('.gn-destino-modo')) {
+        modoDestino = e.target.closest('.gn-destino-modo').dataset.modo
+        sumarAId = null
+        openModal()
+      }
+      else if (e.target.closest?.('.gn-abierta-btn')) {
+        sumarAId = e.target.closest('.gn-abierta-btn').dataset.sumar
+        modoDestino = 'sumar'
+        openModal()
+      }
       else if (e.target.closest?.('.gn-destino-opt')) {
         const opt = e.target.closest('.gn-destino-opt')
         destinoSocio = { email: opt.dataset.email, name: opt.dataset.name }
-        openModal()
+        cargarAbiertas()
       }
       else if (e.target.id === 'gn-pedido-cancel-yes') cancelPedido()
       else if (e.target.id === 'gn-pedido-cancel-no') openModal()
@@ -2256,6 +2338,72 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     cursor: pointer;
   }
   .gn-destino-chip button:hover { background: rgba(19, 13, 28, 0.3); }
+  .gn-destino-abiertas-tit {
+    margin: 2px 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--gn-cream);
+  }
+  .gn-destino-abiertas {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .gn-abierta {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: var(--gn-muted);
+    background: var(--gn-bg);
+    border: 1px solid var(--gn-line);
+    border-radius: 10px;
+    padding: 0.5rem 0.65rem;
+  }
+  .gn-abierta-estado {
+    display: block;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gn-violet);
+  }
+  .gn-abierta-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .gn-abierta-btn:hover,
+  .gn-abierta-btn:focus-visible { outline: none; border-color: var(--gn-violet); }
+  .gn-abierta-btn.is-on {
+    color: var(--gn-cream);
+    border-color: var(--gn-green);
+    background: rgba(60, 180, 146, 0.14);
+  }
+  .gn-abierta-btn.is-on .gn-abierta-estado { color: var(--gn-green); }
+  .gn-abierta.es-listo { opacity: 0.55; }
+  .gn-destino-modos { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gn-destino-modo {
+    flex: 1 1 auto;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gn-cream);
+    background: transparent;
+    border: 1px solid var(--gn-line);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+  }
+  .gn-destino-modo:hover { border-color: var(--gn-violet); }
+  .gn-destino-modo.is-on {
+    color: var(--gn-bg);
+    background: var(--gn-green);
+    border-color: var(--gn-green);
+  }
+
   .gn-destino-hint {
     margin: 0;
     font-family: var(--font-ui);
