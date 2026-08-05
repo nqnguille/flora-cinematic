@@ -45,7 +45,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </div>
 
       <div class="td-head">
-        <a href="/socios/cuenta/" class="td-back mb-chip">← Mi cuenta</a>
+        <a href="/socios/cuenta/" class="td-back mb-chip" id="mb-nav-cuenta">← Mi cuenta</a>
         <div class="td-brand">
           <img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
           <span class="td-brand-name"><em>club</em></span>
@@ -83,15 +83,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <!-- El sello legal, al lado del título: es lo primero que tiene que
                quedar claro en un TV que mira gente que todavía no es socia. -->
           <aside class="mb-sello">
-            <span class="mb-sello-lb">Ley 27.350 · REPROCANN</span>
-            <p class="mb-sello-txt">
-              Servicio <strong>exclusivo para personas asociadas</strong> con credencial REPROCANN
-              vigente que designe a la <strong>Asociación Civil Cann de Cannabis Medicinal</strong>
-              como su cultivadora. Personería jurídica <strong>I.G.J. N.º 1994128</strong>,
-              CUIT 30-71827609-4. Lo que recibís <strong>no es una compra</strong>: es la entrega
-              de tu propio cultivo, amparado por ese vínculo. Podés dar de baja la suscripción
-              cuando quieras, vos mismo, desde Mercado Pago.
-            </p>
+            <span class="mb-sello-lb" id="mb-sello-lb">Ley 27.350 · REPROCANN</span>
+            <p class="mb-sello-txt" id="mb-sello-txt"></p>
           </aside>
         </div>
       </header>
@@ -111,27 +104,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
            en ningún lado: qué pasa después de adherirse. -->
       <section class="mb-ciclo" id="mb-ciclo" hidden aria-label="Cómo funciona el débito">
         <header class="mb-sec-head reveal">
-          <h2 class="mb-h2">¿Cómo funciona?</h2>
+          <h2 class="mb-h2" id="mb-ciclo-t">¿Cómo funciona?</h2>
         </header>
-        <ul class="mb-items">
-          <li class="mb-item">
-            <h3 class="mb-item-t">Te suscribís con Mercado Pago</h3>
-            <p class="mb-item-d">Podés elegir pagar con débito, crédito o dinero en cuenta.</p>
-          </li>
-          <li class="mb-item">
-            <h3 class="mb-item-t">Disponibilidad automática</h3>
-            <p class="mb-item-d">Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.</p>
-          </li>
-          <li class="mb-item">
-            <h3 class="mb-item-t">Variedad a elección</h3>
-            <p class="mb-item-d">Reservás desde la carta las genéticas que quieras, hasta completar los gramos de tu plan.</p>
-          </li>
-        </ul>
+        <ul class="mb-items" id="mb-ciclo-items"></ul>
       </section>
 
       <section class="mb-beneficios" id="mb-beneficios" hidden>
         <header class="mb-sec-head reveal">
-          <h2 class="mb-h2">Beneficios exclusivos</h2>
+          <h2 class="mb-h2" id="mb-benef-t">Beneficios exclusivos</h2>
         </header>
         <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de al lado.
              Antes esto convivía con una tira de tres frases arriba de las
@@ -139,20 +119,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
              paso del ciclo sobre los gramos que se acumulan: los tres decían
              una parte y ninguno pesaba. Quedó uno solo, en frases cortas,
              porque en la TV esto se lee a varios metros. -->
-        <ul class="mb-items">
-          <li class="mb-item">
-            <b class="mb-item-t" id="mb-dto-t">Menos, por 3 meses</b>
-            <span class="mb-item-d">Ese precio queda fijo aunque suba la lista.</span>
-          </li>
-          <li class="mb-item">
-            <b class="mb-item-t">Envío sin cargo</b>
-            <span class="mb-item-d">A tu domicilio en Neuquén capital, al siguiente día hábil.</span>
-          </li>
-          <li class="mb-item">
-            <b class="mb-item-t">No perdés lo que no retirás</b>
-            <span class="mb-item-d">Si un mes no podés pasar, se te acumula.</span>
-          </li>
-        </ul>
+<ul class="mb-items" id="mb-benef-items"></ul>
       </section>
 
 
@@ -169,7 +136,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   const pesos = (n) => '$' + Number(n).toLocaleString('es-AR')
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
-  let ETIQUETAS = { uno: '', dos: '' }
+  let TX = {}   // todos los textos de la página, del backoffice
+  let DTO = ''  // el descuento real, calculado de los precios
   let ACTUAL = { tier: null, debitoActivo: false, puede: false, motivo: null }
   let PLANES = []
   // El contado arranca seleccionado: es el precio de referencia. El descuento
@@ -199,7 +167,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // así que mostrarlo no habilita a nadie que no corresponda.
     const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo
     const btn = puedeBoton
-      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>Suscribir con</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
+      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>${esc(TX.botonSuscribir || 'Suscribir con')}</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
       : ''
 
     // El precio de referencia arriba, y el débito abajo como el beneficio que
@@ -207,20 +175,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // entre dos vistas; mostrar las dos juntas es lo que hace visible el salto.
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
-          <span class="mb-gancho-lb">Con débito automático</span>
+          <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
-          ${p.contado ? `<span class="mb-gancho-ahorro">ahorrás ${pesos(p.contado - p.debito)} por mes</span>` : ''}
-          <span class="mb-gancho-envio">+ envío sin cargo</span>
+          ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
+          ${TX.envio ? `<span class="mb-gancho-envio">${esc(TX.envio)}</span>` : ''}
           ${btn}
         </div>`
       : ''
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
-      <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? 'Tu membresía' : ''}</span>
+      <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? esc(TX.insigniaMia || 'Tu membresía') : ''}</span>
       ${frascos}
       <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
-      <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(ETIQUETAS.uno) || 'Contado o transferencia'}</span></p>
-      <p class="mb-card-retiro">Lo retirás en la sede</p>
+      <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(TX.etiquetaPrecio || 'Contado o transferencia')}</span></p>
+      ${TX.retiro ? `<p class="mb-card-retiro">${esc(TX.retiro)}</p>` : ''}
       ${gancho}
     </article>`
   }
@@ -236,11 +204,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const dtos = PLANES
       .filter((p) => p.contado && p.debito && p.debito < p.contado)
       .map((p) => Math.round((1 - p.debito / p.contado) * 100))
-    const et = document.getElementById('mb-dto-t')
-    if (et && dtos.length) {
+    // El descuento sale de los precios reales, no de un texto escrito a mano:
+    // si mañana cambian, el beneficio no miente. Se escribe {dto} en el texto
+    // del backoffice y acá se reemplaza por el número.
+    if (dtos.length) {
       const max = Math.max(...dtos)
       const parejo = dtos.every((d) => d === max)
-      et.textContent = `${parejo ? '' : 'Hasta '}${max}% menos, por 3 meses`
+      DTO = `${parejo ? '' : 'Hasta '}${max}%`
+      pintarItems('mb-benef-items', TX.beneficios)
     }
 
     const ben = document.getElementById('mb-beneficios')
@@ -249,9 +220,34 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     if (cic) cic.hidden = false
   }
 
+  // Las dos columnas del cierre se arman desde el backoffice: título +
+  // pares de encabezado y descripción.
+  function pintarItems(id, lista) {
+    const ul = document.getElementById(id)
+    if (!ul || !Array.isArray(lista)) return
+    const conDto = (v) => String(v || '').replace('{dto}', DTO || '')
+    ul.innerHTML = lista.map((it) => `<li class="mb-item">
+      <b class="mb-item-t">${esc(conDto(it.t))}</b>
+      <span class="mb-item-d">${esc(conDto(it.d))}</span>
+    </li>`).join('')
+  }
+
   function pintar(d) {
     const tx = d.textos || {}
+    TX = tx
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '' }
+    // Barra de arriba y sello legal: hasta acá estaban escritos en el HTML,
+    // así que cambiar una palabra pedía un deploy.
+    set('mb-nav-cuenta', tx.navCuenta)
+    set('mb-logout', tx.navSalir)
+    set('mb-sello-lb', tx.selloLabel)
+    set('mb-sello-txt', tx.selloTexto)
+    set('mb-vacio', tx.vacio)
+    // Las dos columnas del cierre
+    set('mb-ciclo-t', tx.cicloTitulo)
+    set('mb-benef-t', tx.beneficiosTitulo)
+    pintarItems('mb-ciclo-items', tx.ciclo)
+    pintarItems('mb-benef-items', tx.beneficios)
     set('mb-eyebrow', tx.eyebrow)
     const tit = document.getElementById('mb-title')
     tit.textContent = tx.titulo || ''
@@ -262,7 +258,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     set('mb-lead', tx.lead)
 
-    ETIQUETAS = { uno: tx.etiquetaPrecio || '', dos: tx.etiquetaPrecio2 || '' }
     ACTUAL = d.actual || { tier: null, debitoActivo: false }
 
     PLANES = Array.isArray(d.planes) ? d.planes : []
@@ -298,13 +293,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       ov.innerHTML = `
         <div class="mb-verif-card" role="dialog" aria-modal="true" aria-labelledby="mb-verif-t">
           <div class="mb-verif-txt">
-            <span class="mb-verif-lb" id="mb-verif-t">Antes de suscribirte</span>
+            <span class="mb-verif-lb" id="mb-verif-t">${esc(TX.verifTitulo || 'Antes de suscribirte')}</span>
             <p class="mb-verif-p"></p>
           </div>
           <div class="mb-verif-acc">
-            <a class="mb-chip mb-chip--pri" href="/socios/reprocann/">Ver mi trámite</a>
-            <a class="mb-chip" href="${wa}" target="_blank" rel="noopener noreferrer">Escribinos</a>
-            <button type="button" class="mb-chip" data-cerrar>Cerrar</button>
+            <a class="mb-chip mb-chip--pri" href="/socios/reprocann/">${esc(TX.verifTramite || 'Ver mi trámite')}</a>
+            <a class="mb-chip" href="${wa}" target="_blank" rel="noopener noreferrer">${esc(TX.verifEscribinos || 'Escribinos')}</a>
+            <button type="button" class="mb-chip" data-cerrar>${esc(TX.verifCerrar || 'Cerrar')}</button>
           </div>
         </div>`
       document.getElementById('mb-content').appendChild(ov)

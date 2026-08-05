@@ -2,7 +2,7 @@
 // GET devuelve el documento vigente con sus defaults; PUT guarda el documento
 // entero. Mismo patrón que precios.ts y avisos.ts: un solo doc JSON en KV.
 import { requireCap } from '../../panel/_rol';
-import { leerMembresias, validarMembresias, MEMBRESIAS_KEY } from './_membresias';
+import { leerMembresias, validarMembresias, MEMBRESIAS_KEY, ZONAS } from './_membresias';
 import { planesVigentes } from '../_planes';
 import { PASOS } from '../../panel/reprocann/_pasos';
 
@@ -57,7 +57,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     }
     return Response.json({ ok: true, estados });
   }
-  return Response.json({ ok: true, membresias: await leerMembresias(env.GENETICAS) });
+  return Response.json({ ok: true, membresias: await leerMembresias(env.GENETICAS), zonas: ZONAS });
 };
 
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {

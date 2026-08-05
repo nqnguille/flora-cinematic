@@ -185,34 +185,81 @@
   }
 
   /* ---------- textos ---------- */
+  /* ---------- textos: el editor se dibuja desde las ZONAS ----------
+     El orden de las zonas es el orden en que se ven en la página, de arriba
+     hacia abajo, y cada una dice dónde está. Así editar un texto no obliga a
+     adivinar dónde va a aparecer. El mapa viene del servidor: agregar un texto
+     nuevo allá lo hace aparecer acá solo. */
+  let ZONAS = []
+  let zonaAbierta = 'hero'
+
+  function campoHtml(c) {
+    const val = DOC[c.k] ?? ''
+    const id = 'mbz-' + c.k
+    return `<div class="campo">
+      <label class="lb" for="${id}">${P.esc(c.lb)}</label>
+      ${c.largo
+        ? `<textarea class="input mb-tx" id="${id}" data-k="${P.esc(c.k)}" rows="${val.length > 300 ? 6 : 3}" maxlength="${c.max}">${P.esc(val)}</textarea>`
+        : `<input class="input mb-tx" id="${id}" data-k="${P.esc(c.k)}" maxlength="${c.max}" value="${P.esc(val)}" />`}
+      ${c.ayuda ? `<p class="ct-help" style="margin:4px 0 0">${P.esc(c.ayuda)}</p>` : ''}
+    </div>`
+  }
+
+  function listaHtml(z) {
+    const items = DOC[z.lista.k] || []
+    return `<div class="mb-lista" data-lista="${P.esc(z.lista.k)}">
+      ${items.map((it, i) => `<div class="mb-li">
+        <span class="mb-li-n">${i + 1}</span>
+        <div style="flex:1;min-width:0;display:grid;gap:6px">
+          <input class="input mb-li-t" data-lista="${P.esc(z.lista.k)}" data-i="${i}" data-c="t"
+            maxlength="90" placeholder="Título" value="${P.esc(it.t || '')}" />
+          <input class="input mb-li-d" data-lista="${P.esc(z.lista.k)}" data-i="${i}" data-c="d"
+            maxlength="260" placeholder="Descripción" value="${P.esc(it.d || '')}" />
+        </div>
+        <button class="btn btn-peligro mb-li-x" data-lista="${P.esc(z.lista.k)}" data-i="${i}" type="button" aria-label="Quitar">✕</button>
+      </div>`).join('')}
+      ${items.length < 6 ? `<button class="btn mb-li-mas" data-lista="${P.esc(z.lista.k)}" type="button">+ Agregar</button>` : ''}
+    </div>`
+  }
+
   function pintarTextos() {
-    const v = (id, val) => { const el = cont.querySelector(id); if (el) el.value = val ?? '' }
-    v('#mb-et1', DOC.etiquetaPrecio)
-    v('#mb-et2', DOC.etiquetaPrecio2)
-    v('#mb-eyebrow', DOC.eyebrow)
-    v('#mb-titulo', DOC.titulo)
-    v('#mb-titulo-em', DOC.tituloEm)
-    v('#mb-lead', DOC.lead)
-    v('#mb-nota-titulo', DOC.notaTitulo)
-    v('#mb-notas', (DOC.notas || []).join('\n'))
-    v('#mb-cta-carta', DOC.ctaCarta)
-    v('#mb-cta-wa', DOC.ctaWhatsapp)
+    const caja = cont.querySelector('#mb-zonas')
+    if (!caja || !ZONAS.length) return
+    caja.innerHTML = ZONAS.map((z, i) => {
+      const abierta = zonaAbierta === z.id
+      return `<div class="mb-zona ${abierta ? 'on' : ''}">
+        <button class="mb-zona-cab" data-zona="${P.esc(z.id)}" type="button" aria-expanded="${abierta}">
+          <span class="mb-zona-n">${i + 1}</span>
+          <span style="flex:1;min-width:0;text-align:left">
+            <b>${P.esc(z.nombre)}</b>
+            <span class="mb-zona-donde">${P.esc(z.donde)}</span>
+          </span>
+          <span class="mb-zona-chev">${abierta ? '▾' : '▸'}</span>
+        </button>
+        ${abierta ? `<div class="mb-zona-cuerpo">
+          ${z.campos.map(campoHtml).join('')}
+          ${z.lista ? listaHtml(z) : ''}
+        </div>` : ''}
+      </div>`
+    }).join('')
+  }
+
+  // Lo que se escribe se guarda en DOC al vuelo: así cambiar de zona no pierde
+  // lo tipeado.
+  function tomarCampo(el) {
+    if (el.classList.contains('mb-tx')) { DOC[el.dataset.k] = el.value; return true }
+    if (el.dataset.lista && el.dataset.i !== undefined) {
+      const l = DOC[el.dataset.lista] || (DOC[el.dataset.lista] = [])
+      const i = Number(el.dataset.i)
+      l[i] = l[i] || { t: '', d: '' }
+      l[i][el.dataset.c] = el.value
+      return true
+    }
+    return false
   }
 
   function leerTextos() {
-    const g = (id) => (cont.querySelector(id)?.value ?? '').trim()
-    DOC.etiquetaPrecio = g('#mb-et1')
-    DOC.etiquetaPrecio2 = g('#mb-et2')
-    DOC.eyebrow = g('#mb-eyebrow')
-    DOC.titulo = g('#mb-titulo')
-    DOC.tituloEm = g('#mb-titulo-em')
-    DOC.lead = g('#mb-lead')
-    DOC.notaTitulo = g('#mb-nota-titulo')
-    // Una aclaración por renglón: más simple que una lista de cajitas, cada
-    // una con su propio botón de borrar.
-    DOC.notas = g('#mb-notas').split('\n').map((s) => s.trim()).filter(Boolean).slice(0, MAX_NOTAS)
-    DOC.ctaCarta = g('#mb-cta-carta')
-    DOC.ctaWhatsapp = g('#mb-cta-wa')
+    cont.querySelectorAll('.mb-tx, .mb-li-t, .mb-li-d').forEach(tomarCampo)
   }
 
   /* ---------- guardar ---------- */
@@ -255,7 +302,9 @@
     try {
       const res = await fetch(EP, { credentials: 'include' })
       if (!res.ok) { caja.innerHTML = `<p class="ct-help">${P.esc(errHttp(res.status))}</p>`; caja.hidden = false; return }
-      DOC = (await res.json()).membresias
+      const dd = await res.json()
+      DOC = dd.membresias
+      ZONAS = dd.zonas || []
       // Los planes se leen de la lista de precios vigente, que es donde de
       // verdad viven: acá se muestran para poder chequearlos de un vistazo.
       try {
@@ -312,27 +361,12 @@
             <p id="mb-total" class="mb-total"></p>
           </div>
 
-          <details class="card mb-textos">
-            <summary>Textos de la página</summary>
-            <div class="mb-textos-grid">
-              <div><label class="lb" for="mb-eyebrow">Etiqueta de arriba</label>
-                <input class="input mb-txt" id="mb-eyebrow" type="text" maxlength="60" /></div>
-              <div><label class="lb" for="mb-nota-titulo">Título del bloque del pie</label>
-                <input class="input mb-txt" id="mb-nota-titulo" type="text" maxlength="60" /></div>
-              <div><label class="lb" for="mb-titulo">Título</label>
-                <input class="input mb-txt" id="mb-titulo" type="text" maxlength="80" /></div>
-              <div><label class="lb" for="mb-titulo-em">Título, parte en cursiva</label>
-                <input class="input mb-txt" id="mb-titulo-em" type="text" maxlength="80" /></div>
-              <div class="mb-ancho"><label class="lb" for="mb-lead">Bajada</label>
-                <textarea class="input mb-txt" id="mb-lead" rows="3" maxlength="600"></textarea></div>
-              <div class="mb-ancho"><label class="lb" for="mb-notas">Aclaraciones del pie <span class="mb-hint">una por renglón</span></label>
-                <textarea class="input mb-txt" id="mb-notas" rows="4"></textarea></div>
-              <div><label class="lb" for="mb-cta-carta">Botón a la carta</label>
-                <input class="input mb-txt" id="mb-cta-carta" type="text" maxlength="60" /></div>
-              <div><label class="lb" for="mb-cta-wa">Botón de WhatsApp</label>
-                <input class="input mb-txt" id="mb-cta-wa" type="text" maxlength="60" /></div>
-            </div>
-          </details>
+          <div class="card">
+            <span class="k">Textos de la página</span>
+            <p class="ct-help" style="margin:6px 0 14px">En el mismo orden en que se ven, de arriba hacia abajo.
+            Cada bloque dice en qué parte de la página está. <a href="${URL_PUBLICA}" target="_blank" rel="noopener">Verla</a></p>
+            <div id="mb-zonas"></div>
+          </div>
 
           <div class="fila mb-barra">
             <button class="btn btn-pri" id="mb-guardar" type="button" disabled>Sin cambios</button>
@@ -342,6 +376,7 @@
 
       el.addEventListener('input', (e) => {
         const t = e.target
+        if (tomarCampo(t)) { marcarSucio(); return }
         if (t.classList.contains('mb-et') || t.classList.contains('mb-txt')) marcarSucio()
       })
 
@@ -426,6 +461,21 @@
           if (pr && pr.ok) PLANES = (await pr.json()).planes || []
           cargarPlanes()
           return
+        }
+        // --- textos por zona ---
+        const cab = e.target.closest('.mb-zona-cab')
+        if (cab) { zonaAbierta = zonaAbierta === cab.dataset.zona ? null : cab.dataset.zona; pintarTextos(); return }
+        const mas = e.target.closest('.mb-li-mas')
+        if (mas) {
+          const k = mas.dataset.lista
+          DOC[k] = (DOC[k] || []).concat({ t: '', d: '' })
+          marcarSucio(); pintarTextos(); return
+        }
+        const menos = e.target.closest('.mb-li-x')
+        if (menos) {
+          const k = menos.dataset.lista
+          DOC[k] = (DOC[k] || []).filter((_, i) => i !== Number(menos.dataset.i))
+          marcarSucio(); pintarTextos(); return
         }
         if (e.target.closest('#mb-guardar')) guardar()
       })

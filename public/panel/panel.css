@@ -719,3 +719,33 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
    filas que reemplaza, el texto cae en la primera columna y se parte letra a
    letra. Pasaba en «Todavía nadie retiró hoy». */
 .vacio { grid-column: 1 / -1; display: block }
+
+/* Editor de textos por zona (módulo Membresías). El orden y los rótulos salen
+   del servidor: acá solo está la forma. */
+.mb-zona { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 6px; overflow: hidden }
+.mb-zona.on { border-color: var(--line2); background: var(--card2) }
+.mb-zona-cab {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink); text-align: left;
+}
+.mb-zona-cab:hover { background: var(--vio-soft) }
+.mb-zona-cab:focus-visible { outline: 2px solid var(--vio); outline-offset: -2px }
+.mb-zona-n {
+  width: 22px; height: 22px; border-radius: 999px; flex-shrink: 0;
+  background: var(--vio-soft); color: var(--vio); display: grid; place-items: center;
+  font-size: 11px; font-weight: 700;
+}
+.mb-zona-donde { display: block; color: var(--muted); font-size: 11px; margin-top: 2px }
+.mb-zona-chev { color: var(--muted); font-size: 12px }
+.mb-zona-cuerpo { padding: 4px 14px 14px; display: grid; gap: 10px; border-top: 1px solid var(--line) }
+.mb-zona-cuerpo .campo { margin: 0 }
+.mb-zona-cuerpo textarea.input { resize: vertical; font-family: inherit; line-height: 1.5 }
+
+.mb-lista { display: grid; gap: 6px }
+.mb-li { display: flex; align-items: flex-start; gap: 10px }
+.mb-li-n {
+  width: 20px; height: 20px; border-radius: 999px; flex-shrink: 0; margin-top: 6px;
+  background: var(--line); color: var(--ink2); display: grid; place-items: center;
+  font-size: 11px; font-weight: 700;
+}
+.mb-li-x { padding: 4px 8px; align-self: center }
