@@ -742,16 +742,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: #f4f1f7; margin: 0 0 14px; text-wrap: balance;
   }
   .mb-title em { font-style: italic; color: #4FC79E; }
+  /* Sobre una foto, un párrafo al 66% de opacidad se pierde entre las hojas.
+     La sombra sola no alcanza cuando el fondo tiene zonas claras. */
   .mb-lead {
     font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
-    color: rgba(244, 241, 247, 0.66); margin: 0;
+    color: rgba(248, 246, 252, 0.88); margin: 0;
   }
 
   /* Sobre video el texto necesita sombra sí o sí, igual que en el resto del
      sitio: 0 2px 28px para títulos, 0 1px 16px para párrafos. Ahora que el
      video es el fondo de todo, esto vale para toda la página, no solo el hero. */
   .mb-title { text-shadow: 0 2px 28px rgba(0, 0, 0, .6); }
-  .mb-lead, .mb-h2, .mb-eyebrow-v { text-shadow: 0 1px 16px rgba(0, 0, 0, .65); }
+  .mb-lead, .mb-h2, .mb-eyebrow-v { text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 1px 18px rgba(0, 0, 0, .75); }
 
   /* Encabezado de sección interna, con el gesto tipográfico del sitio: el
      título partido y la segunda mitad en verde. */
@@ -815,21 +817,32 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      un link pelado, "Cerrar sesión" un chip de tienda.css y los dos CTA otro
      chip más chico: cuatro cosas del mismo rango con tres formas distintas.
      El id gana la especificidad contra tienda.css sin pelear con !important. */
+  /* Los chips van sobre una FOTO, no sobre un color: en la franja del
+     encabezado el fondo va del negro al blanco puro. Un borde traslúcido ahí
+     aparece y desaparece según la hoja que le toque atrás, y el chip se ve
+     roto. Por eso llevan su propio fondo oscuro con desenfoque: se despegan
+     de la imagen siempre, sin importar qué haya debajo. */
   #mb-content .mb-chip {
     display: inline-flex; align-items: center;
     font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700;
     line-height: 1; text-decoration: none; white-space: nowrap;
     padding: 10px 18px; border-radius: 999px;
-    border: 1px solid rgba(183, 157, 230, 0.28);
-    background: transparent; color: rgba(244, 241, 247, 0.75);
+    border: 1px solid rgba(214, 199, 245, 0.34);
+    background: rgba(16, 12, 24, 0.58);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+    backdrop-filter: blur(10px) saturate(120%);
+    color: rgba(248, 246, 252, 0.92);
     transition: color .2s ease, border-color .2s ease, background .2s ease;
   }
-  #mb-content .mb-chip:hover { color: #f4f1f7; border-color: rgba(183, 157, 230, 0.55); }
-  #mb-content .mb-chip--pri {
-    border-color: rgba(79, 199, 158, 0.5);
-    background: rgba(79, 199, 158, 0.14); color: #4FC79E;
+  #mb-content .mb-chip:hover {
+    color: #fff; border-color: rgba(214, 199, 245, 0.6);
+    background: rgba(24, 18, 36, 0.72);
   }
-  #mb-content .mb-chip--pri:hover { background: rgba(79, 199, 158, 0.24); color: #4FC79E; }
+  #mb-content .mb-chip--pri {
+    border-color: rgba(79, 199, 158, 0.62);
+    background: rgba(10, 46, 36, 0.72); color: #6FE3BC;
+  }
+  #mb-content .mb-chip--pri:hover { background: rgba(14, 62, 48, 0.85); color: #8CF0CE; }
   /* "Cerrar sesión" traía un margin-left:auto de tienda.css que lo empujaba
      al extremo; acá ya está dentro del grupo de la derecha. */
   #mb-content .td-logout.mb-chip { margin-left: 0; }
