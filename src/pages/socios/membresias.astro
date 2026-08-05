@@ -89,7 +89,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               vigente que designe a la <strong>Asociación Civil Cann de Cannabis Medicinal</strong>
               como su cultivadora. Personería jurídica <strong>I.G.J. N.º 1994128</strong>,
               CUIT 30-71827609-4. Lo que recibís <strong>no es una compra</strong>: es la entrega
-              de tu propio cultivo, amparado por ese vínculo.
+              de tu propio cultivo, amparado por ese vínculo. Podés dar de baja la suscripción
+              cuando quieras, vos mismo, desde Mercado Pago.
             </p>
           </aside>
         </div>
@@ -114,15 +115,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <h2 class="mb-h2">Se ocupa solo, <em>mes a mes</em></h2>
         </header>
         <ul class="mb-items">
-          <li class="mb-item reveal">
+          <li class="mb-item">
             <h3 class="mb-item-t">Te suscribís con Mercado Pago</h3>
             <p class="mb-item-d">Podés elegir pagar con débito, crédito o dinero en cuenta.</p>
           </li>
-          <li class="mb-item reveal" data-reveal-delay="90">
-            <h3 class="mb-item-t">Tus gramos se habilitan</h3>
-            <p class="mb-item-d">Apenas se acredita el pago quedan disponibles, sin que nadie los confirme.</p>
+          <li class="mb-item">
+            <h3 class="mb-item-t">Disponibilidad automática</h3>
+            <p class="mb-item-d">Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.</p>
           </li>
-          <li class="mb-item reveal" data-reveal-delay="180">
+          <li class="mb-item">
             <h3 class="mb-item-t">Lo recibís sin moverte</h3>
             <p class="mb-item-d">Te lo llevamos a tu casa en Neuquén capital, al siguiente día hábil. O lo pasás a buscar por la sede, como prefieras.</p>
           </li>
@@ -156,13 +157,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </ul>
       </section>
 
-      <section class="mb-nota" id="mb-nota-sec" hidden>
-        <header class="mb-sec-head">
-          <span class="mb-eyebrow-v">Letra chica</span>
-          <h2 class="mb-h2" id="mb-nota-titulo"></h2>
-        </header>
-        <ul id="mb-notas" class="mb-items"></ul>
-      </section>
 
       </div><!-- /mb-cierre -->
 
@@ -185,11 +179,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
-    const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
+    // Un frasco por cada 10 g. Es lo que hace que la diferencia entre planes
+    // se vea de lejos sin tener que leer el número.
+    const FRASCO = '<svg class="mb-frasco" viewBox="0 0 14 20" aria-hidden="true"><rect x="4.4" y="1" width="5.2" height="2.6" rx=".8"/><path d="M3.4 3.6h7.2a2 2 0 0 1 2 2v11.4a2 2 0 0 1-2 2H3.4a2 2 0 0 1-2-2V5.6a2 2 0 0 1 2-2Z"/></svg>'
+    const frascos = p.gramos
+      ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
+      : ''
+    const detalle = p.gramos ? `${frascos}<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
     const ofreceDebito = !!(p.debito && p.linkDebito)
     const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo && ACTUAL.puede
     const btn = puedeBoton
-      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}">Adherir al débito</button>`
+      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>Suscribir con</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
       : ''
 
     // El precio de referencia arriba, y el débito abajo como el beneficio que
@@ -260,28 +260,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       av.hidden = false
     } else { av.hidden = true }
 
-    // El título de esta columna viene del backoffice. Se le aplica el gesto de
-    // la casa: la segunda mitad en itálica verde.
-    const nt = String(tx.notaTitulo || '')
-    const corte = nt.lastIndexOf(' ')
-    document.getElementById('mb-nota-titulo').innerHTML = corte > 0
-      ? `${esc(nt.slice(0, corte))} <em>${esc(nt.slice(corte + 1))}</em>`
-      : esc(nt)
-
-    // Cada nota se guarda como "Título: texto". Se parte en el primer dos
-    // puntos para que tenga la misma forma que las otras dos columnas. Si
-    // alguien guarda una nota sin dos puntos, entra entera como texto y no
-    // se rompe nada.
-    const notas = Array.isArray(tx.notas) ? tx.notas : []
-    document.getElementById('mb-notas').innerHTML = notas.map((n) => {
-      const s = String(n)
-      const i = s.indexOf(': ')
-      if (i < 1) return `<li class="mb-item"><span class="mb-item-d">${esc(s)}</span></li>`
-      return `<li class="mb-item"><b class="mb-item-t">${esc(s.slice(0, i))}</b><span class="mb-item-d">${esc(s.slice(i + 2))}</span></li>`
-    }).join('')
+    // La columna de letra chica se sacó de la página: lo legal vive ahora en
+    // el sello del encabezado. Los textos siguen guardados en el backoffice
+    // por si se quiere volver a mostrar.
     set('mb-cta-carta', tx.ctaCarta)
     set('mb-cta-wa', tx.ctaWhatsapp)
-    document.getElementById('mb-nota-sec').hidden = !(tx.notaTitulo || notas.length)
   }
 
   // Un click: se registra la adhesión y se abre el checkout de Mercado Pago.
@@ -447,13 +430,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      sin verse. */
   .mb-mia:empty { background: none; }
   .mb-mia:empty::before { content: "\200b"; }
+  /* El logo oficial de Mercado Pago está dibujado para fondo claro: sobre el
+     celeste de marca no se lee. Por eso el botón va blanco, que además es
+     como se ven los botones oficiales de "pagar con". */
   .mb-adherir {
-    display: block; width: 100%; margin-top: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; margin-top: 14px;
     font: inherit; font-family: var(--font-ui); font-size: 13px; font-weight: 700;
-    color: #fff; background: #009ee3; border: 0; border-radius: 999px;
-    padding: 11px 14px; cursor: pointer;
+    color: #1c1626; background: #fff; border: 0; border-radius: 999px;
+    padding: 10px 14px; cursor: pointer;
   }
-  .mb-adherir:hover { filter: brightness(1.08); }
+  /* En la tarjeta angosta del celular, "Suscribir con" partía en dos renglones
+     y el botón crecía al doble de alto. */
+  .mb-adherir span { white-space: nowrap; }
+  .mb-adherir-mp { height: 15px; width: auto; display: block; flex: none; }
+  .mb-adherir:hover { filter: brightness(.94); }
   .mb-adherir:disabled { opacity: .6; cursor: default; }
   /* El bloque que desbloquea el descuento. Va con el celeste de Mercado Pago
      para que se lea como "esto es lo que pasa si te suscribís", separado del
@@ -564,6 +555,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 12px;
     color: rgba(244, 241, 247, .4); margin: 5px 0 0;
   }
+  /* Frasquitos: uno por cada 10 g. Contorno, sin relleno, del mismo verde
+     que el precio, para que se lean como una unidad de medida y no como un
+     adorno. */
+  .mb-frascos {
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: 4px; margin: 0 0 6px;
+  }
+  .mb-frasco {
+    width: 13px; height: 19px; flex: none;
+    fill: none; stroke: #4FC79E; stroke-width: 1.4;
+    stroke-linejoin: round; opacity: .85;
+  }
+
   .mb-gancho-envio {
     display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
     color: #4cb8e8; margin-top: 3px;
@@ -577,21 +581,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* El precio se queda grande: es lo único que se lee desde el sillón. Todo
        lo que lo rodea cede alto para que la página entre entera en 1080. */
     .mb-card { padding: clamp(10px, 1.6vh, 20px) clamp(14px, 1.2vw, 22px); }
-    .mb-card-nom { font-size: clamp(14px, 1.95vh, 22px); letter-spacing: .1em; margin-bottom: clamp(3px, .5vh, 7px); }
-    .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(6px, 1vh, 13px); }
-    .mb-card-precio { font-size: clamp(34px, 5.2vh, 62px); line-height: 1.05; }
-    .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: 3px; }
+    .mb-card-nom { font-size: clamp(14px, 1.95vh, 22px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
+    .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
+    .mb-card-precio { font-size: clamp(30px, 4.1vh, 50px); line-height: 1.05; }
+    .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(2px, .3vh, 4px); }
     .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
     .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
-    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: 5px; }
-    .mb-gancho-envio { font-size: clamp(10px, 1.2vh, 13px); }
+    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .45vh, 6px); }
+    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
     .mb-gancho { margin-top: clamp(8px, 1.3vh, 16px); padding: clamp(8px, 1.3vh, 14px) 14px clamp(9px, 1.4vh, 15px); }
-    .mb-gancho-precio { font-size: clamp(20px, 3vh, 34px); }
-    .mb-gancho-lb { font-size: clamp(9px, 1.1vh, 12px); margin-bottom: 2px; }
-    .mb-gancho-ahorro { font-size: clamp(10px, 1.2vh, 13px); }
-    .mb-adherir { font-size: clamp(12px, 1.5vh, 16px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
+    .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
+    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(2px, .3vh, 4px); }
+    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
+    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
+    .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
+    .mb-frasco { width: clamp(12px, 1.5vh, 17px); height: clamp(17px, 2.2vh, 25px); }
+    .mb-frascos { margin-bottom: clamp(4px, .7vh, 9px); gap: clamp(3px, .45vh, 6px); }
     .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
-    .mb-mia { font-size: clamp(9px, 1.1vh, 12px); line-height: clamp(12px, 1.5vh, 16px); }
+    .mb-mia { font-size: clamp(10px, 1.2vh, 14px); line-height: clamp(13px, 1.6vh, 18px);
+      margin-bottom: clamp(4px, .6vh, 8px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
   }
 </style>
 
@@ -663,7 +671,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-h2 em { font-style: italic; color: #4FC79E; }
 
-
   /* ── Cierre: apilado en el celular, tres columnas en pantalla grande ── */
   .mb-cierre { display: grid; gap: clamp(34px, 6vw, 60px); }
   /* Las tres traían su propio aire, su ancho máximo y su línea de separación,
@@ -676,7 +683,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Acá vivía un bloque huérfano: cuatro reglas sueltas y una llave de más,
      resto de una edición anterior que quedó cortada. Estaban duplicadas dentro
      del @media de TV de más abajo, y la llave sobrante desbalanceaba la hoja. */
-
 
   .mb-grid {
     display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
@@ -792,11 +798,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        dejaban la página en 2,08 pantallas de TV. En columnas usan el ancho,
        que es justo lo que sobra en 1920. */
     .mb-primera .mb-cierre {
-      /* Al ciclo se le da el ancho de más porque es la columna con más texto:
-         en columnas parejas rompía en tres renglones por paso y arrastraba el
-         alto de toda la banda. */
-      grid-template-columns: 1.55fr 1fr .9fr;
-      /* Las tres arrancan a la misma altura: centradas quedaban escalonadas. */
+      grid-template-columns: repeat(2, 1fr);
+      /* Cuatro renglones compartidos: el encabezado y los tres ítems. Con
+         subgrid, cada columna se cuelga de ESTOS renglones en vez de armar los
+         suyos, así el ítem 1 de las tres arranca y termina a la misma altura
+         aunque uno tenga dos líneas y otro tres. Sin subgrid (navegador viejo)
+         degrada a lo de antes: columnas parejas pero renglones sueltos. */
+      grid-template-rows: auto repeat(3, auto);
       align-items: start;
       gap: clamp(26px, 2.8vw, 54px);
       margin-top: clamp(6px, .8vh, 12px);
@@ -812,6 +820,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(10px, 1.2vh, 13px); margin-bottom: clamp(3px, .5vh, 7px); }
     .mb-primera .mb-cierre .mb-h2 { font-size: clamp(17px, 2.1vh, 26px); }
+    @supports (grid-template-rows: subgrid) {
+      .mb-primera .mb-cierre > * {
+        display: grid; grid-row: span 4; grid-template-rows: subgrid;
+        row-gap: 0;
+      }
+      .mb-primera .mb-cierre .mb-items {
+        display: grid; grid-row: span 3; grid-template-rows: subgrid;
+        row-gap: 0; gap: 0;
+      }
+      /* Con los renglones compartidos, el aire entre ítems lo pone la grilla
+         de arriba una sola vez, no cada columna por su cuenta. */
+      .mb-primera .mb-cierre { row-gap: clamp(6px, .95vh, 13px); }
+      .mb-primera .mb-cierre .mb-item { padding-top: clamp(6px, .95vh, 13px); }
+      .mb-primera .mb-cierre .mb-sec-head { margin-bottom: 0; }
+    }
+
     /* Los pasos van uno debajo del otro: en una columna angosta, en fila
        quedarían tres palabras por renglón. */
   }
