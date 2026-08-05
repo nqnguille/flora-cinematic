@@ -111,8 +111,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
            en ningún lado: qué pasa después de adherirse. -->
       <section class="mb-ciclo" id="mb-ciclo" hidden aria-label="Cómo funciona el débito">
         <header class="mb-sec-head reveal">
-          <span class="mb-eyebrow-v">Una vez adherido</span>
-          <h2 class="mb-h2">Se ocupa solo, <em>mes a mes</em></h2>
+          <h2 class="mb-h2">¿Cómo funciona?</h2>
         </header>
         <ul class="mb-items">
           <li class="mb-item">
@@ -124,16 +123,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <p class="mb-item-d">Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.</p>
           </li>
           <li class="mb-item">
-            <h3 class="mb-item-t">Lo recibís sin moverte</h3>
-            <p class="mb-item-d">Te lo llevamos a tu casa en Neuquén capital, al siguiente día hábil. O lo pasás a buscar por la sede, como prefieras.</p>
+            <h3 class="mb-item-t">Variedad a elección</h3>
+            <p class="mb-item-d">Reservás desde la carta las genéticas que quieras, hasta completar los gramos de tu plan.</p>
           </li>
         </ul>
       </section>
 
       <section class="mb-beneficios" id="mb-beneficios" hidden>
         <header class="mb-sec-head reveal">
-          <span class="mb-eyebrow-v">Por qué conviene</span>
-          <h2 class="mb-h2">Lo que ganás <em>con el débito</em></h2>
+          <h2 class="mb-h2">Beneficios exclusivos</h2>
         </header>
         <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de al lado.
              Antes esto convivía con una tira de tres frases arriba de las
@@ -179,13 +177,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
-    // Un frasco por cada 10 g. Es lo que hace que la diferencia entre planes
-    // se vea de lejos sin tener que leer el número.
-    const FRASCO = '<svg class="mb-frasco" viewBox="0 0 14 20" aria-hidden="true"><rect x="4.4" y="1" width="5.2" height="2.6" rx=".8"/><path d="M3.4 3.6h7.2a2 2 0 0 1 2 2v11.4a2 2 0 0 1-2 2H3.4a2 2 0 0 1-2-2V5.6a2 2 0 0 1 2-2Z"/></svg>'
+    // Un frasco por cada 10 g. El contorno solo se leía como envase vacío:
+    // ahora lleva los cogollos adentro, en relleno, con el borde superior
+    // festoneado. A 20px es lo único que se distingue de un frasco de aceite.
+    const FRASCO = `<svg class="mb-frasco" viewBox="0 0 16 22" aria-hidden="true">
+      <g class="mb-frasco-vidrio"><rect x="5.4" y="1" width="5.2" height="2.6" rx=".8"/><path d="M4 3.6h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/></g>
+      <g class="mb-frasco-flor"><circle cx="5.3" cy="13.2" r="1.9"/><circle cx="8" cy="12.4" r="2.1"/><circle cx="10.7" cy="13.2" r="1.9"/><rect x="3.4" y="13" width="9.2" height="5.8" rx="1.3"/></g>
+    </svg>`
     const frascos = p.gramos
       ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
       : ''
-    const detalle = p.gramos ? `${frascos}<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
+    const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
     const ofreceDebito = !!(p.debito && p.linkDebito)
     const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo && ACTUAL.puede
     const btn = puedeBoton
@@ -206,6 +208,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       : ''
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
       <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? 'Tu membresía' : ''}</span>
+      ${frascos}
       <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(ETIQUETAS.uno) || 'Contado o transferencia'}</span></p>
@@ -434,8 +437,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      celeste de marca no se lee. Por eso el botón va blanco, que además es
      como se ven los botones oficiales de "pagar con". */
   .mb-adherir {
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    width: 100%; margin-top: 14px;
+    /* Se ajusta al texto en vez de ocupar todo el ancho: la tarjeta ya está
+       centrada, así que inline-flex lo centra solo. */
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    width: auto; margin-top: 14px;
     font: inherit; font-family: var(--font-ui); font-size: 13px; font-weight: 700;
     color: #1c1626; background: #fff; border: 0; border-radius: 999px;
     padding: 10px 14px; cursor: pointer;
@@ -562,11 +567,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: flex; justify-content: center; align-items: flex-end;
     gap: 4px; margin: 0 0 6px;
   }
-  .mb-frasco {
-    width: 13px; height: 19px; flex: none;
-    fill: none; stroke: #4FC79E; stroke-width: 1.4;
-    stroke-linejoin: round; opacity: .85;
-  }
+  .mb-frasco { width: 14px; height: 20px; flex: none; color: #4FC79E; }
+  /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
+     los dos lo que hace que se lea lleno y no como un envase suelto. */
+  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; opacity: .7; }
+  .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
 
   .mb-gancho-envio {
     display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
@@ -595,7 +600,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
-    .mb-frasco { width: clamp(12px, 1.5vh, 17px); height: clamp(17px, 2.2vh, 25px); }
+    .mb-frasco { width: clamp(13px, 1.6vh, 19px); height: clamp(18px, 2.3vh, 27px); }
     .mb-frascos { margin-bottom: clamp(4px, .7vh, 9px); gap: clamp(3px, .45vh, 6px); }
     .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
     .mb-mia { font-size: clamp(10px, 1.2vh, 14px); line-height: clamp(13px, 1.6vh, 18px);
