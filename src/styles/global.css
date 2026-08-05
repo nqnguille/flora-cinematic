@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════
    FLORA ONG — Global Styles 2026
-   Cormorant (display) + Hanken Grotesk (UI)
+   Newsreader (display) + Hanken Grotesk (UI)
    Paleta: --ink (verde profundo) / --bone (crema)
           / --leaf (verde lima acento)
           / --gold (dorado tenue)
 ═══════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 
 :root {
   --ink:    #152318;
@@ -19,7 +19,7 @@
   --gold:   #B8A878;
   --muted:  rgba(244, 241, 230, 0.52);
 
-  --font-display: 'Cormorant', Georgia, serif;
+  --font-display: 'Newsreader', Georgia, serif;
   --font-ui:      'Hanken Grotesk', system-ui, sans-serif;
 
   /* Espaciado fluido */
