@@ -17,6 +17,8 @@ interface Env {
   DB: D1Database;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
+  /** Token de máquina del agente que vuelca los trámites del portal. */
+  AGENTE_TOKEN?: string;
 }
 
 // El catálogo del embudo vive en _pasos.ts (compartido con la lista maestra
@@ -188,9 +190,20 @@ async function sincronizarSocio(env: Env, socioId: number, per: TramitePortal, h
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireCap(request, env, 'reprocann_editar');
-  if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-  const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
+  const vista0 = Array.isArray(params.vista) ? params.vista[0] : params.vista;
+  // El agente que corre con la sesión de Mi Argentina abierta puede mandar el
+  // volcado sin ser un humano logueado al panel. Solo para `sincronizar`: es
+  // el único que no decide nada, copia lo que dice el organismo. Mismo patrón
+  // de token de máquina que ya usa el agente contra el consultorio.
+  const cab = request.headers.get('Authorization') || '';
+  const esAgente = vista0 === 'sincronizar' && env.AGENTE_TOKEN
+    && cab.startsWith('Bearer ') && cab.slice(7).trim() === env.AGENTE_TOKEN;
+
+  if (!esAgente) {
+    const auth = await requireCap(request, env, 'reprocann_editar');
+    if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
+  }
+  const vista = vista0;
   const hoy = new Date().toISOString().slice(0, 10);
 
   // El volcado del portal (GET /api/v2/tramites?idOng=342) entra por acá.
