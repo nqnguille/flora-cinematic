@@ -57,31 +57,30 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
                poster="/hero/cannabis-hero-poster.jpg"
                muted loop playsinline autoplay preload="none" aria-hidden="true"></video>
         <div class="mb-hero-velo" aria-hidden="true"></div>
+        <!-- Título y selector comparten renglón: en la TV cada píxel de alto
+             que se lleva el encabezado sale del tamaño de los precios. -->
         <div class="mb-hero-txt">
-          <span class="mb-eyebrow reveal" id="mb-eyebrow"></span>
-          <h1 class="mb-title reveal" data-reveal-delay="90" id="mb-title"></h1>
-          <p class="mb-lead reveal" data-reveal-delay="180" id="mb-lead"></p>
+          <div class="mb-hero-copy">
+            <span class="mb-eyebrow reveal" id="mb-eyebrow"></span>
+            <h1 class="mb-title reveal" data-reveal-delay="90" id="mb-title"></h1>
+            <p class="mb-lead reveal" data-reveal-delay="180" id="mb-lead"></p>
+          </div>
+          <div id="mb-selector" class="mb-selector" role="group" aria-label="Forma de pago" hidden>
+            <button type="button" class="mb-modo on" data-modo="contado" aria-pressed="true">Contado o transferencia</button>
+            <button type="button" class="mb-modo" data-modo="debito" aria-pressed="false">Débito automático <em>· 20% menos</em></button>
+          </div>
         </div>
       </header>
 
       <p id="mb-vacio" class="mb-vacio" hidden>Todavía no hay membresías cargadas.</p>
       <p id="mb-aviso" class="mb-aviso" hidden></p>
 
-      <div id="mb-selector" class="mb-selector" role="group" aria-label="Forma de pago" hidden>
-        <button type="button" class="mb-modo on" data-modo="contado" aria-pressed="true">Contado o transferencia</button>
-        <button type="button" class="mb-modo" data-modo="debito" aria-pressed="false">Débito automático <em>· 20% menos</em></button>
-      </div>
       <div id="mb-grid" class="mb-grid"></div>
 
-      <!-- Las tres razones, en frases cortas. En la TV esto es lo único que se
-           lee además de los precios, así que no puede ser un párrafo. -->
-      <p class="mb-clave" id="mb-clave" hidden>
-        <span><b>20% menos</b> con débito, por 3 meses</span>
-        <span><b>No perdés</b> los gramos que no retirás</span>
-        <span><b>Sin trámite</b>: se debita solo</span>
-      </p>
-
-      </div><!-- /mb-primera -->
+      <!-- Cierre en tres columnas: por qué conviene, cómo sigue, y la letra
+           chica. Apilado ocupaba 1199 px de más y dejaba la página en 2,08
+           pantallas de TV; en columnas usa el ancho, que es lo que sobra. -->
+      <div class="mb-cierre">
 
       <!-- El ciclo, con el patrón de pasos numerados de la home (número en
            serif verde sobre línea superior). Cuenta lo que hoy no se explicaba
@@ -95,22 +94,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <li class="mb-paso reveal">
             <span class="mb-paso-num" aria-hidden="true">01</span>
             <h3>Mercado Pago cobra</h3>
-            <p>El primer día de cada mes, sin que tengas que transferir ni avisarnos nada.</p>
+            <p>El primer día de cada mes, sin que transfieras ni avises nada.</p>
           </li>
           <li class="mb-paso reveal" data-reveal-delay="90">
             <span class="mb-paso-num" aria-hidden="true">02</span>
             <h3>Tus gramos se habilitan</h3>
-            <p>Apenas se acredita el pago quedan disponibles, sin esperar a que alguien del club lo confirme.</p>
+            <p>Apenas se acredita el pago quedan disponibles, sin que nadie los confirme.</p>
           </li>
           <li class="mb-paso reveal" data-reveal-delay="180">
             <span class="mb-paso-num" aria-hidden="true">03</span>
             <h3>Retirás cuando puedas</h3>
-            <p>En la sede, en Neuquén capital. Hasta 40&nbsp;g por visita, que es lo que ampara tu credencial para transportar.</p>
-          </li>
-          <li class="mb-paso reveal" data-reveal-delay="270">
-            <span class="mb-paso-num" aria-hidden="true">04</span>
-            <h3>Lo que no retirás, queda</h3>
-            <p>Si un mes no podés pasar no se pierde: se te acumula y lo retirás más adelante.</p>
+            <p>En la sede, en Neuquén capital. Hasta 40&nbsp;g por visita, lo que ampara tu credencial.</p>
           </li>
         </ol>
       </section>
@@ -118,14 +112,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <section class="mb-beneficios" id="mb-beneficios" hidden>
         <header class="mb-sec-head reveal">
           <span class="mb-eyebrow-v">Por qué conviene</span>
-          <h2 class="mb-h2">Lo que ganás <em>adhiriéndote</em></h2>
+          <h2 class="mb-h2">Lo que ganás <em>con el débito</em></h2>
         </header>
-        <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de arriba.
-             Repetirlo en los dos lados hacía que ninguno de los dos pesara. -->
+        <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de al lado.
+             Antes esto convivía con una tira de tres frases arriba de las
+             tarjetas que decía lo mismo con otras palabras, y con un cuarto
+             paso del ciclo sobre los gramos que se acumulan: los tres decían
+             una parte y ninguno pesaba. Quedó uno solo, en frases cortas,
+             porque en la TV esto se lee a varios metros. -->
         <ul>
-          <li><b>20% menos durante 3 meses.</b> Ese precio queda fijo aunque suba la lista. Al terminar te ofrecemos renovar al valor de ese momento.</li>
-          <li><b>El gramo te sale menos.</b> Cuanto más grande la membresía, más baja el precio por gramo. Con débito va de $16.000 en SMALL a $12.500 en EXTRA&nbsp;LARGE.</li>
-          <li><b>Botón de arrepentimiento.</b> Si cambiás de idea, lo das de baja vos mismo desde Mercado Pago, sin explicaciones ni llamados. Queremos que te quedes porque te conviene, no porque sea difícil salir.</li>
+          <li><b>20% menos, por 3 meses.</b> Ese precio queda fijo aunque suba la lista.</li>
+          <li><b>El gramo te sale menos.</b> De $16.000 en SMALL a $12.500 en EXTRA&nbsp;LARGE.</li>
+          <li><b>No perdés lo que no retirás.</b> Si un mes no podés pasar, se te acumula.</li>
+          <li><b>Botón de arrepentimiento.</b> Lo das de baja vos mismo desde Mercado Pago, sin llamados.</li>
         </ul>
       </section>
 
@@ -137,6 +136,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <a class="mb-cta mb-cta--ghost" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
         </div>
       </section>
+
+      </div><!-- /mb-cierre -->
+      </div><!-- /mb-primera -->
     </div>
   </main>
 </Layout>
@@ -212,8 +214,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // funciona lo que ya tiene andando.
     const cic = document.getElementById('mb-ciclo')
     if (cic) cic.hidden = !ACTUAL.puede && !ACTUAL.debitoActivo
-    const cla = document.getElementById('mb-clave')
-    if (cla) cla.hidden = oculto
   }
 
   function pintar(d) {
@@ -465,18 +465,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      le pone su atributo de alcance solo a lo que existe al compilar, así que
      desde el scoped estas reglas no las alcanzaban. */
   @media (min-width: 1200px) {
-    .mb-card { padding: clamp(20px, 3vh, 34px) clamp(16px, 1.4vw, 26px); }
-    .mb-card-nom { font-size: clamp(13px, 1.7vh, 18px); letter-spacing: .12em; }
-    .mb-card-det { font-size: clamp(13px, 1.8vh, 19px); }
-    .mb-card-precio { font-size: clamp(34px, 5.4vh, 64px); }
-    .mb-card-precio span { font-size: clamp(11px, 1.5vh, 15px); }
-    .mb-card-gramo { font-size: clamp(11px, 1.5vh, 15px); }
-    .mb-gancho { margin-top: clamp(12px, 2vh, 22px); padding: clamp(11px, 1.8vh, 18px) 14px clamp(12px, 2vh, 18px); }
-    .mb-gancho-precio { font-size: clamp(22px, 3.4vh, 40px); }
-    .mb-gancho-lb { font-size: clamp(10px, 1.3vh, 13px); }
-    .mb-gancho-ahorro { font-size: clamp(11px, 1.5vh, 15px); }
-    .mb-adherir { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(10px, 1.6vh, 16px) 14px; }
-    .mb-mia { font-size: clamp(10px, 1.3vh, 13px); line-height: clamp(13px, 1.7vh, 17px); }
+    /* El precio se queda grande: es lo único que se lee desde el sillón. Todo
+       lo que lo rodea cede alto para que la página entre entera en 1080. */
+    .mb-card { padding: clamp(10px, 1.6vh, 20px) clamp(14px, 1.2vw, 22px); }
+    .mb-card-nom { font-size: clamp(12px, 1.5vh, 16px); letter-spacing: .12em; margin-bottom: clamp(2px, .4vh, 5px); }
+    .mb-card-det { font-size: clamp(12px, 1.5vh, 16px); margin-bottom: clamp(5px, .9vh, 11px); }
+    .mb-card-precio { font-size: clamp(34px, 5.2vh, 62px); line-height: 1.05; }
+    .mb-card-precio span { font-size: clamp(10px, 1.2vh, 13px); margin-top: 2px; }
+    .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
+    .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
+    .mb-gancho { margin-top: clamp(8px, 1.3vh, 16px); padding: clamp(8px, 1.3vh, 14px) 14px clamp(9px, 1.4vh, 15px); }
+    .mb-gancho-precio { font-size: clamp(20px, 3vh, 34px); }
+    .mb-gancho-lb { font-size: clamp(9px, 1.1vh, 12px); margin-bottom: 2px; }
+    .mb-gancho-ahorro { font-size: clamp(10px, 1.2vh, 13px); }
+    .mb-adherir { font-size: clamp(12px, 1.5vh, 16px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
+    .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
+    .mb-mia { font-size: clamp(9px, 1.1vh, 12px); line-height: clamp(12px, 1.5vh, 16px); }
   }
   .mb-nota li::marker { color: #3cb492; }
 </style>
@@ -500,6 +504,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       rgba(19, 13, 28, .35);
   }
   .mb-hero-txt { position: relative; z-index: 2; }
+  /* En el celular el selector va debajo del texto; en pantalla grande comparten
+     renglón (regla más abajo, en el bloque de TV). */
+  .mb-hero-copy + .mb-selector { margin-top: 20px; }
 
   .mb-head { max-width: 720px; margin: 0 auto; padding: 8px 0 28px; text-align: center; }
   .mb-eyebrow {
@@ -555,33 +562,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-paso p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, .7); margin: 0; }
   @media (min-width: 760px) { .mb-pasos { grid-template-columns: repeat(4, 1fr); gap: clamp(18px, 2.4vw, 30px); } }
 
-  /* ── La franja de las tres razones ── */
-  .mb-clave {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 34px;
-    max-width: 1000px; margin: clamp(20px, 3vh, 34px) auto 0;
-    font-family: var(--font-ui); font-size: 14px; line-height: 1.4;
-    color: rgba(244, 241, 247, .5); text-align: center;
-  }
-  .mb-clave[hidden] { display: none; }
-  .mb-clave b { color: #4FC79E; font-weight: 700; }
-
   .mb-selector { margin-bottom: clamp(14px, 2vh, 22px); }
 
-    /* El contenedor de socios está capado en 1020px. En una TV eso deja la
-       composición usando el 55% de la pantalla, con las tarjetas tan angostas
-       que "Adherir al débito" partía en dos renglones. Acá se ensancha. */
-    .td-content { max-width: min(1560px, 94vw); }
-    .mb-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 1.6vw, 26px); max-width: 100%; }
-    .mb-selector button { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(9px, 1.4vh, 14px) 22px; }
-    .mb-clave { font-size: clamp(14px, 1.8vh, 19px); gap: 10px clamp(30px, 3vw, 56px); margin-top: clamp(14px, 2vh, 24px); }
-  }
+  /* ── Cierre: apilado en el celular, tres columnas en pantalla grande ── */
+  .mb-cierre { display: grid; gap: clamp(34px, 6vw, 60px); }
+  /* Las tres traían su propio aire, su ancho máximo y su línea de separación,
+     de cuando cada una era una sección suelta al final de la página. Apiladas
+     eso las separaba; en columnas las hacía arrancar a distinta altura, cada
+     una con su rayita. Adentro de la banda el aire y la línea los pone la
+     grilla, una sola vez. */
+  .mb-cierre > * { max-width: none; margin: 0; padding-top: 0; border-top: 0; }
 
-  /* En pantallas muy anchas (la TV del living) el contenido deja de quedar
-     apretado en el medio. 1680px es el mismo umbral que ya usa la carta para
-     su layout de pantalla grande. */
-  @media (min-width: 1680px) {
-    .td-content { max-width: min(1720px, 92vw); }
-  }
+  /* Acá vivía un bloque huérfano: cuatro reglas sueltas y una llave de más,
+     resto de una edición anterior que quedó cortada. Estaban duplicadas dentro
+     del @media de TV de más abajo, y la llave sobrante desbalanceaba la hoja. */
 
   .mb-selector {
     display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
@@ -704,37 +698,105 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        contenido fuera de pantalla. */
     .mb-primera {
       min-height: calc(100dvh - 120px);
-      max-height: calc(100dvh - 60px);
       display: flex; flex-direction: column; justify-content: center;
     }
+    /* Sin esto, en una pantalla más baja que 1080 (un TV con barra de
+       navegador, otra relación de aspecto) el max-height aplastaba los bloques:
+       el hero perdía la bajada y el selector se salía por el borde recortado.
+       Que la página scrollee un poco es mucho mejor que mostrar algo cortado. */
+    .mb-primera > * { flex: none; }
 
     /* El contenedor de socios está capado en 1020px: en una TV eso dejaba la
        composición usando poco más de la mitad del ancho, con las tarjetas tan
        angostas que el botón partía en dos renglones. */
-    #mb-content.td-content { max-width: min(1560px, 94vw); }
+    /* El contenedor de socios trae 48px arriba y 140px abajo, pensados para
+       páginas que scrollean. Acá esos 188px son casi dos tarjetas de alto. */
+    #mb-content.td-content {
+      max-width: min(1560px, 94vw);
+      padding-top: clamp(14px, 1.9vh, 26px);
+      padding-bottom: clamp(8px, 1vh, 14px);
+    }
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
-    .mb-primera .mb-hero { margin-bottom: clamp(14px, 2vh, 24px); padding: clamp(18px, 2.6vh, 34px) 32px; }
-    .mb-primera .mb-title { font-size: clamp(38px, 5.6vh, 68px); margin-bottom: 8px; }
-    .mb-primera .mb-lead { font-size: clamp(14px, 1.7vh, 18px); max-width: 68ch; margin-top: 10px; }
-    .mb-primera .mb-eyebrow { font-size: clamp(11px, 1.3vh, 13px); margin-bottom: 8px; }
+    .mb-primera .mb-hero { margin-bottom: clamp(6px, .9vh, 12px); padding: clamp(10px, 1.6vh, 22px) 32px; }
+    .mb-primera .mb-title { font-size: clamp(28px, 4.2vh, 50px); margin-bottom: 2px; }
+    .mb-primera .mb-lead { font-size: clamp(12px, 1.4vh, 16px); line-height: 1.45; max-width: 92ch; margin-top: clamp(4px, .7vh, 8px); }
+    .mb-primera .mb-eyebrow { font-size: clamp(10px, 1.1vh, 12px); margin-bottom: clamp(3px, .5vh, 6px); }
 
-    .mb-primera .mb-selector { margin-bottom: clamp(14px, 2vh, 22px); }
+    /* Título y selector en un solo renglón: el selector se apoya abajo, a la
+       derecha, alineado con la última línea del texto. */
+    .mb-primera .mb-hero-txt {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: clamp(24px, 3vw, 60px);
+    }
+    /* Sin cap: al lado solo está el selector, y el ancho que sobraba dejaba la
+       bajada en tres renglones cuando entra en dos. */
+    .mb-primera .mb-hero-copy { max-width: none; flex: 1 1 auto; min-width: 0; }
+    .mb-primera .mb-selector { margin: 0; flex: none; }
     .mb-primera .mb-selector button { font-size: clamp(13px, 1.7vh, 17px); padding: clamp(9px, 1.4vh, 14px) 22px; }
 
     .mb-primera .mb-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: clamp(16px, 1.6vw, 26px);
       max-width: 100%;
+      /* El `margin: 0 auto` de la regla base centra bien en el celular, pero
+         acá adentro .mb-primera es un contenedor flex y un margen automático
+         en el eje transversal ANULA el estirado: la grilla se encogía a su
+         contenido y las tarjetas quedaban en 241px con media pantalla vacía
+         al lado. */
+      width: 100%;
+      margin-inline: 0;
     }
 
-    .mb-primera .mb-clave {
-      font-size: clamp(14px, 1.8vh, 19px);
-      gap: 10px clamp(30px, 3vw, 56px);
-      margin-top: clamp(14px, 2vh, 24px);
-      max-width: 100%;
+    /* Las reglas de las TARJETAS no van acá: las escribe el JS con lo que viene
+       de la base, y Astro le pone su atributo de alcance solo a lo que existe
+       al compilar. Están en el <style is:global> de más arriba. */
+
+    /* La razón de todo esto: apilados, estos tres bloques sumaban 1199 px y
+       dejaban la página en 2,08 pantallas de TV. En columnas usan el ancho,
+       que es justo lo que sobra en 1920. */
+    .mb-primera .mb-cierre {
+      /* Al ciclo se le da el ancho de más porque es la columna con más texto:
+         en columnas parejas rompía en tres renglones por paso y arrastraba el
+         alto de toda la banda. */
+      grid-template-columns: 1.55fr 1fr .9fr;
+      /* Las tres arrancan a la misma altura: centradas quedaban escalonadas. */
+      align-items: start;
+      gap: clamp(26px, 2.8vw, 54px);
+      margin-top: clamp(8px, 1.1vh, 16px);
+      padding-top: clamp(8px, 1.1vh, 16px);
+      border-top: 1px solid rgba(183, 157, 230, .16);
+      text-align: left;
     }
+    /* Los encabezados de sección nacieron centrados y con ancho máximo para
+       cuando cada uno era una sección de página entera. En columna van al ras
+       de su texto. */
+    .mb-primera .mb-cierre .mb-sec-head {
+      max-width: none; margin: 0 0 clamp(6px, 1vh, 12px); text-align: left;
+    }
+    .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(9px, 1.1vh, 11px); margin-bottom: clamp(2px, .4vh, 5px); }
+    .mb-primera .mb-cierre .mb-h2 { font-size: clamp(15px, 1.85vh, 22px); }
+    .mb-primera .mb-cierre .mb-beneficios li,
+    .mb-primera .mb-cierre .mb-nota li { margin-bottom: clamp(3px, .5vh, 7px); }
+    .mb-primera .mb-cierre .mb-nota h2 { margin-bottom: clamp(6px, .9vh, 11px); }
+    /* Los pasos van uno debajo del otro: en una columna angosta, en fila
+       quedarían tres palabras por renglón. */
+    .mb-primera .mb-cierre .mb-pasos { grid-template-columns: 1fr; gap: clamp(3px, .5vh, 7px); }
+    /* El número al lado del título, no arriba: en columna, cada paso ahorra
+       un renglón entero y son tres pasos. */
+    .mb-primera .mb-cierre .mb-paso {
+      display: grid; grid-template-columns: auto 1fr;
+      column-gap: 10px; padding-top: clamp(3px, .45vh, 6px);
+    }
+    .mb-primera .mb-cierre .mb-paso-num { grid-column: 1; grid-row: 1 / span 2; font-size: clamp(14px, 1.8vh, 20px); }
+    .mb-primera .mb-cierre .mb-paso h3 { grid-column: 2; font-size: clamp(12px, 1.5vh, 16px); margin: 0 0 1px; }
+    .mb-primera .mb-cierre .mb-paso p { grid-column: 2; font-size: clamp(11px, 1.3vh, 14px); line-height: 1.3; }
+    .mb-primera .mb-cierre .mb-paso p { font-size: clamp(12px, 1.45vh, 15px); line-height: 1.45; }
+    .mb-primera .mb-cierre .mb-beneficios li,
+    .mb-primera .mb-cierre .mb-nota li { font-size: clamp(11px, 1.3vh, 14px); line-height: 1.4; }
+    .mb-primera .mb-cierre .mb-ctas { margin-top: clamp(8px, 1.2vh, 15px); gap: 8px; }
+    .mb-primera .mb-cierre .mb-cta { font-size: clamp(11px, 1.35vh, 14px); padding: clamp(8px, 1.1vh, 12px) clamp(12px, 1.1vw, 20px); }
   }
 
   /* En la TV del living. 1680px es el mismo umbral que ya usa /socios/carta
