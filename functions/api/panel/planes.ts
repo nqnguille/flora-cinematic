@@ -134,19 +134,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // Prepago: se pagan por adelantado y dan un saldo de gramos a favor que el
   // socio retira a lo largo de N meses. El total sale del reparto, no se
   // escribe a mano: si no, el nombre, el total y la vigencia se desincronizan.
-  const gxMes = b.plan_gramos_mes === undefined || b.plan_gramos_mes === '' ? null : Number(b.plan_gramos_mes);
-  const meses = b.plan_meses === undefined || b.plan_meses === '' ? null : Math.round(Number(b.plan_meses));
+  const gxMes = (b.plan_gramos_mes === undefined || b.plan_gramos_mes === null || b.plan_gramos_mes === '') ? null : Number(b.plan_gramos_mes);
+  const meses = (b.plan_meses === undefined || b.plan_meses === null || b.plan_meses === '') ? null : Math.round(Number(b.plan_meses));
   if (gxMes !== null && (!Number.isFinite(gxMes) || gxMes <= 0)) return json({ error: 'Gramos por mes inválidos' }, 400);
   if (meses !== null && (!Number.isFinite(meses) || meses <= 0 || meses > 60)) return json({ error: 'Los meses tienen que ir de 1 a 60' }, 400);
   if (tipo === 'plan' && (gxMes === null || meses === null)) {
     return json({ error: 'Un plan prepago necesita gramos por mes y cantidad de meses' }, 400);
   }
-  const usd = b.valor_usd === undefined || b.valor_usd === '' ? null : Number(b.valor_usd);
+  const usd = (b.valor_usd === undefined || b.valor_usd === null || b.valor_usd === '') ? null : Number(b.valor_usd);
   if (usd !== null && (!Number.isFinite(usd) || usd < 0)) return json({ error: 'Referencia en dólares inválida' }, 400);
-  let gramos = b.gramos === null || b.gramos === '' ? null : Number(b.gramos);
+  // Un campo que no viene no es un campo inválido: los prepagos no tienen
+  // importe de débito y las membresías no tienen reparto por mes.
+  const vacio = (v: unknown) => v === undefined || v === null || v === '';
+  let gramos = vacio(b.gramos) ? null : Number(b.gramos);
   if (tipo === 'plan' && gxMes !== null && meses !== null) gramos = gxMes * meses;
-  const contado = b.contado === null || b.contado === '' ? null : Math.round(Number(b.contado));
-  const debito = b.debito === null || b.debito === '' ? null : Math.round(Number(b.debito));
+  const contado = vacio(b.contado) ? null : Math.round(Number(b.contado));
+  const debito = vacio(b.debito) ? null : Math.round(Number(b.debito));
   if (gramos !== null && (!Number.isFinite(gramos) || gramos < 0)) return json({ error: 'Gramos inválidos' }, 400);
   if (contado !== null && (!Number.isFinite(contado) || contado < 0)) return json({ error: 'Importe de contado inválido' }, 400);
   if (debito !== null && (!Number.isFinite(debito) || debito < 0)) return json({ error: 'Importe de débito inválido' }, 400);
