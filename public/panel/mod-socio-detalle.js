@@ -13,7 +13,8 @@
     const d = Math.floor((Date.now() - Date.parse(String(iso).replace(' ', 'T') + (String(iso).includes('Z') ? '' : 'Z'))) / 86400000)
     return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`
   }
-  const fFecha = (f) => f ? `${String(f).slice(8, 10)}/${String(f).slice(5, 7)}/${String(f).slice(0, 4)}` : '—'
+  const fFecha = (f) => (window.Panel && window.Panel.fecha) ? window.Panel.fecha(f)
+    : (f ? `${String(f).slice(8, 10)}/${String(f).slice(5, 7)}/${String(f).slice(0, 4)}` : '—')
   const tierLindo = (t) => String(t || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
   const TIERS = ['NINGUNA', 'SMALL', 'MEDIUM', 'LARGE', 'EXTRA LARGE']
 
@@ -292,7 +293,7 @@
       try {
         const r = await fetch(`/api/panel/certificado?socio_id=${s.id}`, { credentials: 'include' })
         const d = r.ok ? await r.json() : { existe: false }
-        est.textContent = d.existe ? `cargado ${P.fecha(d.meta?.subido)}` : 'sin cargar'
+        est.textContent = d.existe ? `cargado ${fFecha(d.meta?.subido)}` : 'sin cargar'
         const ver = caja.querySelector('#sd-cert-ver')
         if (ver) { ver.hidden = !d.existe; ver.href = `/api/panel/certificado?socio_id=${s.id}&descargar=1` }
         const borrar = caja.querySelector('#sd-cert-borrar')

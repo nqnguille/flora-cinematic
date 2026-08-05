@@ -3,6 +3,13 @@
 (() => {
   'use strict'
   const P = window.Panel
+  // Usa el formateador del shell, con respaldo por si este módulo se cargó
+  // antes que el shell nuevo (durante un deploy): una fecha fea es mejor que
+  // el panel caído.
+  const fFecha = (v) => (window.Panel && window.Panel.fecha)
+    ? window.Panel.fecha(v)
+    : (String(v || '').slice(0, 10).split('-').reverse().join('/') || '—')
+
 
   P.registrar('inicio', {
     async init(cont) {
@@ -61,7 +68,7 @@
             <span>${P.esc(v.nombre)}</span><span class="pn-sp"></span>
             <span style="color:${v.dias < 0 ? 'var(--dan)' : v.dias <= 60 ? 'var(--amb)' : 'var(--muted)'};font-size:13px;font-weight:600">
               ${v.dias < 0 ? 'vencido hace ' + Math.abs(v.dias) + ' días' : v.dias === 0 ? 'vence HOY' : 'vence en ' + v.dias + ' días'}
-              <i style="color:var(--muted);font-weight:400">· ${P.fecha(v.reprocann_vence)}</i></span>
+              <i style="color:var(--muted);font-weight:400">· ${fFecha(v.reprocann_vence)}</i></span>
           </div>`).join('')}
         </div>` : ''}
         <div class="grid2" style="margin-top:14px;align-items:start">

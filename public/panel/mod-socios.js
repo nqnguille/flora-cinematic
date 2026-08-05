@@ -7,6 +7,13 @@
 (() => {
   'use strict'
   const P = window.Panel
+  // Usa el formateador del shell, con respaldo por si este módulo se cargó
+  // antes que el shell nuevo (durante un deploy): una fecha fea es mejor que
+  // el panel caído.
+  const fFecha = (v) => (window.Panel && window.Panel.fecha)
+    ? window.Panel.fecha(v)
+    : (String(v || '').slice(0, 10).split('-').reverse().join('/') || '—')
+
 
   // Endpoints del acceso a la carta (KV, panel viejo) — los usa el alta
   // rápida, las solicitudes y el eco de teléfono/nota del drawer.
@@ -240,7 +247,7 @@
       <tr class="mu-fila" data-id="${s.id}" style="cursor:pointer;opacity:.75">
         <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || '?'))}</span>
           <div><div style="font-weight:600">${P.esc(s.nombre)}</div>
-          <div style="color:var(--muted);font-size:11px">en la papelera desde ${P.fecha(s.papelera)}</div></div></div></td>
+          <div style="color:var(--muted);font-size:11px">en la papelera desde ${fFecha(s.papelera)}</div></div></div></td>
         <td colspan="4" style="color:var(--muted);font-size:12px">${s.tier ? P.esc(s.tier) + ' · ' : ''}${P.esc(s.paso_nombre || '')}${s.nota ? ' · ' + P.esc(String(s.nota).slice(0, 60)) : ''}</td>
         <td class="r" style="white-space:nowrap">
           ${P.puede('papelera_gestionar') ? `<button class="btn mu-restaurar" data-id="${s.id}" type="button">Restaurar</button>` : ''}
