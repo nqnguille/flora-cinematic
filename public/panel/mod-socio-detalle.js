@@ -93,8 +93,8 @@
       <div class="pn-drawer-cab">
         <div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>
           <div><div style="font-family:var(--font-display);font-size:19px">${P.esc(s.nombre)}</div>
-          <div style="color:var(--muted);font-size:11.5px">${s.numero ? '#' + s.numero + ' · ' : ''}${P.esc(s.email || 'sin email')}</div></div></div>
-        <div class="fila" style="margin-top:9px;flex-wrap:wrap;gap:5px">
+          <div style="color:var(--muted);font-size:12px">${s.numero ? '#' + s.numero + ' · ' : ''}${P.esc(s.email || 'sin email')}</div></div></div>
+        <div class="fila" style="margin-top:6px;flex-wrap:wrap;gap:4px">
           ${d.membresia ? `<span class="tag ${d.membresia.modalidad === 'plan' ? 'tag-auto' : 'tag-ok'}">${P.esc(d.membresia.tier)}${d.membresia.modalidad === 'debito' ? ' · débito' : d.membresia.modalidad === 'plan' ? ' · plan' : ''}</span>` : '<span class="tag tag-off">sin membresía</span>'}
           ${chipDebito}
           ${paso ? `<span class="tag ${paso.quien === 'club' ? 'tag-mal' : paso.quien === 'paciente' ? 'tag-deb' : paso.quien === 'medico' ? 'tag-auto' : s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo' ? 'tag-ok' : 'tag-off'}" title="${P.esc(paso.ayuda)}">${P.esc(paso.nombre)}</span>` : ''}
@@ -140,18 +140,18 @@
             const sal = d.saldo
             if (sal.tipo === 'plan') {
               const pct = sal.total ? Math.max(0, Math.min(100, (sal.retirado / sal.total) * 100)) : 0
-              return `<div style="margin-top:10px;font-size:12.5px;color:var(--ink2)">
+              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
                 Plan prepago: retiró <b>${sal.retirado} g</b> de ${sal.total} — le quedan <b>${sal.saldo} g</b> hasta ${fFecha(sal.hasta)}
-                <div style="height:6px;border-radius:4px;background:var(--line);margin-top:5px"><div style="height:6px;border-radius:4px;background:var(--vio);width:${pct.toFixed(0)}%"></div></div></div>`
+                <div style="height:6px;border-radius:4px;background:var(--line);margin-top:4px"><div style="height:6px;border-radius:4px;background:var(--vio);width:${pct.toFixed(0)}%"></div></div></div>`
             }
             if (sal.tipo === 'debito') {
               const guardado = sal.acumulado > sal.saldo ? ` · tiene <b>${sal.acumulado} g</b> acumulados` : ''
-              return `<div style="margin-top:10px;font-size:12.5px;color:var(--ink2)">
+              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
                 Débito automático: puede retirar hoy <b style="color:var(--grn)">${sal.saldo} g</b> (tope ${sal.tope} g por visita)${guardado}
                 <br />Este mes retiró <b>${sal.retiradoMes} g</b>.</div>`
             }
             const deuda = !sal.pagoEsteMes
-            return `<div style="margin-top:10px;font-size:12.5px;color:var(--ink2)">
+            return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
               Este mes: retiró <b>${sal.retiradoMes} g</b>${sal.habilitado ? ` de ${sal.habilitado} habilitados — saldo <b style="color:${sal.saldo < 0 ? 'var(--dan)' : 'var(--grn)'}">${sal.saldo} g</b>` : ''}
               ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
           })() : ''}
@@ -168,7 +168,7 @@
             ${d.debito?.estado ? `${chipDebito} ${d.debito.monto ? `<b>${P.fmt(d.debito.monto)}</b>/mes` : ''}
               ${d.debito.estado === 'activa' ? ` · cuota ${d.debito.racha_meses % 3 === 0 && d.debito.racha_meses > 0 ? 3 : d.debito.racha_meses % 3}/3` : ''}
               ${d.debito.fin ? ` · termina ${fFecha(d.debito.fin)}` : ''}` : 'Sin suscripción todavía.'}
-            ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:11.5px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
+            ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:12px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
           </div>
           ${mp ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn btn-pri" id="sd-debito" type="button">$ Mandar link de pago</button>
@@ -181,7 +181,7 @@
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
           ${P.puede('reprocann_editar') ? `
-          <div class="grid2" style="gap:10px;margin-top:8px">
+          <div class="grid2" style="gap:10px;margin-top:6px">
             <div class="campo"><label class="lb">Paso</label>
               <select class="sel" id="sd-rc-paso">${pasos.map((p) => `<option value="${p.id}" ${s.reprocann_estado === p.id ? 'selected' : ''}>${P.esc(p.nombre)}</option>`).join('')}</select></div>
             <div class="campo"><label class="lb">Código de vinculación</label>
@@ -200,7 +200,7 @@
             <span class="pn-sp"></span>
             <button class="btn" id="sd-rc-guardar" type="button">Guardar trámite</button></div>
           <p class="msg" id="sd-msg-rc" style="margin:6px 0 0"></p>`
-          : (s.telefono ? `<div class="fila" style="margin-top:8px"><a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a></div>` : '')}
+          : (s.telefono ? `<div class="fila" style="margin-top:6px"><a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a></div>` : '')}
           ${s.email ? `<div class="fila" id="sd-adj-fila" style="margin-top:10px;flex-wrap:wrap" hidden>
             <span style="font-size:12px;color:var(--muted)">Lo que subió al inscribirse:</span>
             <a class="btn" href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(s.email)}" target="_blank" rel="noopener">Ver adjunto</a>
@@ -225,12 +225,12 @@
         </details>` : ''}
 
         <details><summary>Actividad reciente</summary>
-          <div style="margin-top:8px;font-size:12.5px;color:var(--ink2)">
+          <div style="margin-top:6px;font-size:13px;color:var(--ink2)">
             <b style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Retiros</b>
             ${d.dispensas.length ? d.dispensas.map((x) => `<div class="fila" style="padding:3px 0">
               <span>${fFecha(x.fecha)} · ${P.esc(x.producto || 'flores')}</span><span class="pn-sp"></span>
               <span>${x.gramos ? x.gramos + ' g' : (x.unidades || '') + ' u'}</span></div>`).join('') : '<div style="color:var(--muted)">Sin retiros.</div>'}
-            ${d.movimientos ? `<b style="display:block;margin-top:8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
+            ${d.movimientos ? `<b style="display:block;margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
             ${d.movimientos.length ? d.movimientos.map((x) => `<div class="fila" style="padding:3px 0">
               <span>${fFecha(x.fecha)} · ${P.esc(x.concepto || x.categoria)}</span><span class="pn-sp"></span>
               <span style="font-weight:600">${P.fmt(x.neto)}</span></div>`).join('') : '<div style="color:var(--muted)">Sin pagos.</div>'}` : ''}
@@ -292,7 +292,7 @@
       try {
         const r = await fetch(`/api/panel/certificado?socio_id=${s.id}`, { credentials: 'include' })
         const d = r.ok ? await r.json() : { existe: false }
-        est.textContent = d.existe ? `cargado ${String(d.meta?.subido || '').slice(0, 10)}` : 'sin cargar'
+        est.textContent = d.existe ? `cargado ${P.fecha(d.meta?.subido)}` : 'sin cargar'
         const ver = caja.querySelector('#sd-cert-ver')
         if (ver) { ver.hidden = !d.existe; ver.href = `/api/panel/certificado?socio_id=${s.id}&descargar=1` }
         const borrar = caja.querySelector('#sd-cert-borrar')
@@ -438,11 +438,11 @@
     zona.innerHTML = `
       ${dec ? `<div class="fila" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
         <span class="tag ${dec.estado === 'firmada' ? 'tag-ok' : 'tag-deb'}">${dec.estado === 'firmada' ? 'firmada' : 'esperando la firma'}</span>
-        <span style="font-size:11.5px;color:var(--muted)">generada ${fFecha(dec.generada)}${dec.generada_por ? ' por ' + P.esc(dec.generada_por) : ''}${dec.firmada ? ' · firmada ' + fFecha(dec.firmada) : ''}</span>
+        <span style="font-size:12px;color:var(--muted)">generada ${fFecha(dec.generada)}${dec.generada_por ? ' por ' + P.esc(dec.generada_por) : ''}${dec.firmada ? ' · firmada ' + fFecha(dec.firmada) : ''}</span>
       </div>` : ''}
 
-      ${faltaDni ? '<div class="msg err" style="margin-bottom:8px">Cargale el DNI en Contacto: sin eso la declaración no sirve.</div>' : ''}
-      ${!dom ? '<div class="msg" style="margin-bottom:8px;color:var(--ink2)">Completá el domicilio acá abajo o en Contacto.</div>' : ''}
+      ${faltaDni ? '<div class="msg err" style="margin-bottom:6px">Cargale el DNI en Contacto: sin eso la declaración no sirve.</div>' : ''}
+      ${!dom ? '<div class="msg" style="margin-bottom:6px;color:var(--ink2)">Completá el domicilio acá abajo o en Contacto.</div>' : ''}
 
       <div class="campo"><label class="lb">Domicilio para la declaración</label>
         <input class="input" id="sd-dj-dom" placeholder="Calle y número" value="${P.esc(d.socio.domicilio || '')}" /></div>

@@ -36,7 +36,7 @@
       </tr></thead><tbody>${accesos.map((a) => `<tr>
         <td><div class="fila"><span class="av">${P.esc(P.iniciales(a.nombre || a.email))}</span>
           <div><div style="font-weight:600">${P.esc(a.nombre || '—')}${a.email === yo ? ' <span style="color:var(--muted);font-weight:400;font-size:11px">(vos)</span>' : ''}</div>
-          <div style="color:var(--muted);font-size:11.5px">${P.esc(a.email)}</div></div></div></td>
+          <div style="color:var(--muted);font-size:12px">${P.esc(a.email)}</div></div></div></td>
         <td><span class="tag ${a.rol === 'dueno' ? 'tag-auto' : 'tag-off'}" title="${P.esc((ROLES.find((r) => r.rol === a.rol) || {}).descripcion || '')}">${P.esc(nombreRol(a.rol))}</span></td>
         <td style="color:var(--muted)">${P.esc((a.creado || '').slice(0, 10))}</td>
         <td class="r">${a.email === yo ? '' : `<button class="btn aj-editar" data-email="${P.esc(a.email)}" data-nombre="${P.esc(a.nombre || '')}" data-rol="${P.esc(a.rol)}" type="button">Cambiar rol</button>
@@ -72,9 +72,9 @@
 
   function modalCambiarRol(email, nombre, rolActual) {
     const ov = P.modal(`Rol de ${nombre || email}`, `
-      <div style="display:grid;gap:8px">${ROLES.map((r) => `
+      <div style="display:grid;gap:6px">${ROLES.map((r) => `
         <label class="fila" style="gap:10px;align-items:flex-start;cursor:pointer;padding:8px;border:1px solid var(--line);border-radius:8px">
-          <input type="radio" name="aj-mr" value="${r.rol}" ${r.rol === rolActual ? 'checked' : ''} style="margin-top:3px" />
+          <input type="radio" name="aj-mr" value="${r.rol}" ${r.rol === rolActual ? 'checked' : ''} style="margin-top:4px" />
           <span><b>${P.esc(r.etiqueta)}</b><br /><span style="color:var(--muted);font-size:12px">${P.esc(r.descripcion)}</span></span>
         </label>`).join('')}
       </div>
@@ -102,11 +102,11 @@
         <div class="grid2" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start">
           <div class="card">
             <span class="k">Accesos al panel</span>
-            <div id="aj-lista" style="margin-top:12px"></div>
+            <div id="aj-lista" style="margin-top:10px"></div>
           </div>
           <div class="card">
             <span class="k">Dar acceso</span>
-            <form id="aj-form" style="display:grid;gap:10px;margin-top:12px">
+            <form id="aj-form" style="display:grid;gap:10px;margin-top:10px">
               <div><label class="lb" for="aj-email">Email (cuenta de Google)</label>
                 <input class="input" id="aj-email" type="email" required placeholder="persona@gmail.com" /></div>
               <div><label class="lb" for="aj-nombre">Nombre</label>

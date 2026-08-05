@@ -207,6 +207,16 @@
   })
 
   // ---------- API pública para los módulos ----------
+
+  // Una sola forma de mostrar una fecha en todo el panel: dd/mm/aaaa.
+  // Convivían tres (ISO crudo, toLocaleDateString y un slice a mano), así que
+  // la misma fecha se veía distinta según el módulo.
+  function fecha(v) {
+    const t = String(v || '').slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return '—'
+    return `${t.slice(8, 10)}/${t.slice(5, 7)}/${t.slice(0, 4)}`
+  }
+
   window.Panel = {
     // El primero que registra gana: los módulos reales cargan antes que
     // mod-placeholders.js, así el placeholder solo cubre lo que falta.
@@ -215,7 +225,7 @@
     get me() { return me },
     set me(v) { me = v },
     puede,
-    $, esc, fmt, fmtN, iniciales,
+    $, esc, fmt, fmtN, iniciales, fecha,
     modal, cerrarModal, confirmar,
     fatal,
   }

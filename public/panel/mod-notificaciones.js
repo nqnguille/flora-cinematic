@@ -54,9 +54,9 @@
           <span></span>
         </label>
         <div style="flex:1;min-width:0">
-          <b style="font-size:13.5px">${P.esc(ev.nombre)}</b>
+          <b style="font-size:13px">${P.esc(ev.nombre)}</b>
           ${ev.obligatorio ? '<span class="tag tag-auto" style="margin-left:6px">siempre</span>' : ''}
-          <div style="color:var(--muted);font-size:11.5px;margin-top:2px">${P.esc(ev.descripcion || '')}</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">${P.esc(ev.descripcion || '')}</div>
         </div>
         <div class="nt-meta">
           ${canales.map((c) => `<span class="tag ${c === 'push' ? 'tag-auto' : 'tag-off'}">${c === 'push' ? 'app' : 'mail'}</span>`).join('')}

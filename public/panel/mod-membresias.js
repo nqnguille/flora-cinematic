@@ -296,7 +296,7 @@
               <span class="lb">MP</span>
             </div>
             <div id="mb-filas"></div>
-            <div style="margin-top:22px">
+            <div style="margin-top:20px">
               <span class="k">Planes prepagos</span>
               <p class="ct-help" style="margin:6px 0 10px">Se pagan de contado por adelantado y dan un saldo de gramos a favor
               que el socio va retirando. Lo que no retira en un mes queda para el siguiente.</p>

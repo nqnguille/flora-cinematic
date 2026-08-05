@@ -178,7 +178,7 @@
     if (s.sinFicha) return '<span style="color:var(--muted);font-size:12px">—</span>'
     if (s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo') {
       const vence = s.por_vencer ? ' <span class="tag tag-mal" title="El certificado vence en menos de 60 días">⚠ vence</span>' : ''
-      return `<span style="color:var(--ink2);font-size:12.5px" title="${P.esc(s.paso_ayuda || '')}"><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);margin-right:5px"></i>${P.esc(s.paso_nombre)}</span>${vence}`
+      return `<span style="color:var(--ink2);font-size:13px" title="${P.esc(s.paso_ayuda || '')}"><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);margin-right:5px"></i>${P.esc(s.paso_nombre)}</span>${vence}`
     }
     const cls = s.quien === 'club' ? 'tag-mal' : s.quien === 'paciente' ? 'tag-deb'
       : s.quien === 'medico' ? 'tag-auto' : 'tag-off'
@@ -240,7 +240,7 @@
       <tr class="mu-fila" data-id="${s.id}" style="cursor:pointer;opacity:.75">
         <td><div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre || '?'))}</span>
           <div><div style="font-weight:600">${P.esc(s.nombre)}</div>
-          <div style="color:var(--muted);font-size:11px">en la papelera desde ${P.esc(String(s.papelera).slice(0, 10))}</div></div></div></td>
+          <div style="color:var(--muted);font-size:11px">en la papelera desde ${P.fecha(s.papelera)}</div></div></div></td>
         <td colspan="4" style="color:var(--muted);font-size:12px">${s.tier ? P.esc(s.tier) + ' · ' : ''}${P.esc(s.paso_nombre || '')}${s.nota ? ' · ' + P.esc(String(s.nota).slice(0, 60)) : ''}</td>
         <td class="r" style="white-space:nowrap">
           ${P.puede('papelera_gestionar') ? `<button class="btn mu-restaurar" data-id="${s.id}" type="button">Restaurar</button>` : ''}
@@ -309,7 +309,7 @@
       .concat((MU.sugerenciasCarta || []).filter((g) => !vistosCarta.includes(g.socio_id + ':' + g.email))
         .map((g) => ({ tipo: 'carta', ...g })))
     cont.querySelector('#mu-sugerencias').innerHTML = cruces.length && editar ? `
-      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--vio)">
+      <div class="card" style="margin-bottom:10px;border-left:3px solid var(--vio)">
         <span class="k">Cruces por confirmar (${cruces.length})</span>
         <p class="so-help">La misma persona parece estar dos veces: una ficha del padrón y un acceso a la carta.
         Confirmá y quedan unidas (el email pasa a la ficha).</p>
@@ -366,9 +366,9 @@
         const grupo = sinPapelera.filter((x) => x.reprocann_estado === p.id)
         if (!grupo.length) return ''
         const [qtxt, qcls] = QTAG[p.quien] || ['', 'tag-ok']
-        return `<div style="margin-bottom:16px">
+        return `<div style="margin-bottom:14px">
           <div class="fila" style="margin-bottom:6px">
-            <b style="font-size:13.5px">${P.esc(p.nombre)}</b>
+            <b style="font-size:13px">${P.esc(p.nombre)}</b>
             ${qtxt ? `<span class="tag ${qcls}">${qtxt}</span>` : '<span class="tag tag-ok">al día</span>'}
             <span style="color:var(--muted);font-size:12px">· ${grupo.length}</span>
             <span class="pn-sp"></span>
@@ -386,16 +386,16 @@
       const soloCarta = lista.filter((s) => s.sinFicha)
       caja.innerHTML = `
         ${activos.length ? muTabla(activos) : '<div class="vacio">Sin socios activos.</div>'}
-        ${dormidos.length ? `<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+        ${dormidos.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">
           ${dormidos.length} ficha(s) dormida(s) — sin membresía ni retiros recientes</summary>
           ${P.puede('papelera_gestionar') ? `<div class="fila" style="margin:8px 0 0">
             <p class="so-help" style="margin:0">Para depurar el padrón del Excel: marcá las que no correspondan y mandalas a la papelera (siempre se pueden restaurar).</p>
             <span class="pn-sp"></span>
             <button class="btn mu-papelera-bulk" type="button">🗑 A la papelera (<span id="mu-sel-n">0</span>)</button></div>` : ''}
-          <div style="margin-top:8px">${muTabla(dormidos, P.puede('papelera_gestionar'))}</div></details>` : ''}
-        ${soloCarta.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+          <div style="margin-top:6px">${muTabla(dormidos, P.puede('papelera_gestionar'))}</div></details>` : ''}
+        ${soloCarta.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">
           ${soloCarta.length} con acceso a la carta y sin ficha</summary>
-          <div style="margin-top:8px">${muTabla(soloCarta)}</div></details>` : ''}`
+          <div style="margin-top:6px">${muTabla(soloCarta)}</div></details>` : ''}`
     }
     const total = cont.querySelector('#mu-total')
     if (total) total.textContent = `${lista.length} de ${socios.length}`
@@ -452,7 +452,7 @@
     return `<div class="so-sol">
       <span class="av">${P.esc(P.iniciales(i.name || i.email))}</span>
       <div class="so-sol-main">
-        <div class="fila" style="flex-wrap:wrap;gap:8px">
+        <div class="fila" style="flex-wrap:wrap;gap:6px">
           <strong>${P.esc(i.name || '(sin nombre)')}</strong>${badge}
         </div>
         <div class="so-sol-mail">${P.esc(i.email)}</div>
@@ -805,7 +805,7 @@
       // el 20% del débito es solo para trámite subido (aprobado o en evaluación)
       const reproOk = ['aprobado', 'en_evaluacion'].includes(datos.reprocann_estado)
       cuerpo.innerHTML = `${pasosHtml()}
-        <div class="card" style="box-shadow:none;background:var(--card2);margin-bottom:12px">
+        <div class="card" style="box-shadow:none;background:var(--card2);margin-bottom:10px">
           <b>${P.esc(datos.nombre)}</b>
           <div style="color:var(--muted);font-size:12px;margin-top:2px">${P.esc(datos.email)}
           ${conMemb ? ` · ${P.esc(datos.tier)}` : ' · sin membresía'}</div>
@@ -814,14 +814,14 @@
         <div class="grid2" style="gap:10px">
           <button class="btn al-fin" data-cobro="efectivo" type="button" style="padding:14px;text-align:left;height:auto">
             <b style="display:block">Cobré ${P.fmt(datos.precio || 0)}</b>
-            <span style="color:var(--muted);font-weight:400;font-size:11.5px">Registra el pago y le habilita los gramos</span>
+            <span style="color:var(--muted);font-weight:400;font-size:12px">Registra el pago y le habilita los gramos</span>
           </button>
           ${reproOk ? `<button class="btn btn-pri al-fin" data-cobro="debito" type="button" style="padding:14px;text-align:left;height:auto">
             <b style="display:block">Mandarle el débito −20%</b>
-            <span style="opacity:.85;font-weight:400;font-size:11.5px">El link del plan, listo para WhatsApp</span>
+            <span style="opacity:.85;font-weight:400;font-size:12px">El link del plan, listo para WhatsApp</span>
           </button>` : `<div class="card" style="box-shadow:none;background:var(--card2);padding:14px">
             <b style="display:block;font-size:13px">Débito −20%: todavía no</b>
-            <span style="color:var(--muted);font-size:11.5px">Se ofrece cuando su trámite esté subido a REPROCANN (aprobado o en evaluación).</span>
+            <span style="color:var(--muted);font-size:12px">Se ofrece cuando su trámite esté subido a REPROCANN (aprobado o en evaluación).</span>
           </div>`}
         </div>
         <div class="fila" style="margin-top:10px"><button class="btn al-fin" data-cobro="ninguno" type="button">Después paga</button>
@@ -859,16 +859,16 @@
           const tierL = datos.tier.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
           const waDeb = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(
             `Hola ${datos.nombre.split(' ')[0]}! Ya sos socio de Flora 🌿 Tu plan ${tierL} de ${t.gramos} gramos por mes que vale ${P.fmt(t.contado)} tiene un 20% de descuento adhiriéndote al débito automático por 3 meses, te queda en ${P.fmt(t.debito)}. Se autoriza una vez desde MercadoPago, podés usar el medio de pago que prefieras (crédito/débito/saldo) y podés cancelarlo si te arrepentís. Suscribite acá: ${t.debito_link}`)}`
-          extra = `<div style="margin-top:12px"><span class="k">Link del débito (plan ${P.esc(datos.tier)})</span>
+          extra = `<div style="margin-top:10px"><span class="k">Link del débito (plan ${P.esc(datos.tier)})</span>
             <input class="input" value="${P.esc(t.debito_link)}" readonly onclick="this.select()" style="margin-top:6px" />
-            <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" id="al-wa-debito" style="margin-top:8px;display:inline-block">Mandar por WhatsApp</a></div>`
+            <a class="btn btn-pri" href="${P.esc(waDeb)}" target="_blank" rel="noopener" id="al-wa-debito" style="margin-top:6px;display:inline-block">Mandar por WhatsApp</a></div>`
           // registrar el envío (para el "mandado hace N días" de Finanzas)
           fetch('/api/panel/mp/enviar', {
             method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ socio_id: d.socioId, via: 'whatsapp' }),
           }).catch(() => { /* el registro nunca bloquea el alta */ })
         } else {
-          extra = `<p class="msg err" style="margin-top:12px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el socio quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
+          extra = `<p class="msg err" style="margin-top:10px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el socio quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
         }
       }
       // Autocultivador que se pasa: la declaración jurada sale acá mismo,
@@ -897,12 +897,12 @@
       const wa = `https://wa.me/${(datos.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(faltaCodigo ? txtCodigo : txtBase)}`
       cuerpo.innerHTML = `
         <div style="text-align:center;padding:6px 0 4px">
-          <div style="font-family:var(--font-display);font-size:26px;color:var(--grn)">Listo</div>
+          <div style="font-family:var(--font-display);font-size:28px;color:var(--grn)">Listo</div>
           <p style="color:var(--ink2);margin:6px 0 0">${P.esc(datos.nombre)} ya tiene acceso a la carta y ficha en el padrón${d.gramos ? ` con ${d.gramos} g por mes` : ''}.</p>
           <p class="so-help" style="margin:8px 0 0">${d.mailEnviado
             ? 'Le llegó el mail de bienvenida.'
             : `El mail de bienvenida NO salió (${P.esc(d.mailError || 'sin detalle')}) — avisale vos.`}</p>
-          ${faltaCodigo ? `<div style="margin-top:14px;padding:12px 16px;background:var(--amb-soft);border-radius:10px;text-align:left">
+          ${faltaCodigo ? `<div style="margin-top:14px;padding:12px 16px;background:var(--amb-soft);border-radius:12px;text-align:left">
             <b style="color:var(--amb);font-size:13px">Falta su código de vinculación</b>
             <p class="so-help" style="margin:4px 0 0">Sin ese código no se puede arrancar el trámite de REPROCANN.
             El botón de WhatsApp de acá abajo ya lleva el mensaje con el link y el paso a paso.</p>
@@ -910,14 +910,14 @@
         </div>
         ${extra}
         ${ddjj ? (ddjj.ok
-          ? `<div style="margin-top:14px;padding:12px 16px;background:var(--card2);border-radius:10px;text-align:left">
+          ? `<div style="margin-top:14px;padding:12px 16px;background:var(--card2);border-radius:12px;text-align:left">
               <b style="font-size:13px">Declaración jurada lista</b>
               <p class="so-help" style="margin:4px 0 10px">Guardala como PDF y mandásela para que la firme.
                 Cuando vuelva firmada, la subís desde su ficha.</p>
               <button class="btn btn-pri" id="al-ddjj-ver" type="button">Abrir para imprimir</button>
               ${datos.telefono ? `<a class="btn" id="al-ddjj-wa" target="_blank" rel="noopener" href="#" style="margin-left:6px">Mandar por WhatsApp</a>` : ''}
             </div>`
-          : `<p class="msg err" style="margin-top:12px">El socio quedó dado de alta, pero la declaración no salió
+          : `<p class="msg err" style="margin-top:10px">El socio quedó dado de alta, pero la declaración no salió
               (${P.esc(ddjj.error)}). Generala desde su ficha.</p>`) : ''}
         <div class="pn-mod-acciones">
           ${datos.telefono ? `<a class="btn ${faltaCodigo ? 'btn-pri' : ''}" href="${P.esc(wa)}" target="_blank" rel="noopener">${faltaCodigo ? 'Pedirle el código' : 'Saludar por WhatsApp'}</a>` : ''}
@@ -991,8 +991,8 @@
         <p class="so-help" style="margin:6px 0 8px">Pegá el JSON de trámites del portal de REPROCANN (cuenta de la ONG)
         o subí el archivo. Cada carga actualiza sola a los ${d.vinculados} socio(s) ya vinculados y propone pares nuevos.
         ${d.ultimaCarga ? `Última carga: ${P.esc(d.ultimaCarga.slice(0, 16).replace('T', ' '))}.` : 'Todavía no se cargó ninguno.'}</p>
-        <div class="fila" style="flex-wrap:wrap;gap:8px">
-          <textarea class="input" id="ru-json" rows="2" placeholder='Pegar acá el JSON…' style="flex:1;min-width:220px;font-size:11.5px;font-family:var(--font-ui)"></textarea>
+        <div class="fila" style="flex-wrap:wrap;gap:6px">
+          <textarea class="input" id="ru-json" rows="2" placeholder='Pegar acá el JSON…' style="flex:1;min-width:220px;font-size:12px;font-family:var(--font-ui)"></textarea>
           <input type="file" id="ru-file" accept="application/json,.json" hidden />
           <button class="btn" id="ru-subir" type="button">Subir archivo</button>
           <button class="btn btn-pri" id="ru-procesar" type="button">Procesar</button>
@@ -1029,7 +1029,7 @@
 
       ${d.sinMatch.length ? `<details class="card" style="margin-bottom:14px">
         <summary style="cursor:pointer;font-weight:600;font-size:13px">Sin match en el padrón (${d.sinMatch.length})</summary>
-        <p class="so-help" style="margin-top:8px">Trámites de la ONG cuya persona no se parece a ningún socio.
+        <p class="so-help" style="margin-top:6px">Trámites de la ONG cuya persona no se parece a ningún socio.
         Con «Dar de alta» se abre el alta de socio ya precargada con su nombre y DNI oficiales.</p>
         <table class="tabla"><thead><tr><th>Persona</th><th>DNI</th><th>Trámite</th><th>Vence</th><th class="r"></th></tr></thead>
         <tbody>${d.sinMatch.map((p) => `<tr>
@@ -1234,7 +1234,7 @@
     if (!l.turno_fecha) return ''
     const f = new Date(String(l.turno_fecha).replace(' ', 'T') + 'Z')
     const txt = f.toLocaleString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' })
-    return `<div style="color:var(--muted);font-size:11.5px">🗓 turno ${P.esc(txt)} hs</div>`
+    return `<div style="color:var(--muted);font-size:12px">🗓 turno ${P.esc(txt)} hs</div>`
   }
 
   // El tiempo parado en una etapa es la señal de que algo se está enfriando:
@@ -1303,12 +1303,12 @@
     return `<div class="ld-card" data-id="${l.id}" data-etapa="${P.esc(l.etapa)}" style="--ld-color:${color}">
       <div class="fila" style="flex-wrap:wrap;gap:6px">
         ${puedeArrastrar ? '<span class="ld-handle" title="Arrastrar para mover de etapa" aria-hidden="true">⠿</span>' : ''}
-        <b style="font-size:13.5px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}${ldChipPago(l)}
+        <b style="font-size:13px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}${ldChipPago(l)}
       </div>
       ${l.email ? `<div class="ld-dato">${P.esc(l.email)}</div>` : ''}
       ${l.telefono ? `<div class="ld-dato">${P.esc(l.telefono)}</div>` : ''}
       ${ldTurnoLinea(l)}
-      <div style="margin-top:5px">${ldAntiguedad(dias)}</div>
+      <div style="margin-top:4px">${ldAntiguedad(dias)}</div>
       ${l.tiene_adjunto ? `<div class="ld-docs">
         <a class="ld-doc" href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}"
            target="_blank" rel="noopener" aria-label="Ver la credencial REPROCANN que mandó"
@@ -1316,7 +1316,7 @@
         ${editar ? `<button class="ld-doc ld-ddjj" data-id="${l.id}" type="button"
            aria-label="Armar la declaración jurada" data-tip="Armar la declaración jurada">${ICON_FIRMA}</button>` : ''}
       </div>` : ''}
-      ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:8px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
+      ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:6px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
       <div class="fila ld-acciones">
         ${tel ? `<a class="so-wa" target="_blank" rel="noopener" aria-label="Escribirle por WhatsApp" data-tip="Escribirle por WhatsApp"
           href="https://wa.me/${tel}?text=${encodeURIComponent(saludo + 'Te escribimos de Flora 🌿')}">${ICON_WA}</a>` : ''}
@@ -1462,20 +1462,20 @@
     const cnt = cont.querySelector('#ld-cnt')
     if (cnt) { cnt.hidden = !por.nuevo.length; cnt.textContent = por.nuevo.length || '' }
     caja.innerHTML = `
-      <div class="ld-tablero" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:start">
+      <div class="ld-tablero" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;align-items:start">
         ${LD_ETAPAS.map(([etapa, nombre, color]) => `
           <div class="ld-col" data-col="${etapa}">
-            <div class="fila" style="margin-bottom:8px">
+            <div class="fila" style="margin-bottom:6px">
               <span class="k" style="border-left:3px solid ${color};padding-left:8px">${nombre}</span>
               <span class="pn-sp"></span><b style="color:var(--muted);font-size:12px">${etapa === 'convertido' ? convTotal : por[etapa].length}</b>
             </div>
             ${por[etapa].length ? por[etapa].map(ldCard).join('') : `<div class="vacio" style="padding:14px;font-size:12px">${LD_VACIO[etapa] || 'Vacío'}</div>`}
-            ${etapa === 'convertido' && convTotal > 5 ? `<div style="color:var(--muted);font-size:11.5px;padding:2px 4px">y ${convTotal - 5} más</div>` : ''}
+            ${etapa === 'convertido' && convTotal > 5 ? `<div style="color:var(--muted);font-size:12px;padding:2px 4px">y ${convTotal - 5} más</div>` : ''}
           </div>`).join('')}
       </div>
-      ${perdidos.length ? `<details style="margin-top:14px" ${ldPerdidosAbierto ? 'open' : ''} id="ld-perdidos"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600">
+      ${perdidos.length ? `<details style="margin-top:14px" ${ldPerdidosAbierto ? 'open' : ''} id="ld-perdidos"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">
         ${perdidos.length} perdido(s)</summary>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:8px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:6px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
     const det = caja.querySelector('#ld-perdidos')
     if (det) det.addEventListener('toggle', () => { ldPerdidosAbierto = det.open })
     ldVolar(antes)
@@ -1500,9 +1500,9 @@
       : '<p class="so-help" style="margin:0">No mandó adjunto.</p>'
 
     cuerpo.innerHTML = `
-      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start">
         <div>${visor}</div>
-        <div style="display:grid;gap:9px">
+        <div style="display:grid;gap:6px">
           <div><label class="lb" for="dj-nom">Nombre completo</label>
             <input class="input" id="dj-nom" value="${P.esc(L.nombre || '')}" /></div>
           <div><label class="lb" for="dj-dni">DNI</label>
@@ -1510,7 +1510,7 @@
               placeholder="${L.dni ? '' : 'no lo cargó, pedíselo'}" /></div>
           <div><label class="lb" for="dj-dom">Domicilio</label>
             <input class="input" id="dj-dom" placeholder="Calle y número" /></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
             <div><label class="lb" for="dj-loc">Localidad</label><input class="input" id="dj-loc" /></div>
             <div><label class="lb" for="dj-prov">Provincia</label><input class="input" id="dj-prov" value="Neuquén" /></div>
           </div>
@@ -1607,14 +1607,14 @@
 
         <div id="so-maestra">
           ${editar ? `
-          <div class="card" style="margin-bottom:12px">
+          <div class="card" style="margin-bottom:10px">
             <div class="fila"><span class="k">Socio nuevo</span><span class="pn-sp"></span>
               <button class="btn btn-pri" id="so-alta-completa" type="button">+ Dar de alta</button></div>
             <p class="so-help">El alta completa: acceso a la carta, ficha en el padrón, membresía y el primer cobro
             — todo de una vez. Si dejó una solicitud web, sus datos vienen precargados.</p>
           </div>
-          <details class="card" style="margin-bottom:12px">
-            <summary style="cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600">Alta rápida (solo acceso a la carta)</summary>
+          <details class="card" style="margin-bottom:10px">
+            <summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600">Alta rápida (solo acceso a la carta)</summary>
             <p class="so-help" style="margin-top:10px">Le da acceso a la carta pero NO le crea ficha en el padrón.</p>
             <form id="so-alta" class="fila so-alta">
               <input class="input" id="so-alta-email" type="email" required placeholder="email@gmail.com" autocomplete="off" />
@@ -1629,17 +1629,17 @@
             <div class="fila" style="flex-wrap:wrap">
               <input class="input" id="mu-buscar" type="search" placeholder="Buscar por nombre, email, DNI, código…" autocomplete="off" style="max-width:300px" />
               <div id="mu-chips" class="fila" style="flex-wrap:wrap"></div>
-              <div id="mu-chips-rc" class="fila" style="flex-wrap:wrap;flex-basis:100%;margin-top:8px;gap:5px"></div>
+              <div id="mu-chips-rc" class="fila" style="flex-wrap:wrap;flex-basis:100%;margin-top:6px;gap:4px"></div>
               <span class="pn-sp"></span>
               <span id="mu-total" style="color:var(--muted);font-size:12px"></span>
               <span id="so-msg" class="msg"></span>
             </div>
-            <div id="mu-lista" style="margin-top:12px"><div class="vacio">⏳ Cargando…</div></div>
+            <div id="mu-lista" style="margin-top:10px"><div class="vacio">⏳ Cargando…</div></div>
           </div>
         </div>
 
         <div id="so-leads" hidden>
-          <div class="fila" style="margin-bottom:12px;flex-wrap:wrap">
+          <div class="fila" style="margin-bottom:10px;flex-wrap:wrap">
             <p class="so-help" style="margin:0;max-width:62ch">El recorrido de cada interesado hasta hacerse socio.
             Las solicitudes web y los intentos de entrar a la carta aparecen solos como leads nuevos; al darlo de
             alta, el lead se convierte solo.</p>

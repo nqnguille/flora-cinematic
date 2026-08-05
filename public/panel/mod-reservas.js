@@ -89,7 +89,7 @@
     const [label, cls] = BADGE[p.estado] || [p.estado, 'tag-off']
     return `<article class="card rv-card">
       <div class="rv-main">
-        <div class="fila" style="flex-wrap:wrap;gap:8px">
+        <div class="fila" style="flex-wrap:wrap;gap:6px">
           <strong>${P.esc(p.name || p.email)}</strong>
           <span class="tag ${cls}">${P.esc(label)}</span>
           <span class="rv-fecha">${P.esc(fmtFecha(p.creado))}</span>
@@ -277,7 +277,7 @@
     if (a.wa) {
       P.modal('Aviso al socio', `
         <p style="color:var(--ink2);margin:0 0 4px">${P.esc(mailTxt)}.</p>
-        <p style="color:var(--muted);font-size:12.5px;margin:0">¿Se lo mandás también por WhatsApp? El texto ya va escrito.</p>
+        <p style="color:var(--muted);font-size:13px;margin:0">¿Se lo mandás también por WhatsApp? El texto ya va escrito.</p>
         <div class="pn-mod-acciones">
           <button class="btn" onclick="Panel.cerrarModal()" type="button">Listo</button>
           <a class="btn btn-pri" href="${P.esc(a.wa.link)}" target="_blank" rel="noopener" onclick="Panel.cerrarModal()">Mandar por WhatsApp</a>
@@ -300,7 +300,7 @@
       return `
         <fieldset class="rv-av-bloque" data-estado="${estado}" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 12px;min-width:0">
           <legend style="padding:0 6px;font-weight:600;font-size:13px">${NOMBRE_AVISO[estado]}</legend>
-          <label class="fila" style="gap:8px;font-size:12.5px;color:var(--ink2);margin-bottom:8px;cursor:pointer">
+          <label class="fila" style="gap:6px;font-size:13px;color:var(--ink2);margin-bottom:6px;cursor:pointer">
             <input type="checkbox" class="rv-av-activo" ${pl.activo ? 'checked' : ''} /> Mandar el mail automáticamente
           </label>
           <div class="campo"><label class="lb">Asunto del mail</label>
@@ -312,7 +312,7 @@
         </fieldset>`
     }
     const ov = P.modal('Avisos al socio', `
-      <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">Variables: <code>{{nombre}}</code> (primer nombre),
+      <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Variables: <code>{{nombre}}</code> (primer nombre),
       <code>{{items}}</code> (lo que reservó) y <code>{{nota}}</code>. El mail sale con el diseño de marca (logo, botón «Ver mi reserva» y pie de contacto).</p>
       <div style="max-height:60vh;overflow-y:auto;padding-right:4px">${bloque('listo')}${bloque('entregado')}</div>
       <div class="pn-mod-acciones">

@@ -49,7 +49,7 @@
         <div class="card" style="max-width:560px;margin:0 auto;text-align:center;padding:34px 28px">
           <span class="k">¿A quién atendés?</span>
           <input class="input" id="mo-q" placeholder="Nombre o email del socio…" autocomplete="off"
-                 style="margin-top:14px;font-size:16px;padding:12px 14px" />
+                 style="margin-top:14px;font-size:15px;padding:12px 14px" />
           <div id="mo-resultados" style="margin-top:10px;text-align:left"></div>
         </div>`
       const q = cuerpo.querySelector('#mo-q')
@@ -79,15 +79,15 @@
     const esDebito = saldo.tipo === 'debito'
     const saldoColor = saldo.saldo > 0 ? 'var(--grn)' : 'var(--amb)'
     cuerpo.innerHTML = `
-      <div class="fila" style="margin-bottom:12px">
+      <div class="fila" style="margin-bottom:10px">
         <button class="btn" id="mo-volver" type="button">‹ Otro socio</button>
         <div class="fila"><span class="av">${P.esc(P.iniciales(socio.nombre))}</span>
-          <b style="font-size:16px">${P.esc(socio.nombre)}</b>
+          <b style="font-size:15px">${P.esc(socio.nombre)}</b>
           ${socio.numero ? `<span class="tag tag-off">#${socio.numero}</span>` : ''}
           </div>
       </div>
       <div class="grid2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:start">
-        <div style="display:grid;gap:12px">
+        <div style="display:grid;gap:10px">
           ${avisoReprocann(socio)}
           <div class="card">
             <span class="k">${esPlan ? `Saldo del plan (${P.esc(saldo.tier)})` : esDebito ? `Puede retirar hoy (${P.esc(saldo.tier)} · débito)` : 'Le queda este mes'}</span>
@@ -100,7 +100,7 @@
             ${(esPlan ? saldo.total : saldo.habilitado) > 0 ? `<div class="bar" style="margin:8px 0 6px"><i style="width:${Math.min(100, ((esPlan ? saldo.retirado : saldo.retiradoMes) / (esPlan ? saldo.total : saldo.habilitado)) * 100).toFixed(1)}%"></i></div>` : ''}
             <div class="kpi-d">Retiró ${saldo.retiradoMes} g en ${saldo.visitasMes} visita${saldo.visitasMes === 1 ? '' : 's'} este mes.</div>
             ${!esPlan && !saldo.pagoEsteMes ? `
-              <div style="margin-top:12px;padding:10px 12px;background:var(--amb-soft);border-radius:8px;font-size:12.5px;color:var(--amb);font-weight:600">
+              <div style="margin-top:10px;padding:10px 12px;background:var(--amb-soft);border-radius:8px;font-size:13px;color:var(--amb);font-weight:600">
                 Debe la cuota${saldo.tier ? ` — ${P.esc(saldo.tier)}` : ''}. Cobrala antes de entregar.</div>
               <div style="margin-top:10px"><button class="btn btn-pri" id="mo-cobrar" type="button">Cobrar cuota</button></div>` : ''}
           </div>
@@ -114,7 +114,7 @@
         </div>
         <div class="card">
           <span class="k">Armar retiro</span>
-          <div class="grid2" style="grid-template-columns:minmax(0,1.6fr) 90px auto;align-items:end;margin-top:12px;gap:8px">
+          <div class="grid2" style="grid-template-columns:minmax(0,1.6fr) 90px auto;align-items:end;margin-top:10px;gap:6px">
             <div><label class="lb" for="mo-gen">Genética</label>
               <select class="sel" id="mo-gen">${catalogo.map((g) =>
                 `<option value="${P.esc(g.id)}" data-nombre="${P.esc(g.nombre)}">${P.esc(g.nombre)}${g.stock != null ? ` — ${g.stock} g` : ''}</option>`).join('')}</select></div>
@@ -182,7 +182,7 @@
         <span>${P.esc(i.nombre)}</span><b>${i.gramos} g</b>
         <button class="btn btn-peligro mo-quitar" data-ix="${ix}" type="button" aria-label="Quitar">×</button></div>`).join('')}
       <div class="fz-tot"><span>Total del retiro</span><span>${total} g</span></div>
-      ${total > Math.max(0, saldo) ? `<div style="margin-top:8px;padding:9px 12px;background:var(--amb-soft);border-radius:8px;font-size:12px;color:var(--amb);font-weight:600">
+      ${total > Math.max(0, saldo) ? `<div style="margin-top:6px;padding:9px 12px;background:var(--amb-soft);border-radius:8px;font-size:12px;color:var(--amb);font-weight:600">
         Se pasa ${(total - Math.max(0, saldo))} g del saldo — registralo igual solo si ya lo cobraste aparte.</div>` : ''}`
     if (btn) btn.disabled = false
   }
@@ -202,17 +202,17 @@
       <td class="r" style="font-weight:600;color:${i.saldo <= 0 ? 'var(--dan)' : i.clase === 'flor' && i.saldo < 100 ? 'var(--amb)' : 'var(--ink)'}">${i.saldo}${i.clase === 'flor' ? ' g' : ' u'}</td>
     </tr>`
     cuerpo.innerHTML = `
-      <div class="fila" style="margin-bottom:12px">
-        <div class="card" style="padding:10px 16px"><span class="k">Flor total</span> <b style="font-size:16px;margin-left:8px">${Math.round(totalFlor).toLocaleString('es-AR')} g</b></div>
+      <div class="fila" style="margin-bottom:10px">
+        <div class="card" style="padding:10px 16px"><span class="k">Flor total</span> <b style="font-size:15px;margin-left:8px">${Math.round(totalFlor).toLocaleString('es-AR')} g</b></div>
         <span class="sp"></span>
         ${puedeEntrar ? '<button class="btn btn-pri" id="mo-entrada" type="button">+ Entrada de stock</button>' : ''}
       </div>
       <div class="grid2" style="align-items:start">
         <div class="card" style="padding-bottom:6px"><span class="k">Flores</span>
-          <table class="tabla" style="margin-top:8px"><thead><tr><th>Genética</th><th>Clase</th><th>Últ. entrada</th><th class="r">Saldo</th></tr></thead>
+          <table class="tabla" style="margin-top:6px"><thead><tr><th>Genética</th><th>Clase</th><th>Últ. entrada</th><th class="r">Saldo</th></tr></thead>
           <tbody>${flor.map(filaTabla).join('')}</tbody></table></div>
         <div class="card" style="padding-bottom:6px"><span class="k">Aceites, cartuchos y cremas</span>
-          <table class="tabla" style="margin-top:8px"><thead><tr><th>Ítem</th><th>Clase</th><th>Últ. entrada</th><th class="r">Saldo</th></tr></thead>
+          <table class="tabla" style="margin-top:6px"><thead><tr><th>Ítem</th><th>Clase</th><th>Últ. entrada</th><th class="r">Saldo</th></tr></thead>
           <tbody>${resto.map(filaTabla).join('')}</tbody></table></div>
       </div>`
   }

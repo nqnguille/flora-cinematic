@@ -121,20 +121,20 @@
           <div class="kpi-v" style="color:${res >= 0 ? 'var(--grn)' : 'var(--dan)'}">${res >= 0 ? '+' : '−'}${P.fmt(Math.abs(res))}</div>
           <div class="kpi-d">margen ${tot.ingreso ? (res / tot.ingreso * 100).toFixed(1) : 0}% · acumulado ${mes.slice(0, 4)} <b>${acum >= 0 ? '+' : '−'}${P.fmt(Math.abs(acum))}</b></div></div>
       </div>
-      ${c.deudores.length ? `<div class="card fz-cobrar" style="margin-top:12px">
+      ${c.deudores.length ? `<div class="card fz-cobrar" style="margin-top:10px">
         <div><span class="k">Por cobrar</span>
           <div class="fz-cobrar-v">${P.fmt(deuda)}</div>
           <div class="kpi-d">${c.deudores.length} socio${c.deudores.length > 1 ? 's' : ''} con retiros sin cubrir · planes prepagos y compras del mes ya descontados</div></div>
         <button class="btn btn-pri" id="fz-ver-cobranza" type="button">Ver quiénes →</button>
-      </div>` : `<div class="card" style="margin-top:12px;border-left:3px solid var(--grn)"><span class="k">Por cobrar</span>
-        <div class="kpi-d" style="margin-top:8px">Nadie retiró sin cubrir este mes.</div></div>`}
-      <div class="grid2" style="margin-top:12px">
+      </div>` : `<div class="card" style="margin-top:10px;border-left:3px solid var(--grn)"><span class="k">Por cobrar</span>
+        <div class="kpi-d" style="margin-top:6px">Nadie retiró sin cubrir este mes.</div></div>`}
+      <div class="grid2" style="margin-top:10px">
         <div class="card"><span class="k">Entró por</span><div class="fz-rubs">${barras(ing, CAT_ING, 'var(--grn)')}</div>
           <div class="fz-tot"><span>${r.sociosPagaronMp} socios pagaron por Mercado Pago</span><span>${P.fmt(tot.ingreso)}</span></div></div>
         <div class="card"><span class="k">Salió en</span><div class="fz-rubs">${barras(egr, CAT_EGR, 'var(--vio)')}</div>
           <div class="fz-tot"><span></span><span>${P.fmt(tot.egreso)}</span></div></div>
       </div>
-      <div class="card" style="margin-top:12px"><span class="k">Resultado mes a mes · ${mes.slice(0, 4)}</span>
+      <div class="card" style="margin-top:10px"><span class="k">Resultado mes a mes · ${mes.slice(0, 4)}</span>
         <div class="fz-anio">${mesesAnio.map((m) => {
           const v = serie[m].ingreso - serie[m].egreso
           const h = Math.max(3, Math.abs(v) / maxRes * 64)
@@ -181,7 +181,7 @@
         <td class="r">${P.puede('finanzas_cargar') ? `<button class="btn fz-cobrar-btn" data-socio="${d.id}" data-nombre="${P.esc(d.nombre)}" data-precio="${d.precio || ''}" data-tier="${P.esc(d.tier || '')}" type="button">Cobrar</button>
           <button class="btn fz-debito-btn" data-socio="${d.id}" data-nombre="${P.esc(d.nombre)}" type="button">Débito −20%</button>` : ''}</td>
       </tr>`).join('')}</tbody></table></div>
-      <div class="card fz-cobrar" style="margin-top:12px">
+      <div class="card fz-cobrar" style="margin-top:10px">
         <div><span class="k">Total por cobrar</span><div class="fz-cobrar-v">${P.fmt(total)}</div>
         <div class="kpi-d">${c.cubiertosPorPlan ? `${c.cubiertosPorPlan} socio(s) con plan prepago quedaron afuera solos.` : ''}</div></div>
       </div>`
@@ -304,22 +304,22 @@
     const EST = { activa: ['Al día', 'tag-ok'], pendiente: ['Esperando autorización', 'tag-deb'], pausada: ['Pausado en MP', 'tag-mal'], cancelada: ['Terminó / canceló', 'tag-off'] }
 
     cuerpo.innerHTML = `
-      ${!d.configurado ? `<div class="card" style="border-left:3px solid var(--amb);margin-bottom:12px">
+      ${!d.configurado ? `<div class="card" style="border-left:3px solid var(--amb);margin-bottom:10px">
         <span class="k">Falta el token de Mercado Pago</span>
         <div class="kpi-d" style="margin-top:6px">Cuando esté cargado el secret MP_ACCESS_TOKEN, el panel descubre y
         sincroniza las suscripciones de los planes solo.</div></div>` : ''}
-      ${sync && sync.planesInactivos && sync.planesInactivos.length ? `<div class="card" style="border-left:3px solid var(--dan);margin-bottom:12px">
+      ${sync && sync.planesInactivos && sync.planesInactivos.length ? `<div class="card" style="border-left:3px solid var(--dan);margin-bottom:10px">
         <span class="k">Plan pausado en MP</span>
         <div class="kpi-d" style="margin-top:6px">El plan de ${P.esc(sync.planesInactivos.join(', '))} está dado de baja
         en Mercado Pago: su link no acepta suscripciones nuevas. Reactivalo desde el panel de MP.</div></div>` : ''}
 
-      <div class="fila" style="margin-bottom:12px;flex-wrap:wrap">
+      <div class="fila" style="margin-bottom:10px;flex-wrap:wrap">
         <span class="chip">${alDia.length} al día</span>
         <span class="chip">${terminanMes.length} terminan este mes</span>
         <span class="chip">${paraMandar.length} sin débito</span>
         ${ident.pendientes.length ? `<span class="chip" style="border-color:var(--amb);color:var(--amb)">${ident.pendientes.length} por identificar</span>` : ''}
         <span class="pn-sp"></span>
-        <span class="msg ok" style="font-size:11.5px">${sync ? `✔ al día${sync.descubiertas ? ` · ${sync.descubiertas} nueva(s)` : ''}${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}${sync.depuradas ? ` · ${sync.depuradas} link(s) viejo(s) cancelado(s)` : ''}` : ''}</span>
+        <span class="msg ok" style="font-size:12px">${sync ? `✔ al día${sync.descubiertas ? ` · ${sync.descubiertas} nueva(s)` : ''}${sync.rescatados ? ` · ${sync.rescatados} débito(s) rescatados` : ''}${sync.depuradas ? ` · ${sync.depuradas} link(s) viejo(s) cancelado(s)` : ''}` : ''}</span>
         <button class="btn" id="fz-mp-refrescar" type="button">Actualizar estados</button>
       </div>
 
@@ -332,7 +332,7 @@
             · ${P.esc(su.tier || '—')} · ${P.fmt(su.monto)}/mes
             ${su.pagos ? ` · <b>${su.pagos} pago(s)</b> sin socio` : ''}
             <span class="tag ${su.estado === 'activa' ? 'tag-ok' : 'tag-deb'}">${P.esc(su.estado)}</span></div>
-          ${su.pagador ? `<div style="color:var(--muted);font-size:11.5px;margin-top:2px">
+          ${su.pagador ? `<div style="color:var(--muted);font-size:12px;margin-top:2px">
             ${[su.pagador.dni ? 'DNI ' + su.pagador.dni : '', su.pagador.email || su.mp_payer_email || '',
                su.pagador.nickname ? 'MP: ' + su.pagador.nickname : '',
                su.pagador.titular_tarjeta && su.pagador.titular_tarjeta !== su.pagador.nombre ? 'tarjeta de ' + su.pagador.titular_tarjeta : '',
@@ -366,7 +366,7 @@
             : '<span class="tag tag-deb">intento sin terminar</span>'
           const mandado = c.link_enviado ? `<span style="color:var(--muted);font-size:11px">mandado ${hace(c.link_enviado)} por ${c.link_via === 'email' ? 'email' : 'WhatsApp'}</span>` : ''
           return `<div class="fila" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap">
-            <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:11.5px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes' : 'sin plan'}</span> ${situ} ${mandado}</span>
+            <span><b>${P.esc(c.nombre)}</b> <span style="color:var(--muted);font-size:12px">${P.esc(c.tier)} · ${c.monto ? P.fmt(c.monto) + '/mes' : 'sin plan'}</span> ${situ} ${mandado}</span>
             <span class="pn-sp"></span>
             ${!c.reprocann_ok ? `<span class="tag tag-deb" title="El link se manda recién con el trámite subido a REPROCANN (aprobado o en evaluación)">REPROCANN: ${P.esc(c.reprocann_paso)}</span>`
               : c.plan_link && P.puede('mp_enviar') ? `<button class="btn ${c.link_enviado ? '' : 'btn-pri'} fz-debito-btn" data-socio="${c.id}" data-nombre="${P.esc(c.nombre)}"
@@ -376,7 +376,7 @@
             ${P.puede('mp_gestionar') ? `<button class="btn fz-no-insistir" data-socio="${c.id}" data-valor="1" title="No ofrecerle más el débito" type="button">No insistir</button>` : ''}
           </div>`
         }).join('') : '<div class="vacio">Todos los socios con membresía tienen su débito andando 🎉</div>'}
-        ${noInsistir.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">
+        ${noInsistir.length ? `<details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">
           ${noInsistir.length} marcado(s) como «no insistir»</summary>
           ${noInsistir.map((c) => `<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)">
             <span>${P.esc(c.nombre)} <span class="tag tag-auto">no insistir</span></span><span class="pn-sp"></span>
@@ -488,12 +488,12 @@
       los aportes fundacionales y las cuotas de la compra. Separado de la operación mensual.</p>
       <div class="fz-personas">${personas.map(([nom, v]) => `<div class="card">
         <div class="fila"><span class="av">${P.esc(P.iniciales(nom))}</span><b>${P.esc(nom)}</b></div>
-        <div class="kpi-v" style="font-size:26px;margin-top:10px">USD ${P.fmtN(Math.round(v.aportes + v.cuotas))}</div>
+        <div class="kpi-v" style="font-size:28px;margin-top:10px">USD ${P.fmtN(Math.round(v.aportes + v.cuotas))}</div>
         <div class="kpi-d">${v.cuotas ? `cuotas de la compra USD ${P.fmtN(Math.round(v.cuotas))}` : 'aportes fundacionales'}
         ${v.pendientes ? ` · <span style="color:var(--amb);font-weight:600">${v.pendientes} cuota(s) pendiente(s)</span>` : ''}</div>
       </div>`).join('')}</div>
-      <div class="card" style="margin-top:12px;padding-bottom:6px"><span class="k">Últimos movimientos de capital</span>
-      <table class="tabla" style="margin-top:8px"><thead><tr>
+      <div class="card" style="margin-top:10px;padding-bottom:6px"><span class="k">Últimos movimientos de capital</span>
+      <table class="tabla" style="margin-top:6px"><thead><tr>
         <th>Fecha</th><th>Quién</th><th>Concepto</th><th>Estado</th><th class="r">USD</th>
       </tr></thead><tbody>${a.aportes.slice(0, 40).map((x) => `<tr>
         <td style="color:var(--muted)">${P.esc(x.fecha)}</td><td>${P.esc(x.aportante)}</td>
@@ -514,12 +514,12 @@
     cuerpo.innerHTML = `
       <div class="grid3">${p.personal.map((f) => `<div class="card">
         <div class="fila"><span class="av">${P.esc(P.iniciales(f.nombre))}</span>
-        <div><b>${P.esc(f.nombre)}</b><div style="color:var(--muted);font-size:11.5px">${P.esc(f.rol || '')}</div></div></div>
-        <div class="kpi-v" style="font-size:24px;margin-top:10px">${P.fmt(f.monto_mensual || 0)}</div>
+        <div><b>${P.esc(f.nombre)}</b><div style="color:var(--muted);font-size:12px">${P.esc(f.rol || '')}</div></div></div>
+        <div class="kpi-v" style="font-size:28px;margin-top:10px">${P.fmt(f.monto_mensual || 0)}</div>
         <div class="kpi-d">${f.frecuencia === 'semanal' ? 'por semana' : 'por mes'}</div>
       </div>`).join('')}</div>
-      <div class="card" style="margin-top:12px;padding-bottom:6px"><span class="k">Pagos de sueldos · ${mes.slice(0, 4)}</span>
-      <table class="tabla" style="margin-top:8px"><thead><tr>
+      <div class="card" style="margin-top:10px;padding-bottom:6px"><span class="k">Pagos de sueldos · ${mes.slice(0, 4)}</span>
+      <table class="tabla" style="margin-top:6px"><thead><tr>
         <th>Mes</th><th>Concepto</th><th class="r">Importe</th>
       </tr></thead><tbody>${Object.keys(pagosPorMes).sort().reverse().map((m) =>
         pagosPorMes[m].map((x, i) => `<tr>
