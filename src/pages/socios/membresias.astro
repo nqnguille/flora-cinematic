@@ -46,7 +46,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
           <span class="td-brand-name"><em>club</em></span>
         </div>
-        <button id="mb-logout" class="td-logout" type="button">Cerrar sesión</button>
+        <div class="mb-acciones">
+          <a class="mb-cta" id="mb-cta-carta" href="/socios/carta/"></a>
+          <a class="mb-cta mb-cta--ghost" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
+          <button id="mb-logout" class="td-logout" type="button">Cerrar sesión</button>
+        </div>
       </div>
 
       <!-- LA PRIMERA PANTALLA.
@@ -93,23 +97,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <span class="mb-eyebrow-v">Una vez adherido</span>
           <h2 class="mb-h2">Se ocupa solo, <em>mes a mes</em></h2>
         </header>
-        <ol class="mb-pasos">
-          <li class="mb-paso reveal">
-            <span class="mb-paso-num" aria-hidden="true">01</span>
-            <h3>Mercado Pago cobra</h3>
-            <p>El primer día de cada mes, sin que transfieras ni avises nada.</p>
+        <ul class="mb-items">
+          <li class="mb-item reveal">
+            <h3 class="mb-item-t">Te suscribís con Mercado Pago</h3>
+            <p class="mb-item-d">Podés elegir pagar con débito, crédito o dinero en cuenta.</p>
           </li>
-          <li class="mb-paso reveal" data-reveal-delay="90">
-            <span class="mb-paso-num" aria-hidden="true">02</span>
-            <h3>Tus gramos se habilitan</h3>
-            <p>Apenas se acredita el pago quedan disponibles, sin que nadie los confirme.</p>
+          <li class="mb-item reveal" data-reveal-delay="90">
+            <h3 class="mb-item-t">Tus gramos se habilitan</h3>
+            <p class="mb-item-d">Apenas se acredita el pago quedan disponibles, sin que nadie los confirme.</p>
           </li>
-          <li class="mb-paso reveal" data-reveal-delay="180">
-            <span class="mb-paso-num" aria-hidden="true">03</span>
-            <h3>Lo recibís sin moverte</h3>
-            <p>Te lo llevamos a tu casa en Neuquén capital, al siguiente día hábil. O lo pasás a buscar por la sede, como prefieras.</p>
+          <li class="mb-item reveal" data-reveal-delay="180">
+            <h3 class="mb-item-t">Lo recibís sin moverte</h3>
+            <p class="mb-item-d">Te lo llevamos a tu casa en Neuquén capital, al siguiente día hábil. O lo pasás a buscar por la sede, como prefieras.</p>
           </li>
-        </ol>
+        </ul>
       </section>
 
       <section class="mb-beneficios" id="mb-beneficios" hidden>
@@ -123,23 +124,45 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
              paso del ciclo sobre los gramos que se acumulan: los tres decían
              una parte y ninguno pesaba. Quedó uno solo, en frases cortas,
              porque en la TV esto se lee a varios metros. -->
-        <ul>
-          <li><b>20% menos, por 3 meses.</b> Ese precio queda fijo aunque suba la lista.</li>
-          <li><b>Envío sin cargo.</b> Te lo llevamos a tu domicilio en Neuquén capital, al siguiente día hábil.</li>
-          <li><b>No perdés lo que no retirás.</b> Si un mes no podés pasar, se te acumula.</li>
+        <ul class="mb-items">
+          <li class="mb-item">
+            <b class="mb-item-t">20% menos, por 3 meses</b>
+            <span class="mb-item-d">Ese precio queda fijo aunque suba la lista.</span>
+          </li>
+          <li class="mb-item">
+            <b class="mb-item-t">Envío sin cargo</b>
+            <span class="mb-item-d">A tu domicilio en Neuquén capital, al siguiente día hábil.</span>
+          </li>
+          <li class="mb-item">
+            <b class="mb-item-t">No perdés lo que no retirás</b>
+            <span class="mb-item-d">Si un mes no podés pasar, se te acumula.</span>
+          </li>
         </ul>
       </section>
 
       <section class="mb-nota" id="mb-nota-sec" hidden>
-        <h2 id="mb-nota-titulo"></h2>
-        <ul id="mb-notas"></ul>
-        <div class="mb-ctas">
-          <a class="mb-cta" id="mb-cta-carta" href="/socios/carta/"></a>
-          <a class="mb-cta mb-cta--ghost" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
-        </div>
+        <header class="mb-sec-head">
+          <span class="mb-eyebrow-v">Letra chica</span>
+          <h2 class="mb-h2" id="mb-nota-titulo"></h2>
+        </header>
+        <ul id="mb-notas" class="mb-items"></ul>
       </section>
 
       </div><!-- /mb-cierre -->
+
+      <!-- El sello legal. Cierra la pantalla y es lo único que tiene borde
+           propio: en un TV que mira gente que no es socia, esto es lo que
+           explica qué es este servicio y qué no. -->
+      <aside class="mb-sello">
+        <span class="mb-sello-lb">Ley 27.350 · REPROCANN</span>
+        <p class="mb-sello-txt">
+          Servicio <strong>exclusivo para personas asociadas</strong> con credencial REPROCANN
+          vigente que designe a la <strong>Asociación Civil Cann de Cannabis Medicinal</strong>
+          (CUIT 30-71827609-4) como su cultivadora. Lo que recibís
+          <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por
+          ese vínculo. Nada de lo publicado acá reemplaza la indicación de tu médica o médico.
+        </p>
+      </aside>
       </div><!-- /mb-primera -->
     </div>
   </main>
@@ -234,9 +257,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       av.hidden = false
     } else { av.hidden = true }
 
-    set('mb-nota-titulo', tx.notaTitulo)
+    // El título de esta columna viene del backoffice. Se le aplica el gesto de
+    // la casa: la segunda mitad en itálica verde.
+    const nt = String(tx.notaTitulo || '')
+    const corte = nt.lastIndexOf(' ')
+    document.getElementById('mb-nota-titulo').innerHTML = corte > 0
+      ? `${esc(nt.slice(0, corte))} <em>${esc(nt.slice(corte + 1))}</em>`
+      : esc(nt)
+
+    // Cada nota se guarda como "Título: texto". Se parte en el primer dos
+    // puntos para que tenga la misma forma que las otras dos columnas. Si
+    // alguien guarda una nota sin dos puntos, entra entera como texto y no
+    // se rompe nada.
     const notas = Array.isArray(tx.notas) ? tx.notas : []
-    document.getElementById('mb-notas').innerHTML = notas.map((n) => `<li>${esc(n)}</li>`).join('')
+    document.getElementById('mb-notas').innerHTML = notas.map((n) => {
+      const s = String(n)
+      const i = s.indexOf(': ')
+      if (i < 1) return `<li class="mb-item"><span class="mb-item-d">${esc(s)}</span></li>`
+      return `<li class="mb-item"><b class="mb-item-t">${esc(s.slice(0, i))}</b><span class="mb-item-d">${esc(s.slice(i + 2))}</span></li>`
+    }).join('')
     set('mb-cta-carta', tx.ctaCarta)
     set('mb-cta-wa', tx.ctaWhatsapp)
     document.getElementById('mb-nota-sec').hidden = !(tx.notaTitulo || notas.length)
@@ -369,7 +408,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-card-precio {
     font-family: var(--font-display); font-size: clamp(26px, 4vw, 32px);
-    color: #3cb492; margin: 0; line-height: 1.1;
+    color: #4FC79E; margin: 0; line-height: 1.1;
   }
   .mb-card-precio span {
     display: block; font-family: var(--font-ui); font-size: 12px;
@@ -392,7 +431,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      mismo alto en las cuatro tarjetas y no desalinea la marcada. */
   .mb-mia {
     display: inline-block; font-family: var(--font-ui); font-size: 10px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase; color: #3cb492;
+    letter-spacing: .12em; text-transform: uppercase; color: #4FC79E;
     background: rgba(60, 180, 146, .14); border-radius: 999px;
     /* line-height fijo para que el chip vacío mida exactamente lo mismo que el
        que tiene texto: sin esto las tarjetas quedaban 8px desalineadas. */
@@ -443,6 +482,70 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, .5); margin: 11px 0 0;
   }
   .mb-card-comp b { color: rgba(244, 241, 247, .78); font-weight: 700; }
+
+  /* ── LA BANDA DE CIERRE: un solo sistema para las tres columnas ──
+     Vive acá y no en el bloque con alcance porque los ítems de la tercera
+     columna los escribe el JS con lo que viene del backoffice, y Astro solo
+     marca lo que existe al compilar. Antes había selectores agrupados
+     (.mb-beneficios li, .mb-nota li) donde la primera mitad funcionaba y la
+     segunda no: parecían unificar y hacían justo lo contrario.
+
+     Sin números ni viñetas en ninguna de las tres: título y su línea. Las tres
+     eran tres cosas distintas (pasos numerados, puntos verdes, disc nativo con
+     ::marker) y encima con dos verdes distintos. */
+  .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .mb-item { border-top: 1px solid rgba(183, 157, 230, .16); padding-top: 11px; }
+  .mb-item-t {
+    display: block; font-family: var(--font-ui);
+    font-size: 15px; font-weight: 700; line-height: 1.25;
+    color: #f4f1f7; letter-spacing: 0; text-transform: none; margin: 0 0 3px;
+  }
+  .mb-item-d {
+    display: block; font-family: var(--font-ui);
+    font-size: 14px; font-weight: 400; line-height: 1.5;
+    color: rgba(244, 241, 247, .62); margin: 0;
+  }
+  /* Sobre video, todo lo que no está en una tarjeta necesita sombra. */
+  .mb-item-t, .mb-item-d { text-shadow: 0 1px 16px rgba(0, 0, 0, .65); }
+  /* Las notas del backoffice se guardan como "Título: texto", así que el texto
+     arranca en minúscula. En las otras dos columnas arranca en mayúscula: esto
+     empareja las tres sin obligar a escribir raro en el panel. */
+  .mb-item-d::first-letter { text-transform: uppercase; }
+
+  /* ── El sello legal ── */
+  .mb-sello {
+    display: grid; gap: 8px; margin-top: clamp(24px, 4vw, 40px);
+    padding: clamp(14px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
+    border: 1px solid rgba(79, 199, 158, .34);
+    border-radius: 16px;
+    background: rgba(14, 34, 29, .55);
+  }
+  .mb-sello-lb {
+    font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase; color: #4FC79E;
+  }
+  .mb-sello-txt {
+    margin: 0; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
+    color: rgba(244, 241, 247, .72); text-wrap: pretty;
+  }
+  .mb-sello-txt strong { color: #f4f1f7; font-weight: 700; }
+
+  @media (min-width: 1200px) {
+    .mb-sello {
+      margin-top: clamp(10px, 1.4vh, 22px);
+      padding: clamp(10px, 1.5vh, 20px) clamp(18px, 1.6vw, 30px);
+      gap: clamp(2px, .35vh, 5px);
+    }
+    .mb-sello-lb { font-size: clamp(9px, 1.1vh, 12px); }
+    .mb-sello-txt { font-size: clamp(12px, 1.45vh, 16px); line-height: 1.45; }
+  }
+
+  @media (min-width: 1200px) {
+    .mb-items { gap: clamp(6px, .95vh, 13px); }
+    .mb-item { padding-top: clamp(6px, .95vh, 13px); }
+    .mb-item-t { font-size: clamp(13px, 1.7vh, 19px); margin-bottom: 2px; }
+    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.4; }
+  }
   /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
   .mb-card-retiro {
     font-family: var(--font-ui); font-size: 12px;
@@ -452,7 +555,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
     color: #4cb8e8; margin-top: 3px;
   }
-  .mb-nota li { margin-bottom: 7px; }
 
   /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
      porque las tarjetas las escribe el JS con lo que viene de la base: Astro
@@ -478,7 +580,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
     .mb-mia { font-size: clamp(9px, 1.1vh, 12px); line-height: clamp(12px, 1.5vh, 16px); }
   }
-  .mb-nota li::marker { color: #3cb492; }
 </style>
 
 <style>
@@ -513,14 +614,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-eyebrow {
     display: inline-block; font-family: var(--font-ui);
     font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-    color: #3cb492; margin-bottom: 12px;
+    color: #4FC79E; margin-bottom: 12px;
   }
   .mb-title {
     font-family: var(--font-display); font-weight: 400;
     font-size: clamp(28px, 5.4vw, 42px); line-height: 1.15;
     color: #f4f1f7; margin: 0 0 14px; text-wrap: balance;
   }
-  .mb-title em { font-style: italic; color: #3cb492; }
+  .mb-title em { font-style: italic; color: #4FC79E; }
   .mb-lead {
     font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
     color: rgba(244, 241, 247, 0.66); margin: 0;
@@ -549,20 +650,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-h2 em { font-style: italic; color: #4FC79E; }
 
-  /* Pasos: mismo patrón que la home. Línea arriba, número en serif verde,
-     sin caja. Es lo que hace que se lea como una sección editorial y no como
-     una lista de features. */
-  .mb-ciclo { max-width: 1020px; margin: clamp(48px, 7vw, 84px) auto 0; padding-top: clamp(34px, 5vw, 52px); border-top: 1px solid rgba(183, 157, 230, .16); }
-  .mb-ciclo[hidden] { display: none; }
-  .mb-pasos { display: grid; grid-template-columns: 1fr; gap: 22px; list-style: none; padding: 0; margin: 0; text-align: left; }
-  .mb-paso { border-top: 1px solid rgba(255, 255, 255, .18); padding-top: 16px; }
-  .mb-paso-num {
-    display: block; font-family: var(--font-display); font-weight: 500;
-    font-size: clamp(26px, 3vw, 34px); line-height: 1; color: #4FC79E;
-  }
-  .mb-paso h3 { font-family: var(--font-ui); font-size: 16px; font-weight: 700; color: #fff; margin: 9px 0 5px; }
-  .mb-paso p { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, .7); margin: 0; }
-  @media (min-width: 760px) { .mb-pasos { grid-template-columns: repeat(4, 1fr); gap: clamp(18px, 2.4vw, 30px); } }
 
 
   /* ── Cierre: apilado en el celular, tres columnas en pantalla grande ── */
@@ -579,25 +666,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      del @media de TV de más abajo, y la llave sobrante desbalanceaba la hoja. */
 
 
-  .mb-beneficios {
-    max-width: 900px; margin: clamp(48px, 7vw, 84px) auto 0; padding-top: clamp(34px, 5vw, 52px);
-    border-top: 1px solid rgba(183, 157, 230, 0.16);
-  }
-  .mb-beneficios[hidden] { display: none; }
-
-  .mb-beneficios ul {
-    list-style: none; margin: 0; padding: 0; text-align: left;
-    display: grid; gap: 14px 26px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-  .mb-beneficios li {
-    font-family: var(--font-ui); font-size: 13.5px; line-height: 1.6;
-    color: rgba(244, 241, 247, 0.58); padding-left: 20px; position: relative;
-  }
-  .mb-beneficios li::before {
-    content: ''; position: absolute; left: 0; top: 8px;
-    width: 6px; height: 6px; border-radius: 50%; background: #4FC79E;
-  }
-  .mb-beneficios b { color: rgba(244, 241, 247, 0.9); font-weight: 700; }
 
   .mb-grid {
     display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
@@ -615,47 +683,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border-radius: 12px; padding: 12px 16px;
   }
   .mb-aviso :global(b) { color: rgba(244, 241, 247, 0.92); }
-  .mb-aviso :global(a) { color: #3cb492; font-weight: 700; text-underline-offset: 3px; }
+  .mb-aviso :global(a) { color: #4FC79E; font-weight: 700; text-underline-offset: 3px; }
   .mb-vacio {
     text-align: center; font-family: var(--font-ui); font-size: 14px;
     color: rgba(244, 241, 247, 0.5); margin: 0 0 24px;
   }
 
-  .mb-nota {
-    max-width: 720px; margin: 36px auto 0; padding-top: 24px;
-    border-top: 1px solid rgba(183, 157, 230, 0.16);
-    font-family: var(--font-ui); font-size: 14px; line-height: 1.7;
-    color: rgba(244, 241, 247, 0.6);
-  }
-  .mb-nota h2 {
-    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    color: rgba(244, 241, 247, 0.45); margin: 0 0 10px;
-  }
-  .mb-nota ul { margin: 0 0 20px; padding-left: 1.1rem; list-style: disc; }
-  .mb-card-alt {
-    margin: 12px 0 0; padding-top: 10px;
-    border-top: 1px solid rgba(183, 157, 230, 0.16);
-  }
-  .mb-card-alt b {
-    display: block; font-family: var(--font-display); font-weight: 400;
-    font-size: 20px; color: rgba(244, 241, 247, 0.9); line-height: 1.15;
-  }
-  .mb-card-alt span {
-    display: block; font-family: var(--font-ui); font-size: 11.5px;
-    color: rgba(244, 241, 247, 0.45); margin-top: 3px;
-  }
-  .mb-nota li { margin-bottom: 7px; }
-  .mb-nota li::marker { color: #3cb492; }
-  .mb-nota strong { color: rgba(244, 241, 247, 0.88); font-weight: 700; }
 
-  .mb-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+  /* Los accesos viven arriba, al lado de Cerrar sesión: son navegación, no el
+     cierre de la lectura. Antes colgaban del final de la tercera columna, que
+     los dejaba a merced de cuánto texto tuviera esa columna. */
+  .mb-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
   .mb-cta {
     display: inline-flex; align-items: center; font-family: var(--font-ui);
     font-size: 0.82rem; font-weight: 700; text-decoration: none;
     padding: 11px 20px; border-radius: 999px;
     border: 1px solid rgba(60, 180, 146, 0.5);
-    background: rgba(60, 180, 146, 0.14); color: #3cb492;
+    background: rgba(60, 180, 146, 0.14); color: #4FC79E;
   }
   .mb-cta:hover { background: rgba(60, 180, 146, 0.24); }
   .mb-cta--ghost {
@@ -698,7 +742,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     #mb-content.td-content {
       max-width: min(1560px, 94vw);
       padding-top: clamp(14px, 1.9vh, 26px);
-      padding-bottom: clamp(8px, 1vh, 14px);
+      padding-bottom: clamp(6px, .8vh, 11px);
     }
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
@@ -736,8 +780,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       /* Las tres arrancan a la misma altura: centradas quedaban escalonadas. */
       align-items: start;
       gap: clamp(26px, 2.8vw, 54px);
-      margin-top: clamp(8px, 1.1vh, 16px);
-      padding-top: clamp(8px, 1.1vh, 16px);
+      margin-top: clamp(6px, .8vh, 12px);
+      padding-top: clamp(6px, .8vh, 12px);
       border-top: 1px solid rgba(183, 157, 230, .16);
       text-align: left;
     }
@@ -747,28 +791,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-primera .mb-cierre .mb-sec-head {
       max-width: none; margin: 0 0 clamp(6px, 1vh, 12px); text-align: left;
     }
-    .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(9px, 1.1vh, 11px); margin-bottom: clamp(2px, .4vh, 5px); }
-    .mb-primera .mb-cierre .mb-h2 { font-size: clamp(15px, 1.85vh, 22px); }
-    .mb-primera .mb-cierre .mb-beneficios li,
-    .mb-primera .mb-cierre .mb-nota li { margin-bottom: clamp(3px, .5vh, 7px); }
-    .mb-primera .mb-cierre .mb-nota h2 { margin-bottom: clamp(6px, .9vh, 11px); }
+    .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(10px, 1.2vh, 13px); margin-bottom: clamp(3px, .5vh, 7px); }
+    .mb-primera .mb-cierre .mb-h2 { font-size: clamp(17px, 2.1vh, 26px); }
     /* Los pasos van uno debajo del otro: en una columna angosta, en fila
        quedarían tres palabras por renglón. */
-    .mb-primera .mb-cierre .mb-pasos { grid-template-columns: 1fr; gap: clamp(3px, .5vh, 7px); }
-    /* El número al lado del título, no arriba: en columna, cada paso ahorra
-       un renglón entero y son tres pasos. */
-    .mb-primera .mb-cierre .mb-paso {
-      display: grid; grid-template-columns: auto 1fr;
-      column-gap: 10px; padding-top: clamp(3px, .45vh, 6px);
-    }
-    .mb-primera .mb-cierre .mb-paso-num { grid-column: 1; grid-row: 1 / span 2; font-size: clamp(14px, 1.8vh, 20px); }
-    .mb-primera .mb-cierre .mb-paso h3 { grid-column: 2; font-size: clamp(12px, 1.5vh, 16px); margin: 0 0 1px; }
-    .mb-primera .mb-cierre .mb-paso p { grid-column: 2; font-size: clamp(11px, 1.3vh, 14px); line-height: 1.3; }
-    .mb-primera .mb-cierre .mb-paso p { font-size: clamp(12px, 1.45vh, 15px); line-height: 1.45; }
-    .mb-primera .mb-cierre .mb-beneficios li,
-    .mb-primera .mb-cierre .mb-nota li { font-size: clamp(11px, 1.3vh, 14px); line-height: 1.4; }
-    .mb-primera .mb-cierre .mb-ctas { margin-top: clamp(8px, 1.2vh, 15px); gap: 8px; }
-    .mb-primera .mb-cierre .mb-cta { font-size: clamp(11px, 1.35vh, 14px); padding: clamp(8px, 1.1vh, 12px) clamp(12px, 1.1vw, 20px); }
   }
 
   /* En la TV del living. 1680px es el mismo umbral que ya usa /socios/carta
