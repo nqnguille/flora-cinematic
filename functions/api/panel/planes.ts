@@ -74,8 +74,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const [planes, listas] = await Promise.all([
     lista
       ? env.DB.prepare(
-          `SELECT item, tipo, gramos, contado, debito, cupo, mp_plan_id FROM precios
-            WHERE lista_id = ? AND tipo IN ('membresia','cuota_ong') ORDER BY gramos, item`,
+          `SELECT item, tipo, gramos, contado, debito, cupo, mp_plan_id, valor_usd,
+                  plan_gramos_mes, plan_meses
+             FROM precios WHERE lista_id = ? AND tipo IN ('membresia','cuota_ong','plan')
+            ORDER BY tipo, gramos, item`,
         ).bind(lista.id).all()
       : Promise.resolve({ results: [] }),
     env.DB.prepare(
@@ -125,8 +127,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   // ---- guardar un plan ----
   const item = String(b.item || '').trim().toUpperCase();
-  if (!item) return json({ error: 'Falta la membresía' }, 400);
-  const gramos = b.gramos === null || b.gramos === '' ? null : Number(b.gramos);
+  if (!item) return json({ error: 'Falta el nombre del plan' }, 400);
+  const tipo = ['membresia', 'plan', 'cuota_ong'].includes(String(b.tipo || ''))
+    ? String(b.tipo) : 'membresia';
+
+  // Prepago: se pagan por adelantado y dan un saldo de gramos a favor que el
+  // socio retira a lo largo de N meses. El total sale del reparto, no se
+  // escribe a mano: si no, el nombre, el total y la vigencia se desincronizan.
+  const gxMes = b.plan_gramos_mes === undefined || b.plan_gramos_mes === '' ? null : Number(b.plan_gramos_mes);
+  const meses = b.plan_meses === undefined || b.plan_meses === '' ? null : Math.round(Number(b.plan_meses));
+  if (gxMes !== null && (!Number.isFinite(gxMes) || gxMes <= 0)) return json({ error: 'Gramos por mes inválidos' }, 400);
+  if (meses !== null && (!Number.isFinite(meses) || meses <= 0 || meses > 60)) return json({ error: 'Los meses tienen que ir de 1 a 60' }, 400);
+  if (tipo === 'plan' && (gxMes === null || meses === null)) {
+    return json({ error: 'Un plan prepago necesita gramos por mes y cantidad de meses' }, 400);
+  }
+  const usd = b.valor_usd === undefined || b.valor_usd === '' ? null : Number(b.valor_usd);
+  if (usd !== null && (!Number.isFinite(usd) || usd < 0)) return json({ error: 'Referencia en dólares inválida' }, 400);
+  let gramos = b.gramos === null || b.gramos === '' ? null : Number(b.gramos);
+  if (tipo === 'plan' && gxMes !== null && meses !== null) gramos = gxMes * meses;
   const contado = b.contado === null || b.contado === '' ? null : Math.round(Number(b.contado));
   const debito = b.debito === null || b.debito === '' ? null : Math.round(Number(b.debito));
   if (gramos !== null && (!Number.isFinite(gramos) || gramos < 0)) return json({ error: 'Gramos inválidos' }, 400);
@@ -185,7 +203,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (existe) {
     const campos: string[] = [];
     const vals: (string | number | null)[] = [];
-    if (b.gramos !== undefined) { campos.push('gramos = ?'); vals.push(gramos); }
+    if (b.gramos !== undefined || tipo === 'plan') { campos.push('gramos = ?'); vals.push(gramos); }
+    if (b.plan_gramos_mes !== undefined) { campos.push('plan_gramos_mes = ?'); vals.push(gxMes); }
+    if (b.plan_meses !== undefined) { campos.push('plan_meses = ?'); vals.push(meses); }
+    if (b.valor_usd !== undefined) { campos.push('valor_usd = ?'); vals.push(usd); }
     if (b.contado !== undefined) { campos.push('contado = ?'); vals.push(contado); }
     if (b.debito !== undefined) { campos.push('debito = ?'); vals.push(debito); }
     if (mpPlanId !== undefined) { campos.push('mp_plan_id = ?'); vals.push(mpPlanId); }
@@ -194,9 +215,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
   } else {
     await env.DB.prepare(
-      `INSERT INTO precios (lista_id, item, tipo, gramos, contado, debito, mp_plan_id)
-       VALUES (?, ?, 'membresia', ?, ?, ?, ?)`,
-    ).bind(lista.id, item, gramos, contado, debito, mpPlanId || null).run();
+      `INSERT INTO precios (lista_id, item, tipo, gramos, contado, debito, mp_plan_id,
+                            valor_usd, plan_gramos_mes, plan_meses)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(lista.id, item, tipo, gramos, contado, debito, mpPlanId || null, usd, gxMes, meses).run();
   }
 
   return json({ ok: true, lista_id: lista.id, vigente_desde: desde, aviso: avisoMP });

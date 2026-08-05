@@ -713,3 +713,4 @@ label.lb { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink
 .mb-tap:hover { color: var(--vio) }
 .mb-edit { padding: 4px 14px 16px; display: grid; gap: 10px }
 .mb-edit .campo { margin: 0 }
+.mb-fila.mb-pp { grid-template-columns: 1.1fr 1.3fr .7fr .9fr .7fr }

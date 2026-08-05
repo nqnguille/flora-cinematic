@@ -49,7 +49,8 @@
       caja.innerHTML = '<p class="ct-help" style="margin:8px 0 0">No hay membresías en la lista de precios vigente.</p>'
       return
     }
-    caja.innerHTML = PLANES.map((p) => {
+    const mensuales = PLANES.filter((p) => p.tipo !== 'plan')
+    caja.innerHTML = mensuales.map((p) => {
       const n = SUSCRIPTOS[p.item] || 0
       const abre = abierto === p.item
       return `<div class="mb-plan ${abre ? 'on' : ''}">
@@ -60,30 +61,79 @@
           <span class="mb-num">${p.debito ? pesos(p.debito) : '—'}</span>
           <span class="mb-mp">${p.mp_plan_id || p.linkDebito ? '✓ débito' : '<span style="color:var(--dan)">sin link</span>'}</span>
         </div>
-        ${abre ? `<div class="mb-edit">
-          <div class="grid2" style="gap:10px">
-            <div class="campo"><label class="lb">Gramos por mes</label>
-              <input class="input mb-c" data-c="gramos" type="number" min="0" step="1" value="${p.gramos ?? ''}" /></div>
-            <div class="campo"><label class="lb">Contado o transferencia</label>
-              <input class="input mb-c" data-c="contado" type="number" min="0" step="1000" value="${p.contado ?? ''}" /></div>
-          </div>
-          <div class="campo"><label class="lb">Débito automático</label>
-            <input class="input mb-c" data-c="debito" type="number" min="0" step="1000" value="${p.debito ?? ''}" />
-            <p class="ct-help" style="margin:4px 0 0">Tiene que coincidir con lo que cobra el plan en Mercado Pago. Al guardar se verifica.</p></div>
-          <div class="campo"><label class="lb">Link del plan de Mercado Pago</label>
-            <input class="input mb-c" data-c="link" placeholder="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=…"
-              value="${P.esc(p.linkDebito || '')}" />
-            <p class="ct-help" style="margin:4px 0 0">Pegá el link del plan que creaste en Mercado Pago. Se comprueba que exista y cuánto cobra.</p></div>
-          ${n ? `<p class="ct-help" style="margin:8px 0 0;color:var(--amb)">⚠ ${n} socio${n > 1 ? 's' : ''} con este plan activo. Cambiar el importe en Mercado Pago les actualiza la cuota a todos.</p>` : ''}
-          <div class="fila" style="margin-top:10px">
-            <button class="btn mb-verificar" type="button">Verificar el link</button>
-            <span class="pn-sp"></span>
-            <button class="btn btn-pri mb-guardar-plan" type="button">Guardar ${P.esc(p.item)}</button>
-          </div>
-          <p class="msg" style="margin:8px 0 0" id="mb-msg-plan"></p>
-        </div>` : ''}
+        ${abre ? filaEdit(p, false) : ''}
       </div>`
     }).join('')
+    pintarPrepagos()
+  }
+
+  /* ---------- planes prepagos: se pagan de una y dan saldo a favor ---------- */
+  function pintarPrepagos() {
+    const caja = cont.querySelector('#mb-prepagos')
+    if (!caja) return
+    const lista = PLANES.filter((p) => p.tipo === 'plan')
+    caja.innerHTML = `${lista.map((p) => {
+      const abre = abierto === p.item
+      const total = (p.plan_gramos_mes || 0) * (p.plan_meses || 0)
+      return `<div class="mb-plan ${abre ? 'on' : ''}">
+        <div class="mb-fila mb-pp mb-tap" data-plan="${P.esc(p.item)}">
+          <b>${P.esc(p.item)}</b>
+          <span>${p.plan_gramos_mes && p.plan_meses
+            ? `${p.plan_gramos_mes} g/mes × ${p.plan_meses} meses` : '<span style="color:var(--dan)">falta el reparto</span>'}</span>
+          <span class="mb-num">${total ? total + ' g' : (p.gramos ? p.gramos + ' g' : '—')}</span>
+          <span class="mb-num">${p.contado ? pesos(p.contado) : '—'}</span>
+          <span class="mb-num" style="color:var(--muted)">${p.valor_usd ? 'USD ' + p.valor_usd : '—'}</span>
+        </div>
+        ${abre ? filaEdit(p, true) : ''}
+      </div>`
+    }).join('')}
+    ${abierto === '__nuevo__' ? `<div class="mb-plan on">${filaEdit({ item: '', tipo: 'plan' }, true, true)}</div>`
+      : '<button class="btn" id="mb-nuevo-plan" type="button" style="margin-top:10px">+ Plan prepago</button>'}`
+  }
+
+  // El formulario de edición, compartido por los dos tipos.
+  function filaEdit(p, esPlan, esNuevo) {
+    const n = SUSCRIPTOS[p.item] || 0
+    return `<div class="mb-edit">
+      ${esNuevo ? `<div class="campo"><label class="lb">Nombre del plan</label>
+        <input class="input mb-c" data-c="item" placeholder="PLAN 15x12" value="" />
+        <p class="ct-help" style="margin:4px 0 0">Como lo van a ver en la ficha del socio y en la cobranza.</p></div>` : ''}
+      ${esPlan ? `<div class="grid2" style="gap:10px">
+          <div class="campo"><label class="lb">Gramos por mes</label>
+            <input class="input mb-c" data-c="plan_gramos_mes" type="number" min="1" step="1" value="${p.plan_gramos_mes ?? ''}" /></div>
+          <div class="campo"><label class="lb">Durante cuántos meses</label>
+            <input class="input mb-c" data-c="plan_meses" type="number" min="1" max="60" step="1" value="${p.plan_meses ?? ''}" /></div>
+        </div>
+        <p class="ct-help" style="margin:0" id="mb-total-calc"></p>
+        <div class="grid2" style="gap:10px">
+          <div class="campo"><label class="lb">Precio de contado</label>
+            <input class="input mb-c" data-c="contado" type="number" min="0" step="10000" value="${p.contado ?? ''}" /></div>
+          <div class="campo"><label class="lb">Referencia en dólares</label>
+            <input class="input mb-c" data-c="valor_usd" type="number" min="0" step="50" value="${p.valor_usd ?? ''}" />
+            <p class="ct-help" style="margin:4px 0 0">Solo de referencia, no se cobra.</p></div>
+        </div>`
+      : `<div class="grid2" style="gap:10px">
+          <div class="campo"><label class="lb">Gramos por mes</label>
+            <input class="input mb-c" data-c="gramos" type="number" min="0" step="1" value="${p.gramos ?? ''}" /></div>
+          <div class="campo"><label class="lb">Contado o transferencia</label>
+            <input class="input mb-c" data-c="contado" type="number" min="0" step="1000" value="${p.contado ?? ''}" /></div>
+        </div>
+        <div class="campo"><label class="lb">Débito automático</label>
+          <input class="input mb-c" data-c="debito" type="number" min="0" step="1000" value="${p.debito ?? ''}" />
+          <p class="ct-help" style="margin:4px 0 0">Tiene que coincidir con lo que cobra el plan en Mercado Pago. Al guardar se verifica.</p></div>
+        <div class="campo"><label class="lb">Link del plan de Mercado Pago</label>
+          <input class="input mb-c" data-c="link" placeholder="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=…"
+            value="${P.esc(p.linkDebito || '')}" />
+          <p class="ct-help" style="margin:4px 0 0">Pegá el link del plan que creaste en Mercado Pago. Se comprueba que exista y cuánto cobra.</p></div>`}
+      ${n ? `<p class="ct-help" style="margin:8px 0 0;color:var(--amb)">⚠ ${n} socio${n > 1 ? 's' : ''} con este plan activo. Cambiar el importe en Mercado Pago les actualiza la cuota a todos.</p>` : ''}
+      <div class="fila" style="margin-top:10px">
+        ${esPlan ? '' : '<button class="btn mb-verificar" type="button">Verificar el link</button>'}
+        <span class="pn-sp"></span>
+        <button class="btn btn-pri mb-guardar-plan" data-tipo="${esPlan ? 'plan' : 'membresia'}" type="button">
+          ${esNuevo ? 'Crear el plan' : 'Guardar ' + P.esc(p.item)}</button>
+      </div>
+      <p class="msg" style="margin:8px 0 0" id="mb-msg-plan"></p>
+    </div>`
   }
 
   async function cargarPlanes() {
@@ -246,6 +296,12 @@
               <span class="lb">MP</span>
             </div>
             <div id="mb-filas"></div>
+            <div style="margin-top:22px">
+              <span class="k">Planes prepagos</span>
+              <p class="ct-help" style="margin:6px 0 10px">Se pagan de contado por adelantado y dan un saldo de gramos a favor
+              que el socio va retirando. Lo que no retira en un mes queda para el siguiente.</p>
+              <div id="mb-prepagos"></div>
+            </div>
             <p class="ct-help" style="margin:12px 0 0">Tocá una membresía para editar sus gramos, sus importes y el link de Mercado Pago. <span id="mb-lista-info"></span> Cambiar un importe crea una lista nueva con la fecha de hoy: la cobranza de los meses anteriores sigue calculándose con la lista que regía entonces.</p>
           </div>
 
@@ -300,6 +356,16 @@
         marcarSucio()
       })
 
+      el.addEventListener('input', (e) => {
+        if (!e.target.closest('.mb-c')) return
+        const g = cont.querySelector('.mb-c[data-c="plan_gramos_mes"]')
+        const m = cont.querySelector('.mb-c[data-c="plan_meses"]')
+        const out = cont.querySelector('#mb-total-calc')
+        if (!g || !m || !out) return
+        const t = (Number(g.value) || 0) * (Number(m.value) || 0)
+        out.textContent = t ? `Son ${t} gramos en total, que el socio puede retirar cuando quiera dentro de esos meses.` : ''
+      })
+
       el.addEventListener('click', async (e) => {
         const copiar = e.target.closest('#mb-copiar')
         if (copiar) {
@@ -334,20 +400,28 @@
           msgPlan(`✔ ${d.nombre || 'plan'} · cobra ${imp}${d.adheridos != null ? ` · ${d.adheridos} adheridos` : ''}${d.estado && d.estado !== 'active' ? ` · ${d.estado}` : ''}`, 'ok')
           return
         }
+        if (e.target.closest('#mb-nuevo-plan')) { abierto = '__nuevo__'; pintarPrepagos(); return }
         const gp = e.target.closest('.mb-guardar-plan')
         if (gp) {
-          const item = abierto
+          const esPlan = gp.dataset.tipo === 'plan'
+          const campoItem = cont.querySelector('.mb-c[data-c="item"]')
+          const item = campoItem ? campoItem.value.trim().toUpperCase() : abierto
+          if (!item) { msgPlan('Ponele un nombre al plan.', 'err'); return }
           const val = (c) => { const el = cont.querySelector(`.mb-c[data-c="${c}"]`); return el ? el.value.trim() : undefined }
           gp.disabled = true
           msgPlan('⏳ guardando…')
           const r = await fetch('/api/panel/planes', {
             method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ item, gramos: val('gramos'), contado: val('contado'), debito: val('debito'), link: val('link') }),
+            body: JSON.stringify(esPlan
+              ? { item, tipo: 'plan', plan_gramos_mes: val('plan_gramos_mes'), plan_meses: val('plan_meses'),
+                  contado: val('contado'), valor_usd: val('valor_usd') }
+              : { item, gramos: val('gramos'), contado: val('contado'), debito: val('debito'), link: val('link') }),
           }).catch(() => null)
           const d = r ? await r.json().catch(() => ({})) : {}
           gp.disabled = false
           if (!r || !r.ok) { msgPlan('✗ ' + (d.error || 'no se pudo guardar'), 'err'); return }
           msgPlan(d.aviso ? '✔ guardado · ' + d.aviso : '✔ guardado', d.aviso ? 'err' : 'ok')
+          if (abierto === '__nuevo__') abierto = item
           const pr = await fetch('/api/socios/admin/membresias?planes=1', { credentials: 'include' }).catch(() => null)
           if (pr && pr.ok) PLANES = (await pr.json()).planes || []
           cargarPlanes()
