@@ -36,8 +36,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
            velo es lo que hace que el texto se lea; sin él, sobre hojas en
            movimiento no se lee nada a tres metros. -->
       <div class="mb-fondo" aria-hidden="true">
-        <video src="/hero/cannabis-hero-720.webm" poster="/hero/cannabis-hero-poster.jpg"
-               muted loop playsinline autoplay preload="none"></video>
+        <!-- Servido por Pexels: "Cannabis plants swaying in the wind", de
+             Nicky Pe (video 12361112). Se enlaza directo, no lo servimos
+             nosotros. -->
+        <video src="https://videos.pexels.com/video-files/12361112/12361112-hd_1280_720_30fps.mp4"
+               poster="https://images.pexels.com/videos/12361112/cannabis-cannabis-cultivation-cannabis-flower-field-12361112.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200"
+               muted loop playsinline autoplay preload="none" crossorigin="anonymous"></video>
       </div>
 
       <div class="td-head">
@@ -611,7 +615,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   #mb-content > *:not(.mb-fondo) { position: relative; z-index: 1; }
   @media (prefers-reduced-motion: reduce) {
     .mb-fondo video { display: none; }
-    .mb-fondo { background: #130d1c url('/hero/cannabis-hero-poster.jpg') center / cover; }
+    .mb-fondo { background: #130d1c url('https://images.pexels.com/videos/12361112/cannabis-cannabis-cultivation-cannabis-flower-field-12361112.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200') center / cover; }
   }
 
   .mb-hero { margin: 0 0 34px; }
