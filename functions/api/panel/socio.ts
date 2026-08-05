@@ -26,8 +26,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const [socio, membresia, susc, envio, dispensas, movimientos, saldo] = await Promise.all([
     env.DB.prepare(`SELECT * FROM socios WHERE id = ? AND (numero IS NULL OR numero != -1)`).bind(id).first<Record<string, unknown>>(),
     env.DB.prepare(
-      `SELECT tier, modalidad, gramos_mes, desde FROM membresias WHERE socio_id = ? AND hasta IS NULL
-        ORDER BY desde DESC LIMIT 1`,
+      // Un plan prepago SIEMPRE tiene fecha de fin, así que pedir `hasta IS
+      // NULL` lo dejaba afuera: la ficha decía «sin membresía» aunque el socio
+      // hubiera pagado un plan de 12 meses. Gana el plan sobre la mensual,
+      // igual que en el cálculo del saldo.
+      `SELECT id, tier, modalidad, gramos_mes, desde, hasta FROM membresias
+        WHERE socio_id = ? AND (hasta IS NULL OR hasta >= date('now'))
+        ORDER BY modalidad = 'plan' DESC, desde DESC LIMIT 1`,
     ).bind(id).first(),
     env.DB.prepare(
       `SELECT id, estado, monto, racha_meses, fin, tier, origen, mp_payer_email FROM suscripciones
