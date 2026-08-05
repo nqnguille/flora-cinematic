@@ -189,7 +189,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       : ''
     const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
     const ofreceDebito = !!(p.debito && p.linkDebito)
-    const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo && ACTUAL.puede
+    // El botón se muestra siempre que la membresía tenga débito y el socio no
+    // esté ya adherido. El estado del REPROCANN dejó de esconderlo: la
+    // verificación pasó a ser un cartel DESPUÉS del clic. El servidor sigue
+    // siendo el que decide (adherir.ts revalida y devuelve 409 con el motivo),
+    // así que mostrarlo no habilita a nadie que no corresponda.
+    const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo
     const btn = puedeBoton
       ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>Suscribir con</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
       : ''
@@ -220,14 +225,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   function pintarPlanes() {
     document.getElementById('mb-grid').innerHTML = PLANES.map(tarjeta).join('')
     document.getElementById('mb-vacio').hidden = PLANES.length > 0
-    // Los beneficios solo tienen sentido para quien todavía puede adherirse.
-    const oculto = ACTUAL.debitoActivo || !ACTUAL.puede
+    // Las dos columnas se muestran siempre. Antes se escondían cuando el
+    // REPROCANN no estaba habilitado, junto con el botón: ahora que el botón
+    // está siempre, esconder la explicación de qué es el débito dejaría la
+    // pantalla mostrando precios sin decir de qué se trata. Es justo lo que
+    // pasaba en el TV del living, que no tiene ficha de padrón propia.
     const ben = document.getElementById('mb-beneficios')
-    if (ben) ben.hidden = oculto
-    // El ciclo se muestra igual a quien ya está adherido: le explica cómo
-    // funciona lo que ya tiene andando.
+    if (ben) ben.hidden = false
     const cic = document.getElementById('mb-ciclo')
-    if (cic) cic.hidden = !ACTUAL.puede && !ACTUAL.debitoActivo
+    if (cic) cic.hidden = false
   }
 
   function pintar(d) {
@@ -255,12 +261,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     if (ACTUAL.debitoActivo) {
       av.innerHTML = 'Ya tenés el débito automático activo. Para cambiar de membresía, escribinos.'
       av.hidden = false
-    } else if (!ACTUAL.puede) {
-      const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero adherirme al débito automático')
-      av.innerHTML = `<b>Para adherirte al débito automático, tu REPROCANN tiene que estar presentado.</b><br />`
-        + esc(ACTUAL.motivo || '')
-        + ` <a href="/socios/reprocann/">Ver mi trámite</a> · <a href="${wa}" target="_blank" rel="noopener">Escribinos</a>`
-      av.hidden = false
     } else { av.hidden = true }
 
     // La columna de letra chica se sacó de la página: lo legal vive ahora en
@@ -271,6 +271,39 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   // Un click: se registra la adhesión y se abre el checkout de Mercado Pago.
+  // Cartel de verificación: aparece cuando el socio aprieta y el servidor
+  // dice que todavía no puede. Reemplaza al aviso que antes salía ANTES, con
+  // el botón escondido: quien mira la pantalla del living ve la oferta
+  // completa, y el que la aprieta se entera de qué le falta.
+  function verificacion(motivo) {
+    const wa = 'https://wa.me/5492996375723?text=' + encodeURIComponent('Hola Flora, quiero adherirme al débito automático')
+    let ov = document.getElementById('mb-verif')
+    if (!ov) {
+      ov = document.createElement('div')
+      ov.id = 'mb-verif'
+      ov.className = 'mb-verif'
+      ov.innerHTML = `
+        <div class="mb-verif-card" role="dialog" aria-modal="true" aria-labelledby="mb-verif-t">
+          <span class="mb-verif-lb">Verificación</span>
+          <h2 class="mb-verif-t" id="mb-verif-t">Antes de suscribirte</h2>
+          <p class="mb-verif-txt"></p>
+          <div class="mb-verif-acc">
+            <a class="mb-chip mb-chip--pri" href="/socios/reprocann/">Ver mi trámite</a>
+            <a class="mb-chip" href="${wa}" target="_blank" rel="noopener noreferrer">Escribinos</a>
+            <button type="button" class="mb-chip" data-cerrar>Cerrar</button>
+          </div>
+        </div>`
+      document.getElementById('mb-content').appendChild(ov)
+      ov.addEventListener('click', (e) => {
+        if (e.target === ov || e.target.hasAttribute('data-cerrar')) ov.hidden = true
+      })
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ov.hidden = true })
+    }
+    ov.querySelector('.mb-verif-txt').textContent = motivo
+    ov.hidden = false
+    ov.querySelector('[data-cerrar]').focus()
+  }
+
   async function adherir(btn) {
     const tier = btn.dataset.tier
     btn.disabled = true
@@ -284,13 +317,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       })
       const d = await r.json().catch(() => ({}))
       if (r.ok && d.ok && d.link) { location.href = d.link; return }
-      const av = document.getElementById('mb-aviso')
-      av.textContent = d.error || 'No se pudo abrir la adhesión. Escribinos y lo resolvemos.'
-      av.hidden = false
+      // El servidor rechazó: se muestra su motivo como un cartel, no como un
+      // error suelto arriba de la página que en la TV nadie ve.
+      verificacion(d.error || 'No se pudo abrir la adhesión. Escribinos y lo resolvemos.')
     } catch {
-      const av = document.getElementById('mb-aviso')
-      av.textContent = 'No se pudo conectar. Probá de nuevo.'
-      av.hidden = false
+      verificacion('No se pudo conectar. Probá de nuevo.')
     }
     btn.disabled = false
     btn.textContent = original
@@ -513,6 +544,69 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      empareja las tres sin obligar a escribir raro en el panel. */
   .mb-item-d::first-letter { text-transform: uppercase; }
 
+  /* En teléfonos chicos, lo que sobra se saca: la etiqueta del precio la
+     repite el rótulo del bloque de abajo, y el chip vacío solo estaba para
+     alinear alturas que ahora alinea la grilla. */
+  @media (max-width: 400px) {
+    .mb-card { padding: 11px 9px; }
+    .mb-card-precio span { display: none; }
+    .mb-mia:empty { display: none; }
+    .mb-card-det { margin-bottom: 7px; }
+    .mb-gancho { margin-top: 8px; padding: 8px 7px 9px; }
+    .mb-adherir { margin-top: 8px; padding: 8px 8px; }
+    .mb-frascos { margin-bottom: 5px; }
+  }
+
+  /* Con dos columnas en un teléfono de 360 quedan ~155px por tarjeta: todo
+     lo que estaba pensado para una tarjeta de 220 tiene que achicarse o se
+     desborda. El botón es el que más apreta, por el ancho del logo. */
+  @media (max-width: 560px) {
+    .mb-card { padding: 14px 11px; border-radius: 14px; }
+    .mb-card-precio { font-size: clamp(20px, 6.4vw, 28px); }
+    .mb-card-precio span { font-size: 10.5px; }
+    .mb-card-nom { font-size: 12px; letter-spacing: .06em; }
+    .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
+    .mb-card-retiro { display: none; }
+    .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
+    .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
+    .mb-gancho-precio { font-size: 19px; }
+    .mb-gancho-ahorro, .mb-gancho-envio { font-size: 10.5px; }
+    .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; margin-top: 10px; max-width: 100%; }
+    .mb-adherir-mp { height: 11px; }
+    .mb-frasco { width: 15px; height: 21px; }
+    .mb-frascos { gap: 3px; margin-bottom: 6px; }
+    .mb-mia { font-size: 8.5px; padding: 3px 7px; margin-bottom: 5px; }
+  }
+
+  /* ── El cartel de verificación ── */
+  .mb-verif {
+    position: fixed; inset: 0; z-index: 80;
+    display: grid; place-items: center; padding: 20px;
+    background: rgba(10, 6, 16, .78); backdrop-filter: blur(6px);
+  }
+  .mb-verif[hidden] { display: none; }
+  .mb-verif-card {
+    width: min(560px, 100%);
+    background: rgba(14, 9, 21, .96);
+    border: 1px solid rgba(79, 199, 158, .34);
+    border-radius: 20px; padding: clamp(22px, 3vw, 34px);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .9);
+    text-align: left;
+  }
+  .mb-verif-lb {
+    display: block; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase; color: #4FC79E; margin-bottom: 8px;
+  }
+  .mb-verif-t {
+    font-family: var(--font-display); font-weight: 600; font-optical-sizing: auto;
+    font-size: clamp(24px, 3vw, 34px); line-height: 1.15; color: #f4f1f7; margin: 0 0 10px;
+  }
+  .mb-verif-txt {
+    margin: 0; font-family: var(--font-ui); font-size: clamp(14px, 1.6vw, 17px);
+    line-height: 1.55; color: rgba(244, 241, 247, .74);
+  }
+  .mb-verif-acc { display: flex; flex-wrap: wrap; gap: 10px; margin-top: clamp(16px, 2vw, 24px); }
+
   /* ── El sello legal ── */
   .mb-sello {
     display: grid; gap: 8px; margin-top: clamp(18px, 3vw, 28px);
@@ -565,12 +659,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      adorno. */
   .mb-frascos {
     display: flex; justify-content: center; align-items: flex-end;
-    gap: 4px; margin: 0 0 6px;
+    gap: 5px; margin: 0 0 8px;
   }
-  .mb-frasco { width: 14px; height: 20px; flex: none; color: #4FC79E; }
+  .mb-frasco { width: 19px; height: 27px; flex: none; color: #4FC79E; }
   /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
      los dos lo que hace que se lea lleno y no como un envase suelto. */
-  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; opacity: .7; }
+  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linejoin: round; opacity: .7; }
   .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
 
   .mb-gancho-envio {
@@ -600,8 +694,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
-    .mb-frasco { width: clamp(13px, 1.6vh, 19px); height: clamp(18px, 2.3vh, 27px); }
-    .mb-frascos { margin-bottom: clamp(4px, .7vh, 9px); gap: clamp(3px, .45vh, 6px); }
+    .mb-frasco { width: clamp(18px, 2.3vh, 28px); height: clamp(26px, 3.3vh, 40px); }
+    .mb-frascos { margin-bottom: clamp(6px, .9vh, 12px); gap: clamp(4px, .6vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
     .mb-mia { font-size: clamp(10px, 1.2vh, 14px); line-height: clamp(13px, 1.6vh, 18px);
       margin-bottom: clamp(4px, .6vh, 8px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
@@ -691,10 +785,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   .mb-grid {
     display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
-    /* Tope de 220px: con el padding del contenedor quedan 956px útiles, así
-       que cuatro tarjetas (4x220 + 3 de gap = 922) entran en una fila. Y el
-       tope evita que una sola se estire a lo ancho de la pantalla. */
-    grid-template-columns: repeat(auto-fit, minmax(170px, 220px));
+    /* Siempre dos columnas abajo de 1200px, sin importar el ancho del
+       teléfono: con auto-fit, un teléfono de 360 no llegaba al mínimo de
+       170px por tarjeta y se caía a una sola columna, o sea 2,6 pantallas de
+       scroll para ver los cuatro planes. Arriba de 1200 el bloque de TV lo
+       pisa con cuatro. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: center;
   }
   .mb-aviso {

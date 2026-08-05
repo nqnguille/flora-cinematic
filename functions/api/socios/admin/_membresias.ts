@@ -98,9 +98,16 @@ export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias
       // Sin lista no se guarda un array vacío por error: eso dejaría a TODOS
       // los socios sin poder adherirse, y es más probable que sea un bug del
       // formulario que una decisión.
-      estadosAdhesion: Array.isArray(e.estadosAdhesion)
-        ? (e.estadosAdhesion as unknown[]).filter((s): s is string => typeof s === 'string' && !!s.trim()).slice(0, 20)
-        : d.estadosAdhesion,
+      estadosAdhesion: (() => {
+        if (!Array.isArray(e.estadosAdhesion)) return d.estadosAdhesion;
+        const lista = (e.estadosAdhesion as unknown[])
+          .filter((s): s is string => typeof s === 'string' && !!s.trim())
+          .slice(0, 20);
+        // El comentario de arriba prometía esto pero el código no lo hacía: un
+        // array vacío pasaba el filtro y se guardaba, dejando a TODOS los
+        // socios sin poder adherirse. Ahora es verdad.
+        return lista.length ? lista : d.estadosAdhesion;
+      })(),
       etiquetaPrecio: txt(e.etiquetaPrecio, 40, d.etiquetaPrecio),
       etiquetaPrecio2: String(e.etiquetaPrecio2 ?? '').trim().slice(0, 40),
       notaTitulo: txt(e.notaTitulo, 60, d.notaTitulo),
