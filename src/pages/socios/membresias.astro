@@ -141,7 +141,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
              porque en la TV esto se lee a varios metros. -->
         <ul class="mb-items">
           <li class="mb-item">
-            <b class="mb-item-t">20% menos, por 3 meses</b>
+            <b class="mb-item-t" id="mb-dto-t">Menos, por 3 meses</b>
             <span class="mb-item-d">Ese precio queda fijo aunque suba la lista.</span>
           </li>
           <li class="mb-item">
@@ -180,9 +180,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // Un frasco por cada 10 g. El contorno solo se leía como envase vacío:
     // ahora lleva los cogollos adentro, en relleno, con el borde superior
     // festoneado. A 20px es lo único que se distingue de un frasco de aceite.
-    const FRASCO = `<svg class="mb-frasco" viewBox="0 0 16 22" aria-hidden="true">
-      <g class="mb-frasco-vidrio"><rect x="5.4" y="1" width="5.2" height="2.6" rx=".8"/><path d="M4 3.6h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/></g>
-      <g class="mb-frasco-flor"><circle cx="5.3" cy="13.2" r="1.9"/><circle cx="8" cy="12.4" r="2.1"/><circle cx="10.7" cy="13.2" r="1.9"/><rect x="3.4" y="13" width="9.2" height="5.8" rx="1.3"/></g>
+    const FRASCO = `<svg class="mb-frasco" viewBox="0 0 20 24" aria-hidden="true">
+      <g class="mb-frasco-vidrio">
+        <rect x="4.4" y="1.1" width="11.2" height="3.4" rx="1.2"/>
+        <path d="M5.4 4.5h9.2a2.9 2.9 0 0 1 2.9 2.9v12.7a2.9 2.9 0 0 1-2.9 2.9H5.4a2.9 2.9 0 0 1-2.9-2.9V7.4a2.9 2.9 0 0 1 2.9-2.9Z"/>
+      </g>
+      <g class="mb-frasco-flor"><circle cx="6.8" cy="14.4" r="2.3"/><circle cx="10" cy="13.3" r="2.6"/><circle cx="13.2" cy="14.4" r="2.3"/><rect x="4.3" y="14.1" width="11.4" height="7.2" rx="2"/></g>
     </svg>`
     const frascos = p.gramos
       ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
@@ -230,6 +233,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // está siempre, esconder la explicación de qué es el débito dejaría la
     // pantalla mostrando precios sin decir de qué se trata. Es justo lo que
     // pasaba en el TV del living, que no tiene ficha de padrón propia.
+    const dtos = PLANES
+      .filter((p) => p.contado && p.debito && p.debito < p.contado)
+      .map((p) => Math.round((1 - p.debito / p.contado) * 100))
+    const et = document.getElementById('mb-dto-t')
+    if (et && dtos.length) {
+      const max = Math.max(...dtos)
+      const parejo = dtos.every((d) => d === max)
+      et.textContent = `${parejo ? '' : 'Hasta '}${max}% menos, por 3 meses`
+    }
+
     const ben = document.getElementById('mb-beneficios')
     if (ben) ben.hidden = false
     const cic = document.getElementById('mb-ciclo')
@@ -284,9 +297,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       ov.className = 'mb-verif'
       ov.innerHTML = `
         <div class="mb-verif-card" role="dialog" aria-modal="true" aria-labelledby="mb-verif-t">
-          <span class="mb-verif-lb">Verificación</span>
-          <h2 class="mb-verif-t" id="mb-verif-t">Antes de suscribirte</h2>
-          <p class="mb-verif-txt"></p>
+          <div class="mb-verif-txt">
+            <span class="mb-verif-lb" id="mb-verif-t">Antes de suscribirte</span>
+            <p class="mb-verif-p"></p>
+          </div>
           <div class="mb-verif-acc">
             <a class="mb-chip mb-chip--pri" href="/socios/reprocann/">Ver mi trámite</a>
             <a class="mb-chip" href="${wa}" target="_blank" rel="noopener noreferrer">Escribinos</a>
@@ -299,7 +313,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       })
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ov.hidden = true })
     }
-    ov.querySelector('.mb-verif-txt').textContent = motivo
+    ov.querySelector('.mb-verif-p').textContent = motivo
     ov.hidden = false
     ov.querySelector('[data-cerrar]').focus()
   }
@@ -415,7 +429,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-card {
     background: rgba(14, 9, 21, 0.86);
     border: 1px solid rgba(183, 157, 230, 0.22);
-    border-radius: 18px; padding: 22px 20px; text-align: center;
+    border-radius: 18px; padding: 22px 20px; text-align: center; position: relative;
   }
   .mb-card-nom {
     font-family: var(--font-ui); font-size: 13px; font-weight: 700;
@@ -429,7 +443,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-card-precio {
     font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 4vw, 32px);
     color: #4FC79E; margin: 0; line-height: 1.1;
-    /* Newsreader trae eje óptico: a tamaño grande afina los remates sola. */
+    /* Source Serif 4 trae eje óptico: a tamaño grande afina los remates sola. */
     font-optical-sizing: auto;
   }
   .mb-card-precio span {
@@ -451,22 +465,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-card--mia { border-color: rgba(60, 180, 146, .55); background: rgba(14, 30, 26, .8); }
   /* El chip se renderiza SIEMPRE, vacío cuando no corresponde: así reserva el
      mismo alto en las cuatro tarjetas y no desalinea la marcada. */
+  /* La insignia se posa sobre la tarjeta en vez de ocupar un renglón. Antes
+     el chip VACÍO de las otras tres tarjetas seguía midiendo alto para que
+     todas alinearan, y ese era el aire de más que quedaba arriba de los
+     frascos. Con la insignia fuera del flujo, el problema se va solo. */
   .mb-mia {
-    display: inline-block; font-family: var(--font-ui); font-size: 10px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase; color: #4FC79E;
-    background: rgba(60, 180, 146, .14); border-radius: 999px;
-    /* line-height fijo para que el chip vacío mida exactamente lo mismo que el
-       que tiene texto: sin esto las tarjetas quedaban 8px desalineadas. */
-    padding: 4px 10px; margin-bottom: 10px; line-height: 13px; min-width: 1px;
+    position: absolute; top: 9px; right: 11px;
+    font-family: var(--font-ui); font-size: 9.5px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: #4FC79E;
+    background: rgba(60, 180, 146, .16); border: 1px solid rgba(79, 199, 158, .3);
+    border-radius: 999px; padding: 3px 9px; line-height: 1.2;
   }
-  /* Un inline-block VACÍO no genera caja de línea, así que medía 8px contra
-     los 21px del que tiene texto. El espacio de ancho cero le da esa caja
-     sin verse. */
-  .mb-mia:empty { background: none; }
-  .mb-mia:empty::before { content: "\200b"; }
-  /* El logo oficial de Mercado Pago está dibujado para fondo claro: sobre el
-     celeste de marca no se lee. Por eso el botón va blanco, que además es
-     como se ven los botones oficiales de "pagar con". */
+  .mb-mia:empty { display: none; }
+
   .mb-adherir {
     /* Se ajusta al texto en vez de ocupar todo el ancho: la tarjeta ya está
        centrada, así que inline-flex lo centra solo. */
@@ -486,7 +497,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      para que se lea como "esto es lo que pasa si te suscribís", separado del
      precio de referencia de arriba. */
   .mb-gancho {
-    margin: 16px -4px 0; padding: 13px 12px 14px;
+    margin: 16px 0 0; padding: 13px 12px 14px;
     background: rgba(0, 158, 227, .09);
     border: 1px solid rgba(0, 158, 227, .28);
     border-radius: 14px;
@@ -525,8 +536,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      Sin números ni viñetas en ninguna de las tres: título y su línea. Las tres
      eran tres cosas distintas (pasos numerados, puntos verdes, disc nativo con
      ::marker) y encima con dos verdes distintos. */
-  .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-  .mb-item { border-top: 1px solid rgba(183, 157, 230, .16); padding-top: 11px; }
+  .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+  .mb-item { padding-top: 0; }
   .mb-item-t {
     display: block; font-family: var(--font-ui);
     font-size: 15px; font-weight: 700; line-height: 1.25;
@@ -575,37 +586,43 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-adherir-mp { height: 11px; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
-    .mb-mia { font-size: 8.5px; padding: 3px 7px; margin-bottom: 5px; }
+    .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
   }
 
   /* ── El cartel de verificación ── */
+  /* Va al pie, no al medio: tapar la oferta con un cartel modal para decirle
+     al socio qué le falta es castigarlo por haber apretado. Abajo se ve, se
+     lee, y las tarjetas siguen a la vista. */
   .mb-verif {
-    position: fixed; inset: 0; z-index: 80;
-    display: grid; place-items: center; padding: 20px;
-    background: rgba(10, 6, 16, .78); backdrop-filter: blur(6px);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+    display: flex; justify-content: center; padding: clamp(12px, 2vw, 22px);
+    background: linear-gradient(to top, rgba(10, 6, 16, .96), rgba(10, 6, 16, .82));
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(79, 199, 158, .34);
+    animation: mb-verif-sube .28s ease both;
   }
+  @keyframes mb-verif-sube { from { transform: translateY(100%) } to { transform: none } }
+  @media (prefers-reduced-motion: reduce) { .mb-verif { animation: none } }
   .mb-verif[hidden] { display: none; }
   .mb-verif-card {
-    width: min(560px, 100%);
-    background: rgba(14, 9, 21, .96);
-    border: 1px solid rgba(79, 199, 158, .34);
-    border-radius: 20px; padding: clamp(22px, 3vw, 34px);
-    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .9);
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: clamp(10px, 1.6vw, 24px);
+    width: 100%; max-width: min(1560px, 94vw);
     text-align: left;
   }
   .mb-verif-lb {
     display: block; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
     letter-spacing: .16em; text-transform: uppercase; color: #4FC79E; margin-bottom: 8px;
   }
-  .mb-verif-t {
-    font-family: var(--font-display); font-weight: 600; font-optical-sizing: auto;
-    font-size: clamp(24px, 3vw, 34px); line-height: 1.15; color: #f4f1f7; margin: 0 0 10px;
+  .mb-verif-p {
+    margin: 0; font-family: var(--font-ui); font-size: clamp(13px, 1.4vw, 16px);
+    line-height: 1.5; color: rgba(244, 241, 247, .8);
   }
-  .mb-verif-txt {
-    margin: 0; font-family: var(--font-ui); font-size: clamp(14px, 1.6vw, 17px);
-    line-height: 1.55; color: rgba(244, 241, 247, .74);
-  }
-  .mb-verif-acc { display: flex; flex-wrap: wrap; gap: 10px; margin-top: clamp(16px, 2vw, 24px); }
+  /* El texto crece y empuja los accesos al extremo derecho. */
+  .mb-verif-txt { flex: 1 1 320px; }
+  .mb-verif-acc { display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
+  .mb-verif-lb { margin-bottom: 2px; }
+  .mb-verif-t { flex: 0 0 100%; }
 
   /* ── El sello legal ── */
   .mb-sello {
@@ -629,7 +646,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* En el encabezado se apoya a la derecha del título, en el hueco que dejó
        el selector de forma de pago. */
     .mb-primera .mb-hero-txt {
-      display: flex; align-items: flex-end; justify-content: space-between;
+      /* Alineados por ARRIBA. Con flex-end se alineaban por la base, y como el
+         sello mide el doble que el título, el H1 quedaba flotando contra su pie
+         con 108px de vacío encima: el agujero más grande de la pantalla. */
+      display: flex; align-items: flex-start; justify-content: space-between;
       gap: clamp(24px, 3vw, 60px);
     }
     .mb-primera .mb-hero-copy { flex: 1 1 auto; min-width: 0; }
@@ -644,10 +664,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   @media (min-width: 1200px) {
-    .mb-items { gap: clamp(6px, .95vh, 13px); }
+    .mb-items { gap: clamp(14px, 2.1vh, 28px); }
     .mb-item { padding-top: clamp(6px, .95vh, 13px); }
-    .mb-item-t { font-size: clamp(13px, 1.7vh, 19px); margin-bottom: 2px; }
-    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.4; }
+    .mb-item-t { font-size: clamp(14px, 1.85vh, 21px); margin-bottom: clamp(5px, .8vh, 11px); }
+    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.45; color: rgba(244, 241, 247, .55); }
   }
   /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
   .mb-card-retiro {
@@ -659,12 +679,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      adorno. */
   .mb-frascos {
     display: flex; justify-content: center; align-items: flex-end;
-    gap: 5px; margin: 0 0 8px;
+    gap: 5px; margin: 0 0 7px;
   }
-  .mb-frasco { width: 19px; height: 27px; flex: none; color: #4FC79E; }
+  .mb-frasco { width: 22px; height: 26px; flex: none; color: #4FC79E; }
   /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
      los dos lo que hace que se lea lleno y no como un envase suelto. */
-  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linejoin: round; opacity: .7; }
+  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
 
   .mb-gancho-envio {
@@ -679,26 +699,25 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   @media (min-width: 1200px) {
     /* El precio se queda grande: es lo único que se lee desde el sillón. Todo
        lo que lo rodea cede alto para que la página entre entera en 1080. */
-    .mb-card { padding: clamp(10px, 1.6vh, 20px) clamp(14px, 1.2vw, 22px); }
+    .mb-card { padding: clamp(10px, 1.45vh, 19px) clamp(14px, 1.2vw, 22px); }
     .mb-card-nom { font-size: clamp(14px, 1.95vh, 22px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
-    .mb-card-precio { font-size: clamp(30px, 4.1vh, 50px); line-height: 1.05; }
-    .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(2px, .3vh, 4px); }
+    .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
+    .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
     .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
-    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .45vh, 6px); }
+    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
     .mb-gancho { margin-top: clamp(8px, 1.3vh, 16px); padding: clamp(8px, 1.3vh, 14px) 14px clamp(9px, 1.4vh, 15px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
-    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(2px, .3vh, 4px); }
+    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .4vh, 6px); }
     .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
-    .mb-frasco { width: clamp(18px, 2.3vh, 28px); height: clamp(26px, 3.3vh, 40px); }
-    .mb-frascos { margin-bottom: clamp(6px, .9vh, 12px); gap: clamp(4px, .6vh, 8px); }
+    .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
+    .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
-    .mb-mia { font-size: clamp(10px, 1.2vh, 14px); line-height: clamp(13px, 1.6vh, 18px);
-      margin-bottom: clamp(4px, .6vh, 8px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
+    .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
   }
 </style>
 
@@ -812,7 +831,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Los accesos viven arriba, al lado de Cerrar sesión: son navegación, no el
      cierre de la lectura. Antes colgaban del final de la tercera columna, que
      los dejaba a merced de cuánto texto tuviera esa columna. */
-  .mb-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .mb-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-left: auto; }
   /* Un solo chip para los cuatro accesos del encabezado. Antes "Mi cuenta" era
      un link pelado, "Cerrar sesión" un chip de tienda.css y los dos CTA otro
      chip más chico: cuatro cosas del mismo rango con tres formas distintas.
@@ -864,7 +883,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        otra relación de aspecto, el bloque se comprime en vez de empujar el
        contenido fuera de pantalla. */
     .mb-primera {
-      min-height: calc(100dvh - 120px);
+      min-height: calc(100dvh - 76px);
       display: flex; flex-direction: column; justify-content: center;
     }
     /* Sin esto, en una pantalla más baja que 1080 (un TV con barra de
@@ -886,8 +905,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
-    .mb-primera .mb-hero { margin-bottom: clamp(6px, .9vh, 12px); padding: clamp(10px, 1.6vh, 22px) 32px; }
-    .mb-primera .mb-title { font-size: clamp(28px, 4.2vh, 50px); margin-bottom: 2px; }
+    .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(8px, 1.3vh, 18px) 0; }
+    .mb-primera .mb-title { font-size: clamp(28px, 4.2vh, 50px); margin-bottom: clamp(4px, .6vh, 9px); }
     .mb-primera .mb-lead { font-size: clamp(12px, 1.4vh, 16px); line-height: 1.45; max-width: 92ch; margin-top: clamp(4px, .7vh, 8px); }
     .mb-primera .mb-eyebrow { font-size: clamp(10px, 1.1vh, 12px); margin-bottom: clamp(3px, .5vh, 6px); }
 
@@ -921,9 +940,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       grid-template-rows: auto repeat(3, auto);
       align-items: start;
       gap: clamp(26px, 2.8vw, 54px);
-      margin-top: clamp(6px, .8vh, 12px);
-      padding-top: clamp(6px, .8vh, 12px);
-      border-top: 1px solid rgba(183, 157, 230, .16);
+      margin-top: clamp(14px, 2.1vh, 30px);
+      padding-top: 0;
       text-align: left;
     }
     /* Los encabezados de sección nacieron centrados y con ancho máximo para
@@ -937,17 +955,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     @supports (grid-template-rows: subgrid) {
       .mb-primera .mb-cierre > * {
         display: grid; grid-row: span 4; grid-template-rows: subgrid;
-        row-gap: 0;
       }
       .mb-primera .mb-cierre .mb-items {
         display: grid; grid-row: span 3; grid-template-rows: subgrid;
-        row-gap: 0; gap: 0;
+        /* SIN row-gap propio: un subgrid hereda el del padre, y ponerlo en 0
+           dejaba los ítems literalmente pegados. El aire entre renglones lo
+           pone .mb-cierre una sola vez, para las dos columnas a la vez. */
       }
       /* Con los renglones compartidos, el aire entre ítems lo pone la grilla
          de arriba una sola vez, no cada columna por su cuenta. */
-      .mb-primera .mb-cierre { row-gap: clamp(6px, .95vh, 13px); }
-      .mb-primera .mb-cierre .mb-item { padding-top: clamp(6px, .95vh, 13px); }
-      .mb-primera .mb-cierre .mb-sec-head { margin-bottom: 0; }
+      /* Con subgrid, el aire entre ítems lo pone ESTE row-gap, no el gap de
+         .mb-items. Estaba en 10px contra los 9px que separan el título de su
+         línea: el ojo agrupaba al revés, cada título con el texto del ítem de
+         arriba. Tiene que ser claramente mayor. */
+      .mb-primera .mb-cierre { row-gap: clamp(16px, 2.4vh, 34px); }
+      .mb-primera .mb-cierre .mb-item { padding-top: 0; }
+      .mb-primera .mb-cierre .mb-sec-head { margin-bottom: clamp(6px, 1vh, 14px); }
     }
 
     /* Los pasos van uno debajo del otro: en una columna angosta, en fila

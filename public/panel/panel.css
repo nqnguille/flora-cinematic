@@ -9,7 +9,7 @@
    plata que entra; el ámbar es SOLO deuda/atención; el violeta es
    la marca y la navegación. Nunca mezclarlos de rol.
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400..700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
   --bg: #f5f4f8;
@@ -32,7 +32,7 @@
   --sombra: 0 1px 3px rgba(36, 24, 51, .06);
   --sombra-hover: 0 4px 14px rgba(36, 24, 51, .10);
   --ease: cubic-bezier(.22, .9, .26, 1);
-  --font-display: 'Newsreader', Georgia, serif;
+  --font-display: 'Source Serif 4', Georgia, serif;
   --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
 }
 
