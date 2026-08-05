@@ -143,7 +143,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // libre: es lo que después dice de quién depende cada socio.
   const PASOS_ALTA = ['esperando_codigo', 'codigo_listo', 'cargado', 'en_evaluacion', 'aprobado', 'autocultivo'];
   const rcEstado = PASOS_ALTA.includes(String(b.reprocann_estado)) ? String(b.reprocann_estado) : 'esperando_codigo';
-  const rcCodigo = String(b.reprocann_codigo || '').trim().toUpperCase().replace(/\s/g, '') || null;
+  // sensible a mayúsculas: los códigos reales son mixtos (KK9Gwzv454839)
+  const rcCodigo = String(b.reprocann_codigo || '').trim().replace(/\s/g, '') || null;
   const rcVence = String(b.reprocann_vence || '').slice(0, 10) || null;
   const nota = String(b.nota || '').trim().slice(0, 400) || null;
   const tier = String(b.tier || 'NINGUNA');

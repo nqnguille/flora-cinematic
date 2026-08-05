@@ -121,19 +121,26 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 
   const campos: string[] = [];
   const vals: (string | number | null)[] = [];
-  if ('estado' in b) {
-    const e = String(b.estado);
-    if (!IDS.has(e)) return json({ error: 'Paso inválido' }, 400);
-    campos.push('reprocann_estado = ?'); vals.push(e);
+
+  // El código lo genera el paciente en Mi Argentina y es SENSIBLE A MAYÚSCULAS
+  // (`KK9Gwzv454839`). Antes acá se pasaba a mayúsculas y abrir la ficha de un
+  // socio y apretar Guardar le rompía el código.
+  const codigo = 'codigo' in b ? (String(b.codigo || '').trim().replace(/\s/g, '') || null) : undefined;
+  if (codigo !== undefined) {
+    if (codigo && codigo.length !== 13) return json({ error: 'El código de vinculación tiene 13 caracteres' }, 400);
+    campos.push('reprocann_codigo = ?'); vals.push(codigo);
   }
-  if ('codigo' in b) {
-    const c = String(b.codigo || '').trim().toUpperCase().replace(/\s/g, '') || null;
-    // El código lo genera el paciente en Mi Argentina: son 13 caracteres.
-    if (c && c.length !== 13) return json({ error: 'El código de vinculación tiene 13 caracteres' }, 400);
-    campos.push('reprocann_codigo = ?'); vals.push(c);
-    // cargar el código es, en los hechos, avanzar de paso
-    if (c && !('estado' in b)) { campos.push('reprocann_estado = ?'); vals.push('codigo_listo'); }
-  }
+
+  // Tener el código ES haber pasado de paso: mientras no estaba, el trámite
+  // esperaba justamente eso. Antes el avance automático existía pero nunca
+  // corría, porque la ficha manda siempre el paso del selector y eso lo
+  // desactivaba. Ahora se aplica salvo que el paso elegido sea uno más
+  // avanzado, para no hacer retroceder a nadie.
+  const ANTES_DEL_CODIGO = ['sin_iniciar', 'esperando_codigo', 'revisar'];
+  let estado = 'estado' in b ? String(b.estado) : null;
+  if (estado !== null && !IDS.has(estado)) return json({ error: 'Paso inválido' }, 400);
+  if (codigo && (estado === null || ANTES_DEL_CODIGO.includes(estado))) estado = 'codigo_listo';
+  if (estado !== null) { campos.push('reprocann_estado = ?'); vals.push(estado); }
   if ('tramite' in b) {
     const t = b.tramite ? Number(b.tramite) : null;
     if (t !== null && !Number.isFinite(t)) return json({ error: 'Nº de trámite inválido' }, 400);
@@ -156,9 +163,20 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 // La sync de un socio ya vinculado: el portal es la autoridad sobre el estado
 // del trámite. Pisa el paso del embudo, completa vencimiento/plantas/documento
 // sin destruir nada cargado a mano.
+// Pasos que el portal NO conoce y no puede corregir: son papeleo interno del
+// club. Mientras alguien está convirtiendo a un autocultivador, el Ministerio
+// lo sigue mostrando como `Aprobado` con autocultivo, así que el volcado lo
+// devolvía a `autocultivo` y borraba el trabajo en curso — justo el de las
+// personas que alguien está atendiendo, y encima un estado que no se puede
+// reconstruir mirando el portal (el papel firmado está en un cajón, no ahí).
+const SOLO_DEL_CLUB = new Set(['ddjj_pendiente', 'ddjj_firmada']);
+
 async function sincronizarSocio(env: Env, socioId: number, per: TramitePortal, hoy: string): Promise<boolean> {
   const paso = pasoDe(per, hoy);
   if (!paso) return false;
+  const actual = await env.DB.prepare(`SELECT reprocann_estado FROM socios WHERE id = ?`)
+    .bind(socioId).first<{ reprocann_estado: string }>();
+  if (actual && SOLO_DEL_CLUB.has(actual.reprocann_estado)) return false;
   // El DNI OFICIAL del portal manda (decisión 01/08): pisa lo cargado a mano
   // — que a veces era un teléfono. El dato viejo queda en la nota por las
   // dudas. Única excepción: si ese DNI ya es de otro socio (índice único),
@@ -199,9 +217,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   const esAgente = vista0 === 'sincronizar' && env.AGENTE_TOKEN
     && cab.startsWith('Bearer ') && cab.slice(7).trim() === env.AGENTE_TOKEN;
 
+  // `auth` tiene que vivir FUERA del if: más abajo se usa `auth.email` para
+  // firmar quién confirmó cada vínculo. Declararlo adentro del bloque lo dejaba
+  // sin alcance y reventaba con 500 en cuanto el volcado encontraba un DNI que
+  // matchea por documento.
+  let quienFirma = 'agente';
   if (!esAgente) {
     const auth = await requireCap(request, env, 'reprocann_editar');
     if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
+    quienFirma = auth.email;
   }
   const vista = vista0;
   const hoy = new Date().toISOString().slice(0, 10);
@@ -253,7 +277,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
         await env.DB.prepare(
           `INSERT OR IGNORE INTO vinculos_reprocann (socio_id, dni, estado, senales, decidido_por, decidido)
            VALUES (?, ?, 'confirmado', ?, ?, datetime('now'))`,
-        ).bind(socioId, p.dni, JSON.stringify({ match: ['dni'], conflictos: [], puntaje: 100 }), auth.email).run();
+        ).bind(socioId, p.dni, JSON.stringify({ match: ['dni'], conflictos: [], puntaje: 100 }), quienFirma).run();
       }
     }
 
@@ -289,7 +313,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
         await env.DB.prepare(
           `UPDATE vinculos_reprocann SET estado = 'rechazado', decidido_por = ?, decidido = datetime('now')
             WHERE socio_id = ? AND dni = ? AND estado = 'pendiente'`,
-        ).bind(auth.email, sid, dni).run();
+        ).bind(quienFirma, sid, dni).run();
       }
       return json({ ok: true, rechazados: b.rechazar_socio_ids.length });
     }
@@ -301,7 +325,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       await env.DB.prepare(
         `UPDATE vinculos_reprocann SET estado = 'rechazado', decidido_por = ?, decidido = datetime('now')
           WHERE socio_id = ? AND dni = ?`,
-      ).bind(auth.email, socioId, dni).run();
+      ).bind(quienFirma, socioId, dni).run();
       return json({ ok: true, rechazado: true });
     }
 
@@ -329,7 +353,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       `INSERT INTO vinculos_reprocann (socio_id, dni, estado, senales, decidido_por, decidido)
        VALUES (?, ?, 'confirmado', COALESCE(?, '{}'), ?, datetime('now'))
        ON CONFLICT(socio_id, dni) DO UPDATE SET estado = 'confirmado', decidido_por = excluded.decidido_por, decidido = datetime('now')`,
-    ).bind(socioId, dni, pendiente?.senales || null, auth.email).run();
+    ).bind(socioId, dni, pendiente?.senales || null, quienFirma).run();
 
     // el COALESCE de documento nunca pisa un DNI ya cargado; y si el DNI del
     // portal ya es de OTRO socio (índice único), no se copia y se avisa

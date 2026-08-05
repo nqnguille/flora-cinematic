@@ -656,12 +656,12 @@
         if (e === 'codigo_listo' || e === 'cargado' || e === 'en_evaluacion') {
           box.innerHTML = `<label class="lb" for="al-cod">Código de vinculación</label>
             <input class="input" id="al-cod" maxlength="13" value="${P.esc(datos.reprocann_codigo)}"
-              placeholder="13 caracteres, se lo da su cuenta de Mi Argentina" style="letter-spacing:.08em;text-transform:uppercase" />
+              placeholder="13 caracteres, se lo da su cuenta de Mi Argentina" style="letter-spacing:.08em" />
             <p class="so-help" style="margin:6px 0 0">Si todavía no te lo pasó, dejalo vacío: al terminar te damos el link para pedírselo.</p>`
         } else if (e === 'aprobado') {
           box.innerHTML = `<div class="grid2">
             <div><label class="lb" for="al-cod">Código de vinculación</label>
-              <input class="input" id="al-cod" maxlength="13" value="${P.esc(datos.reprocann_codigo)}" placeholder="opcional" style="letter-spacing:.08em;text-transform:uppercase" /></div>
+              <input class="input" id="al-cod" maxlength="13" value="${P.esc(datos.reprocann_codigo)}" placeholder="opcional" style="letter-spacing:.08em" /></div>
             <div><label class="lb" for="al-vence">Vence</label>
               <input class="input" id="al-vence" type="date" value="${P.esc(datos.reprocann_vence)}" /></div>
           </div>`
@@ -714,7 +714,7 @@
         datos.documento = cuerpo.querySelector('#al-dni').value.replace(/\D/g, '')
         datos.reprocann_estado = inputRepro.value
         const campoCod = cuerpo.querySelector('#al-cod')
-        datos.reprocann_codigo = campoCod ? campoCod.value.trim().toUpperCase() : ''
+        datos.reprocann_codigo = campoCod ? campoCod.value.trim() : ''
         const campoVence = cuerpo.querySelector('#al-vence')
         datos.reprocann_vence = campoVence ? campoVence.value : ''
         // datos de la declaración jurada (solo existen si eligió autocultivo)
