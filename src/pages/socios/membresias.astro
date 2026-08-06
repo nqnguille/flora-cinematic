@@ -458,18 +458,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-ui); font-size: 12px;
     color: rgba(244, 241, 247, 0.45); margin-top: 4px;
   }
-  .mb-card-alt {
-    margin: 12px 0 0; padding-top: 10px;
-    border-top: 1px solid rgba(183, 157, 230, 0.16);
-  }
-  .mb-card-alt b {
-    display: block; font-family: var(--font-display); font-weight: 400;
-    font-size: 20px; color: rgba(244, 241, 247, 0.9); line-height: 1.15;
-  }
-  .mb-card-alt span {
-    display: block; font-family: var(--font-ui); font-size: 11.5px;
-    color: rgba(244, 241, 247, 0.45); margin-top: 3px;
-  }
   .mb-card--mia { border-color: rgba(60, 180, 146, .55); background: rgba(14, 30, 26, .8); }
   /* El chip se renderiza SIEMPRE, vacío cuando no corresponde: así reserva el
      mismo alto en las cuatro tarjetas y no desalinea la marcada. */
@@ -523,16 +511,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(244, 241, 247, .55); margin-top: 3px;
   }
   .mb-gancho .mb-adherir { margin-top: 11px; }
-  .mb-card-gramo {
-    font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, .42); margin: 6px 0 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .mb-card-comp {
-    font-family: var(--font-ui); font-size: 12.5px;
-    color: rgba(244, 241, 247, .5); margin: 11px 0 0;
-  }
-  .mb-card-comp b { color: rgba(244, 241, 247, .78); font-weight: 700; }
 
   /* ── LA BANDA DE CIERRE: un solo sistema para las tres columnas ──
      Vive acá y no en el bloque con alcance porque los ítems de la tercera
@@ -544,7 +522,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      Sin números ni viñetas en ninguna de las tres: título y su línea. Las tres
      eran tres cosas distintas (pasos numerados, puntos verdes, disc nativo con
      ::marker) y encima con dos verdes distintos. */
-  .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+  .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--mb-v3); }
   .mb-item { padding-top: 0; }
   .mb-item-t {
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
@@ -577,7 +555,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
     .mb-gancho-precio { font-size: 19px; }
     .mb-gancho-ahorro, .mb-gancho-envio { font-size: 10.5px; }
-    .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; margin-top: 10px; max-width: 100%; }
+    .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
     .mb-adherir-mp { height: 11px; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
@@ -595,7 +573,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   @media (max-width: 400px) {
     .mb-card { padding: 11px 9px; }
     .mb-card-precio span { display: none; }
-    .mb-mia:empty { display: none; }
     .mb-card-det { margin-bottom: 7px; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
     .mb-frascos { gap: 2px; margin-bottom: 5px; }
@@ -619,7 +596,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      de las mismas medidas que el contenido en vez de tener las suyas. Con las
      propias arrancaba en x=180 mientras el contenido arrancaba en 132: 48px de
      desfase contra todo lo demás. */
-  #mb-content { --mb-ancho: 1020px; --mb-pad: clamp(18px, 3vw, 32px); }
+  #mb-content {
+    --mb-ancho: 1020px;
+    --mb-pad: clamp(18px, 3vw, 32px);
+    /* Cuatro escalones con la MISMA pendiente por vw. Antes convivían px fijos
+       (34, 22, 14) con clamps, y en un teléfono de 360 el px fijo terminaba
+       más grande que el clamp de al lado: el hueco entre ítems (22) superaba
+       al que separa el h2 de su lista (16,2), o sea la jerarquía al revés. */
+    --mb-v1: clamp(8px,  2.4vw, 14px);   /* adentro de un bloque   */
+    --mb-v2: clamp(14px, 4.2vw, 24px);   /* entre piezas hermanas  */
+    --mb-v3: clamp(22px, 6.4vw, 36px);   /* entre grupos           */
+    --mb-v4: clamp(34px, 10vw,  60px);   /* entre secciones        */
+  }
   .mb-verif {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
     display: flex; justify-content: center;
@@ -640,7 +628,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-verif-lb {
     display: block; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
-    letter-spacing: .16em; text-transform: uppercase; color: #4FC79E; margin-bottom: 8px;
+    letter-spacing: .16em; text-transform: uppercase; color: #4FC79E; margin-bottom: 2px;
   }
   .mb-verif-p {
     margin: 0; font-family: var(--font-ui); font-size: clamp(13px, 1.4vw, 16px);
@@ -649,12 +637,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* El texto crece y empuja los accesos al extremo derecho. */
   .mb-verif-txt { flex: 1 1 320px; }
   .mb-verif-acc { display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
-  .mb-verif-lb { margin-bottom: 2px; }
-  .mb-verif-t { flex: 0 0 100%; }
 
   /* ── El sello legal ── */
   .mb-sello {
-    display: grid; gap: 8px; margin-top: clamp(18px, 3vw, 28px);
+    display: grid; gap: 8px; margin-top: var(--mb-v2);
     padding: clamp(14px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
     border: 1px solid rgba(79, 199, 158, .34);
     border-radius: 16px;
@@ -668,7 +654,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     margin: 0; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
     color: rgba(244, 241, 247, .72); text-wrap: pretty;
   }
-  .mb-sello-txt strong { color: #f4f1f7; font-weight: 700; }
 
   @media (min-width: 1200px) {
     /* En el encabezado se apoya a la derecha del título, en el hueco que dejó
@@ -744,15 +729,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
-    .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
-    .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
     .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
     .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
     .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
-    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
+    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
     .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
@@ -784,7 +767,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-fondo { background: #130d1c url('https://images.pexels.com/videos/12361112/cannabis-cannabis-cultivation-cannabis-flower-field-12361112.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200') center / cover; }
   }
 
-  .mb-hero { margin: 0 0 34px; position: relative; }
+  .mb-hero { margin: 0 0 var(--mb-v4); position: relative; }
   /* Cama oscura detras del encabezado: sin esto el texto cae sobre el video y
      el contraste no llega al minimo legible. Se difumina en los cuatro lados
      (el degrade horizontal apaga izquierda y derecha, la mascara vertical apaga
@@ -821,16 +804,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* En el celular el selector va debajo del texto; en pantalla grande comparten
      renglón (regla más abajo, en el bloque de TV). */
 
-  .mb-head { max-width: 720px; margin: 0 auto; padding: 8px 0 28px; text-align: center; }
   .mb-eyebrow {
     display: inline-block; font-family: var(--font-ui);
     font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-    color: #4FC79E; margin-bottom: 12px;
+    color: #4FC79E; margin-bottom: var(--mb-v1);
   }
   .mb-title {
     font-family: var(--font-display); font-weight: 600; font-optical-sizing: auto;
     font-size: clamp(28px, 5.4vw, 42px); line-height: 1.15;
-    color: #f4f1f7; margin: 0 0 14px; text-wrap: balance;
+    color: #f4f1f7; margin: 0 0 var(--mb-v2); text-wrap: balance;
   }
   .mb-title em { font-style: italic; color: #4FC79E; }
   /* Sobre una foto, un párrafo al 66% de opacidad se pierde entre las hojas.
@@ -844,7 +826,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      sitio: 0 2px 28px para títulos, 0 1px 16px para párrafos. Ahora que el
      video es el fondo de todo, esto vale para toda la página, no solo el hero. */
   .mb-title { text-shadow: 0 2px 28px rgba(0, 0, 0, .6); }
-  .mb-lead, .mb-h2, .mb-eyebrow-v { text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 1px 18px rgba(0, 0, 0, .75); }
+  .mb-lead, .mb-h2 { text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 1px 18px rgba(0, 0, 0, .75); }
 
   /* Encabezado de sección interna, con el gesto tipográfico del sitio: el
      título partido y la segunda mitad en verde. */
@@ -852,12 +834,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      que la de arriba. El margin auto importa: sin él la caja de 720px se
      apoyaba a la izquierda y el texto se centraba dentro de ELLA, no dentro de
      la columna, así que en tablet quedaba corrido a la izquierda. */
-  .mb-sec-head { max-width: 720px; margin: 0 auto clamp(16px, 4.5vw, 24px); text-align: center; }
-  .mb-eyebrow-v {
-    display: inline-block; font-family: var(--font-ui);
-    font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-    color: #4FC79E; margin-bottom: 14px;
-  }
+  .mb-sec-head { max-width: 720px; margin: 0 auto var(--mb-v2); text-align: center; }
   /* Serif, como el título del hero y como todo el portal de socios. En la home
      los títulos son sans 800, pero acá adentro la voz es la otra. */
   .mb-h2 {
@@ -865,7 +842,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: clamp(27px, 3.8vw, 42px); line-height: 1.12;
     color: #fff; margin: 0; text-wrap: balance;
   }
-  .mb-h2 em { font-style: italic; color: #4FC79E; }
 
   /* ── Cierre: apilado en el celular, tres columnas en pantalla grande ── */
   /* El margin-top no vivía acá sino solo en el bloque de TV, así que en el
@@ -873,7 +849,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      .mb-grid no trae margen abajo y el gap de esta grilla separa a las dos
      secciones entre sí, no a la banda de lo que tiene arriba. */
   .mb-cierre {
-    display: grid; gap: clamp(40px, 11vw, 64px); margin-top: clamp(36px, 10vw, 60px);
+    display: grid; gap: var(--mb-v4); margin-top: var(--mb-v4);
     /* Centrado por herencia y no ítem por ítem: los <li> los escribe el JS y no
        llevan el atributo de alcance de Astro, así que una regla sobre .mb-item
        desde acá no los tocaría. text-align sí baja solo. */
@@ -891,17 +867,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      del @media de TV de más abajo, y la llave sobrante desbalanceaba la hoja. */
 
   .mb-grid {
-    display: grid; gap: 14px; max-width: 1020px; margin: 0 auto;
+    display: grid; gap: var(--mb-v2); margin: 0 auto;
     /* Siempre dos columnas abajo de 1200px, sin importar el ancho del
        teléfono: con auto-fit, un teléfono de 360 no llegaba al mínimo de
        170px por tarjeta y se caía a una sola columna, o sea 2,6 pantallas de
        scroll para ver los cuatro planes. Arriba de 1200 el bloque de TV lo
        pisa con cuatro. */
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: center;
   }
   .mb-aviso {
-    max-width: 620px; margin: 0 auto 22px; text-align: center;
+    max-width: 620px; margin: 0 auto var(--mb-v3); text-align: center;
     font-family: var(--font-ui); font-size: 13.5px; line-height: 1.6;
     color: rgba(244, 241, 247, 0.72);
     background: rgba(255, 255, 255, .04); border: 1px solid rgba(183, 157, 230, .18);
@@ -911,7 +886,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-aviso :global(a) { color: #4FC79E; font-weight: 700; text-underline-offset: 3px; }
   .mb-vacio {
     text-align: center; font-family: var(--font-ui); font-size: 14px;
-    color: rgba(244, 241, 247, 0.5); margin: 0 0 24px;
+    color: rgba(244, 241, 247, 0.5); margin: 0 0 var(--mb-v3);
   }
 
   /* Los accesos viven arriba, al lado de Cerrar sesión: son navegación, no el
@@ -959,7 +934,28 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      30-34px que separan todo lo demás: la volanta quedaba colgada del botón
      "Mi cuenta" como si fuera parte de la barra. En la TV no se nota porque el
      bloque va centrado a lo alto, pero en el celular sí. */
-  #mb-content .td-head { margin-bottom: clamp(24px, 7vw, 32px); }
+  #mb-content .td-head { margin-bottom: var(--mb-v3); }
+
+  /* tienda.css cierra con 140px abajo, reservados para la barra flotante de la
+     tienda (.td-bar), que en esta página no existe: en un teléfono son media
+     pantalla de nada después del último ítem. El id le gana a .td-content sin
+     importar el orden de carga, y /socios/cuenta y /socios/reprocann conservan
+     los suyos. */
+  #mb-content.td-content { padding-bottom: clamp(28px, 8vw, 56px); }
+
+  /* LA BARRA DE ARRIBA, EN EL CELULAR.
+     Los dos accesos largos ("Ver la carta de genéticas" y "Consultar por
+     WhatsApp") suman 269px de puro texto: el trío no entra en un renglón
+     abajo de 408px de pantalla, hagas lo que hagas con el padding. Así que el
+     grupo baja SIEMPRE a su propia fila en vez de pelear por meterse arriba.
+     Centrado y no pegado a la izquierda: con flex-start la fila corta dejaba
+     161px de sobra a la derecha y el borde se veía dentado.
+     Medido: de 4 renglones y 214px de alto en un 320, a 3 renglones y 110. */
+  @media (max-width: 560px) {
+    #mb-content :global(.mb-chip) { font-size: 12px; padding: 8px 12px; }
+    #mb-content .td-head { gap: 12px; }
+    .mb-acciones { flex: 1 0 100%; margin-left: 0; justify-content: center; gap: 8px; }
+  }
 
   /* ══ LA PANTALLA DE LA TV ══
      De 1200px para arriba la primera pantalla se compone para mirarse de
@@ -1069,8 +1065,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
          abajo) y el título se leía como pie de las tarjetas. */
       row-gap: clamp(13px, 1.8vh, 26px);
       margin-top: clamp(26px, 3.9vh, 52px);
-      padding-top: 0;
-      text-align: center;
     }
     /* Dos columnas de tarjeta cada una, sin padding lateral: centrado, el eje
        de cada columna tiene que ser el centro real de sus dos tarjetas. Con un
@@ -1080,9 +1074,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        cuando cada uno era una sección de página entera. En columna van al ras
        de su texto. */
     .mb-primera .mb-cierre .mb-sec-head {
-      max-width: none; margin: 0; text-align: center;
+      max-width: none; margin: 0;
     }
-    .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(10px, 1.2vh, 13px); margin-bottom: clamp(3px, .5vh, 7px); }
     .mb-primera .mb-cierre .mb-h2 { font-size: clamp(22px, 2.9vh, 38px); }
     @supports (grid-template-rows: subgrid) {
       /* De la primera a la última línea de renglón, sin contar a mano: así el
