@@ -143,6 +143,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // El contado arranca seleccionado: es el precio de referencia. El descuento
   // no es "otro precio", es lo que se desbloquea al suscribirse al débito.
 
+  // "EXTRA LARGE" no entra a 40px sin partirse en dos renglones, y partido deja
+  // de leerse como un nombre. Se abrevia SOLO acá, en lo que se ve: el string
+  // "EXTRA LARGE" es la clave de negocio del tier (viaja por precios,
+  // membresias, suscripciones y envios_debito en D1, y el webhook de Mercado
+  // Pago lo compara por igualdad), así que renombrarlo de verdad sería una
+  // migración de cuatro tablas. El repo ya hace esto mismo en los mails, con
+  // tierLindo() en functions/api/panel/mp.
+  const NOMBRE_CORTO = { 'EXTRA LARGE': 'XL' }
+
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
     // Un frasco por cada 10 g. El contorno solo se leía como envase vacío:
@@ -155,10 +164,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </g>
       <g class="mb-frasco-flor"><circle cx="6.8" cy="14.4" r="2.3"/><circle cx="10" cy="13.3" r="2.6"/><circle cx="13.2" cy="14.4" r="2.3"/><rect x="4.3" y="14.1" width="11.4" height="7.2" rx="2"/></g>
     </svg>`
+    // Los gramos van al lado de los frascos, no en un renglón propio: los
+    // frascos YA dicen la cantidad, y dicha dos veces se llevaba 36px de alto
+    // que ahora usan el nombre y los frascos grandes. Ojo: el <p> no puede ser
+    // aria-hidden, porque adentro está el único lugar donde el número de gramos
+    // existe como texto. Los aria-hidden van en cada <svg>, que sí es adorno.
     const frascos = p.gramos
-      ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
+      ? `<p class="mb-frascos">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}<span class="mb-gramos"><b>${p.gramos} g</b><i>por mes</i></span></p>`
       : ''
-    const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
     const ofreceDebito = !!(p.debito && p.linkDebito)
     // El botón se muestra siempre que la membresía tenga débito y el socio no
     // esté ya adherido. El estado del REPROCANN dejó de esconderlo: la
@@ -173,22 +186,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // El precio de referencia arriba, y el débito abajo como el beneficio que
     // se desbloquea, con su propio bloque. Antes había un selector que cambiaba
     // entre dos vistas; mostrar las dos juntas es lo que hace visible el salto.
+    // El ahorro dejó de ser un renglón gris debajo del precio y pasó a ser una
+    // franja diagonal en la esquina del bloque: es la única promesa de plata de
+    // toda la tarjeta y estaba escrita más chica que la letra chica. De paso no
+    // ocupa alto, porque va posicionada fuera del flujo.
+    const cinta = p.contado
+      ? `<span class="mb-cinta"><span>${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span></span>`
+      : ''
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
+          ${cinta}
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
-          ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
-          ${TX.envio ? `<span class="mb-gancho-envio">${esc(TX.envio)}</span>` : ''}
           ${btn}
         </div>`
       : ''
+    // Fuera de la tarjeta quedaron dos renglones que decían lo mismo que la
+    // banda de abajo: el envío sin cargo tiene su propio ícono ahí, repetirlo
+    // cuatro veces era ruido. El nombre y el precio pasan a pesar parecido y a
+    // distinguirse por color (crema el nombre, verde el precio): a tres metros
+    // el tamaño ya no alcanza para jerarquizar, el color sí.
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
       <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? esc(TX.insigniaMia || 'Tu membresía') : ''}</span>
       ${frascos}
-      <h3 class="mb-card-nom">${esc(p.item)}</h3>
-      ${detalle}
+      <h3 class="mb-card-nom">${esc(NOMBRE_CORTO[p.item] || p.item)}</h3>
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(TX.etiquetaPrecio || 'Contado o transferencia')}</span></p>
-      ${TX.retiro ? `<p class="mb-card-retiro">${esc(TX.retiro)}</p>` : ''}
       ${gancho}
     </article>`
   }
@@ -220,16 +242,74 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     if (cic) cic.hidden = false
   }
 
+  // ── Los seis iconos de la banda de cierre ──
+  // Dibujados a mano, no de una librería: tienen que hablar el mismo idioma
+  // que el frasco de las tarjetas, que es lo único gráfico que ya había en la
+  // página. La regla de ese idioma: el continente va en CONTORNO y el
+  // contenido en RELLENO. Es el contraste entre los dos lo que hace que a
+  // cuatro metros se lea una cosa llena y no un alambre.
+  // Todos en un viewBox de 24x24 y con el trazo en currentColor, así el color
+  // se decide una sola vez desde el CSS.
+  const ico = (d) => `<svg class="mb-ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`
+
+  // 1 · Te suscribís con Mercado Pago → la tarjeta con la que se paga.
+  const ICO_TARJETA = ico(`
+    <g class="mb-ico-traz"><rect x="1.7" y="5" width="20.6" height="14.4" rx="3"/><path d="M1.7 9.7h20.6"/></g>
+    <g class="mb-ico-lleno"><rect x="4.7" y="12.5" width="6.2" height="4" rx="1.2"/><rect x="14.4" y="14.4" width="4.4" height="1.8" rx=".9"/></g>`)
+  // 2 · Disponibilidad automática → el mes que vuelve a empezar solo, con los
+  //     gramos ya adentro. La flecha que se muerde la cola es el "sin hacer nada".
+  const ICO_CICLO = ico(`
+    <g class="mb-ico-traz"><path d="M20.6 12.4A8.4 8.4 0 1 1 17.9 6"/><path d="M21.1 2.2v4.6h-4.6"/></g>
+    <g class="mb-ico-lleno"><rect x="10.1" y="7.1" width="3.8" height="2.1" rx=".9"/><rect x="8.8" y="9.6" width="6.4" height="7.6" rx="1.9"/></g>`)
+  // 3 · Variedad a elección → la carta de genéticas: una hoja con flores arriba
+  //     y los renglones de la lista abajo.
+  const ICO_CARTA = ico(`
+    <g class="mb-ico-traz"><rect x="4" y="2.3" width="16" height="19.4" rx="2.6"/></g>
+    <g class="mb-ico-lleno"><circle cx="9.1" cy="8" r="1.7"/><circle cx="12" cy="7.1" r="1.9"/><circle cx="14.9" cy="8" r="1.7"/><rect x="7.7" y="7.8" width="8.6" height="4.3" rx="1.4"/><rect x="7.7" y="14.6" width="8.6" height="1.6" rx=".8"/><rect x="7.7" y="17.5" width="5.6" height="1.6" rx=".8"/></g>`)
+  // 4 · Tanto por ciento menos → la etiqueta de precio, con la flecha para abajo.
+  const ICO_ETIQUETA = ico(`
+    <g class="mb-ico-traz"><path d="M11.4 2.6h7.3a1.8 1.8 0 0 1 1.8 1.8v7.3a1.8 1.8 0 0 1-.53 1.27l-6.9 6.9a1.8 1.8 0 0 1-2.55 0l-6.05-6.05a1.8 1.8 0 0 1 0-2.55l6.9-6.9a1.8 1.8 0 0 1 1.27-.53Z"/></g>
+    <g class="mb-ico-lleno"><circle cx="16.6" cy="7.4" r="1.6"/><path d="M9.9 8.1h2.2v3.5H14L11 15.1 8 11.6h1.9V8.1Z"/></g>`)
+  // 5 · Envío sin cargo → la camioneta que llega al domicilio.
+  const ICO_ENVIO = ico(`
+    <g class="mb-ico-traz"><rect x="1.6" y="6.1" width="12.3" height="9.7" rx="1.9"/><path d="M13.9 9.3h3.6l3.2 3.4v3.1h-6.8z"/></g>
+    <g class="mb-ico-lleno"><circle cx="7" cy="18.1" r="2.1"/><circle cx="17.1" cy="18.1" r="2.1"/></g>`)
+  // 6 · No perdés lo que no retirás → el mismo frasco de las tarjetas, con el
+  //     nivel más alto y un signo de más: lo que no sacaste, se suma.
+  const ICO_ACUMULA = ico(`
+    <g class="mb-ico-traz"><rect x="8.2" y="1.7" width="7.6" height="2.8" rx="1"/><path d="M8.7 4.5h6.6a3 3 0 0 1 3 3v11.5a3 3 0 0 1-3 3H8.7a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3Z"/></g>
+    <g class="mb-ico-lleno"><rect x="7.4" y="12.3" width="9.2" height="8.4" rx="2"/><path d="M19.4 2.8h1.9v2.3h2.3V7h-2.3v2.3h-1.9V7h-2.3V5.1h2.3z"/></g>`)
+  // Si el panel carga un ítem de más, ese cae acá y no rompe la fila.
+  const ICO_FLOR = ico(`
+    <g class="mb-ico-traz"><path d="M12 21.4v-6.6"/></g>
+    <g class="mb-ico-lleno"><circle cx="8.4" cy="9.6" r="3.1"/><circle cx="15.6" cy="9.6" r="3.1"/><circle cx="12" cy="6.4" r="3.3"/><circle cx="12" cy="12.2" r="3.3"/></g>`)
+
+  // Los iconos van por posición dentro de su lista, no por el texto: el texto
+  // se edita desde el backoffice y matchear por palabras sería adivinar.
+  const ICONOS = {
+    ciclo: [ICO_TARJETA, ICO_CICLO, ICO_CARTA],
+    beneficios: [ICO_ETIQUETA, ICO_ENVIO, ICO_ACUMULA],
+  }
+
   // Las dos columnas del cierre se arman desde el backoffice: título +
   // pares de encabezado y descripción.
   function pintarItems(id, lista) {
     const ul = document.getElementById(id)
     if (!ul || !Array.isArray(lista)) return
     const conDto = (v) => String(v || '').replace('{dto}', DTO || '')
-    ul.innerHTML = lista.map((it) => `<li class="mb-item">
+    // El grupo sale del id del <ul>, que es el único dato que ya reciben las
+    // tres llamadas. Pasarlo por parámetro obligaba a tocar los tres lugares
+    // para que digan lo mismo que el id que ya traen.
+    const grupo = id.indexOf('benef') >= 0 ? 'beneficios' : 'ciclo'
+    ul.innerHTML = lista.map((it, i) => `<li class="mb-item">
+      ${ICONOS[grupo][i] || ICO_FLOR}
       <b class="mb-item-t">${esc(conDto(it.t))}</b>
       <span class="mb-item-d">${esc(conDto(it.d))}</span>
     </li>`).join('')
+    // Los ítems pasaron de apilarse a ir uno al lado del otro: la lista necesita
+    // tantas columnas como ítems tenga. Escrito acá y no clavado en 3, porque el
+    // panel puede cargar un cuarto y ahí serían cuatro.
+    ul.style.setProperty('--mb-cols', String(Math.max(1, lista.length)))
   }
 
   function pintar(d) {
@@ -248,19 +328,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     set('mb-benef-t', tx.beneficiosTitulo)
     pintarItems('mb-ciclo-items', tx.ciclo)
     pintarItems('mb-benef-items', tx.beneficios)
-    // Los renglones compartidos de las dos columnas son tantos como ítems tenga
-    // la lista más larga. Si esto queda clavado en 3 y el panel carga un cuarto
-    // ítem, ese cae en un renglón que no se comparte y las dos columnas dejan
-    // de arrancar a la misma altura.
-    const cierre = document.querySelector('.mb-cierre')
-    if (cierre) {
-      const filas = Math.max(
-        Array.isArray(tx.ciclo) ? tx.ciclo.length : 0,
-        Array.isArray(tx.beneficios) ? tx.beneficios.length : 0,
-        1
-      )
-      cierre.style.setProperty('--mb-filas', String(filas))
-    }
+    // Acá se calculaban los renglones compartidos de la banda de cierre a
+    // partir de cuántos ítems tenía la lista más larga, porque los ítems iban
+    // apilados. Ahora van en fila y los renglones son siempre los mismos tres
+    // (ícono, título, descripción), sin importar cuántos ítems haya: lo que
+    // pasó a depender del contenido son las COLUMNAS, y eso lo escribe
+    // pintarItems sobre cada lista.
     set('mb-eyebrow', tx.eyebrow)
     const tit = document.getElementById('mb-title')
     tit.textContent = tx.titulo || ''
@@ -439,15 +512,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border: 1px solid rgba(183, 157, 230, 0.22);
     border-radius: 18px; padding: 22px 20px; text-align: center; position: relative;
   }
+  /* El nombre del plan y el precio pesan lo mismo y se distinguen por color:
+     crema el nombre, verde el precio. A tres metros el tamaño solo ya no
+     jerarquiza (todo es "grande"), el color sí. Antes el nombre iba a 13px,
+     media letra chica, y lo que se leía primero era el número: la tarjeta no
+     decía cuál plan era hasta que uno se acercaba. */
   .mb-card-nom {
-    font-family: var(--font-ui); font-size: 13px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: rgba(244, 241, 247, 0.9); margin: 0 0 6px;
+    font-family: var(--font-ui); font-size: clamp(20px, 5.6vw, 26px); font-weight: 800;
+    letter-spacing: .07em; text-transform: uppercase; line-height: 1.08;
+    color: #f4f1f7; margin: 0 0 4px;
   }
-  .mb-card-det {
-    font-family: var(--font-ui); font-size: 13.5px;
-    color: rgba(244, 241, 247, 0.55); margin: 0 0 14px;
-  }
+  /* Acá vivía .mb-card-det, el renglón "20 gramos por mes". Los gramos se
+     mudaron al lado de los frascos: los frascos ya eran la cantidad dibujada y
+     el renglón la repetía en palabras, dos veces lo mismo por 36px de alto. */
   .mb-card-precio {
     font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 4vw, 32px);
     color: #4FC79E; margin: 0; line-height: 1.1;
@@ -497,6 +574,57 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     background: rgba(0, 158, 227, .09);
     border: 1px solid rgba(0, 158, 227, .28);
     border-radius: 14px;
+    /* Las dos cosas que hacen posible la franja: el bloque es el marco de
+       referencia de su posición, y el recorte le come las puntas justo en el
+       borde redondeado, que es lo que la hace parecer cosida al bloque y no
+       apoyada encima. */
+    position: relative; overflow: hidden;
+  }
+  /* ── La franja del ahorro ──
+     Geometría, para que se pueda mover sin adivinar: el cuadrado que recorta se
+     apoya en el vértice de arriba a la derecha, y la franja lo cruza en
+     diagonal a --c-fondo píxeles del vértice. Ese único número decide todo: el
+     largo visible de la franja es exactamente el doble (2·d), porque el
+     triángulo que corta es rectángulo isósceles. Más fondo = franja más larga,
+     pero también más adentro del bloque, encima del texto. */
+  .mb-cinta {
+    --c-lado: 88px;    /* lado del cuadrado que recorta */
+    --c-fondo: 46px;   /* distancia del vértice a la que cruza la franja */
+    /* Los otros dos salen del fondo, no se eligen a mano, y cada uno resuelve
+       un problema distinto:
+       · el LARGO tiene que pasarse de la cuerda (2·fondo) porque la franja es
+         un rectángulo cruzando un triángulo: si midiera justo la cuerda de su
+         eje, las puntas del lado de afuera no llegarían al borde y quedarían
+         dos muescas. Sobra, y lo que sobra lo recorta el cuadrado.
+       · el TEXTO, en cambio, tiene que quedar ADENTRO de la cuerda, porque lo
+         que se sale del triángulo se recorta y no se lee. Va más angosto que
+         la franja, y la diferencia se reparte como padding a los costados.
+       Sin esta distinción el texto se cortaba a la mitad: "AHORRÁS $40.000 PO". */
+    --c-texto: calc(var(--c-fondo) * 1.45);
+    --c-largo: calc(var(--c-fondo) * 2 + 72px);
+    position: absolute; top: 0; right: 0;
+    width: var(--c-lado); height: var(--c-lado);
+    overflow: hidden; pointer-events: none; z-index: 2;
+  }
+  .mb-cinta > span {
+    position: absolute;
+    /* El centro de la franja cae sobre la bisectriz del vértice, a --c-fondo de
+       distancia: de ahí el /1.4142 (la raíz de 2 que proyecta la diagonal sobre
+       cada eje). El translateY sube la caja media altura, así lo que se ubica
+       con top es su CENTRO y no su borde de arriba. */
+    left: calc(var(--c-lado) - var(--c-fondo) / 1.4142 - var(--c-largo) / 2);
+    top: calc(var(--c-fondo) / 1.4142);
+    width: var(--c-largo); box-sizing: border-box;
+    transform: translateY(-50%) rotate(45deg);
+    display: block; text-align: center;
+    padding: 5px calc((var(--c-largo) - var(--c-texto)) / 2);
+    font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
+    letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
+    /* Verde sólido con letra oscura: es lo más contrastado de la pantalla, que
+       es lo que corresponde a la única promesa de plata que hay en la tarjeta.
+       Sobre el celeste del bloque de Mercado Pago no compite, se despega. */
+    color: #08160f; background: linear-gradient(135deg, #63d9ae, #3cb492);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
   }
   .mb-gancho-lb {
     display: block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 700;
@@ -506,11 +634,46 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-display); font-weight: 600;
     font-size: 24px; color: #f4f1f7; line-height: 1.1;
   }
-  .mb-gancho-ahorro {
-    display: block; font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, .55); margin-top: 3px;
-  }
+  /* .mb-gancho-ahorro se fue: ese texto ahora es la franja diagonal de acá
+     arriba. Iba a 12px y en gris al 55%, más chico y más apagado que el rótulo
+     del bloque: era la mejor noticia de la tarjeta escrita como una aclaración. */
   .mb-gancho .mb-adherir { margin-top: 11px; }
+
+  /* ── Frascos y gramos ──
+     Este bloque tiene que quedar ARRIBA de los @media de celular de más abajo.
+     Estaba después, y como tiene la misma especificidad que los overrides de
+     560 y 400, ganaba por orden: en el teléfono los frascos se seguían pintando
+     del tamaño de escritorio aunque el override dijera otra cosa. Era un bug
+     viejo, de cuando el bloque se escribió al final del archivo; se ve recién
+     ahora porque antes los frascos eran chicos en todos lados. */
+  /* Frasquitos: uno por cada 10 g, con los gramos escritos al lado. Van en
+     VIOLETA, el segundo color de la marca. Queda repartido así: el VERDE es la
+     plata (los precios, la franja del ahorro) y el VIOLETA es lo que se lleva
+     el socio y el marco legal. Antes los frascos eran del mismo verde que el
+     precio y la tarjeta entera hablaba de un solo color. */
+  .mb-frascos {
+    display: flex; justify-content: center; align-items: center;
+    gap: 5px; margin: 0 0 7px;
+  }
+  .mb-frasco { width: 22px; height: 26px; flex: none; color: #B79DE6; }
+  /* Los gramos, pegados a los frascos en vez de en un renglón propio: el número
+     grande y la unidad de tiempo abajo en chico, como se leen las cantidades. */
+  .mb-gramos {
+    display: block; margin-left: 7px; text-align: left; line-height: 1.05;
+    font-family: var(--font-ui);
+  }
+  .mb-gramos b {
+    display: block; font-size: 15px; font-weight: 800; color: #B79DE6;
+  }
+  .mb-gramos i {
+    display: block; font-style: normal; font-size: 9.5px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: rgba(244, 241, 247, .5);
+  }
+  /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
+     los dos lo que hace que se lea lleno y no como un envase suelto. */
+  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
+  .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
 
   /* ── LA BANDA DE CIERRE: un solo sistema para las tres columnas ──
      Vive acá y no en el bloque con alcance porque los ítems de la tercera
@@ -523,7 +686,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      eran tres cosas distintas (pasos numerados, puntos verdes, disc nativo con
      ::marker) y encima con dos verdes distintos. */
   .mb-items { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--mb-v3); }
-  .mb-item { padding-top: 0; }
+  /* Cada ítem es ahora ícono arriba y texto abajo, centrado. En el celular los
+     seis siguen apilados: en fila quedarían columnas de 110px y ahí no entra
+     una frase. La fila de seis empieza recién en la pantalla grande. */
+  .mb-item { padding-top: 0; display: grid; justify-items: center; }
+  /* Los iconos en el mismo violeta que los frascos: los dos son el dibujo de
+     algo, no un número. El verde quedó reservado para la plata. */
+  .mb-ico {
+    width: 34px; height: 34px; margin: 0 0 9px; color: #B79DE6;
+    /* Sobre video, un trazo fino sin sombra desaparece igual que el texto. */
+    filter: drop-shadow(0 1px 12px rgba(0, 0, 0, .7));
+  }
+  /* La misma regla que el frasco de las tarjetas: continente en contorno,
+     contenido en relleno. Es lo que hace que a cuatro metros se lea algo lleno
+     y no un alambre. */
+  .mb-ico-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
+  .mb-ico-lleno { fill: currentColor; stroke: none; opacity: .95; }
   .mb-item-t {
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
     font-size: 17px; font-weight: 600; line-height: 1.2;
@@ -548,18 +726,39 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card { padding: 14px 11px; border-radius: 14px; }
     .mb-card-precio { font-size: clamp(20px, 6.4vw, 28px); }
     .mb-card-precio span { font-size: 10.5px; }
-    .mb-card-nom { font-size: 12px; letter-spacing: .06em; }
-    .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
-    .mb-card-retiro { display: none; }
-    .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
+    .mb-card-nom { font-size: clamp(15px, 4.8vw, 21px); letter-spacing: .05em; }
+    /* La tarjeta del celular es una flex column solo por una razón: la franja
+       del ahorro está PRIMERA en el HTML (en la pantalla grande va posicionada
+       encima de la esquina, y lo posicionado no tiene orden), y acá abajo, ya
+       convertida en píldora, tiene que caer después del precio. */
+    .mb-gancho {
+      margin: 11px -2px 0; padding: 9px 8px 10px;
+      display: flex; flex-direction: column; align-items: center;
+    }
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
     .mb-gancho-precio { font-size: 19px; }
-    .mb-gancho-ahorro, .mb-gancho-envio { font-size: 10.5px; }
+    /* En una tarjeta de 155px la diagonal no entra: el texto quedaría en tres
+       renglones de 7px, o sea ilegible, para conseguir el efecto. Acá la misma
+       franja se endereza y queda de píldora, con el mismo verde y el mismo
+       peso. La diagonal es de la pantalla grande, que es donde hay esquina. */
+    .mb-cinta {
+      position: static; order: 3; overflow: visible;
+      width: auto; height: auto; margin-top: 8px;
+    }
+    .mb-cinta > span {
+      position: static; width: auto; transform: none; left: auto; top: auto;
+      border-radius: 999px; padding: 4px 9px; font-size: 8.5px; box-shadow: none;
+    }
+    .mb-gancho .mb-adherir { order: 4; }
     .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
     .mb-adherir-mp { height: 11px; }
-    .mb-frasco { width: 15px; height: 21px; }
+    .mb-frasco { width: 20px; height: 27px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
+    .mb-gramos { margin-left: 5px; }
+    .mb-gramos b { font-size: 13px; }
+    .mb-gramos i { font-size: 8px; letter-spacing: .04em; }
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
+    .mb-ico { width: 30px; height: 30px; margin-bottom: 7px; }
   }
 
   /* En teléfonos chicos, lo que sobra se saca: la etiqueta del precio la
@@ -573,10 +772,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   @media (max-width: 400px) {
     .mb-card { padding: 11px 9px; }
     .mb-card-precio span { display: none; }
-    .mb-card-det { margin-bottom: 7px; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
-    .mb-frascos { gap: 2px; margin-bottom: 5px; }
-    .mb-frasco { width: 12px; height: 17px; }
+    /* El wrap es una red, no el plan: a 400px los cuatro frascos y el número
+       entran en un renglón, y si en un teléfono más angosto no entraran, los
+       gramos bajan solos en vez de desbordar la tarjeta. El text-align es para
+       ese caso: ya abajo, van centrados como todo lo demás. */
+    .mb-frascos { gap: 2px; margin-bottom: 5px; flex-wrap: wrap; }
+    .mb-frasco { width: 17px; height: 23px; }
+    .mb-gramos { margin-left: 4px; text-align: center; }
+    .mb-gramos b { font-size: 11.5px; }
+    .mb-cinta > span { font-size: 8px; padding: 3px 7px; }
     /* El botón es lo que primero se rompe: "Suscribir con" no parte y el logo
        de Mercado Pago tampoco encoge, así que abajo de ~406px de pantalla el
        texto y el logo se salían de la píldora blanca y los botones de las dos
@@ -703,56 +908,88 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        sección y su primer ítem, y el h2 dejaba de leerse como cabeza de su
        grupo. Ojo: acá no sirve escribirlo en el <style> con alcance de Astro,
        porque los <li> los inyecta el JS y no llevan el atributo de alcance. */
-    .mb-item-t { font-size: clamp(16px, 2.15vh, 26px); margin-bottom: clamp(4px, .65vh, 9px); }
-    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.45; color: rgba(244, 241, 247, .68); }
+    /* En fila, cada ítem tiene 253px de ancho contra los 813px que tenía
+       apilado: la misma frase entra en el triple de renglones. Por eso el
+       título y la descripción bajan un escalón de tamaño respecto de cuando
+       ocupaban la columna entera. */
+    .mb-item-t { font-size: clamp(16px, 2.15vh, 27px); margin-bottom: 0; }
+    .mb-item-d { font-size: clamp(12px, 1.45vh, 18px); line-height: 1.4; color: rgba(244, 241, 247, .68); }
+    /* Los iconos, del tamaño de los frascos de las tarjetas: son la misma
+       familia de dibujos y tienen que pesar igual. */
+    .mb-ico {
+      width: clamp(38px, 6vh, 76px); height: clamp(38px, 6vh, 76px);
+      margin-bottom: clamp(7px, 1.05vh, 15px);
+    }
+    @supports (grid-template-rows: subgrid) {
+      /* Los tres renglones (ícono, título, descripción) los pone la banda de
+         cierre, y cada ítem se cuelga de ESOS renglones en vez de armar los
+         suyos: así los seis iconos quedan apoyados en una misma línea y los
+         seis títulos también, aunque uno ocupe un renglón y el de al lado tres.
+         Sin esto, seis columnas con textos de distinto largo dan seis iconos a
+         seis alturas distintas, que es exactamente lo que una fila de iconos no
+         puede permitirse. */
+      .mb-item { grid-row: 1 / -1; grid-template-rows: subgrid; row-gap: clamp(2px, .35vh, 5px); }
+    }
   }
-  /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
-  .mb-card-retiro {
-    font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, .4); margin: 5px 0 0;
-  }
-  /* Frasquitos: uno por cada 10 g. Contorno, sin relleno, del mismo verde
-     que el precio, para que se lean como una unidad de medida y no como un
-     adorno. */
-  .mb-frascos {
-    display: flex; justify-content: center; align-items: flex-end;
-    gap: 5px; margin: 0 0 7px;
-  }
-  .mb-frasco { width: 22px; height: 26px; flex: none; color: #4FC79E; }
-  /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
-     los dos lo que hace que se lea lleno y no como un envase suelto. */
-  .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
-  .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
+  /* Acá vivían .mb-card-retiro ("Lo retirás en la sede") y .mb-gancho-envio
+     ("+ envío sin cargo"). Los dos se fueron de la tarjeta: el envío tiene su
+     propio ícono en la banda de abajo y repetirlo en las cuatro tarjetas era
+     decirlo cinco veces en la misma pantalla. Entre los dos se llevaban 46px
+     de alto por tarjeta, que es de donde salió el aire para agrandar el nombre
+     y los frascos. */
 
-  .mb-gancho-envio {
-    display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
-    color: #4cb8e8; margin-top: 3px;
-  }
 
   /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
      porque las tarjetas las escribe el JS con lo que viene de la base: Astro
      le pone su atributo de alcance solo a lo que existe al compilar, así que
      desde el scoped estas reglas no las alcanzaban. */
   @media (min-width: 1200px) {
-    /* El precio se queda grande: es lo único que se lee desde el sillón. Todo
-       lo que lo rodea cede alto para que la página entre entera en 1080. */
+    /* El nombre y el precio, a la misma altura tipográfica (3,6vh cada uno:
+       38,9px en 1080). Los dos son lo que se lee desde el sillón y lo que los
+       separa es el color. El precio bajó de 4,3vh justamente para que empaten:
+       con el nombre a 3,6 y el precio a 4,3 el nombre seguía siendo el segundo
+       renglón de algo, no un título. */
     .mb-card { padding: clamp(9px, 1.15vh, 15px) clamp(14px, 1.2vw, 22px); }
-    .mb-card-nom { font-size: clamp(14px, 1.95vh, 22px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
-    .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
-    .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
+    .mb-card-nom { font-size: clamp(24px, 4vh, 50px); letter-spacing: .06em; margin-bottom: clamp(2px, .35vh, 6px); }
+    .mb-card-precio { font-size: clamp(24px, 4vh, 50px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
-    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
-    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
-    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
-    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
+    /* El rótulo se va al ras de la izquierda y le deja toda la esquina derecha
+       a la franja. Centrado no entraba: correrlo unos píxeles para esquivar el
+       verde lo dejaba ni centrado ni alineado, y agrandar la franja le comía la
+       última letra. Así los dos ocupan una punta del mismo renglón, que es lo
+       que hacen el rótulo y el sello en cualquier etiqueta. */
+    .mb-gancho-lb {
+      font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px);
+      text-align: left; letter-spacing: .07em;
+    }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
-    .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
+    /* Los frascos, al doble: pasaron de 2,6vh de ancho a 4,2vh. Son el dibujo
+       de cuánto se lleva el socio y estaban del tamaño de un ícono de barra. */
+    .mb-frasco { width: clamp(29px, 4.8vh, 60px); height: clamp(35px, 5.75vh, 72px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
+    .mb-gramos { margin-left: clamp(7px, .95vh, 13px); }
+    .mb-gramos b { font-size: clamp(18px, 2.5vh, 32px); }
+    .mb-gramos i { font-size: clamp(9px, 1.05vh, 13px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
     .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
+    /* La franja crece con la pantalla como todo lo demás. El fondo (a qué
+       distancia del vértice cruza) es lo que le da largo: a 1080 son 62px de
+       fondo, o sea 124px de franja visible, que es lo que necesita el texto en
+       dos renglones sin meterse encima del precio. */
+    .mb-cinta {
+      --c-lado: clamp(96px, 14.5vh, 184px);
+      --c-fondo: clamp(52px, 8vh, 100px);
+    }
+    /* Solo el padding vertical: el horizontal lo calcula la fórmula de arriba
+       para meter el texto adentro de la cuerda, y pisarlo con un valor fijo es
+       volver a cortarlo. */
+    .mb-cinta > span {
+      font-size: clamp(9px, 1.2vh, 15px); letter-spacing: .01em;
+      padding-top: clamp(4px, .55vh, 8px); padding-bottom: clamp(4px, .55vh, 8px);
+    }
   }
 </style>
 
@@ -1065,12 +1302,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
          suyos, así el ítem 1 de las tres arranca y termina a la misma altura
          aunque uno tenga dos líneas y otro tres. Sin subgrid (navegador viejo)
          degrada a lo de antes: columnas parejas pero renglones sueltos. */
-      /* El número de renglones sale del contenido real (lo escribe el JS al
-         pintar), no de un 3 escrito a mano: si mañana el panel carga un cuarto
-         ítem en una de las dos listas, el cuarto caía en un renglón implícito
-         que NO se comparte y las dos columnas se desincronizaban justo en el
-         bloque que existe para mantenerlas sincronizadas. */
-      grid-template-rows: auto repeat(var(--mb-filas, 3), auto);
+      /* Cuatro renglones fijos, y ahora sí escritos a mano: son el encabezado
+         de sección y los TRES que tiene cualquier ítem (ícono, título,
+         descripción). Antes este número salía del contenido, porque los ítems
+         se apilaban y cada uno era un renglón; ahora van uno al lado del otro y
+         lo que depende del contenido son las columnas, que las escribe
+         pintarItems sobre cada lista. */
+      grid-template-rows: auto repeat(3, auto);
       align-items: start;
       column-gap: var(--mb-gap);
       /* Este row-gap separa el encabezado de sección de su lista (entre ítems
@@ -1105,16 +1343,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       .mb-primera .mb-cierre > *[hidden] { display: none; }
       .mb-primera .mb-cierre .mb-items {
         display: grid; grid-row: 2 / -1; grid-template-rows: subgrid;
-        /* El gap entre ítems lo pone ACÁ .mb-items (un subgrid usa su propio
-           gutter cuando lo declara, no hereda). El row-gap de .mb-cierre queda
-           gobernando el único renglón que .mb-items no cubre: el que separa el
-           encabezado de sección de su lista. Son dos huecos distintos a
-           propósito, no dos formas de escribir el mismo. */
+        /* El row-gap va ACÁ y no se hereda (un subgrid usa su propio gutter
+           cuando lo declara). Son los dos huecos de adentro del ítem: entre el
+           ícono y el título, y entre el título y su descripción. Chico a
+           propósito: las tres cosas son UNA sola unidad y lo que las tiene que
+           separar del ítem de al lado es el column-gap, no el aire de arriba.
+           El row-gap de .mb-cierre queda gobernando el único renglón que
+           .mb-items no cubre: el que separa el encabezado de su lista. */
+        row-gap: clamp(2px, .35vh, 5px);
       }
     }
 
-    /* Los pasos van uno debajo del otro: en una columna angosta, en fila
-       quedarían tres palabras por renglón. */
+    /* En la pantalla grande los ítems dejan de apilarse y se ponen uno al lado
+       del otro, con su ícono arriba: tres por sección, seis en la fila. El
+       número de columnas sale de cuántos ítems tenga la lista (lo escribe
+       pintarItems), así que si el panel carga un cuarto, la fila se hace de
+       cuatro en vez de mandarlo a un renglón de abajo él solo. */
+    .mb-primera .mb-cierre .mb-items {
+      grid-template-columns: repeat(var(--mb-cols, 3), minmax(0, 1fr));
+      column-gap: clamp(10px, 1.1vw, 20px);
+    }
   }
 
   /* En la TV del living. 1680px es el mismo umbral que ya usa /socios/carta
