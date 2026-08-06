@@ -164,14 +164,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       </g>
       <g class="mb-frasco-flor"><circle cx="6.8" cy="14.4" r="2.3"/><circle cx="10" cy="13.3" r="2.6"/><circle cx="13.2" cy="14.4" r="2.3"/><rect x="4.3" y="14.1" width="11.4" height="7.2" rx="2"/></g>
     </svg>`
-    // Los gramos van al lado de los frascos, no en un renglón propio: los
-    // frascos YA dicen la cantidad, y dicha dos veces se llevaba 36px de alto
-    // que ahora usan el nombre y los frascos grandes. Ojo: el <p> no puede ser
-    // aria-hidden, porque adentro está el único lugar donde el número de gramos
-    // existe como texto. Los aria-hidden van en cada <svg>, que sí es adorno.
     const frascos = p.gramos
-      ? `<p class="mb-frascos">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}<span class="mb-gramos"><b>${p.gramos} g</b><i>por mes</i></span></p>`
+      ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
       : ''
+    const detalle = p.gramos ? `<p class="mb-card-det">${p.gramos} gramos por mes</p>` : ''
     const ofreceDebito = !!(p.debito && p.linkDebito)
     // El botón se muestra siempre que la membresía tenga débito y el socio no
     // esté ya adherido. El estado del REPROCANN dejó de esconderlo: la
@@ -198,19 +194,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           ${cinta}
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
+          ${TX.envio ? `<span class="mb-gancho-envio">${esc(TX.envio)}</span>` : ''}
           ${btn}
         </div>`
       : ''
-    // Fuera de la tarjeta quedaron dos renglones que decían lo mismo que la
-    // banda de abajo: el envío sin cargo tiene su propio ícono ahí, repetirlo
-    // cuatro veces era ruido. El nombre y el precio pasan a pesar parecido y a
-    // distinguirse por color (crema el nombre, verde el precio): a tres metros
-    // el tamaño ya no alcanza para jerarquizar, el color sí.
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
       <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? esc(TX.insigniaMia || 'Tu membresía') : ''}</span>
       ${frascos}
       <h3 class="mb-card-nom">${esc(NOMBRE_CORTO[p.item] || p.item)}</h3>
+      ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(TX.etiquetaPrecio || 'Contado o transferencia')}</span></p>
+      ${TX.retiro ? `<p class="mb-card-retiro">${esc(TX.retiro)}</p>` : ''}
       ${gancho}
     </article>`
   }
@@ -512,19 +506,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border: 1px solid rgba(183, 157, 230, 0.22);
     border-radius: 18px; padding: 22px 20px; text-align: center; position: relative;
   }
-  /* El nombre del plan y el precio pesan lo mismo y se distinguen por color:
-     crema el nombre, verde el precio. A tres metros el tamaño solo ya no
-     jerarquiza (todo es "grande"), el color sí. Antes el nombre iba a 13px,
-     media letra chica, y lo que se leía primero era el número: la tarjeta no
-     decía cuál plan era hasta que uno se acercaba. */
+  /* Del rediseño de agosto sobrevivió UNA sola suba de tamaño: la del nombre
+     (13 → 17px acá, 21 → 31px en la TV). El resto (precio, frascos, renglones)
+     volvió a su medida anterior: agrandado todo junto, nada era protagonista y
+     la tarjeta gritaba. */
   .mb-card-nom {
-    font-family: var(--font-ui); font-size: clamp(20px, 5.6vw, 26px); font-weight: 800;
-    letter-spacing: .07em; text-transform: uppercase; line-height: 1.08;
-    color: #f4f1f7; margin: 0 0 4px;
+    font-family: var(--font-ui); font-size: 17px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: rgba(244, 241, 247, 0.9); margin: 0 0 6px;
   }
-  /* Acá vivía .mb-card-det, el renglón "20 gramos por mes". Los gramos se
-     mudaron al lado de los frascos: los frascos ya eran la cantidad dibujada y
-     el renglón la repetía en palabras, dos veces lo mismo por 36px de alto. */
+  .mb-card-det {
+    font-family: var(--font-ui); font-size: 13.5px;
+    color: rgba(244, 241, 247, 0.55); margin: 0 0 14px;
+  }
   .mb-card-precio {
     font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 4vw, 32px);
     color: #4FC79E; margin: 0; line-height: 1.1;
@@ -639,37 +633,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      del bloque: era la mejor noticia de la tarjeta escrita como una aclaración. */
   .mb-gancho .mb-adherir { margin-top: 11px; }
 
-  /* ── Frascos y gramos ──
+  /* ── Frascos ──
      Este bloque tiene que quedar ARRIBA de los @media de celular de más abajo.
      Estaba después, y como tiene la misma especificidad que los overrides de
      560 y 400, ganaba por orden: en el teléfono los frascos se seguían pintando
      del tamaño de escritorio aunque el override dijera otra cosa. Era un bug
-     viejo, de cuando el bloque se escribió al final del archivo; se ve recién
-     ahora porque antes los frascos eran chicos en todos lados. */
-  /* Frasquitos: uno por cada 10 g, con los gramos escritos al lado. Van en
-     VIOLETA, el segundo color de la marca. Queda repartido así: el VERDE es la
-     plata (los precios, la franja del ahorro) y el VIOLETA es lo que se lleva
-     el socio y el marco legal. Antes los frascos eran del mismo verde que el
-     precio y la tarjeta entera hablaba de un solo color. */
+     viejo, de cuando el bloque se escribió al final del archivo. */
+  /* Frasquitos: uno por cada 10 g, en VIOLETA, el segundo color de la marca.
+     El reparto: el VERDE es la plata (precios, franja del ahorro), el VIOLETA
+     es lo que se lleva el socio y el marco legal. */
   .mb-frascos {
-    display: flex; justify-content: center; align-items: center;
+    display: flex; justify-content: center; align-items: flex-end;
     gap: 5px; margin: 0 0 7px;
   }
   .mb-frasco { width: 22px; height: 26px; flex: none; color: #B79DE6; }
-  /* Los gramos, pegados a los frascos en vez de en un renglón propio: el número
-     grande y la unidad de tiempo abajo en chico, como se leen las cantidades. */
-  .mb-gramos {
-    display: block; margin-left: 7px; text-align: left; line-height: 1.05;
-    font-family: var(--font-ui);
-  }
-  .mb-gramos b {
-    display: block; font-size: 15px; font-weight: 800; color: #B79DE6;
-  }
-  .mb-gramos i {
-    display: block; font-style: normal; font-size: 9.5px; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
-    color: rgba(244, 241, 247, .5);
-  }
   /* El vidrio va en contorno y el contenido en relleno: es el contraste entre
      los dos lo que hace que se lea lleno y no como un envase suelto. */
   .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
@@ -726,7 +703,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card { padding: 14px 11px; border-radius: 14px; }
     .mb-card-precio { font-size: clamp(20px, 6.4vw, 28px); }
     .mb-card-precio span { font-size: 10.5px; }
-    .mb-card-nom { font-size: clamp(15px, 4.8vw, 21px); letter-spacing: .05em; }
+    .mb-card-nom { font-size: 13.5px; letter-spacing: .06em; }
+    .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
+    .mb-card-retiro { display: none; }
+    .mb-gancho-envio { font-size: 10.5px; }
     /* La tarjeta del celular es una flex column solo por una razón: la franja
        del ahorro está PRIMERA en el HTML (en la pantalla grande va posicionada
        encima de la esquina, y lo posicionado no tiene orden), y acá abajo, ya
@@ -752,11 +732,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho .mb-adherir { order: 4; }
     .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
     .mb-adherir-mp { height: 11px; }
-    .mb-frasco { width: 20px; height: 27px; }
+    .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
-    .mb-gramos { margin-left: 5px; }
-    .mb-gramos b { font-size: 13px; }
-    .mb-gramos i { font-size: 8px; letter-spacing: .04em; }
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
     .mb-ico { width: 30px; height: 30px; margin-bottom: 7px; }
   }
@@ -773,14 +750,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card { padding: 11px 9px; }
     .mb-card-precio span { display: none; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
-    /* El wrap es una red, no el plan: a 400px los cuatro frascos y el número
-       entran en un renglón, y si en un teléfono más angosto no entraran, los
-       gramos bajan solos en vez de desbordar la tarjeta. El text-align es para
-       ese caso: ya abajo, van centrados como todo lo demás. */
-    .mb-frascos { gap: 2px; margin-bottom: 5px; flex-wrap: wrap; }
-    .mb-frasco { width: 17px; height: 23px; }
-    .mb-gramos { margin-left: 4px; text-align: center; }
-    .mb-gramos b { font-size: 11.5px; }
+    .mb-card-det { margin-bottom: 7px; }
+    .mb-frascos { gap: 2px; margin-bottom: 5px; }
+    .mb-frasco { width: 12px; height: 17px; }
     .mb-cinta > span { font-size: 8px; padding: 3px 7px; }
     /* El botón es lo que primero se rompe: "Suscribir con" no parte y el logo
        de Mercado Pago tampoco encoge, así que abajo de ~406px de pantalla el
@@ -931,12 +903,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       .mb-item { grid-row: 1 / -1; grid-template-rows: subgrid; row-gap: clamp(2px, .35vh, 5px); }
     }
   }
-  /* Acá vivían .mb-card-retiro ("Lo retirás en la sede") y .mb-gancho-envio
-     ("+ envío sin cargo"). Los dos se fueron de la tarjeta: el envío tiene su
-     propio ícono en la banda de abajo y repetirlo en las cuatro tarjetas era
-     decirlo cinco veces en la misma pantalla. Entre los dos se llevaban 46px
-     de alto por tarjeta, que es de donde salió el aire para agrandar el nombre
-     y los frascos. */
+  /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
+  .mb-card-retiro {
+    font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, .4); margin: 5px 0 0;
+  }
+  .mb-gancho-envio {
+    display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+    color: #4cb8e8; margin-top: 3px;
+  }
 
 
   /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
@@ -944,14 +919,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      le pone su atributo de alcance solo a lo que existe al compilar, así que
      desde el scoped estas reglas no las alcanzaban. */
   @media (min-width: 1200px) {
-    /* El nombre y el precio, a la misma altura tipográfica (3,6vh cada uno:
-       38,9px en 1080). Los dos son lo que se lee desde el sillón y lo que los
-       separa es el color. El precio bajó de 4,3vh justamente para que empaten:
-       con el nombre a 3,6 y el precio a 4,3 el nombre seguía siendo el segundo
-       renglón de algo, no un título. */
+    /* El precio sigue mandando (4,3vh): es lo único que se lee desde el
+       sillón. El nombre queda segundo pero con presencia propia: 2,9vh, un
+       escalón y medio arriba de los 1,95vh que tenía. */
     .mb-card { padding: clamp(9px, 1.15vh, 15px) clamp(14px, 1.2vw, 22px); }
-    .mb-card-nom { font-size: clamp(24px, 4vh, 50px); letter-spacing: .06em; margin-bottom: clamp(2px, .35vh, 6px); }
-    .mb-card-precio { font-size: clamp(24px, 4vh, 50px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
+    .mb-card-nom { font-size: clamp(18px, 2.9vh, 36px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
+    .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
+    .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
+    .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
+    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
@@ -966,13 +942,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
-    /* Los frascos, al doble: pasaron de 2,6vh de ancho a 4,2vh. Son el dibujo
-       de cuánto se lleva el socio y estaban del tamaño de un ícono de barra. */
-    .mb-frasco { width: clamp(29px, 4.8vh, 60px); height: clamp(35px, 5.75vh, 72px); }
+    .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
-    .mb-gramos { margin-left: clamp(7px, .95vh, 13px); }
-    .mb-gramos b { font-size: clamp(18px, 2.5vh, 32px); }
-    .mb-gramos i { font-size: clamp(9px, 1.05vh, 13px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
     .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
     /* La franja crece con la pantalla como todo lo demás. El fondo (a qué
@@ -980,14 +951,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        fondo, o sea 124px de franja visible, que es lo que necesita el texto en
        dos renglones sin meterse encima del precio. */
     .mb-cinta {
-      --c-lado: clamp(96px, 14.5vh, 184px);
-      --c-fondo: clamp(52px, 8vh, 100px);
+      --c-lado: clamp(86px, 12.5vh, 160px);
+      --c-fondo: clamp(44px, 6.6vh, 84px);
     }
     /* Solo el padding vertical: el horizontal lo calcula la fórmula de arriba
        para meter el texto adentro de la cuerda, y pisarlo con un valor fijo es
        volver a cortarlo. */
     .mb-cinta > span {
-      font-size: clamp(9px, 1.2vh, 15px); letter-spacing: .01em;
+      font-size: clamp(9px, 1.05vh, 13px); letter-spacing: .01em;
       padding-top: clamp(4px, .55vh, 8px); padding-bottom: clamp(4px, .55vh, 8px);
     }
   }
