@@ -20,7 +20,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const hoy = new Date().toISOString().slice(0, 10);
   const mes = hoy.slice(0, 7);
 
-  const [retiros, cobros, pendientes, mesTot, vencen, debitos] = await Promise.all([
+  const [retiros, cobros, pendientes, mesTot, vencen, debitos, aVincular] = await Promise.all([
     env.DB.prepare(
       `SELECT d.fecha, d.producto, d.gramos, d.unidades, s.nombre
          FROM dispensas d JOIN socios s ON s.id = d.socio_id
@@ -66,6 +66,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
                AND estado != 'cancelada') AS sin_identificar`,
         ).bind(hoy, mes).first<{ al_dia: number; esperando: number; terminan_mes: number; recaudado_mes: number }>()
       : Promise.resolve(null),
+    // "Nos toca vincular": trámites que el paciente ya firmó y esperan que la
+    // ONG los vincule. La tabla la llena el agente (el trámite todavía no está
+    // en el volcado de la ONG, así que no vive en `socios`). Solo padrón.
+    puede(rol, 'padron_ver')
+      ? env.DB.prepare(
+          `SELECT COUNT(*) AS n FROM pendientes_vinculacion WHERE resuelto IS NULL`,
+        ).first<{ n: number }>().catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   // reservas activas desde el KV del portal (mismas que ve el módulo Reservas)
@@ -105,5 +113,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       en60: vencen.results.filter((v) => v.dias >= 0 && v.dias <= 60).length,
       proximos: vencen.results.slice(0, 6),
     } : null,
+    aVincular: aVincular?.n ?? null,
   });
 };

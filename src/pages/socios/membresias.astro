@@ -182,19 +182,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // El precio de referencia arriba, y el débito abajo como el beneficio que
     // se desbloquea, con su propio bloque. Antes había un selector que cambiaba
     // entre dos vistas; mostrar las dos juntas es lo que hace visible el salto.
-    // El ahorro dejó de ser un renglón gris debajo del precio y pasó a ser una
-    // franja diagonal en la esquina del bloque: es la única promesa de plata de
-    // toda la tarjeta y estaba escrita más chica que la letra chica. De paso no
-    // ocupa alto, porque va posicionada fuera del flujo.
-    const cinta = p.contado
-      ? `<span class="mb-cinta"><span>${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span></span>`
+    // La franja diagonal dice el envío sin cargo: es el beneficio que se
+    // desbloquea al suscribirse y no ocupa alto porque va fuera del flujo. El
+    // ahorro va como renglón abajo del precio de débito, que es donde se
+    // compara con el precio de contado que tiene arriba.
+    const cinta = TX.envio
+      ? `<span class="mb-cinta"><span>${esc(TX.envio)}</span></span>`
       : ''
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
           ${cinta}
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
-          ${TX.envio ? `<span class="mb-gancho-envio">${esc(TX.envio)}</span>` : ''}
+          ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
           ${btn}
         </div>`
       : ''
@@ -614,9 +614,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     padding: 5px calc((var(--c-largo) - var(--c-texto)) / 2);
     font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
     letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
-    /* Verde sólido con letra oscura: es lo más contrastado de la pantalla, que
-       es lo que corresponde a la única promesa de plata que hay en la tarjeta.
-       Sobre el celeste del bloque de Mercado Pago no compite, se despega. */
+    /* Verde sólido con letra oscura: lo más contrastado de la tarjeta, para
+       el beneficio que se desbloquea al suscribirse. Sobre el celeste del
+       bloque de Mercado Pago no compite, se despega. */
     color: #08160f; background: linear-gradient(135deg, #63d9ae, #3cb492);
     box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
   }
@@ -628,9 +628,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-display); font-weight: 600;
     font-size: 24px; color: #f4f1f7; line-height: 1.1;
   }
-  /* .mb-gancho-ahorro se fue: ese texto ahora es la franja diagonal de acá
-     arriba. Iba a 12px y en gris al 55%, más chico y más apagado que el rótulo
-     del bloque: era la mejor noticia de la tarjeta escrita como una aclaración. */
+  .mb-gancho-ahorro {
+    display: block; font-family: var(--font-ui); font-size: 12px;
+    color: rgba(244, 241, 247, .55); margin-top: 3px;
+  }
   .mb-gancho .mb-adherir { margin-top: 11px; }
 
   /* ── Frascos ──
@@ -706,7 +707,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-nom { font-size: 13.5px; letter-spacing: .06em; }
     .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
     .mb-card-retiro { display: none; }
-    .mb-gancho-envio { font-size: 10.5px; }
+    .mb-gancho-ahorro { font-size: 10.5px; }
     /* La tarjeta del celular es una flex column solo por una razón: la franja
        del ahorro está PRIMERA en el HTML (en la pantalla grande va posicionada
        encima de la esquina, y lo posicionado no tiene orden), y acá abajo, ya
@@ -908,10 +909,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 12px;
     color: rgba(244, 241, 247, .4); margin: 5px 0 0;
   }
-  .mb-gancho-envio {
-    display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 700;
-    color: #4cb8e8; margin-top: 3px;
-  }
 
 
   /* La escala de la TV para las tarjetas. Va acá y NO en el bloque scoped
@@ -927,7 +924,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
     .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
-    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
+    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }

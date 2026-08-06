@@ -106,6 +106,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     return json({ ok: true, pares: grupos, sinMatch, vinculados: confirmados.length, ultimaCarga: ultima?.m || null });
   }
 
+  // Los trámites que ya firmó el paciente y esperan que la ONG los vincule.
+  // Alimenta el tile del Inicio y su detalle. Los llena el agente.
+  if (vista === 'pendientes') {
+    const abiertos = await env.DB.prepare(
+      `SELECT tramite, dni, nombre, apellido, codigo, estado, creado, actualizado
+         FROM pendientes_vinculacion WHERE resuelto IS NULL
+        ORDER BY creado`,
+    ).all<Record<string, unknown>>();
+    return json({ ok: true, pendientes: abiertos.results });
+  }
+
   return json({ error: 'Vista desconocida' }, 404);
 };
 
@@ -214,7 +225,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
   // el único que no decide nada, copia lo que dice el organismo. Mismo patrón
   // de token de máquina que ya usa el agente contra el consultorio.
   const cab = request.headers.get('Authorization') || '';
-  const esAgente = vista0 === 'sincronizar' && env.AGENTE_TOKEN
+  // `pendiente` también lo manda el agente: es el aviso de "el paciente firmó,
+  // nos toca vincular", que sólo la máquina con la sesión del médico puede ver.
+  const vistasAgente = new Set(['sincronizar', 'pendiente']);
+  const esAgente = vistasAgente.has(vista0 as string) && env.AGENTE_TOKEN
     && cab.startsWith('Bearer ') && cab.slice(7).trim() === env.AGENTE_TOKEN;
 
   // `auth` tiene que vivir FUERA del if: más abajo se usa `auth.email` para
@@ -298,6 +312,41 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       ok: true, recibidos: tramites.length, personas: personas.length,
       sincronizados, candidatosNuevos, sinMatch: sinMatch.length,
     });
+  }
+
+  // El agente avisa que un trámite quedó esperando la vinculación de la ONG
+  // (o que ya avanzó, y entonces se cierra). Alimenta el tile "Nos toca
+  // vincular" del Inicio. No decide nada: copia el estado que reporta el
+  // organismo, igual que `sincronizar`.
+  if (vista === 'pendiente') {
+    let b: Record<string, unknown>;
+    try { b = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+    const tramite = parseInt(String(b.tramite ?? ''), 10);
+    if (!tramite) return json({ error: 'Falta el número de trámite' }, 400);
+    const estado = String(b.estado || 'PendienteVinculacionCultivador').slice(0, 60);
+    const abierto = estado === 'PendienteVinculacionCultivador';
+    await env.DB.prepare(
+      `INSERT INTO pendientes_vinculacion (tramite, dni, nombre, apellido, codigo, estado, resuelto)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+       ON CONFLICT(tramite) DO UPDATE SET
+         dni = COALESCE(excluded.dni, dni),
+         nombre = COALESCE(excluded.nombre, nombre),
+         apellido = COALESCE(excluded.apellido, apellido),
+         codigo = COALESCE(excluded.codigo, codigo),
+         estado = excluded.estado,
+         actualizado = datetime('now'),
+         resuelto = CASE WHEN ?7 IS NULL THEN NULL
+                         ELSE COALESCE(pendientes_vinculacion.resuelto, ?7) END`,
+    ).bind(
+      tramite,
+      b.dni ? String(b.dni).replace(/\D/g, '').slice(0, 10) : null,
+      b.nombre ? String(b.nombre).slice(0, 80) : null,
+      b.apellido ? String(b.apellido).slice(0, 80) : null,
+      b.codigo ? String(b.codigo).slice(0, 40) : null,
+      estado,
+      abierto ? null : new Date().toISOString(),
+    ).run();
+    return json({ ok: true, abierto });
   }
 
   // Confirmar o rechazar un par. Nunca automático: este endpoint ES el click.

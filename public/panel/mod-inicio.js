@@ -54,6 +54,10 @@
         <span class="k">REPROCANN por vencer</span>
         <div class="kpi-v" style="font-size:28px;color:${d.vencimientos.vencidos ? 'var(--dan)' : 'var(--amb)'}">${d.vencimientos.vencidos + d.vencimientos.en60}</div>
         <div class="kpi-d">${d.vencimientos.vencidos ? `<b style="color:var(--dan)">${d.vencimientos.vencidos} vencido(s)</b> · ` : ''}${d.vencimientos.en60} vencen en 60 días</div></div>`)
+      if (d.aVincular) tiles.push(`<div class="card in-tile" data-ir="socios" data-filtro="aVincular">
+        <span class="k">Nos toca vincular</span>
+        <div class="kpi-v" style="font-size:28px;color:var(--amb)">${d.aVincular}</div>
+        <div class="kpi-d">${d.aVincular === 1 ? 'paciente firmó y espera' : 'pacientes firmaron y esperan'} la vinculación de la ONG</div></div>`)
       if (d.debitos) tiles.push(`<div class="card in-tile" data-ir="finanzas">
         <span class="k">Débito automático</span>
         <div class="kpi-v" style="font-size:28px;color:var(--grn)">${P.fmt(d.debitos.recaudado_mes)}</div>
