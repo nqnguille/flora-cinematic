@@ -381,13 +381,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
           ).bind(paso, tramite, socio.id).run();
           socioTocado = { id: socio.id, estado: paso };
         } else {
-          // Protegido: no toco el paso, pero dejo el número y una nota (sin pisar
-          // una nota que ya exista) para que se vea en la ficha.
+          // Protegido: no toco el paso, pero dejo el número y AGREGO una nota
+          // (sin pisar la que exista y sin duplicar si ya la puse) para que el
+          // conflicto se vea en la ficha y un humano lo resuelva.
+          const aviso = `Trámite ${tramite} presentado en REPROCANN (${estado}), revisar conversión`;
           await env.DB.prepare(
             `UPDATE socios SET reprocann_tramite = COALESCE(?1, reprocann_tramite),
-                    reprocann_nota = COALESCE(reprocann_nota, ?2),
-                    reprocann_actualizado = datetime('now') WHERE id = ?3`,
-          ).bind(tramite, `Trámite ${tramite} presentado en REPROCANN (${estado}). Revisar: figura ${socio.reprocann_estado}.`, socio.id).run();
+                    reprocann_nota = CASE
+                      WHEN reprocann_nota IS NULL OR reprocann_nota = '' THEN ?2
+                      WHEN reprocann_nota LIKE ?3 THEN reprocann_nota
+                      ELSE reprocann_nota || ' · ' || ?2 END,
+                    reprocann_actualizado = datetime('now') WHERE id = ?4`,
+          ).bind(tramite, aviso, `%Trámite ${tramite}%`, socio.id).run();
           socioTocado = { id: socio.id, estado: socio.reprocann_estado, protegido: true };
         }
       }

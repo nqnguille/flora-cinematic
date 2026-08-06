@@ -163,6 +163,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <path d="M5.4 4.5h9.2a2.9 2.9 0 0 1 2.9 2.9v12.7a2.9 2.9 0 0 1-2.9 2.9H5.4a2.9 2.9 0 0 1-2.9-2.9V7.4a2.9 2.9 0 0 1 2.9-2.9Z"/>
       </g>
       <g class="mb-frasco-flor"><circle cx="6.8" cy="14.4" r="2.3"/><circle cx="10" cy="13.3" r="2.6"/><circle cx="13.2" cy="14.4" r="2.3"/><rect x="4.3" y="14.1" width="11.4" height="7.2" rx="2"/></g>
+      <g class="mb-frasco-fino"><path d="M7.3 1.9v1.8M10 1.9v1.8M12.7 1.9v1.8"/></g>
     </svg>`
     const frascos = p.gramos
       ? `<p class="mb-frascos" aria-hidden="true">${FRASCO.repeat(Math.max(1, Math.min(6, Math.round(p.gramos / 10))))}</p>`
@@ -251,32 +252,44 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   //     asset ya estaba en el repo (public/img/mp-iso.png, solo la burbuja).
   const ICO_MP = `<img class="mb-ico mb-ico--img" src="/img/mp-iso.png" alt="" width="100" height="70" loading="lazy">`
   // 2 · Disponibilidad automática → el mes que vuelve a empezar solo, con los
-  //     gramos ya adentro. La flecha que se muerde la cola es el "sin hacer nada".
+  //     gramos ya adentro. La flecha que se muerde la cola es el "sin hacer
+  //     nada"; la punta va RELLENA (a lo lejos una punta de trazo se deshace) y
+  //     los tres tics finos de atrás son el movimiento.
   const ICO_CICLO = ico(`
-    <g class="mb-ico-traz"><path d="M20.6 12.4A8.4 8.4 0 1 1 17.9 6"/><path d="M21.1 2.2v4.6h-4.6"/></g>
-    <g class="mb-ico-lleno"><rect x="10.1" y="7.1" width="3.8" height="2.1" rx=".9"/><rect x="8.8" y="9.6" width="6.4" height="7.6" rx="1.9"/></g>`)
-  // 3 · Variedad a elección → la carta de genéticas: una hoja con flores arriba
-  //     y los renglones de la lista abajo.
+    <g class="mb-ico-traz"><path d="M20.5 12.4A8.4 8.4 0 1 1 17.8 6.1"/></g>
+    <g class="mb-ico-lleno"><path d="M21.9 1.7v5.9h-5.9z"/><rect x="10" y="7.2" width="4" height="2.1" rx=".9"/><rect x="8.7" y="9.8" width="6.6" height="7.4" rx="1.9"/></g>
+    <g class="mb-ico-fino"><path d="M3.4 17.6l-1.2 1.2M5.4 19.5l-.9 1.4M2.5 14.9l-1.5.6"/></g>`)
+  // 3 · Variedad a elección → la carta de genéticas: el cogollo arriba y los
+  //     renglones de la lista abajo. El detalle fino: el tallo con su par de
+  //     hojitas, dibujado en el aire que queda entre el cogollo y la lista.
   const ICO_CARTA = ico(`
     <g class="mb-ico-traz"><rect x="4" y="2.3" width="16" height="19.4" rx="2.6"/></g>
-    <g class="mb-ico-lleno"><circle cx="9.1" cy="8" r="1.7"/><circle cx="12" cy="7.1" r="1.9"/><circle cx="14.9" cy="8" r="1.7"/><rect x="7.7" y="7.8" width="8.6" height="4.3" rx="1.4"/><rect x="7.7" y="14.6" width="8.6" height="1.6" rx=".8"/><rect x="7.7" y="17.5" width="5.6" height="1.6" rx=".8"/></g>`)
-  // 4 · Tanto por ciento menos → la etiqueta de precio, con la flecha para abajo.
+    <g class="mb-ico-lleno"><circle cx="9.3" cy="7.4" r="1.7"/><circle cx="12" cy="6.5" r="1.9"/><circle cx="14.7" cy="7.4" r="1.7"/><rect x="7.9" y="7.2" width="8.2" height="3.6" rx="1.4"/><rect x="7.7" y="16" width="8.6" height="1.6" rx=".8"/><rect x="7.7" y="18.8" width="5.6" height="1.6" rx=".8"/></g>
+    <g class="mb-ico-fino"><path d="M12 10.8v3M12 12.4l-1.7-1M12 12.4l1.7-1"/></g>`)
+  // 4 · Tanto por ciento menos → la etiqueta de precio con el % adentro (más
+  //     literal que una flecha) y el hilo fino pasando por el ojal.
   const ICO_ETIQUETA = ico(`
     <g class="mb-ico-traz"><path d="M11.4 2.6h7.3a1.8 1.8 0 0 1 1.8 1.8v7.3a1.8 1.8 0 0 1-.53 1.27l-6.9 6.9a1.8 1.8 0 0 1-2.55 0l-6.05-6.05a1.8 1.8 0 0 1 0-2.55l6.9-6.9a1.8 1.8 0 0 1 1.27-.53Z"/></g>
-    <g class="mb-ico-lleno"><circle cx="16.6" cy="7.4" r="1.6"/><path d="M9.9 8.1h2.2v3.5H14L11 15.1 8 11.6h1.9V8.1Z"/></g>`)
-  // 5 · Envío sin cargo → la camioneta que llega al domicilio.
+    <g class="mb-ico-lleno"><circle cx="16.5" cy="7.5" r="1.5"/><circle cx="8.9" cy="11.1" r="1.9"/><circle cx="13.1" cy="15.3" r="1.9"/><path d="M13.2 8.9l1.5 1.5-6.1 6.1-1.5-1.5z"/></g>
+    <g class="mb-ico-fino"><path d="M16.5 5.2c0-1.8 1.9-2.4 3-1.5"/><circle cx="8.9" cy="11.1" r=".6"/><circle cx="13.1" cy="15.3" r=".6"/></g>`)
+  // 5 · Envío sin cargo → la camioneta en movimiento: el paquete relleno viaja
+  //     adentro de la caja, y las dos ráfagas finas de atrás son la velocidad.
   const ICO_ENVIO = ico(`
-    <g class="mb-ico-traz"><rect x="1.6" y="6.1" width="12.3" height="9.7" rx="1.9"/><path d="M13.9 9.3h3.6l3.2 3.4v3.1h-6.8z"/></g>
-    <g class="mb-ico-lleno"><circle cx="7" cy="18.1" r="2.1"/><circle cx="17.1" cy="18.1" r="2.1"/></g>`)
+    <g class="mb-ico-traz"><rect x="3.4" y="6.1" width="10.5" height="9.7" rx="1.9"/><path d="M13.9 9.3h3.6l3.2 3.4v3.1h-6.8z"/></g>
+    <g class="mb-ico-lleno"><circle cx="8" cy="18.1" r="2.1"/><circle cx="17.1" cy="18.1" r="2.1"/><rect x="5.6" y="9.9" width="4" height="3.9" rx=".9"/></g>
+    <g class="mb-ico-fino"><path d="M.6 8.6h1.7M.2 11.6h2.1M.6 14.6h1.7"/></g>`)
   // 6 · No perdés lo que no retirás → el mismo frasco de las tarjetas, con el
-  //     nivel más alto y un signo de más: lo que no sacaste, se suma.
+  //     nivel más alto y un signo de más: lo que no sacaste, se suma. Las
+  //     rayitas finas de la pared son la medida, como en un vaso graduado.
   const ICO_ACUMULA = ico(`
     <g class="mb-ico-traz"><rect x="8.2" y="1.7" width="7.6" height="2.8" rx="1"/><path d="M8.7 4.5h6.6a3 3 0 0 1 3 3v11.5a3 3 0 0 1-3 3H8.7a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3Z"/></g>
-    <g class="mb-ico-lleno"><rect x="7.4" y="12.3" width="9.2" height="8.4" rx="2"/><path d="M19.4 2.8h1.9v2.3h2.3V7h-2.3v2.3h-1.9V7h-2.3V5.1h2.3z"/></g>`)
+    <g class="mb-ico-lleno"><rect x="7.4" y="12.3" width="9.2" height="8.4" rx="2"/><path d="M19.4 2.8h1.9v2.3h2.3V7h-2.3v2.3h-1.9V7h-2.3V5.1h2.3z"/></g>
+    <g class="mb-ico-fino"><path d="M7.4 7.4h1.6M7.4 9.6h1.1"/></g>`)
   // Si el panel carga un ítem de más, ese cae acá y no rompe la fila.
   const ICO_FLOR = ico(`
     <g class="mb-ico-traz"><path d="M12 21.4v-6.6"/></g>
-    <g class="mb-ico-lleno"><circle cx="8.4" cy="9.6" r="3.1"/><circle cx="15.6" cy="9.6" r="3.1"/><circle cx="12" cy="6.4" r="3.3"/><circle cx="12" cy="12.2" r="3.3"/></g>`)
+    <g class="mb-ico-lleno"><circle cx="8.4" cy="9.6" r="3.1"/><circle cx="15.6" cy="9.6" r="3.1"/><circle cx="12" cy="6.4" r="3.3"/><circle cx="12" cy="12.2" r="3.3"/></g>
+    <g class="mb-ico-fino"><path d="M12 17.6l-1.6-1M12 17.6l1.6-1"/></g>`)
 
   // Los iconos van por posición dentro de su lista, no por el texto: el texto
   // se edita desde el backoffice y matchear por palabras sería adivinar.
@@ -651,6 +664,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      los dos lo que hace que se lea lleno y no como un envase suelto. */
   .mb-frasco-vidrio { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-frasco-flor { fill: currentColor; stroke: none; opacity: .95; }
+  /* La rosca de la tapa: el detalle HD del frasco, a media voz. */
+  .mb-frasco-fino { fill: none; stroke: currentColor; stroke-width: 1; stroke-linecap: round; opacity: .45; }
 
   /* ── LA BANDA DE CIERRE: un solo sistema para las tres columnas ──
      Vive acá y no en el bloque con alcance porque los ítems de la tercera
@@ -679,6 +694,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      y no un alambre. */
   .mb-ico-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-ico-lleno { fill: currentColor; stroke: none; opacity: .95; }
+  /* La tercera capa del duotono HD: el detalle interior, en trazo fino y a
+     media voz. Vive solo en el AIRE del dibujo (nunca sobre un relleno, donde
+     no se vería) y a 18px desaparece sin ensuciar: es el detalle que aparece
+     cuando el icono está grande y sobra resolución. */
+  .mb-ico-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; opacity: .5; }
   /* El isotipo de MP es una imagen 100x70: entra en la misma caja cuadrada que
      los SVG sin deformarse, y hereda la misma sombra. */
   .mb-ico--img { object-fit: contain; }
