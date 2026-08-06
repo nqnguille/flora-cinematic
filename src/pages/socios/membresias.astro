@@ -248,6 +248,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     set('mb-benef-t', tx.beneficiosTitulo)
     pintarItems('mb-ciclo-items', tx.ciclo)
     pintarItems('mb-benef-items', tx.beneficios)
+    // Los renglones compartidos de las dos columnas son tantos como ítems tenga
+    // la lista más larga. Si esto queda clavado en 3 y el panel carga un cuarto
+    // ítem, ese cae en un renglón que no se comparte y las dos columnas dejan
+    // de arrancar a la misma altura.
+    const cierre = document.querySelector('.mb-cierre')
+    if (cierre) {
+      const filas = Math.max(
+        Array.isArray(tx.ciclo) ? tx.ciclo.length : 0,
+        Array.isArray(tx.beneficios) ? tx.beneficios.length : 0,
+        1
+      )
+      cierre.style.setProperty('--mb-filas', String(filas))
+    }
     set('mb-eyebrow', tx.eyebrow)
     const tit = document.getElementById('mb-title')
     tit.textContent = tx.titulo || ''
@@ -550,19 +563,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      empareja las tres sin obligar a escribir raro en el panel. */
   .mb-item-d::first-letter { text-transform: uppercase; }
 
-  /* En teléfonos chicos, lo que sobra se saca: la etiqueta del precio la
-     repite el rótulo del bloque de abajo, y el chip vacío solo estaba para
-     alinear alturas que ahora alinea la grilla. */
-  @media (max-width: 400px) {
-    .mb-card { padding: 11px 9px; }
-    .mb-card-precio span { display: none; }
-    .mb-mia:empty { display: none; }
-    .mb-card-det { margin-bottom: 7px; }
-    .mb-gancho { margin-top: 8px; padding: 8px 7px 9px; }
-    .mb-adherir { margin-top: 8px; padding: 8px 8px; }
-    .mb-frascos { margin-bottom: 5px; }
-  }
-
   /* Con dos columnas en un teléfono de 360 quedan ~155px por tarjeta: todo
      lo que estaba pensado para una tarjeta de 220 tiene que achicarse o se
      desborda. El botón es el que más apreta, por el ancho del logo. */
@@ -584,13 +584,46 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
   }
 
+  /* En teléfonos chicos, lo que sobra se saca: la etiqueta del precio la
+     repite el rótulo del bloque de abajo, y el chip vacío solo estaba para
+     alinear alturas que ahora alinea la grilla.
+
+     Este bloque va DESPUÉS del de 560 y no antes. Estaba arriba, y como los
+     dos matchean a la vez en un teléfono de 360 y tienen la misma
+     especificidad, ganaba el de 560 por orden: el teléfono chico recibía los
+     paddings pensados para uno de 559 y toda esta compresión no existía. */
+  @media (max-width: 400px) {
+    .mb-card { padding: 11px 9px; }
+    .mb-card-precio span { display: none; }
+    .mb-mia:empty { display: none; }
+    .mb-card-det { margin-bottom: 7px; }
+    .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
+    .mb-frascos { gap: 2px; margin-bottom: 5px; }
+    .mb-frasco { width: 12px; height: 17px; }
+    /* El botón es lo que primero se rompe: "Suscribir con" no parte y el logo
+       de Mercado Pago tampoco encoge, así que abajo de ~406px de pantalla el
+       texto y el logo se salían de la píldora blanca y los botones de las dos
+       tarjetas se pisaban. Con estos tamaños el mínimo baja de ~142px a ~99px,
+       contra los 105px que deja la tarjeta a 320px. El flex-wrap queda de red:
+       si alguna vez no entra, parte en dos renglones en vez de desbordar. */
+    .mb-gancho .mb-adherir { margin-top: 8px; }
+    .mb-adherir { font-size: 8.5px; gap: 3px; padding: 8px 5px; flex-wrap: wrap; }
+    .mb-adherir-mp { height: 8px; }
+  }
+
   /* ── El cartel de verificación ── */
   /* Va al pie, no al medio: tapar la oferta con un cartel modal para decirle
      al socio qué le falta es castigarlo por haber apretado. Abajo se ve, se
      lee, y las tarjetas siguen a la vista. */
+  /* Una sola fuente de verdad para el ancho de la página: el cartel se cuelga
+     de las mismas medidas que el contenido en vez de tener las suyas. Con las
+     propias arrancaba en x=180 mientras el contenido arrancaba en 132: 48px de
+     desfase contra todo lo demás. */
+  #mb-content { --mb-ancho: 1020px; --mb-pad: clamp(18px, 3vw, 32px); }
   .mb-verif {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-    display: flex; justify-content: center; padding: clamp(12px, 2vw, 22px);
+    display: flex; justify-content: center;
+    padding: clamp(12px, 2vw, 22px) var(--mb-pad);
     background: linear-gradient(to top, rgba(10, 6, 16, .96), rgba(10, 6, 16, .82));
     backdrop-filter: blur(8px);
     border-top: 1px solid rgba(79, 199, 158, .34);
@@ -602,7 +635,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-verif-card {
     display: flex; align-items: center; flex-wrap: wrap;
     gap: clamp(10px, 1.6vw, 24px);
-    width: 100%; max-width: min(1560px, 94vw);
+    width: 100%; max-width: calc(var(--mb-ancho) - 2 * var(--mb-pad));
     text-align: left;
   }
   .mb-verif-lb {
@@ -643,13 +676,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-primera .mb-hero-txt {
       /* Alineados por ARRIBA. Con flex-end se alineaban por la base, y como el
          sello mide el doble que el título, el H1 quedaba flotando contra su pie
-         con 108px de vacío encima: el agujero más grande de la pantalla. */
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: clamp(24px, 3vw, 60px);
+         con 108px de vacío encima: el agujero más grande de la pantalla.
+
+         Grilla y no flex: el sello medía 540px y su borde izquierdo caía en
+         1248, en el medio de la nada. Con las cuatro columnas de las tarjetas,
+         el encabezado se lleva las dos primeras y el sello las dos últimas, así
+         que su borde cae exactamente sobre el borde de la tercera tarjeta. */
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: var(--mb-gap);
+      align-items: start;
     }
-    .mb-primera .mb-hero-copy { flex: 1 1 auto; min-width: 0; }
-    .mb-sello {
-      flex: 0 1 clamp(330px, 29vw, 540px);
+    .mb-primera .mb-hero-copy { grid-column: span 2; min-width: 0; }
+    .mb-primera .mb-sello {
+      grid-column: span 2;
       margin-top: 0;
       padding: clamp(10px, 1.5vh, 18px) clamp(16px, 1.4vw, 24px);
       gap: clamp(2px, .35vh, 5px);
@@ -660,7 +700,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   @media (min-width: 1200px) {
     .mb-items { gap: clamp(14px, 2.1vh, 28px); }
-    .mb-item { padding-top: clamp(6px, .95vh, 13px); }
+    /* El ítem NO lleva padding propio (la regla base ya lo deja en 0): el aire
+       entre ítems lo pone el gap de la lista, una sola vez. Sumando las dos
+       cosas quedaban 33px entre ítems contra 34,5px entre el encabezado de
+       sección y su primer ítem, y el h2 dejaba de leerse como cabeza de su
+       grupo. Ojo: acá no sirve escribirlo en el <style> con alcance de Astro,
+       porque los <li> los inyecta el JS y no llevan el atributo de alcance. */
     .mb-item-t { font-size: clamp(16px, 2.15vh, 26px); margin-bottom: clamp(4px, .65vh, 9px); }
     .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.45; color: rgba(244, 241, 247, .68); }
   }
@@ -754,11 +799,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
     pointer-events: none;
   }
-  /* En el celular el hero ocupa todo el ancho, asi que la cama no puede cortar
-     al 26%: la bajada quedaba sobre el video pelado. */
-  @media (max-width: 900px) {
+  /* Mientras el hero esté apilado a ancho completo, la cama no puede cortar al
+     26%: la bajada quedaba sobre el video pelado. El corte va en 1199,98 y no
+     en 900 porque el hero recién se parte en dos columnas a los 1200: entre
+     901 y 1199 volvía la versión de escritorio sobre un hero apilado y se veía
+     el canto vertical al 74% del ancho.
+
+     Los -24px fijos de los costados sobresalían del padding real del
+     contenedor (18px abajo de 600) y agregaban 6px de scroll horizontal.
+     Colgados del MISMO clamp que el padding, la cama termina siempre al ras
+     del borde de la ventana, en cualquier ancho. */
+  @media (max-width: 1199.98px) {
     .mb-hero::before {
-      left: -24px; right: -24px; top: -20px; bottom: -14px;
+      left: calc(-1 * clamp(18px, 3vw, 32px));
+      right: calc(-1 * clamp(18px, 3vw, 32px));
+      top: -20px; bottom: -14px;
       background: linear-gradient(to bottom, rgba(9, 5, 14, .84) 0%, rgba(9, 5, 14, .74) 100%);
     }
   }
@@ -793,7 +848,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   /* Encabezado de sección interna, con el gesto tipográfico del sitio: el
      título partido y la segunda mitad en verde. */
-  .mb-sec-head { max-width: 720px; margin: 0 auto clamp(24px, 3vw, 34px); text-align: center; }
+  /* Al ras de la izquierda, no centrado: el h2 encabeza una lista alineada a la
+     izquierda, y centrarlo dejaba el título flotando sobre su propio contenido.
+     En la TV ya iba a la izquierda; en el celular seguía centrado y era el
+     desalineado más visible de la mitad de abajo. */
+  .mb-sec-head { max-width: 720px; margin: 0 0 clamp(16px, 4.5vw, 24px); text-align: left; }
   .mb-eyebrow-v {
     display: inline-block; font-family: var(--font-ui);
     font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
@@ -809,7 +868,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-h2 em { font-style: italic; color: #4FC79E; }
 
   /* ── Cierre: apilado en el celular, tres columnas en pantalla grande ── */
-  .mb-cierre { display: grid; gap: clamp(34px, 6vw, 60px); }
+  /* El margin-top no vivía acá sino solo en el bloque de TV, así que en el
+     celular "¿Cómo funciona?" arrancaba PEGADO al borde de la última tarjeta:
+     .mb-grid no trae margen abajo y el gap de esta grilla separa a las dos
+     secciones entre sí, no a la banda de lo que tiene arriba. */
+  .mb-cierre { display: grid; gap: clamp(40px, 11vw, 64px); margin-top: clamp(36px, 10vw, 60px); }
   /* Las tres traían su propio aire, su ancho máximo y su línea de separación,
      de cuando cada una era una sección suelta al final de la página. Apiladas
      eso las separaba; en columnas las hacía arrancar a distinta altura, cada
@@ -858,7 +921,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      aparece y desaparece según la hoja que le toque atrás, y el chip se ve
      roto. Por eso llevan su propio fondo oscuro con desenfoque: se despegan
      de la imagen siempre, sin importar qué haya debajo. */
-  #mb-content .mb-chip {
+  /* :global() a propósito: los tres chips del cartel de verificación los
+     escribe el JS y no llevan el atributo de alcance de Astro, así que con el
+     selector con scope salían sin píldora, sin borde y sin fondo: dos links
+     azules y un botón gris del navegador adentro de una barra oscura. */
+  #mb-content :global(.mb-chip) {
     display: inline-flex; align-items: center;
     font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700;
     line-height: 1; text-decoration: none; white-space: nowrap;
@@ -870,18 +937,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: rgba(248, 246, 252, 0.92);
     transition: color .2s ease, border-color .2s ease, background .2s ease;
   }
-  #mb-content .mb-chip:hover {
+  #mb-content :global(.mb-chip:hover) {
     color: #fff; border-color: rgba(214, 199, 245, 0.6);
     background: rgba(24, 18, 36, 0.72);
   }
-  #mb-content .mb-chip--pri {
+  #mb-content :global(.mb-chip--pri) {
     border-color: rgba(79, 199, 158, 0.62);
     background: rgba(10, 46, 36, 0.72); color: #6FE3BC;
   }
-  #mb-content .mb-chip--pri:hover { background: rgba(14, 62, 48, 0.85); color: #8CF0CE; }
+  #mb-content :global(.mb-chip--pri:hover) { background: rgba(14, 62, 48, 0.85); color: #8CF0CE; }
   /* "Cerrar sesión" traía un margin-left:auto de tienda.css que lo empujaba
      al extremo; acá ya está dentro del grupo de la derecha. */
   #mb-content .td-logout.mb-chip { margin-left: 0; }
+  /* tienda.css deja 6px entre la barra de chips y el encabezado, contra los
+     30-34px que separan todo lo demás: la volanta quedaba colgada del botón
+     "Mi cuenta" como si fuera parte de la barra. En la TV no se nota porque el
+     bloque va centrado a lo alto, pero en el celular sí. */
+  #mb-content .td-head { margin-bottom: clamp(24px, 7vw, 32px); }
 
   /* ══ LA PANTALLA DE LA TV ══
      De 1200px para arriba la primera pantalla se compone para mirarse de
@@ -899,9 +971,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* max-height además de min-height: si la TV tiene barra de navegador o
        otra relación de aspecto, el bloque se comprime en vez de empujar el
        contenido fuera de pantalla. */
+    /* Lo que se descuenta es lo que ocupa la barra de chips con su aire: si se
+       queda corto, la primera pantalla empieza a scrollear. Estaba clavado en
+       76px, que a 1080 daba 5px de margen sobre lo que realmente mide; con un
+       clamp en vh acompaña a la escala del resto en pantallas más altas. */
     .mb-primera {
-      min-height: calc(100dvh - 76px);
+      min-height: calc(100dvh - clamp(76px, 7.5vh, 104px));
       display: flex; flex-direction: column; justify-content: center;
+      /* UNA SOLA GRILLA PARA TODA LA PANTALLA. Las cuatro tarjetas marcan las
+         cuatro columnas, y el encabezado y el cierre se cuelgan de las MISMAS
+         columnas en vez de armar cada uno la suya. Antes el cierre partía la
+         pantalla en dos mitades iguales (801px + 54 de calle) y su segunda
+         columna arrancaba en 986,9 mientras la tercera tarjeta arrancaba en
+         973: 14px de desfasaje, suficiente para que el ojo lea la página
+         como dos maquetas distintas apiladas. */
+      --mb-gap: clamp(16px, 1.6vw, 26px);
     }
     /* Sin esto, en una pantalla más baja que 1080 (un TV con barra de
        navegador, otra relación de aspecto) el max-height aplastaba los bloques:
@@ -915,10 +999,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* El contenedor de socios trae 48px arriba y 140px abajo, pensados para
        páginas que scrollean. Acá esos 188px son casi dos tarjetas de alto. */
     #mb-content.td-content {
-      max-width: min(1560px, 94vw);
+      --mb-ancho: min(1560px, 94vw);
+      max-width: var(--mb-ancho);
       padding-top: clamp(14px, 1.9vh, 26px);
       padding-bottom: clamp(6px, .8vh, 11px);
     }
+
+    /* Acá el bloque va centrado a lo alto, así que el hueco entre la barra y el
+       encabezado lo reparte el centrado: alcanza con que escale con la altura,
+       no hace falta el aire que necesita el celular. */
+    #mb-content .td-head { margin-bottom: clamp(6px, .9vh, 13px); }
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
@@ -929,7 +1019,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     .mb-primera .mb-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: clamp(16px, 1.6vw, 26px);
+      gap: var(--mb-gap);
       max-width: 100%;
       /* El `margin: 0 auto` de la regla base centra bien en el celular, pero
          acá adentro .mb-primera es un contenedor flex y un margen automático
@@ -948,46 +1038,64 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        dejaban la página en 2,08 pantallas de TV. En columnas usan el ancho,
        que es justo lo que sobra en 1920. */
     .mb-primera .mb-cierre {
-      grid-template-columns: repeat(2, 1fr);
+      /* Las MISMAS cuatro columnas que las tarjetas, no dos mitades propias:
+         así "Beneficios exclusivos" arranca exactamente donde arranca la
+         tercera tarjeta. Cada sección se lleva dos columnas. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       /* Cuatro renglones compartidos: el encabezado y los tres ítems. Con
          subgrid, cada columna se cuelga de ESTOS renglones en vez de armar los
          suyos, así el ítem 1 de las tres arranca y termina a la misma altura
          aunque uno tenga dos líneas y otro tres. Sin subgrid (navegador viejo)
          degrada a lo de antes: columnas parejas pero renglones sueltos. */
-      grid-template-rows: auto repeat(3, auto);
+      /* El número de renglones sale del contenido real (lo escribe el JS al
+         pintar), no de un 3 escrito a mano: si mañana el panel carga un cuarto
+         ítem en una de las dos listas, el cuarto caía en un renglón implícito
+         que NO se comparte y las dos columnas se desincronizaban justo en el
+         bloque que existe para mantenerlas sincronizadas. */
+      grid-template-rows: auto repeat(var(--mb-filas, 3), auto);
       align-items: start;
-      gap: clamp(26px, 2.8vw, 54px);
-      margin-top: clamp(14px, 2.1vh, 30px);
+      column-gap: var(--mb-gap);
+      /* Este row-gap separa el encabezado de sección de su lista (entre ítems
+         manda el gap de .mb-items). Va algo MENOR que el hueco entre ítems: el
+         h2 tiene que colgar de su lista, no flotar entre dos grupos. El aire
+         grande va ARRIBA del h2, en el margin-top de acá abajo: es lo que lo
+         despega de las tarjetas. Estaba al revés (22,7 arriba contra 42
+         abajo) y el título se leía como pie de las tarjetas. */
+      row-gap: clamp(13px, 1.8vh, 26px);
+      margin-top: clamp(26px, 3.9vh, 52px);
       padding-top: 0;
       text-align: left;
     }
+    /* Dos columnas de tarjeta cada una. El padding derecho abre la calle
+       entre las dos columnas de texto sin mover el borde izquierdo, que es
+       el que tiene que caer sobre la grilla. */
+    .mb-primera .mb-cierre > * { grid-column: span 2; padding-right: var(--mb-gap); }
     /* Los encabezados de sección nacieron centrados y con ancho máximo para
        cuando cada uno era una sección de página entera. En columna van al ras
        de su texto. */
     .mb-primera .mb-cierre .mb-sec-head {
-      max-width: none; margin: 0 0 clamp(6px, 1vh, 12px); text-align: left;
+      max-width: none; margin: 0; text-align: left;
     }
     .mb-primera .mb-cierre .mb-eyebrow-v { font-size: clamp(10px, 1.2vh, 13px); margin-bottom: clamp(3px, .5vh, 7px); }
     .mb-primera .mb-cierre .mb-h2 { font-size: clamp(22px, 2.9vh, 38px); }
     @supports (grid-template-rows: subgrid) {
+      /* De la primera a la última línea de renglón, sin contar a mano: así el
+         span sigue al --mb-filas de arriba solo. */
       .mb-primera .mb-cierre > * {
-        display: grid; grid-row: span 4; grid-template-rows: subgrid;
+        display: grid; grid-row: 1 / -1; grid-template-rows: subgrid;
       }
+      /* El display de autor le gana al display:none que trae el atributo
+         hidden. Sin esto, si falla la carga de textos quedan los dos h2
+         sueltos sin lista. */
+      .mb-primera .mb-cierre > *[hidden] { display: none; }
       .mb-primera .mb-cierre .mb-items {
-        display: grid; grid-row: span 3; grid-template-rows: subgrid;
-        /* SIN row-gap propio: un subgrid hereda el del padre, y ponerlo en 0
-           dejaba los ítems literalmente pegados. El aire entre renglones lo
-           pone .mb-cierre una sola vez, para las dos columnas a la vez. */
+        display: grid; grid-row: 2 / -1; grid-template-rows: subgrid;
+        /* El gap entre ítems lo pone ACÁ .mb-items (un subgrid usa su propio
+           gutter cuando lo declara, no hereda). El row-gap de .mb-cierre queda
+           gobernando el único renglón que .mb-items no cubre: el que separa el
+           encabezado de sección de su lista. Son dos huecos distintos a
+           propósito, no dos formas de escribir el mismo. */
       }
-      /* Con los renglones compartidos, el aire entre ítems lo pone la grilla
-         de arriba una sola vez, no cada columna por su cuenta. */
-      /* Con subgrid, el aire entre ítems lo pone ESTE row-gap, no el gap de
-         .mb-items. Estaba en 10px contra los 9px que separan el título de su
-         línea: el ojo agrupaba al revés, cada título con el texto del ítem de
-         arriba. Tiene que ser claramente mayor. */
-      .mb-primera .mb-cierre { row-gap: clamp(15px, 2.2vh, 31px); }
-      .mb-primera .mb-cierre .mb-item { padding-top: 0; }
-      .mb-primera .mb-cierre .mb-sec-head { margin-bottom: clamp(6px, 1vh, 14px); }
     }
 
     /* Los pasos van uno debajo del otro: en una columna angosta, en fila
@@ -997,6 +1105,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* En la TV del living. 1680px es el mismo umbral que ya usa /socios/carta
      para su layout de pantalla grande. */
   @media (min-width: 1680px) {
-    #mb-content.td-content { max-width: min(1720px, 92vw); }
+    #mb-content.td-content { --mb-ancho: min(1720px, 92vw); max-width: var(--mb-ancho); }
   }
 </style>
