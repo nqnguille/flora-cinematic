@@ -639,16 +639,28 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .mb-verif-acc { display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
 
   /* ── El sello legal ── */
+  /* En violeta y no en verde. Los dos colores de la marca se reparten el
+     encabezado por significado: el VERDE es el club y lo que ofrece (la
+     volanta, los precios, los frascos), el VIOLETA es el marco institucional,
+     que es lo que este sello realmente es. Antes el sello era verde y quedaba
+     a un palmo de la volanta "EXCLUSIVO SOCIOS", también verde: dos verdes
+     compitiendo en el mismo renglón.
+     El #B79DE6 no es un color nuevo: es el violeta de marca (#381F56)
+     aclarado para fondo oscuro, y ya vivía acá como borde de las tarjetas. */
   .mb-sello {
     display: grid; gap: 8px; margin-top: var(--mb-v2);
     padding: clamp(14px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
-    border: 1px solid rgba(79, 199, 158, .34);
+    border: 1px solid rgba(183, 157, 230, .42);
     border-radius: 16px;
-    background: rgba(14, 34, 29, .55);
+    /* .74 y no .62: medido sobre el video, el rótulo violeta a .62 daba 4,51
+       de contraste, al borde del mínimo legible de 4,5. Oscurecer la caja lo
+       lleva a 5,33, mejor que los 5,03 que daba el verde anterior, sin tocar
+       el color del texto. */
+    background: rgba(30, 20, 48, .74);
   }
   .mb-sello-lb {
     font-family: var(--font-ui); font-size: 11px; font-weight: 700;
-    letter-spacing: .16em; text-transform: uppercase; color: #4FC79E;
+    letter-spacing: .16em; text-transform: uppercase; color: #B79DE6;
   }
   .mb-sello-txt {
     margin: 0; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
@@ -814,7 +826,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: clamp(28px, 5.4vw, 42px); line-height: 1.15;
     color: #f4f1f7; margin: 0 0 var(--mb-v2); text-wrap: balance;
   }
-  .mb-title em { font-style: italic; color: #4FC79E; }
+  /* "de flores" va en itálica CREMA, no en verde: decidido mirando las dos
+     versiones. Acá había una regla que le ponía el verde y que nunca aplicó
+     (el <em> lo crea el JS después de compilar, así que no lleva el atributo
+     de alcance de Astro). La itálica que se ve es la del navegador y alcanza.
+     Borrada para que el código no diga una cosa distinta de la que se ve. */
   /* Sobre una foto, un párrafo al 66% de opacidad se pierde entre las hojas.
      La sombra sola no alcanza cuando el fondo tiene zonas claras. */
   .mb-lead {
