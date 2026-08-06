@@ -649,20 +649,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .mb-primera .mb-hero-copy { flex: 1 1 auto; min-width: 0; }
     .mb-sello {
-      flex: 0 1 clamp(360px, 34vw, 620px);
+      flex: 0 1 clamp(330px, 29vw, 540px);
       margin-top: 0;
       padding: clamp(10px, 1.5vh, 18px) clamp(16px, 1.4vw, 24px);
       gap: clamp(2px, .35vh, 5px);
     }
     .mb-sello-lb { font-size: clamp(9px, 1.1vh, 12px); }
-    .mb-sello-txt { font-size: clamp(12px, 1.45vh, 16px); line-height: 1.45; }
+    .mb-sello-txt { font-size: clamp(11px, 1.2vh, 14px); line-height: 1.5; }
   }
 
   @media (min-width: 1200px) {
     .mb-items { gap: clamp(14px, 2.1vh, 28px); }
     .mb-item { padding-top: clamp(6px, .95vh, 13px); }
     .mb-item-t { font-size: clamp(16px, 2.15vh, 26px); margin-bottom: clamp(4px, .65vh, 9px); }
-    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.45; color: rgba(244, 241, 247, .55); }
+    .mb-item-d { font-size: clamp(12px, 1.5vh, 17px); line-height: 1.45; color: rgba(244, 241, 247, .68); }
   }
   /* El contraste entre las dos formas de pago: una se retira, la otra llega. */
   .mb-card-retiro {
@@ -694,7 +694,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   @media (min-width: 1200px) {
     /* El precio se queda grande: es lo único que se lee desde el sillón. Todo
        lo que lo rodea cede alto para que la página entre entera en 1080. */
-    .mb-card { padding: clamp(10px, 1.45vh, 19px) clamp(14px, 1.2vw, 22px); }
+    .mb-card { padding: clamp(9px, 1.15vh, 15px) clamp(14px, 1.2vw, 22px); }
     .mb-card-nom { font-size: clamp(14px, 1.95vh, 22px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
@@ -702,16 +702,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-gramo { font-size: clamp(10px, 1.2vh, 13px); margin-top: 3px; }
     .mb-card-comp { font-size: clamp(10px, 1.2vh, 13px); margin-top: clamp(5px, .8vh, 9px); }
     .mb-card-retiro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
-    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
-    .mb-gancho { margin-top: clamp(8px, 1.3vh, 16px); padding: clamp(8px, 1.3vh, 14px) 14px clamp(9px, 1.4vh, 15px); }
+    .mb-gancho-envio { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
+    .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
-    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .4vh, 6px); }
-    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .4vh, 5px); }
+    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
+    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; margin-top: clamp(8px, 1.2vh, 14px); }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
     .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
-    .mb-gancho .mb-adherir { margin-top: clamp(7px, 1.1vh, 12px); }
+    .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
     .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
   }
 </style>
@@ -739,8 +739,30 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-fondo { background: #130d1c url('https://images.pexels.com/videos/12361112/cannabis-cannabis-cultivation-cannabis-flower-field-12361112.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200') center / cover; }
   }
 
-  .mb-hero { margin: 0 0 34px; }
-  .mb-hero-txt { position: relative; }
+  .mb-hero { margin: 0 0 34px; position: relative; }
+  /* Cama oscura detras del encabezado: sin esto el texto cae sobre el video y
+     el contraste no llega al minimo legible. Se difumina en los cuatro lados
+     (el degrade horizontal apaga izquierda y derecha, la mascara vertical apaga
+     arriba y abajo) para que no se vea un rectangulo negro recortado. */
+  .mb-hero::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: -26px; bottom: -26px; left: -90px; right: 26%;
+    background: linear-gradient(to right, rgba(9, 5, 14, 0) 0%, rgba(9, 5, 14, .88) 14%, rgba(9, 5, 14, .74) 58%, rgba(9, 5, 14, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+  }
+  /* En el celular el hero ocupa todo el ancho, asi que la cama no puede cortar
+     al 26%: la bajada quedaba sobre el video pelado. */
+  @media (max-width: 900px) {
+    .mb-hero::before {
+      left: -24px; right: -24px; top: -20px; bottom: -14px;
+      background: linear-gradient(to bottom, rgba(9, 5, 14, .84) 0%, rgba(9, 5, 14, .74) 100%);
+    }
+  }
+  .mb-hero-txt { position: relative; z-index: 1; }
   /* En el celular el selector va debajo del texto; en pantalla grande comparten
      renglón (regla más abajo, en el bloque de TV). */
 
@@ -900,9 +922,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
-    .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(8px, 1.3vh, 18px) 0; }
+    .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(6px, .95vh, 13px) 0; }
     .mb-primera .mb-title { font-size: clamp(32px, 5vh, 62px); margin-bottom: clamp(6px, .9vh, 13px); }
-    .mb-primera .mb-lead { font-size: clamp(12px, 1.35vh, 16px); line-height: 1.5; max-width: 74ch; margin-top: 0; color: rgba(244, 241, 247, .58); }
+    .mb-primera .mb-lead { font-size: clamp(12px, 1.35vh, 16px); line-height: 1.5; max-width: 74ch; margin-top: 0; color: rgba(244, 241, 247, .78); }
     .mb-primera .mb-eyebrow { font-size: clamp(10px, 1.15vh, 13px); letter-spacing: .2em; margin-bottom: clamp(5px, .8vh, 11px); }
 
     .mb-primera .mb-grid {
@@ -963,7 +985,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
          .mb-items. Estaba en 10px contra los 9px que separan el título de su
          línea: el ojo agrupaba al revés, cada título con el texto del ítem de
          arriba. Tiene que ser claramente mayor. */
-      .mb-primera .mb-cierre { row-gap: clamp(16px, 2.4vh, 34px); }
+      .mb-primera .mb-cierre { row-gap: clamp(15px, 2.2vh, 31px); }
       .mb-primera .mb-cierre .mb-item { padding-top: 0; }
       .mb-primera .mb-cierre .mb-sec-head { margin-bottom: clamp(6px, 1vh, 14px); }
     }
