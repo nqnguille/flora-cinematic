@@ -176,7 +176,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // así que mostrarlo no habilita a nadie que no corresponda.
     const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo
     const btn = puedeBoton
-      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>${esc(TX.botonSuscribir || 'Suscribir con')}</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
+      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>${esc(TX.botonSuscribir || 'Suscribir por 3 meses')}</span></button>`
       : ''
 
     // El precio de referencia arriba, y el débito abajo como el beneficio que
@@ -246,10 +246,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // se decide una sola vez desde el CSS.
   const ico = (d) => `<svg class="mb-ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`
 
-  // 1 · Te suscribís con Mercado Pago → la tarjeta con la que se paga.
-  const ICO_TARJETA = ico(`
-    <g class="mb-ico-traz"><rect x="1.7" y="5" width="20.6" height="14.4" rx="3"/><path d="M1.7 9.7h20.6"/></g>
-    <g class="mb-ico-lleno"><rect x="4.7" y="12.5" width="6.2" height="4" rx="1.2"/><rect x="14.4" y="14.4" width="4.4" height="1.8" rx=".9"/></g>`)
+  // 1 · Te suscribís con Mercado Pago → el isotipo OFICIAL de MP, no un dibujo
+  //     propio: es una marca de terceros y la reconocible es la de ellos. El
+  //     asset ya estaba en el repo (public/img/mp-iso.png, solo la burbuja).
+  const ICO_MP = `<img class="mb-ico mb-ico--img" src="/img/mp-iso.png" alt="" width="100" height="70" loading="lazy">`
   // 2 · Disponibilidad automática → el mes que vuelve a empezar solo, con los
   //     gramos ya adentro. La flecha que se muerde la cola es el "sin hacer nada".
   const ICO_CICLO = ico(`
@@ -281,7 +281,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // Los iconos van por posición dentro de su lista, no por el texto: el texto
   // se edita desde el backoffice y matchear por palabras sería adivinar.
   const ICONOS = {
-    ciclo: [ICO_TARJETA, ICO_CICLO, ICO_CARTA],
+    ciclo: [ICO_MP, ICO_CICLO, ICO_CARTA],
     beneficios: [ICO_ETIQUETA, ICO_ENVIO, ICO_ACUMULA],
   }
 
@@ -554,10 +554,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     color: #1c1626; background: #fff; border: 0; border-radius: 999px;
     padding: 10px 14px; cursor: pointer;
   }
-  /* En la tarjeta angosta del celular, "Suscribir con" partía en dos renglones
-     y el botón crecía al doble de alto. */
+  /* En la tarjeta angosta del celular, el texto partía en dos renglones y el
+     botón crecía al doble de alto. */
   .mb-adherir span { white-space: nowrap; }
-  .mb-adherir-mp { height: 15px; width: auto; display: block; flex: none; }
   .mb-adherir:hover { filter: brightness(.94); }
   .mb-adherir:disabled { opacity: .6; cursor: default; }
   /* El bloque que desbloquea el descuento. Va con el celeste de Mercado Pago
@@ -582,8 +581,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      triángulo que corta es rectángulo isósceles. Más fondo = franja más larga,
      pero también más adentro del bloque, encima del texto. */
   .mb-cinta {
-    --c-lado: 88px;    /* lado del cuadrado que recorta */
-    --c-fondo: 46px;   /* distancia del vértice a la que cruza la franja */
+    --c-lado: 66px;    /* lado del cuadrado que recorta */
+    --c-fondo: 34px;   /* distancia del vértice a la que cruza la franja */
     /* Los otros dos salen del fondo, no se eligen a mano, y cada uno resuelve
        un problema distinto:
        · el LARGO tiene que pasarse de la cuerda (2·fondo) porque la franja es
@@ -595,7 +594,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
          la franja, y la diferencia se reparte como padding a los costados.
        Sin esta distinción el texto se cortaba a la mitad: "AHORRÁS $40.000 PO". */
     --c-texto: calc(var(--c-fondo) * 1.45);
-    --c-largo: calc(var(--c-fondo) * 2 + 72px);
+    --c-largo: calc(var(--c-fondo) * 2 + 56px);
     position: absolute; top: 0; right: 0;
     width: var(--c-lado); height: var(--c-lado);
     overflow: hidden; pointer-events: none; z-index: 2;
@@ -611,8 +610,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     width: var(--c-largo); box-sizing: border-box;
     transform: translateY(-50%) rotate(45deg);
     display: block; text-align: center;
-    padding: 5px calc((var(--c-largo) - var(--c-texto)) / 2);
-    font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
+    padding: 4px calc((var(--c-largo) - var(--c-texto)) / 2);
+    font-family: var(--font-ui); font-size: 8.5px; font-weight: 800;
     letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
     /* Verde sólido con letra oscura: lo más contrastado de la tarjeta, para
        el beneficio que se desbloquea al suscribirse. Sobre el celeste del
@@ -680,6 +679,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      y no un alambre. */
   .mb-ico-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-ico-lleno { fill: currentColor; stroke: none; opacity: .95; }
+  /* El isotipo de MP es una imagen 100x70: entra en la misma caja cuadrada que
+     los SVG sin deformarse, y hereda la misma sombra. */
+  .mb-ico--img { object-fit: contain; }
   .mb-item-t {
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
     font-size: 17px; font-weight: 600; line-height: 1.2;
@@ -731,8 +733,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       border-radius: 999px; padding: 4px 9px; font-size: 8.5px; box-shadow: none;
     }
     .mb-gancho .mb-adherir { order: 4; }
-    .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
-    .mb-adherir-mp { height: 11px; }
+    .mb-adherir { font-size: 10.5px; padding: 9px 10px; max-width: 100%; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
@@ -762,8 +763,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        contra los 105px que deja la tarjeta a 320px. El flex-wrap queda de red:
        si alguna vez no entra, parte en dos renglones en vez de desbordar. */
     .mb-gancho .mb-adherir { margin-top: 8px; }
-    .mb-adherir { font-size: 8.5px; gap: 3px; padding: 8px 5px; flex-wrap: wrap; }
-    .mb-adherir-mp { height: 8px; }
+    .mb-adherir { font-size: 9px; padding: 8px 6px; }
   }
 
   /* ── El cartel de verificación ── */
@@ -937,8 +937,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px);
       text-align: left; letter-spacing: .07em;
     }
-    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
-    .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
+    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) clamp(14px, 1.6vh, 22px); }
     .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
@@ -948,15 +947,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        fondo, o sea 124px de franja visible, que es lo que necesita el texto en
        dos renglones sin meterse encima del precio. */
     .mb-cinta {
-      --c-lado: clamp(86px, 12.5vh, 160px);
-      --c-fondo: clamp(44px, 6.6vh, 84px);
+      --c-lado: clamp(60px, 8.6vh, 110px);
+      --c-fondo: clamp(31px, 4.5vh, 58px);
     }
     /* Solo el padding vertical: el horizontal lo calcula la fórmula de arriba
        para meter el texto adentro de la cuerda, y pisarlo con un valor fijo es
        volver a cortarlo. */
     .mb-cinta > span {
-      font-size: clamp(9px, 1.05vh, 13px); letter-spacing: .01em;
-      padding-top: clamp(4px, .55vh, 8px); padding-bottom: clamp(4px, .55vh, 8px);
+      font-size: clamp(8px, .92vh, 11px); letter-spacing: .01em;
+      padding-top: clamp(3px, .45vh, 6px); padding-bottom: clamp(3px, .45vh, 6px);
     }
   }
 </style>

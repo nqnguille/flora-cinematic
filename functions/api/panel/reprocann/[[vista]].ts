@@ -10,7 +10,7 @@
 // como su cultivador con el mismo código). Sin esto no había forma de saber a
 // quién había que empujar: el 84 de 156 socios no tenía ni el dato cargado.
 import { requireCap, puede } from '../_rol';
-import { extraerTramites, agruparPorPersona, pasoDe, emparejar, puntuar } from './_unificar';
+import { extraerTramites, agruparPorPersona, pasoDe, emparejar, puntuar, DESDE_REPROCANN } from './_unificar';
 import type { TramitePortal } from './_unificar';
 
 interface Env {
@@ -346,7 +346,53 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       estado,
       abierto ? null : new Date().toISOString(),
     ).run();
-    return json({ ok: true, abierto });
+
+    // Además del tile, reflejar el estado REAL en la ficha del socio, para que
+    // el embudo del panel avance solo (Código listo → Esperando firma → …). El
+    // trámite recién presentado no está en el volcado de la ONG, así que este
+    // es el único canal que lo sabe. Match por DNI (la llave confiable) y por
+    // código como respaldo cuando el socio todavía no tiene el DNI cargado.
+    const dni = b.dni ? String(b.dni).replace(/\D/g, '').slice(0, 10) : null;
+    const codigo = b.codigo ? String(b.codigo).slice(0, 40) : null;
+    const paso = DESDE_REPROCANN[estado] || null;
+    // Estados que maneja el club a mano y que el organismo no puede reconstruir:
+    // no se pisan nunca. Se le deja el número y una nota para que un humano los
+    // resuelva (ej. un socio en 'autocultivo' que se está pasando a Flora).
+    const PROTEGIDOS = new Set(['ddjj_pendiente', 'ddjj_firmada', 'revisar', 'autocultivo']);
+    let socioTocado: { id: number; estado: string; protegido?: boolean } | null = null;
+    if (dni || codigo) {
+      let socio = dni
+        ? await env.DB.prepare(`SELECT id, reprocann_estado, documento FROM socios WHERE documento = ?1 AND papelera IS NULL LIMIT 1`).bind(dni).first<{ id: number; reprocann_estado: string; documento: string | null }>()
+        : null;
+      if (!socio && codigo) {
+        socio = await env.DB.prepare(`SELECT id, reprocann_estado, documento FROM socios WHERE reprocann_codigo = ?1 AND papelera IS NULL LIMIT 1`).bind(codigo).first();
+      }
+      if (socio) {
+        // Completar el DNI del socio si estaba vacío y no choca con otro (el
+        // índice único de documento). Es la "llave común" del plan de conexión.
+        if (dni && !socio.documento) {
+          const otro = await env.DB.prepare(`SELECT id FROM socios WHERE documento = ?1 AND id != ?2`).bind(dni, socio.id).first();
+          if (!otro) await env.DB.prepare(`UPDATE socios SET documento = ?1 WHERE id = ?2`).bind(dni, socio.id).run();
+        }
+        if (paso && !PROTEGIDOS.has(socio.reprocann_estado)) {
+          await env.DB.prepare(
+            `UPDATE socios SET reprocann_estado = ?1, reprocann_tramite = COALESCE(?2, reprocann_tramite),
+                    reprocann_actualizado = datetime('now') WHERE id = ?3`,
+          ).bind(paso, tramite, socio.id).run();
+          socioTocado = { id: socio.id, estado: paso };
+        } else {
+          // Protegido: no toco el paso, pero dejo el número y una nota (sin pisar
+          // una nota que ya exista) para que se vea en la ficha.
+          await env.DB.prepare(
+            `UPDATE socios SET reprocann_tramite = COALESCE(?1, reprocann_tramite),
+                    reprocann_nota = COALESCE(reprocann_nota, ?2),
+                    reprocann_actualizado = datetime('now') WHERE id = ?3`,
+          ).bind(tramite, `Trámite ${tramite} presentado en REPROCANN (${estado}). Revisar: figura ${socio.reprocann_estado}.`, socio.id).run();
+          socioTocado = { id: socio.id, estado: socio.reprocann_estado, protegido: true };
+        }
+      }
+    }
+    return json({ ok: true, abierto, socio: socioTocado });
   }
 
   // Confirmar o rechazar un par. Nunca automático: este endpoint ES el click.
