@@ -36,12 +36,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
            velo es lo que hace que el texto se lea; sin él, sobre hojas en
            movimiento no se lee nada a tres metros. -->
       <div class="mb-fondo" aria-hidden="true">
-        <!-- Servido por Pexels: "Cannabis plants swaying in the wind", de
-             Nicky Pe (video 12361112). Se enlaza directo, no lo servimos
-             nosotros. -->
-        <video src="https://videos.pexels.com/video-files/12361112/12361112-hd_1280_720_30fps.mp4"
+        <!-- "Cannabis plants swaying in the wind", de Nicky Pe (Pexels 12361112),
+             ahora servido por NOSOTROS y horneado en ping-pong (ida + vuelta en
+             el mismo archivo): los navegadores no reproducen en reversa, así
+             que el rewind vive adentro del mp4 y el loop no tiene corte.
+             Dos calidades: 1080 nítido para pantallas grandes (la TV lo cachea
+             una vez), 720 liviano para el celular. El src lo elige el script de
+             abajo ANTES de que el video empiece a cargar. -->
+        <video data-src-hd="/video/membresias-1080.mp4"
+               data-src-sd="/video/membresias-720.mp4"
                poster="https://images.pexels.com/videos/12361112/cannabis-cannabis-cultivation-cannabis-flower-field-12361112.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200"
-               muted loop playsinline autoplay preload="none" crossorigin="anonymous"></video>
+               muted loop playsinline autoplay preload="none"></video>
+        <script is:inline>
+          (() => {
+            const v = document.currentScript.previousElementSibling
+            v.src = matchMedia('(min-width: 1200px)').matches ? v.dataset.srcHd : v.dataset.srcSd
+          })()
+        </script>
       </div>
 
       <!-- El logo respira solo a la izquierda; todos los controles, incluido
