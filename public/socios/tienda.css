@@ -62,8 +62,20 @@
   .td-head > .td-brand { width: 100%; justify-content: center; }
   .td-acciones { width: 100%; justify-content: center; }
 }
-.td-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-left: auto; }
+.td-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-left: auto; }
 .td-acciones .td-logout { margin-left: 0; }
+/* Los links de la barra unificada van de píldora, como los chips de
+   membresías y del portal: una sola familia visual para saltar entre las
+   páginas del club. Solo dentro de .td-acciones: el .td-back suelto de otras
+   pantallas (p.ej. "Volver" del login) sigue siendo un link de texto. */
+.td-acciones .td-back {
+  display: inline-flex; align-items: center;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--td-line);
+  border-radius: 999px; padding: 8px 16px;
+  color: var(--td-muted); font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; transition: color 0.2s ease, border-color 0.2s ease;
+}
+.td-acciones .td-back:hover { color: var(--td-cream); border-color: var(--td-violet); }
 .td-logout {
   margin-left: auto;
   background: none; border: 1px solid var(--td-line); border-radius: 999px;
