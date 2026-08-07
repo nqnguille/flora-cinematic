@@ -20,6 +20,7 @@
     "unpdf": "^1.8.0"
   },
   "devDependencies": {
+    "linkedom": "^0.18.13",
     "ws": "^8.21.3"
   }
 }

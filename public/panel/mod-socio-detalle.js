@@ -56,6 +56,8 @@
   let velo = null
   let caja = null
   let alCambiar = null
+  let tabActiva = 'resumen'
+  let ultimoId = null
 
   function cerrar() {
     velo?.remove(); caja?.remove()
@@ -66,6 +68,7 @@
 
   async function abrir(id, onCambio) {
     alCambiar = onCambio || null
+    if (ultimoId !== id) { tabActiva = 'resumen'; ultimoId = id }
     cerrar()
     velo = document.createElement('div'); velo.className = 'pn-drawer-velo'
     caja = document.createElement('aside'); caja.className = 'pn-drawer'
@@ -92,6 +95,36 @@
       : d.debito?.estado === 'pausada' ? '<span class="tag tag-mal">débito pausado</span>'
       : s.debito_no_insistir ? '<span class="tag tag-auto">no insistir</span>'
       : d.membresia ? '<span class="tag tag-off">sin débito</span>' : ''
+    // ── semáforo de cumplimiento Res. 1780/2025 (por paciente) ──
+    const cumFila = (est, texto, det) => `<div class="sd-cum is-${est}"><span class="sd-cum-ico">${est === 'ok' ? '✓' : est === 'warn' ? '△' : est === 'mal' ? '✗' : '·'}</span><span>${texto}</span>${det ? `<span class="sd-cum-det">${det}</span>` : ''}</div>`
+    const cumplimiento = (() => {
+      const filas = []
+      const faltan = [!s.documento && 'DNI', !s.domicilio && 'domicilio', !s.email && 'email'].filter(Boolean)
+      filas.push(faltan.length
+        ? cumFila('mal', 'Identidad para la nómina (art. 4° ter)', 'falta ' + faltan.join(', '))
+        : cumFila('ok', 'Identidad completa para la nómina (art. 4° ter)'))
+      const vence = String(s.reprocann_vence || '').slice(0, 10)
+      const hoy = new Date().toISOString().slice(0, 10)
+      const en45 = new Date(Date.now() + 45 * 864e5).toISOString().slice(0, 10)
+      filas.push(!vence ? cumFila('warn', 'Vigencia del REPROCANN', 'sin fecha de vencimiento cargada')
+        : vence < hoy ? cumFila('mal', 'REPROCANN vencido', 'venció ' + fFecha(vence))
+        : vence <= en45 ? cumFila('warn', 'REPROCANN por vencer', 'vence ' + fFecha(vence))
+        : cumFila('ok', 'REPROCANN vigente', 'vence ' + fFecha(vence)))
+      const rc = s.reprocann_estado
+      filas.push(rc === 'aprobado' ? cumFila('ok', 'Vinculado a Flora como cultivadora')
+        : rc === 'autocultivo' ? cumFila('warn', 'Figura como autocultivo', 'no vinculado a Flora')
+        : rc === 'conversion' ? cumFila('warn', 'En conversión a Flora', 'baja + alta nueva en curso')
+        : rc === 'en_evaluacion' ? cumFila('warn', 'Vinculación en evaluación del Ministerio')
+        : cumFila('pend', 'Vinculación con Flora', 'trámite en curso'))
+      filas.push(`<div class="sd-cum" id="sd-cum-ddjj">${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(rc) ? '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo (art. 4° ter inc. c)</span><span class="sd-cum-det">⏳</span>' : '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo</span><span class="sd-cum-det">no aplica: vinculación directa</span>'}</div>`)
+      filas.push('<div class="sd-cum" id="sd-cum-cert"><span class="sd-cum-ico">·</span><span>Certificado REPROCANN archivado</span><span class="sd-cum-det">⏳</span></div>')
+      if (d.saldo && typeof d.saldo.retiradoMes === 'number') {
+        filas.push(d.saldo.retiradoMes <= 40
+          ? cumFila('ok', 'Dispensa del mes dentro del tope', d.saldo.retiradoMes + ' g de 40 g (Anexo IV)')
+          : cumFila('mal', 'Dispensa del mes EXCEDE el tope', d.saldo.retiradoMes + ' g de 40 g (Anexo IV)'))
+      }
+      return filas.join('')
+    })()
     const chipCarta = d.carta.acceso
       ? (d.carta.lastLogin ? `<span class="tag tag-ok">carta ${hace(d.carta.lastLogin)}</span>` : '<span class="tag tag-off">sin ingresar</span>')
       : '<span class="tag tag-deb">sin acceso a la carta</span>'
@@ -112,83 +145,32 @@
         </div>
       </div>
       <div class="pn-drawer-cuerpo">
+        <div class="sd-tabs" role="tablist">
+          ${[['resumen', 'Resumen'], ['tramite', 'Trámite'], ['legal', 'Legal'], ['eco', 'Económico'], ['retiros', 'Retiros'], ['datos', 'Datos']]
+            .filter(([id]) => id !== 'legal' || P.puede('reprocann_editar'))
+            .map(([id, tx]) => `<button type="button" class="sd-tabbtn ${tabActiva === id ? 'on' : ''}" data-tab="${id}">${tx}</button>`).join('')}
+        </div>
 
-        <details open><summary>Contacto</summary>
-          <div class="campo"><label class="lb">Email de Google</label>
-            <input class="input sd-campo" data-campo="email" value="${P.esc(s.email || '')}" ${editar ? '' : 'disabled'} /></div>
-          <div class="grid2" style="gap:10px">
-            <div class="campo"><label class="lb">Teléfono</label>
-              <input class="input sd-campo" data-campo="telefono" value="${P.esc(s.telefono || '')}" ${editar ? '' : 'disabled'} /></div>
-            <div class="campo"><label class="lb">DNI</label>
-              <input class="input sd-campo" data-campo="documento" inputmode="numeric" maxlength="10" value="${P.esc(s.documento || '')}" ${editar ? '' : 'disabled'} /></div>
+        <div class="sd-tab ${tabActiva === 'resumen' ? 'on' : ''}" data-tab="resumen">
+          <details open><summary>Cumplimiento Res. 1780/2025</summary>
+            <div class="sd-cum-lista">${cumplimiento}</div>
+          </details>
+          <details open><summary>Consultorio</summary>
+            <div style="margin-top:8px;font-size:13px;color:var(--ink2)">
+              ${s.med_en_tratamiento
+                ? `✓ En tratamiento con el Dr. Kalb${s.med_proxima_consulta ? ` · próxima consulta ${new Date(s.med_proxima_consulta).toLocaleDateString('es-AR')}` : ''}`
+                : 'Sin señal del consultorio para este DNI.'}
+              <div style="color:var(--muted);font-size:12px;margin-top:4px">La historia clínica vive en el consultorio (drezequielkalb.com), bajo secreto profesional: acá solo llega la señal, nunca datos clínicos.</div>
+            </div>
+          </details>
+          <div class="fila" style="margin-top:12px;flex-wrap:wrap">
+            ${mp ? '<button class="btn btn-pri" id="sd-r-debito" type="button">$ Mandar link de pago</button>' : ''}
+            ${s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a>` : ''}
           </div>
-          <div class="campo"><label class="lb">Domicilio</label>
-            <input class="input sd-campo" data-campo="domicilio" placeholder="Calle y número" value="${P.esc(s.domicilio || '')}" ${editar ? '' : 'disabled'} /></div>
-          <div class="grid2" style="gap:10px">
-            <div class="campo"><label class="lb">Localidad</label>
-              <input class="input sd-campo" data-campo="localidad" value="${P.esc(s.localidad || '')}" ${editar ? '' : 'disabled'} /></div>
-            <div class="campo"><label class="lb">Provincia</label>
-              <input class="input sd-campo" data-campo="provincia" value="${P.esc(s.provincia || '')}" ${editar ? '' : 'disabled'} /></div>
-          </div>
-          <div class="campo"><label class="lb">Nota</label>
-            <input class="input sd-campo" data-campo="nota" value="${P.esc(s.nota || '')}" ${editar ? '' : 'disabled'} /></div>
-          ${editar ? '<div class="fila" style="margin-top:10px"><span class="pn-sp"></span><button class="btn" id="sd-guardar-contacto" type="button">Guardar contacto</button></div>' : ''}
-          <p class="msg" id="sd-msg-contacto" style="margin:6px 0 0"></p>
-        </details>
+        </div>
 
-        <details open><summary>Membresía</summary>
-          <div class="fila" style="margin-top:10px;flex-wrap:wrap">
-            ${d.membresia && d.membresia.modalidad === 'plan'
-              ? `<span class="tag tag-auto">${P.esc(d.membresia.tier)} · plan prepago</span>`
-              : editar ? `<select class="sel" id="sd-tier">${TIERS.map((t) =>
-                  `<option value="${t}" ${(d.membresia?.tier || 'NINGUNA') === t ? 'selected' : ''}>${t === 'NINGUNA' ? '— sin membresía' : t}</option>`).join('')}</select>`
-              : `<b>${P.esc(d.membresia?.tier || '— sin membresía')}</b>`}
-            ${d.membresia?.gramos_mes ? `<span style="color:var(--muted);font-size:12px">${d.membresia.gramos_mes} g por mes · desde ${fFecha(d.membresia.desde)}</span>` : ''}
-          </div>
-          ${d.saldo && d.membresia ? (() => {
-            const sal = d.saldo
-            if (sal.tipo === 'plan') {
-              const pct = sal.total ? Math.max(0, Math.min(100, (sal.retirado / sal.total) * 100)) : 0
-              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
-                Plan prepago: retiró <b>${sal.retirado} g</b> de ${sal.total} — le quedan <b>${sal.saldo} g</b> hasta ${fFecha(sal.hasta)}
-                <div style="height:6px;border-radius:4px;background:var(--line);margin-top:4px"><div style="height:6px;border-radius:4px;background:var(--vio);width:${pct.toFixed(0)}%"></div></div></div>`
-            }
-            if (sal.tipo === 'debito') {
-              const guardado = sal.acumulado > sal.saldo ? ` · tiene <b>${sal.acumulado} g</b> acumulados` : ''
-              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
-                Débito automático: puede retirar hoy <b style="color:var(--grn)">${sal.saldo} g</b> (tope ${sal.tope} g por visita)${guardado}
-                <br />Este mes retiró <b>${sal.retiradoMes} g</b>.</div>`
-            }
-            const deuda = !sal.pagoEsteMes
-            return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
-              Este mes: retiró <b>${sal.retiradoMes} g</b>${sal.habilitado ? ` de ${sal.habilitado} habilitados — saldo <b style="color:${sal.saldo < 0 ? 'var(--dan)' : 'var(--grn)'}">${sal.saldo} g</b>` : ''}
-              ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
-          })() : ''}
-          ${editar ? `<div class="fila" style="margin-top:10px">
-            ${d.membresia && d.membresia.modalidad === 'plan'
-              ? '<button class="btn btn-peligro" id="sd-plan-cancelar" type="button">Cancelar el plan prepago</button>'
-              : '<button class="btn" id="sd-plan-vender" type="button">Venderle un plan prepago</button>'}
-          </div>` : ''}
-          <p class="msg" id="sd-msg-memb" style="margin:6px 0 0"></p>
-        </details>
-
-        <details open><summary>Débito automático</summary>
-          <div style="margin-top:10px;font-size:13px;color:var(--ink2)">
-            ${d.debito?.estado ? `${chipDebito} ${d.debito.monto ? `<b>${P.fmt(d.debito.monto)}</b>/mes` : ''}
-              ${d.debito.estado === 'activa' ? ` · cuota ${d.debito.racha_meses % 3 === 0 && d.debito.racha_meses > 0 ? 3 : d.debito.racha_meses % 3}/3` : ''}
-              ${d.debito.fin ? ` · termina ${fFecha(d.debito.fin)}` : ''}` : 'Sin suscripción todavía.'}
-            ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:12px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
-          </div>
-          ${s.adhesion_habilitada ? `<div style="font-size:12px;color:var(--grn,#4c9);margin-top:6px">✓ Puede adherirse desde su cuenta (habilitado ${hace(s.adhesion_habilitada)}${s.adhesion_habilitada_por ? ' por ' + P.esc(s.adhesion_habilitada_por) : ''})</div>` : ''}
-          ${mp ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-pri" id="sd-debito" type="button">$ Mandar link de pago</button>
-            <button class="btn" id="sd-adhesion" type="button">${s.adhesion_habilitada ? 'Quitarle la habilitación' : 'Dejar que se adhiera desde su cuenta'}</button>
-            ${s.adhesion_habilitada && s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${(() => { let t = String(s.telefono).replace(/\D/g, ''); return t.length === 10 ? '549' + t : t })()}?text=${encodeURIComponent(`Hola ${String(s.nombre || '').split(' ')[0]}! Ya podés adherirte al débito automático con el 20% de descuento directo desde tu cuenta de Flora: entrá a https://floraong.ar/socios/membresias/ con tu Google, elegí tu membresía y listo. Cualquier duda escribime.`)}">Avisarle por WhatsApp</a>` : ''}
-            <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
-          </div>` : ''}
-        </details>
-
-        <details ${paso && (paso.quien === 'club' || paso.quien === 'paciente' || paso.quien === 'medico') ? 'open' : ''}><summary>REPROCANN</summary>
+        <div class="sd-tab ${tabActiva === 'tramite' ? 'on' : ''}" data-tab="tramite">
+          <details ${paso && (paso.quien === 'club' || paso.quien === 'paciente' || paso.quien === 'medico') ? 'open' : ''}><summary>REPROCANN</summary>
           <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
@@ -228,29 +210,114 @@
               <input type="file" id="sd-cert-file" accept="application/pdf" hidden />` : ''}
           </div>
         </details>
+        </div>
 
-        ${P.puede('reprocann_editar') ? `
+        ${P.puede('reprocann_editar') ? `<div class="sd-tab ${tabActiva === 'legal' ? 'on' : ''}" data-tab="legal">` : '<div hidden>'}
+          ${P.puede('reprocann_editar') ? `
         <details ${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(s.reprocann_estado) ? 'open' : ''}><summary>Declaración jurada</summary>
           <p class="so-help" style="margin:8px 0 0">Para vincularse a Flora tiene que renunciar al autocultivo: las modalidades
             son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.
             El débito recién se habilita con la declaración firmada y verificada.</p>
           <div id="sd-ddjj" style="margin-top:10px"><div style="color:var(--muted);font-size:12px">⏳ buscando…</div></div>
         </details>` : ''}
+        </div>
 
-        <details><summary>Actividad reciente</summary>
-          <div style="margin-top:6px;font-size:13px;color:var(--ink2)">
-            <b style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Retiros</b>
-            ${d.dispensas.length ? d.dispensas.map((x) => `<div class="fila" style="padding:3px 0">
-              <span>${fFecha(x.fecha)} · ${P.esc(x.producto || 'flores')}</span><span class="pn-sp"></span>
-              <span>${x.gramos ? x.gramos + ' g' : (x.unidades || '') + ' u'}</span></div>`).join('') : '<div style="color:var(--muted)">Sin retiros.</div>'}
-            ${d.movimientos ? `<b style="display:block;margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
+        <div class="sd-tab ${tabActiva === 'eco' ? 'on' : ''}" data-tab="eco">
+          <details open><summary>Membresía</summary>
+          <div class="fila" style="margin-top:10px;flex-wrap:wrap">
+            ${d.membresia && d.membresia.modalidad === 'plan'
+              ? `<span class="tag tag-auto">${P.esc(d.membresia.tier)} · plan prepago</span>`
+              : editar ? `<select class="sel" id="sd-tier">${TIERS.map((t) =>
+                  `<option value="${t}" ${(d.membresia?.tier || 'NINGUNA') === t ? 'selected' : ''}>${t === 'NINGUNA' ? '— sin membresía' : t}</option>`).join('')}</select>`
+              : `<b>${P.esc(d.membresia?.tier || '— sin membresía')}</b>`}
+            ${d.membresia?.gramos_mes ? `<span style="color:var(--muted);font-size:12px">${d.membresia.gramos_mes} g por mes · desde ${fFecha(d.membresia.desde)}</span>` : ''}
+          </div>
+          
+          ${editar ? `<div class="fila" style="margin-top:10px">
+            ${d.membresia && d.membresia.modalidad === 'plan'
+              ? '<button class="btn btn-peligro" id="sd-plan-cancelar" type="button">Cancelar el plan prepago</button>'
+              : '<button class="btn" id="sd-plan-vender" type="button">Venderle un plan prepago</button>'}
+          </div>` : ''}
+          <p class="msg" id="sd-msg-memb" style="margin:6px 0 0"></p>
+        </details>
+          <details open><summary>Débito automático</summary>
+          <div style="margin-top:10px;font-size:13px;color:var(--ink2)">
+            ${d.debito?.estado ? `${chipDebito} ${d.debito.monto ? `<b>${P.fmt(d.debito.monto)}</b>/mes` : ''}
+              ${d.debito.estado === 'activa' ? ` · cuota ${d.debito.racha_meses % 3 === 0 && d.debito.racha_meses > 0 ? 3 : d.debito.racha_meses % 3}/3` : ''}
+              ${d.debito.fin ? ` · termina ${fFecha(d.debito.fin)}` : ''}` : 'Sin suscripción todavía.'}
+            ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:12px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
+          </div>
+          ${s.adhesion_habilitada ? `<div style="font-size:12px;color:var(--grn,#4c9);margin-top:6px">✓ Puede adherirse desde su cuenta (habilitado ${hace(s.adhesion_habilitada)}${s.adhesion_habilitada_por ? ' por ' + P.esc(s.adhesion_habilitada_por) : ''})</div>` : ''}
+          ${mp ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-pri" id="sd-debito" type="button">$ Mandar link de pago</button>
+            <button class="btn" id="sd-adhesion" type="button">${s.adhesion_habilitada ? 'Quitarle la habilitación' : 'Dejar que se adhiera desde su cuenta'}</button>
+            ${s.adhesion_habilitada && s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${(() => { let t = String(s.telefono).replace(/\D/g, ''); return t.length === 10 ? '549' + t : t })()}?text=${encodeURIComponent(`Hola ${String(s.nombre || '').split(' ')[0]}! Ya podés adherirte al débito automático con el 20% de descuento directo desde tu cuenta de Flora: entrá a https://floraong.ar/socios/membresias/ con tu Google, elegí tu membresía y listo. Cualquier duda escribime.`)}">Avisarle por WhatsApp</a>` : ''}
+            <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
+          </div>` : ''}
+        </details>
+          <details open><summary>Pagos recientes</summary>
+            <div style="margin-top:6px;font-size:13px;color:var(--ink2)">${d.movimientos ? `<b style="display:block;margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
             ${d.movimientos.length ? d.movimientos.map((x) => `<div class="fila" style="padding:3px 0">
               <span>${fFecha(x.fecha)} · ${P.esc(x.concepto || x.categoria)}</span><span class="pn-sp"></span>
-              <span style="font-weight:600">${P.fmt(x.neto)}</span></div>`).join('') : '<div style="color:var(--muted)">Sin pagos.</div>'}` : ''}
-          </div>
-        </details>
+              <span style="font-weight:600">${P.fmt(x.neto)}</span></div>`).join('') : '<div style="color:var(--muted)">Sin pagos.</div>'}` : ''}</div>
+          </details>
+        </div>
 
-        ${editar ? `<details><summary>Zona peligrosa</summary>
+        <div class="sd-tab ${tabActiva === 'retiros' ? 'on' : ''}" data-tab="retiros">
+          <details open><summary>Saldo</summary>
+            ${d.saldo && d.membresia ? (() => {
+            const sal = d.saldo
+            if (sal.tipo === 'plan') {
+              const pct = sal.total ? Math.max(0, Math.min(100, (sal.retirado / sal.total) * 100)) : 0
+              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
+                Plan prepago: retiró <b>${sal.retirado} g</b> de ${sal.total} — le quedan <b>${sal.saldo} g</b> hasta ${fFecha(sal.hasta)}
+                <div style="height:6px;border-radius:4px;background:var(--line);margin-top:4px"><div style="height:6px;border-radius:4px;background:var(--vio);width:${pct.toFixed(0)}%"></div></div></div>`
+            }
+            if (sal.tipo === 'debito') {
+              const guardado = sal.acumulado > sal.saldo ? ` · tiene <b>${sal.acumulado} g</b> acumulados` : ''
+              return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
+                Débito automático: puede retirar hoy <b style="color:var(--grn)">${sal.saldo} g</b> (tope ${sal.tope} g por visita)${guardado}
+                <br />Este mes retiró <b>${sal.retiradoMes} g</b>.</div>`
+            }
+            const deuda = !sal.pagoEsteMes
+            return `<div style="margin-top:10px;font-size:13px;color:var(--ink2)">
+              Este mes: retiró <b>${sal.retiradoMes} g</b>${sal.habilitado ? ` de ${sal.habilitado} habilitados — saldo <b style="color:${sal.saldo < 0 ? 'var(--dan)' : 'var(--grn)'}">${sal.saldo} g</b>` : ''}
+              ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
+          })() : ''}
+            ${!d.saldo || !d.membresia ? '<div style="margin-top:8px;color:var(--muted);font-size:13px">Sin membresía activa: no hay saldo que mostrar.</div>' : ''}
+          </details>
+          <details open><summary>Retiros recientes</summary>
+          <div style="margin-top:6px;font-size:13px;color:var(--ink2)"><b style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Retiros</b>
+            ${d.dispensas.length ? d.dispensas.map((x) => `<div class="fila" style="padding:3px 0">
+              <span>${fFecha(x.fecha)} · ${P.esc(x.producto || 'flores')}</span><span class="pn-sp"></span>
+              <span>${x.gramos ? x.gramos + ' g' : (x.unidades || '') + ' u'}</span></div>`).join('') : '<div style="color:var(--muted)">Sin retiros.</div>'}</div>
+        </details>
+        </div>
+
+        <div class="sd-tab ${tabActiva === 'datos' ? 'on' : ''}" data-tab="datos">
+          <details open><summary>Contacto</summary>
+          <div class="campo"><label class="lb">Email de Google</label>
+            <input class="input sd-campo" data-campo="email" value="${P.esc(s.email || '')}" ${editar ? '' : 'disabled'} /></div>
+          <div class="grid2" style="gap:10px">
+            <div class="campo"><label class="lb">Teléfono</label>
+              <input class="input sd-campo" data-campo="telefono" value="${P.esc(s.telefono || '')}" ${editar ? '' : 'disabled'} /></div>
+            <div class="campo"><label class="lb">DNI</label>
+              <input class="input sd-campo" data-campo="documento" inputmode="numeric" maxlength="10" value="${P.esc(s.documento || '')}" ${editar ? '' : 'disabled'} /></div>
+          </div>
+          <div class="campo"><label class="lb">Domicilio</label>
+            <input class="input sd-campo" data-campo="domicilio" placeholder="Calle y número" value="${P.esc(s.domicilio || '')}" ${editar ? '' : 'disabled'} /></div>
+          <div class="grid2" style="gap:10px">
+            <div class="campo"><label class="lb">Localidad</label>
+              <input class="input sd-campo" data-campo="localidad" value="${P.esc(s.localidad || '')}" ${editar ? '' : 'disabled'} /></div>
+            <div class="campo"><label class="lb">Provincia</label>
+              <input class="input sd-campo" data-campo="provincia" value="${P.esc(s.provincia || '')}" ${editar ? '' : 'disabled'} /></div>
+          </div>
+          <div class="campo"><label class="lb">Nota</label>
+            <input class="input sd-campo" data-campo="nota" value="${P.esc(s.nota || '')}" ${editar ? '' : 'disabled'} /></div>
+          ${editar ? '<div class="fila" style="margin-top:10px"><span class="pn-sp"></span><button class="btn" id="sd-guardar-contacto" type="button">Guardar contacto</button></div>' : ''}
+          <p class="msg" id="sd-msg-contacto" style="margin:6px 0 0"></p>
+        </details>
+          ${editar ? `<details><summary>Zona peligrosa</summary>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar socio'}</button>
             ${P.puede('papelera_gestionar') ? `<button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>` : ''}
@@ -258,9 +325,17 @@
           </div>
           <p class="msg" id="sd-msg-zona" style="margin:6px 0 0"></p>
         </details>` : ''}
+        </div>
       </div>`
 
     caja.querySelector('.pn-drawer-x').addEventListener('click', cerrar)
+
+    caja.querySelectorAll('.sd-tabbtn').forEach((b) => b.addEventListener('click', () => {
+      tabActiva = b.dataset.tab
+      caja.querySelectorAll('.sd-tabbtn').forEach((x) => x.classList.toggle('on', x === b))
+      caja.querySelectorAll('.sd-tab').forEach((t) => t.classList.toggle('on', t.dataset.tab === tabActiva))
+    }))
+    caja.querySelector('#sd-r-debito')?.addEventListener('click', () => modalDebito(s))
 
     const msgDe = (sel) => caja.querySelector(sel)
     const aviso = (sel, texto, clase) => { const m = msgDe(sel); m.className = 'msg ' + (clase || ''); m.textContent = texto }
@@ -306,6 +381,13 @@
         const r = await fetch(`/api/panel/certificado?socio_id=${s.id}`, { credentials: 'include' })
         const d = r.ok ? await r.json() : { existe: false }
         est.textContent = d.existe ? `cargado ${fFecha(d.meta?.subido)}` : 'sin cargar'
+        const cum = caja.querySelector('#sd-cum-cert')
+        if (cum) {
+          cum.className = 'sd-cum ' + (d.existe ? 'is-ok' : 'is-warn')
+          cum.innerHTML = d.existe
+            ? '<span class="sd-cum-ico">✓</span><span>Certificado REPROCANN archivado</span><span class="sd-cum-det">subido ' + fFecha(d.meta?.subido) + '</span>'
+            : '<span class="sd-cum-ico">△</span><span>Certificado REPROCANN sin archivar</span><span class="sd-cum-det">subilo en Trámite</span>'
+        }
         const ver = caja.querySelector('#sd-cert-ver')
         if (ver) { ver.hidden = !d.existe; ver.href = `/api/panel/certificado?socio_id=${s.id}&descargar=1` }
         const borrar = caja.querySelector('#sd-cert-borrar')
@@ -461,6 +543,13 @@
       return
     }
     const dec = d.declaracion && d.declaracion.estado !== 'anulada' ? d.declaracion : null
+    const cumDj = caja.querySelector('#sd-cum-ddjj')
+    if (cumDj && ['autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(s.reprocann_estado)) {
+      const verif = dec && dec.estado === 'verificada'
+      const firm = dec && dec.estado === 'firmada'
+      cumDj.className = 'sd-cum ' + (verif ? 'is-ok' : firm ? 'is-warn' : 'is-mal')
+      cumDj.innerHTML = `<span class="sd-cum-ico">${verif ? '✓' : firm ? '△' : '✗'}</span><span>Renuncia al autocultivo (art. 4° ter inc. c)</span><span class="sd-cum-det">${verif ? 'firmada y verificada' : firm ? 'firmada · falta verificar' : dec ? 'generada · falta la firma' : 'sin generar'}</span>`
+    }
     const faltaDni = !d.socio.documento
     const dom = [d.socio.domicilio, d.socio.localidad, d.socio.provincia].filter(Boolean).join(', ')
 
