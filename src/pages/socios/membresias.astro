@@ -85,6 +85,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <aside class="mb-sello">
             <span class="mb-sello-lb" id="mb-sello-lb">Ley 27.350 · REPROCANN</span>
             <p class="mb-sello-txt" id="mb-sello-txt"></p>
+            <!-- Los dos caminos para profundizar: el marco legal contado en la
+                 landing y los términos con URL propia. Son hijos estáticos: el
+                 JS solo pisa el rótulo y el texto, a esto no lo toca. -->
+            <nav class="mb-sello-cta" aria-label="Información legal">
+              <a href="/#legalidad">Conocé el marco legal →</a>
+              <a href="/terminos/">Términos y condiciones →</a>
+            </nav>
           </aside>
         </div>
       </header>
@@ -865,6 +872,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     margin: 0; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
     color: rgba(244, 241, 247, .72); text-wrap: pretty;
   }
+  /* Los CTA del sello: dos links chicos en línea, en el violeta del marco
+     institucional. En fila y no apilados: el sello tiene prohibido crecer en
+     alto (tiene que entrar en la primera pantalla de la TV). */
+  .mb-sello-cta { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .mb-sello-cta a {
+    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+    color: #B79DE6; text-decoration: none;
+  }
+  .mb-sello-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   @media (min-width: 1200px) {
     /* En el encabezado se apoya a la derecha del título, en el hueco que dejó
@@ -891,6 +907,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       gap: clamp(2px, .35vh, 5px);
     }
     .mb-sello-lb { font-size: clamp(9px, 1.1vh, 12px); }
+    .mb-sello-cta { gap: 3px clamp(12px, 1.6vh, 22px); margin-top: clamp(2px, .3vh, 5px); }
+    .mb-sello-cta a { font-size: clamp(10px, 1.15vh, 14px); }
     .mb-sello-txt { font-size: clamp(11px, 1.2vh, 14px); line-height: 1.5; }
   }
 

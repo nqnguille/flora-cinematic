@@ -1,0 +1,188 @@
+---
+// Términos de uso de floraong.ar, como página con URL propia.
+//
+// El texto es EL MISMO, palabra por palabra y con la misma fecha, que el del
+// modal de aceptación del portal de socios (src/components/SociosTos.astro):
+// si se cambia uno hay que cambiar el otro, son la misma versión legal. La
+// página existe para que los términos sean linkeables (desde el sello legal
+// de membresías, el footer, un contrato o una impresión), cosa que un modal
+// no puede dar.
+import Layout from '../layouts/Layout.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import '../styles/global.css'
+
+const ACTUALIZADA = '5 de agosto de 2026'
+---
+
+<Layout
+  title="Términos de uso — Flora ONG"
+  description="Los términos de uso del portal de socios de Flora: quién puede usarlo, el marco legal REPROCANN, qué es y qué no es el servicio, tus datos y tus derechos."
+  canonical="https://floraong.ar/terminos/"
+>
+  <div class="pv-page">
+  <div class="pv-barra">
+    <a class="pv-marca" href="/">Flora</a>
+    <a class="pv-volver" href="/">Volver al sitio</a>
+  </div>
+
+  <main class="pv-main">
+    <h1 class="pv-h1">Términos de uso</h1>
+    <p class="pv-fecha">Última actualización: {ACTUALIZADA}</p>
+    <p class="pv-entrada">
+      Estos son los términos que aceptás al usar el portal de socios de Flora,
+      incluida la carta de genéticas y las membresías. Son el mismo texto que se
+      te muestra al entrar por primera vez; acá tienen su propia página para que
+      puedas leerlos, guardarlos o imprimirlos cuando quieras.
+    </p>
+
+    <h2 class="pv-h2">1. Quién puede usar esta carta</h2>
+      <p>Esta carta es exclusiva para socios y socias <strong>mayores de 18 años</strong> de la Asociación Civil Cann de Cannabis Medicinal, con vínculo asociativo vigente y en el marco del programa REPROCANN (Ley 27.350). Al aceptar estos términos, declarás ser mayor de edad.</p>
+
+      <h2 class="pv-h2">2. Marco legal: cultivo solidario bajo REPROCANN</h2>
+      <p>La Ley 27.350 y su reglamentación (REPROCANN) reconocen el derecho de cada paciente a cultivar su propio cannabis medicinal, y prevén que una organización civil inscripta cultive en su nombre —de forma solidaria— cuando, por el motivo que sea, no pueda ejercer ese derecho en su domicilio. La Asociación Civil Cann de Cannabis Medicinal (CUIT 30-71827609-4) está inscripta en REPROCANN como organización civil cultivadora, con sitios de cultivo declarados en las provincias de Neuquén y Río Negro, y cuenta con Director Médico y responsable técnico designados conforme la normativa vigente. Para retirar en el club, cada socio debe contar con su propio trámite REPROCANN vigente, que designe a la Asociación como su cultivadora.</p>
+
+      <h2 class="pv-h2">3. Qué es (y qué no es) este servicio</h2>
+      <p>Por eso, lo que reservás <strong>no es una compra</strong>: es la entrega de tu propio cultivo, amparado por tu vínculo REPROCANN con la Asociación. Podés retirarlo en la sede del club o, si tu membresía lo incluye, pedir que te lo llevemos a tu domicilio dentro de Neuquén capital. El traslado lo hace la Asociación con la carta de porte que exige la Resolución 1780/2025, y la cantidad que se traslada nunca supera lo que ampara tu credencial. Este sitio no procesa pagos: tu aporte se coordina aparte.</p>
+
+      <h2 class="pv-h2">4. Tus datos personales</h2>
+      <p>Para identificarte usamos el inicio de sesión con tu cuenta de Google, de donde tomamos tu nombre, foto y email. Guardamos también el historial de tus reservas para poder atenderte. Cuando reservás, le avisamos al equipo del club a través de nuestro propio servicio de notificaciones, con tu nombre y tu contacto para poder atenderte. No vendemos ni cedemos tus datos a nadie más. El detalle completo está en nuestra <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a>.</p>
+
+      <h2 class="pv-h2">5. Tus derechos sobre tus datos</h2>
+      <p>Conforme la Ley 25.326 de Protección de Datos Personales, en cualquier momento podés pedirnos acceder, corregir o eliminar tus datos, o dar de baja tu cuenta de la carta, escribiéndonos por WhatsApp.</p>
+
+      <h2 class="pv-h2">6. La información del catálogo es orientativa</h2>
+      <p>THC, CBD y demás datos publicados son de referencia y pueden variar de lote a lote. Las fotos son ilustrativas —gentileza de los bancos de semillas de las genéticas que cultivamos— y no reflejan necesariamente la cosecha exacta que vas a retirar. Nada de lo publicado acá reemplaza la indicación de tu médica o médico tratante.</p>
+
+      <h2 class="pv-h2">7. Disponibilidad y baja del servicio</h2>
+      <p>La disponibilidad de cada genética puede cambiar entre tu reserva y el retiro; te avisamos si hay cambios. El club puede, a su criterio, dar de baja el acceso de un socio a la carta ante un uso indebido del servicio.</p>
+
+      <h2 class="pv-h2">8. Cambios a estos términos</h2>
+      <p>Podemos actualizar este texto. Si el cambio es importante, te vamos a pedir que lo aceptes de nuevo la próxima vez que entres.</p>
+
+      <h2 class="pv-h2">9. Ley aplicable</h2>
+      <p>Estos términos se rigen por las leyes de la República Argentina. Ante cualquier consulta, escribinos por <a href="https://wa.me/5492996375723" target="_blank" rel="noopener">WhatsApp</a>.</p>
+    
+
+    <p class="pv-legal">
+      Asociación Civil Cann de Cannabis Medicinal · I.G.J. N.º 1994128 ·
+      CUIT 30-71827609-4 · Neuquén, Argentina ·
+      <a href="/privacidad/">Política de privacidad</a>
+    </p>
+  </main>
+  <SiteFooter />
+  </div>
+</Layout>
+
+<style>
+  /* El sitio corre sobre fondo oscuro; esta página es un documento y va sobre
+     papel claro, como /verificacion-edad. */
+  .pv-page {
+    background: var(--fl-paper, #fff);
+    min-height: 100vh;
+  }
+
+  .pv-barra {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px clamp(20px, 6vw, 64px);
+    background: var(--fl-violet, #381F56);
+  }
+  .pv-marca {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: #fff;
+    text-decoration: none;
+  }
+  .pv-volver {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .8);
+    text-decoration: none;
+  }
+  .pv-volver:hover { color: #fff; text-decoration: underline; }
+
+  .pv-main {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: clamp(36px, 6vw, 72px) clamp(20px, 6vw, 40px) 80px;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.68;
+    color: rgba(28, 22, 38, 0.78);
+  }
+  .pv-main :global(p) { margin: 0 0 15px; }
+  .pv-main :global(a) { color: var(--fl-green, #148A91); font-weight: 600; text-underline-offset: 3px; }
+  .pv-main :global(strong) { color: var(--fl-ink, #1C1626); font-weight: 700; }
+
+  .pv-h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(32px, 6vw, 48px);
+    line-height: 1.12;
+    color: var(--fl-ink, #1C1626);
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .pv-fecha { font-size: 14px; color: rgba(28, 22, 38, 0.5); margin: 0 0 10px; }
+  .pv-entrada { font-size: 18px; color: rgba(28, 22, 38, 0.72); margin: 0 0 8px; }
+
+  .pv-h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(23px, 3.6vw, 30px);
+    line-height: 1.2;
+    color: var(--fl-violet, #381F56);
+    margin: 44px 0 10px;
+    text-wrap: balance;
+  }
+  .pv-h3 { font-size: 16px; font-weight: 700; color: var(--fl-ink, #1C1626); margin: 26px 0 5px; }
+
+  .pv-ul { margin: 0 0 15px; padding-left: 1.15rem; list-style: disc; }
+  .pv-ul li { margin-bottom: 7px; }
+  .pv-ul li::marker { color: var(--fl-green, #148A91); }
+
+  .pv-tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 18px;
+    border: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    border-radius: 14px;
+  }
+  .pv-tabla { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 15px; }
+  .pv-tabla th, .pv-tabla td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--fl-line, rgba(56, 31, 86, 0.12));
+    vertical-align: top;
+  }
+  .pv-tabla tr:last-child td { border-bottom: none; }
+  .pv-tabla th {
+    font-size: 11.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: rgba(28, 22, 38, 0.5);
+    font-weight: 700;
+    background: var(--fl-paper-2, #F6F4F2);
+  }
+
+  .pv-destacado {
+    background: var(--fl-paper-2, #F6F4F2);
+    border-radius: 16px;
+    padding: 20px 22px;
+    margin: 22px 0;
+    box-shadow: inset 0 0 0 1px var(--fl-line, rgba(56, 31, 86, 0.14));
+  }
+  .pv-destacado :global(p:last-child) { margin-bottom: 0; }
+
+  .pv-legal {
+    font-size: 12.5px;
+    color: rgba(28, 22, 38, 0.45);
+    border-top: 1px solid var(--fl-line, rgba(56, 31, 86, 0.14));
+    padding-top: 16px;
+    margin: 44px 0 0;
+  }
+</style>
