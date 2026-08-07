@@ -73,6 +73,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <div class="gn-topbar-right">
         <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva">
           <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg>
+          <!-- Con ítems en el carrito el trigger deja de ser un icono discreto y
+               se vuelve una píldora verde "Completar reserva" (clase is-cta, la
+               pone updateCartBar). La versión corta es para los anchos justos
+               de la grilla (1440-1700), donde la larga no entra en la fila. -->
+          <span class="gn-cart-cta-txt" aria-hidden="true"><span class="gn-cta-long">Completar reserva</span><span class="gn-cta-short">Reservar</span></span>
           <span id="gn-cart-badge" class="gn-cart-badge" hidden></span>
         </button>
         <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
@@ -101,6 +106,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <footer class="gn-pagefoot">
         <p class="gn-disclaimer"><strong>Asociación Civil Cann de Cannabis Medicinal</strong> · Ley 27.350 / REPROCANN. <button type="button" class="gn-tos-linkbtn gn-tos-open">Ver términos completos</button></p>
       </footer>
+
+      <!-- MOBILE: con ítems cargados, además del CTA del topbar (que queda
+           arriba, lejos del pulgar) aparece esta barrita fija abajo. Abre el
+           mismo modal del carrito; el padding-bottom que la acompaña
+           (.has-cart-fab) corre el footer legal para que no quede tapado. -->
+      <button id="gn-cart-fab" class="gn-cart-fab" type="button" hidden>Completar reserva · <span id="gn-cart-fab-n">0 ítems</span> <span aria-hidden="true">→</span></button>
 
       <!-- ── Modal de reserva (se abre desde el ícono de carrito del topbar) ── -->
       <div id="gn-modal" class="gn-modal gn-modal--cart" hidden data-lenis-prevent>
@@ -287,8 +298,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // unidades), en fila propia debajo de una etiqueta — así entran aun con los
     // dos formatos en la tarjeta más angosta.
     function orderStrip(g) {
-      const pills = formatosDe(g)
-        .filter((f) => FORMATO[f])
+      // Orden FIJO, el mismo del selector del topbar: flores a la izquierda,
+      // preroll a la derecha — venga como venga el array en los datos.
+      const tiene = formatosDe(g)
+      const pills = ['flor', 'preroll']
+        .filter((f) => tiene.includes(f) && FORMATO[f])
         .map((f) => {
           const key = `${g.id}|${f}`
           return `
@@ -567,8 +581,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       document.querySelectorAll('.gn-dd-panel').forEach((p) => {
         if (p !== except) {
           p.hidden = true
-          const t = p.previousElementSibling
+          const t = p._toggle || p.previousElementSibling
           if (t) t.classList.remove('is-open')
+          // El panel abierto vive fuera de su chip (ver toggle click): al
+          // cerrarse vuelve a casa para que el DOM quede como se armó.
+          if (p._home && p.parentElement !== p._home) p._home.appendChild(p)
         }
       })
     }
@@ -605,12 +622,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const toggle = el.querySelector('.gn-dd-toggle')
       const panel = el.querySelector('.gn-dd-panel')
       const allcb = panel.querySelector('.gn-dd-allcb')
+      // El carril de filtros scrollea (overflow) y se desvanece (mask): un
+      // panel absoluto ADENTRO quedaba recortado e invisible al abrirse. Por
+      // eso el panel abierto se muda a #gn-content (hereda las variables de
+      // color de .gn-main) y se fija con position:fixed bajo su chip;
+      // closeAllPanels lo devuelve a su lugar al cerrarse.
+      panel._toggle = toggle
+      panel._home = el
       toggle.addEventListener('click', (e) => {
         e.stopPropagation()
         const willOpen = panel.hidden
         closeAllPanels(willOpen ? panel : null)
         panel.hidden = !willOpen
         toggle.classList.toggle('is-open', willOpen)
+        if (willOpen) {
+          const r = toggle.getBoundingClientRect()
+          panel.style.position = 'fixed'
+          panel.style.top = `${Math.round(r.bottom + 6)}px`
+          panel.style.left = `${Math.round(Math.max(8, Math.min(r.left, window.innerWidth - 208)))}px`
+          document.getElementById('gn-content').appendChild(panel)
+        }
       })
       panel.addEventListener('click', (e) => e.stopPropagation())
 
@@ -773,6 +804,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       trigger.setAttribute('aria-label', label || 'Tu reserva')
       badge.textContent = count > 0 ? String(count) : ''
       badge.hidden = count <= 0
+
+      // CTA "Completar reserva": solo mientras se ARMA un carrito (no cuando el
+      // trigger está mostrando una reserva ya enviada). Mismo estado, sin
+      // duplicar: se deriva de lo que este función ya calculó.
+      const armando = !(activePedido && !modoAparte) && cart.size > 0
+      trigger.classList.toggle('is-cta', armando)
+      // Pop sutil del badge en cada agregado (no al quitar): reinicia la
+      // animación CSS re-aplicando la clase.
+      const prev = updateCartBar._n || 0
+      if (armando && count > prev) {
+        badge.classList.remove('is-pop')
+        void badge.offsetWidth
+        badge.classList.add('is-pop')
+      }
+      updateCartBar._n = count
+      // Barrita fija de mobile: mismo carrito, mismo modal.
+      const fab = document.getElementById('gn-cart-fab')
+      if (fab) {
+        fab.hidden = !armando
+        const n = document.getElementById('gn-cart-fab-n')
+        if (n) n.textContent = count === 1 ? '1 ítem' : `${count} ítems`
+      }
+      document.getElementById('gn-content').classList.toggle('has-cart-fab', armando)
     }
 
     function cartItems() {
@@ -1159,6 +1213,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     })
 
     document.getElementById('gn-cart-trigger').addEventListener('click', () => openModal())
+    document.getElementById('gn-cart-fab').addEventListener('click', () => openModal())
     document.getElementById('gn-modal').addEventListener('click', (e) => {
       if (e.target.id === 'gn-modal') { closeModal(); return } // clic afuera cierra
       if (e.target.id === 'gn-modal-close') closeModal()
@@ -1571,7 +1626,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    column-gap: clamp(0.8rem, 1.2vw, 1.25rem);
+    /* Canal de respiro entre las tres piezas: la columna de filtros llena su
+       1fr (scrollea adentro), así que este gap ES la distancia filtros↔logo.
+       Con el clamp viejo (tope 1.25rem = 20px) a 1920 quedaban pegados. */
+    column-gap: clamp(1.6rem, 2.2vw, 2.75rem);
     margin-bottom: clamp(8px, 1.2vh, 16px);
   }
   .gn-logo { height: clamp(24px, 2.7vh, 36px); width: auto; display: block; }
@@ -1614,16 +1672,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--gn-muted);
-    padding: 0.4rem 0.9rem;
+    /* Área de click generosa: el botón entero es el target, no solo el texto */
+    padding: 0.5rem 1rem;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
     touch-action: manipulation;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   }
   /* Formato sin genéticas activas: atenuado y sin acción (evita el dead-end) */
   .gn-seg-btn.is-empty { opacity: 0.38; cursor: default; }
-  .gn-seg-btn:hover { color: var(--gn-cream); }
+  .gn-seg-btn:hover:not(.is-empty) { color: var(--gn-cream); background: rgba(244, 241, 247, 0.09); }
   .gn-seg-label {
     font-size: 0.66rem;
     font-weight: 700;
@@ -1648,17 +1707,32 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-seg-ic svg { width: 17px; height: 17px; }
   .gn-seg-btn.is-flor .gn-seg-ic { background: var(--gn-green); color: #08160f; }
   .gn-seg-btn.is-preroll .gn-seg-ic { background: var(--gn-violet); color: #170c2b; }
-  /* Activo: el botón se tiñe del color de su sello */
-  .gn-seg-btn.is-active { background: rgba(244, 241, 247, 0.16); color: var(--gn-cream); }
+  /* Activo: el botón se tiñe del color de su sello, con más cuerpo que antes
+     (el 0.18 de alfa apenas se distinguía del estado apagado) y una tilde
+     sobre el sello que lo dice sin depender del color. */
+  .gn-seg-btn.is-active { background: rgba(244, 241, 247, 0.16); color: var(--gn-cream); font-weight: 800; }
   .gn-seg-btn.is-flor.is-active {
-    background: rgba(60, 180, 146, 0.18);
+    background: rgba(60, 180, 146, 0.3);
     color: var(--gn-cream);
-    box-shadow: inset 0 0 0 1.5px var(--gn-green);
+    box-shadow: inset 0 0 0 1.8px var(--gn-green);
   }
   .gn-seg-btn.is-preroll.is-active {
-    background: rgba(183, 157, 230, 0.18);
+    background: rgba(183, 157, 230, 0.3);
     color: var(--gn-cream);
-    box-shadow: inset 0 0 0 1.5px var(--gn-violet);
+    box-shadow: inset 0 0 0 1.8px var(--gn-violet);
+  }
+  /* Tilde de "prendido" montada sobre el sello circular del formato activo */
+  .gn-seg-btn .gn-seg-ic { position: relative; }
+  .gn-seg-btn.is-active .gn-seg-ic::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: -4px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--gn-cream) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23130d1c" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5 9-11"/></svg>') center / 8px 8px no-repeat;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
   .gn-seg-btn:focus-visible { outline: 2px solid var(--gn-violet); outline-offset: 2px; }
 
@@ -1670,11 +1744,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600;
     color: var(--gn-cream); background: var(--gn-card);
     border: 1px solid rgba(244, 241, 247, 0.2); border-radius: 999px;
-    padding: 0.78rem 0.95rem; cursor: pointer; /* misma altura que el segmentado */
+    padding: 0.78rem 1.05rem; cursor: pointer; /* misma altura que el segmentado */
     transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.3); }
-  .gn-dd-toggle.has-sel { border-color: var(--gn-violet); }
+  .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.45); background: var(--gn-card-2); }
+  /* Con selección distinta de "Todos" el chip lo dice de un vistazo: borde y
+     tinte violeta + el contador en pastilla (que ya trae el número). */
+  .gn-dd-toggle.has-sel {
+    border-color: var(--gn-violet);
+    background: rgba(183, 157, 230, 0.16);
+    box-shadow: inset 0 0 0 1px var(--gn-violet);
+  }
+  .gn-dd-toggle.has-sel .gn-dd-name { color: #d3c2f2; }
   .gn-dd-count {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 1.15rem; height: 1.15rem; padding: 0 0.35rem;
@@ -1695,6 +1776,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-dd-panel {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
     min-width: 190px; max-height: min(58vh, 380px); overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: rgba(183, 157, 230, 0.4) transparent;
     background: var(--gn-card-2); border: 1px solid var(--gn-line);
     border-radius: 14px; padding: 0.4rem;
     box-shadow: 0 20px 48px -14px rgba(0, 0, 0, 0.75);
@@ -1702,7 +1784,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-dd-panel[hidden] { display: none; }
   .gn-dd-opt {
     display: flex; align-items: center; gap: 0.65rem;
-    padding: 0.45rem 0.6rem; border-radius: 8px; cursor: pointer;
+    /* Renglón más alto: target táctil cómodo en todo el ancho del panel */
+    padding: 0.6rem 0.7rem; border-radius: 8px; cursor: pointer;
     font-size: 0.86rem; color: var(--gn-cream);
     transition: background 0.12s ease;
   }
@@ -2256,6 +2339,73 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     text-align: center;
   }
   .gn-cart-badge[hidden] { display: none; }
+  /* Pop sutil del badge en cada agregado (la clase la re-aplica updateCartBar) */
+  .gn-cart-badge.is-pop { animation: gn-badge-pop 0.32s cubic-bezier(0.33, 1, 0.68, 1); }
+  @keyframes gn-badge-pop { 40% { transform: scale(1.4); } }
+
+  /* ── CTA "Completar reserva": el trigger del carrito con ítems adentro.
+     Vacío es el icono discreto de siempre; con el primer ítem se convierte
+     en una píldora verde protagonista (clase is-cta, la pone updateCartBar)
+     con una aparición breve, sin épica. ── */
+  .gn-cart-cta-txt { display: none; font-family: var(--font-ui); font-size: 0.88rem; font-weight: 800; letter-spacing: 0.01em; white-space: nowrap; }
+  .gn-cta-short { display: none; }
+  .gn-cart-trigger.is-cta {
+    width: auto;
+    gap: 0.45rem;
+    padding: 0 1.05rem 0 0.8rem;
+    background: var(--gn-green);
+    border-color: var(--gn-green);
+    color: #08160f;
+    animation: gn-cta-in 0.28s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+  .gn-cart-trigger.is-cta:hover { background: #4fc79e; border-color: #4fc79e; }
+  .gn-cart-trigger.is-cta .gn-cart-cta-txt { display: inline; }
+  .gn-cart-trigger.is-cta .gn-cart-badge { color: var(--gn-green-d); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35); }
+  @keyframes gn-cta-in { from { transform: scale(0.88); opacity: 0.4; } }
+  /* Anchos justos de la grilla de 3 columnas (1440-1600): la píldora usa el
+     texto corto y los chips vecinos se compactan, así la fila derecha sigue
+     entrando en su columna sin pisar el logo centrado (medido: a 1440 la
+     versión larga se pasaba ~12px de su columna; a 1620 ya sobran ~39px). */
+  @media (min-width: 1440px) and (max-width: 1619.98px) {
+    .gn-cart-trigger.is-cta .gn-cta-long { display: none; }
+    .gn-cart-trigger.is-cta .gn-cta-short { display: inline; }
+    .gn-topbar-right:has(.gn-cart-trigger.is-cta) .gn-logout { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+    .gn-topbar-right:has(.gn-cart-trigger.is-cta) { gap: 0.45rem; }
+  }
+
+  /* ── Barrita fija de mobile: "Completar reserva · N ítems →" ── */
+  .gn-cart-fab {
+    display: none;
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 45;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #08160f;
+    background: var(--gn-green);
+    border: none;
+    border-radius: 999px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.85);
+    cursor: pointer;
+    animation: gn-fab-in 0.3s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+  .gn-cart-fab[hidden] { display: none; }
+  @keyframes gn-fab-in { from { transform: translateY(14px); opacity: 0; } }
+  @media (max-width: 760px) {
+    .gn-cart-fab:not([hidden]) { display: flex; }
+    /* Que la barrita no tape el footer legal: el contenido le hace lugar */
+    .gn-content.has-cart-fab { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gn-cart-trigger.is-cta, .gn-cart-fab, .gn-cart-badge.is-pop { animation: none !important; }
+  }
 
   .gn-btn-primary {
     font-family: var(--font-ui);
@@ -2287,6 +2437,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     transition: border-color 0.15s ease;
   }
   .gn-btn-ghost:hover { border-color: var(--gn-violet); }
+
+  /* El botón que ENVÍA la reserva es el protagonista del modal: verde (el
+     mismo verde del CTA que trajo hasta acá), más grande que sus vecinos. */
+  #gn-modal-send {
+    background: var(--gn-green);
+    color: #08160f;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.7rem;
+    box-shadow: 0 10px 26px -10px rgba(60, 180, 146, 0.55);
+  }
+  #gn-modal-send:hover { background: #4fc79e; }
 
   /* ── Modal de pedido ── */
   .gn-modal {
