@@ -150,7 +150,6 @@ export const ZONAS: {
     id: 'tarjetas', nombre: 'Tarjetas de precio', donde: 'Las cuatro tarjetas del medio.',
     campos: [
       { k: 'etiquetaPrecio', lb: 'Debajo del precio de contado', max: 40 },
-      { k: 'retiro', lb: 'Cómo lo recibe', max: 60 },
       { k: 'etiquetaPrecio2', lb: 'Rótulo del bloque de débito', max: 40, ayuda: 'Vacío = no se muestra el bloque.' },
       { k: 'ahorro', lb: 'Cuánto ahorra', max: 60, ayuda: 'Usá {monto} donde va la plata.' },
       { k: 'envio', lb: 'Línea del envío', max: 60 },
