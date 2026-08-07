@@ -148,6 +148,17 @@ export async function procesarPagoAprobado(env: EnvMp, pago: Record<string, unkn
 // de un tier DISTINTO al que tenía, su membresía pasa a ese tier — pagar
 // MEDIUM es ser MEDIUM. Devuelve los gramos mensuales del tier.
 export async function asegurarMembresiaDebito(env: EnvMp, socioId: number, tier: string): Promise<number | null> {
+  // Backstop del gate de autocultivo: los links de plan de MP son públicos,
+  // así que un pago puede llegar aunque los dos gates de arriba (el botón
+  // del socio y el envío del panel) lo hayan bloqueado. Las modalidades son
+  // excluyentes: sin la DDJJ de renuncia verificada, acá NO se crea la
+  // membresía; la suscripción queda registrada igual y el panel la resuelve
+  // a mano (verificar la DDJJ o cancelar en MP).
+  const quien = await env.DB.prepare(`SELECT reprocann_estado FROM socios WHERE id = ?`)
+    .bind(socioId).first<{ reprocann_estado: string | null }>();
+  if (quien && ['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(String(quien.reprocann_estado))) {
+    return null;
+  }
   const precio = await env.DB.prepare(
     `SELECT p.gramos FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
       WHERE p.item = ? AND p.tipo = 'membresia' ORDER BY lp.vigente_desde DESC LIMIT 1`,

@@ -170,8 +170,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   // Desde un LEAD: todavía no hay ficha, así que el papel se arma con lo que
   // cargó al inscribirse. Sirve para mandárselo y que lo devuelva firmado; la
   // declaración se registra recién cuando la persona tiene ficha.
-  const leadId = Number(url.searchParams.get('lead_id'));
-  if (Number.isFinite(leadId)) {
+  // Number(null) es 0 y 0 es finito: con el guard viejo, TODO GET con
+  // socio_id se desviaba a buscar el lead id 0 y moría en "El lead no
+  // existe" (para el 100% de los socios; la rama de socio era código
+  // muerto). El parámetro tiene que EXISTIR para entrar acá.
+  const leadParam = url.searchParams.get('lead_id');
+  const leadId = Number(leadParam);
+  if (leadParam !== null && Number.isFinite(leadId)) {
     const lead = await env.DB.prepare(
       `SELECT id, nombre, email, telefono, nota FROM leads WHERE id = ?`,
     ).bind(leadId).first<{ id: number; nombre: string; email: string | null; telefono: string | null; nota: string | null }>();
@@ -223,7 +228,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const dec = await env.DB.prepare(
-    `SELECT id, estado, version, texto_hash, generada, generada_por, firmada, archivo_bytes, archivo_tipo
+    `SELECT id, estado, version, texto_hash, generada, generada_por, firmada, firmada_por,
+            archivo_bytes, archivo_tipo, verificada, verificada_por, firma_texto
        FROM declaraciones WHERE socio_id = ? ORDER BY id DESC LIMIT 1`,
   ).bind(socioId).first();
   const p = await leerPlantilla(env);
@@ -283,6 +289,29 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         WHERE id = ? AND reprocann_estado IN ('autocultivo', 'ddjj_pendiente')`,
     ).bind(dec.socio_id).run();
     return json({ ok: true, bytes: bytes.length });
+  }
+
+  // ---- verificar la firmada (el proceso interno de doble control) ----
+  // Es un acto SEPARADO de subir el archivo, con su propio registro de quién
+  // y cuándo. En una organización chica puede verificar la misma persona que
+  // subió: lo que importa es que sea una decisión explícita y quede firmado
+  // el rastro. Recién la declaración VERIFICADA devuelve al ex-autocultivador
+  // al embudo normal (esperando_codigo), que es lo que le abre el débito.
+  if (body.verificar) {
+    const decId = Number(body.declaracion_id);
+    if (!Number.isFinite(decId)) return json({ error: 'Falta declaracion_id' }, 400);
+    const dec = await env.DB.prepare(`SELECT id, socio_id, estado FROM declaraciones WHERE id = ?`)
+      .bind(decId).first<{ id: number; socio_id: number; estado: string }>();
+    if (!dec) return json({ error: 'La declaración no existe' }, 404);
+    if (dec.estado !== 'firmada') return json({ error: 'Primero tiene que estar firmada' }, 409);
+    await env.DB.prepare(
+      `UPDATE declaraciones SET estado = 'verificada', verificada = datetime('now'), verificada_por = ? WHERE id = ?`,
+    ).bind(auth.email, decId).run();
+    await env.DB.prepare(
+      `UPDATE socios SET reprocann_estado = 'esperando_codigo', reprocann_actualizado = datetime('now')
+        WHERE id = ? AND reprocann_estado IN ('autocultivo', 'ddjj_pendiente', 'ddjj_firmada')`,
+    ).bind(dec.socio_id).run();
+    return json({ ok: true, verificada: true });
   }
 
   const diagnostico = String(body.diagnostico || '').trim();

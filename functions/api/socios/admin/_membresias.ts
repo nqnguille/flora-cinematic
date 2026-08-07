@@ -239,8 +239,15 @@ function normalizar(g: Partial<Membresias>): Membresias {
     // formulario que una decisión.
     estadosAdhesion: (() => {
       if (!Array.isArray(g.estadosAdhesion)) return d.estadosAdhesion;
+      // Los estados de autocultivo NUNCA habilitan la adhesión, ni tildados
+      // por error en el panel: las modalidades son excluyentes y el débito
+      // recién se abre cuando la DDJJ de renuncia está firmada Y verificada
+      // (ahí el socio vuelve a esperando_codigo y sigue el embudo normal).
+      // Es la versión estructural de la regla, no una configuración.
+      const VEDADOS = new Set(['autocultivo', 'ddjj_pendiente', 'ddjj_firmada']);
       const l = (g.estadosAdhesion as unknown[])
         .filter((s): s is string => typeof s === 'string' && !!s.trim())
+        .filter((s) => !VEDADOS.has(s))
         .slice(0, 20);
       return l.length ? l : d.estadosAdhesion;
     })(),
