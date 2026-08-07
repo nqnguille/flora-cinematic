@@ -183,16 +183,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // El precio de referencia arriba, y el débito abajo como el beneficio que
     // se desbloquea, con su propio bloque. Antes había un selector que cambiaba
     // entre dos vistas; mostrar las dos juntas es lo que hace visible el salto.
-    // La franja diagonal dice el envío sin cargo: es el beneficio que se
-    // desbloquea al suscribirse y no ocupa alto porque va fuera del flujo. El
-    // ahorro va como renglón abajo del precio de débito, que es donde se
-    // compara con el precio de contado que tiene arriba.
-    const cinta = TX.envio
-      ? `<span class="mb-cinta"><span>${esc(TX.envio)}</span></span>`
-      : ''
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
-          ${cinta}
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
           ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
@@ -580,57 +572,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     background: rgba(0, 158, 227, .09);
     border: 1px solid rgba(0, 158, 227, .28);
     border-radius: 14px;
-    /* Las dos cosas que hacen posible la franja: el bloque es el marco de
-       referencia de su posición, y el recorte le come las puntas justo en el
-       borde redondeado, que es lo que la hace parecer cosida al bloque y no
-       apoyada encima. */
-    position: relative; overflow: hidden;
-  }
-  /* ── La franja del ahorro ──
-     Geometría, para que se pueda mover sin adivinar: el cuadrado que recorta se
-     apoya en el vértice de arriba a la derecha, y la franja lo cruza en
-     diagonal a --c-fondo píxeles del vértice. Ese único número decide todo: el
-     largo visible de la franja es exactamente el doble (2·d), porque el
-     triángulo que corta es rectángulo isósceles. Más fondo = franja más larga,
-     pero también más adentro del bloque, encima del texto. */
-  .mb-cinta {
-    --c-lado: 66px;    /* lado del cuadrado que recorta */
-    --c-fondo: 34px;   /* distancia del vértice a la que cruza la franja */
-    /* Los otros dos salen del fondo, no se eligen a mano, y cada uno resuelve
-       un problema distinto:
-       · el LARGO tiene que pasarse de la cuerda (2·fondo) porque la franja es
-         un rectángulo cruzando un triángulo: si midiera justo la cuerda de su
-         eje, las puntas del lado de afuera no llegarían al borde y quedarían
-         dos muescas. Sobra, y lo que sobra lo recorta el cuadrado.
-       · el TEXTO, en cambio, tiene que quedar ADENTRO de la cuerda, porque lo
-         que se sale del triángulo se recorta y no se lee. Va más angosto que
-         la franja, y la diferencia se reparte como padding a los costados.
-       Sin esta distinción el texto se cortaba a la mitad: "AHORRÁS $40.000 PO". */
-    --c-texto: calc(var(--c-fondo) * 1.45);
-    --c-largo: calc(var(--c-fondo) * 2 + 56px);
-    position: absolute; top: 0; right: 0;
-    width: var(--c-lado); height: var(--c-lado);
-    overflow: hidden; pointer-events: none; z-index: 2;
-  }
-  .mb-cinta > span {
-    position: absolute;
-    /* El centro de la franja cae sobre la bisectriz del vértice, a --c-fondo de
-       distancia: de ahí el /1.4142 (la raíz de 2 que proyecta la diagonal sobre
-       cada eje). El translateY sube la caja media altura, así lo que se ubica
-       con top es su CENTRO y no su borde de arriba. */
-    left: calc(var(--c-lado) - var(--c-fondo) / 1.4142 - var(--c-largo) / 2);
-    top: calc(var(--c-fondo) / 1.4142);
-    width: var(--c-largo); box-sizing: border-box;
-    transform: translateY(-50%) rotate(45deg);
-    display: block; text-align: center;
-    padding: 4px calc((var(--c-largo) - var(--c-texto)) / 2);
-    font-family: var(--font-ui); font-size: 8.5px; font-weight: 800;
-    letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
-    /* Verde sólido con letra oscura: lo más contrastado de la tarjeta, para
-       el beneficio que se desbloquea al suscribirse. Sobre el celeste del
-       bloque de Mercado Pago no compite, se despega. */
-    color: #08160f; background: linear-gradient(135deg, #63d9ae, #3cb492);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
   }
   .mb-gancho-lb {
     display: block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 700;
@@ -653,7 +594,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      del tamaño de escritorio aunque el override dijera otra cosa. Era un bug
      viejo, de cuando el bloque se escribió al final del archivo. */
   /* Frasquitos: uno por cada 10 g, en VIOLETA, el segundo color de la marca.
-     El reparto: el VERDE es la plata (precios, franja del ahorro), el VIOLETA
+     El reparto: el VERDE es la plata (los precios), el VIOLETA
      es lo que se lleva el socio y el marco legal. */
   .mb-frascos {
     display: flex; justify-content: center; align-items: flex-end;
@@ -730,29 +671,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
     .mb-card-retiro { display: none; }
     .mb-gancho-ahorro { font-size: 10.5px; }
-    /* La tarjeta del celular es una flex column solo por una razón: la franja
-       del ahorro está PRIMERA en el HTML (en la pantalla grande va posicionada
-       encima de la esquina, y lo posicionado no tiene orden), y acá abajo, ya
-       convertida en píldora, tiene que caer después del precio. */
-    .mb-gancho {
-      margin: 11px -2px 0; padding: 9px 8px 10px;
-      display: flex; flex-direction: column; align-items: center;
-    }
+    .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
     .mb-gancho-precio { font-size: 19px; }
-    /* En una tarjeta de 155px la diagonal no entra: el texto quedaría en tres
-       renglones de 7px, o sea ilegible, para conseguir el efecto. Acá la misma
-       franja se endereza y queda de píldora, con el mismo verde y el mismo
-       peso. La diagonal es de la pantalla grande, que es donde hay esquina. */
-    .mb-cinta {
-      position: static; order: 3; overflow: visible;
-      width: auto; height: auto; margin-top: 8px;
-    }
-    .mb-cinta > span {
-      position: static; width: auto; transform: none; left: auto; top: auto;
-      border-radius: 999px; padding: 4px 9px; font-size: 8.5px; box-shadow: none;
-    }
-    .mb-gancho .mb-adherir { order: 4; }
     .mb-adherir { font-size: 10.5px; padding: 9px 10px; max-width: 100%; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
@@ -775,7 +696,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-det { margin-bottom: 7px; }
     .mb-frascos { gap: 2px; margin-bottom: 5px; }
     .mb-frasco { width: 12px; height: 17px; }
-    .mb-cinta > span { font-size: 8px; padding: 3px 7px; }
     /* El botón es lo que primero se rompe: "Suscribir con" no parte y el logo
        de Mercado Pago tampoco encoge, así que abajo de ~406px de pantalla el
        texto y el logo se salían de la píldora blanca y los botones de las dos
@@ -948,35 +868,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
-    /* El rótulo se va al ras de la izquierda y le deja toda la esquina derecha
-       a la franja. Centrado no entraba: correrlo unos píxeles para esquivar el
-       verde lo dejaba ni centrado ni alineado, y agrandar la franja le comía la
-       última letra. Así los dos ocupan una punta del mismo renglón, que es lo
-       que hacen el rótulo y el sello en cualquier etiqueta. */
-    .mb-gancho-lb {
-      font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px);
-      text-align: left; letter-spacing: .07em;
-    }
+    .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) clamp(14px, 1.6vh, 22px); }
     .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
     .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
-    /* La franja crece con la pantalla como todo lo demás. El fondo (a qué
-       distancia del vértice cruza) es lo que le da largo: a 1080 son 62px de
-       fondo, o sea 124px de franja visible, que es lo que necesita el texto en
-       dos renglones sin meterse encima del precio. */
-    .mb-cinta {
-      --c-lado: clamp(60px, 8.6vh, 110px);
-      --c-fondo: clamp(31px, 4.5vh, 58px);
-    }
-    /* Solo el padding vertical: el horizontal lo calcula la fórmula de arriba
-       para meter el texto adentro de la cuerda, y pisarlo con un valor fijo es
-       volver a cortarlo. */
-    .mb-cinta > span {
-      font-size: clamp(8px, .92vh, 11px); letter-spacing: .01em;
-      padding-top: clamp(3px, .45vh, 6px); padding-bottom: clamp(3px, .45vh, 6px);
-    }
   }
 </style>
 
