@@ -118,6 +118,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <section class="cu-sec" id="cu-retiros-sec" hidden>
         <h2 class="cu-sec-title">Tus retiros</h2>
         <div class="cu-saldo-card">
+          <!-- Cabecera estática de la tabla: las filas las escribe el JS abajo. -->
+          <div class="cu-retiros-cab" aria-hidden="true"><span>Fecha</span><span>Producto</span><b>Cantidad</b></div>
           <div class="cu-saldo-retiros" id="cu-saldo-retiros"></div>
           <button class="cu-vermas" id="cu-vermas" type="button" hidden>Ver historial completo</button>
         </div>
@@ -497,53 +499,96 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .fx-lleno { fill: currentColor; stroke: none; opacity: 0.95; }
     .fx-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
     .fx-ico { width: 15px; height: 15px; vertical-align: -2px; }
-    .cu-perfil { display: flex; align-items: center; gap: 18px; margin: 18px 0 30px; }
-    .cu-foto { border-radius: 50%; border: 2px solid rgba(183, 157, 230, 0.4); }
+    /* El saludo respira: más aire antes y después, la foto con su halo. */
+    .cu-perfil { display: flex; align-items: center; gap: 18px; margin: clamp(22px, 3.5vw, 34px) 0 clamp(34px, 5vw, 48px); }
+    .cu-foto {
+      border-radius: 50%; border: 2px solid rgba(183, 157, 230, 0.4);
+      box-shadow: 0 0 0 5px rgba(183, 157, 230, 0.08);
+    }
     .cu-foto[hidden] { display: none; }
     .cu-email { color: rgba(244, 241, 247, 0.55); font-size: 0.9rem; margin: 4px 0 0; }
-    .cu-sec { margin-bottom: 30px; }
+
+    /* Aire parejo entre secciones, y las volantas hablando todas igual: la
+       misma volanta violeta de membresías, con una línea que se desvanece y
+       ancla el título a su columna. */
+    .cu-sec { margin-bottom: clamp(32px, 5vw, 46px); }
     .cu-sec-title {
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-      color: #b79de6; margin: 0 0 12px;
+      display: flex; align-items: center; gap: 14px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+      color: #b79de6; margin: 0 0 14px;
+    }
+    .cu-sec-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(183, 157, 230, 0.3), rgba(183, 157, 230, 0));
     }
     .cu-lista { display: flex; flex-direction: column; gap: 12px; }
     .cu-pedido {
-      background: #1b1326; border: 1px solid rgba(183, 157, 230, 0.16);
-      border-radius: 16px; padding: 16px 18px;
+      background: #1b1326; border: 1px solid rgba(183, 157, 230, 0.18);
+      border-radius: 16px; padding: 17px 20px;
     }
-    .cu-pedido.is-activo { border-color: rgba(60, 180, 146, 0.45); }
+    .cu-pedido.is-activo { border-color: rgba(79, 199, 158, 0.45); }
     .cu-pedido-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-    .cu-pedido-fecha { font-size: 0.82rem; color: rgba(244, 241, 247, 0.55); }
+    .cu-pedido-fecha { font-size: 0.82rem; color: rgba(244, 241, 247, 0.55); font-variant-numeric: tabular-nums; }
     .cu-pedido-items { font-size: 0.95rem; color: #f4f1f7; line-height: 1.55; margin: 0; }
     .cu-pedido-nota { font-size: 0.82rem; color: rgba(244, 241, 247, 0.55); margin: 8px 0 0; }
     .td-cart-badge.is-entregado { background: rgba(244, 241, 247, 0.12); color: rgba(244, 241, 247, 0.7); }
     .td-cart-badge.is-cancelado { background: rgba(255, 120, 120, 0.14); color: #ff9d9d; }
-    .cu-vacio { color: rgba(244, 241, 247, 0.55); font-size: 0.92rem; }
-    .cu-vacio a { color: #b79de6; }
+    /* El vacío también es una tarjeta, punteada: un lugar esperando contenido,
+       no un renglón suelto. */
+    .cu-vacio {
+      color: rgba(244, 241, 247, 0.55); font-size: 0.92rem; margin: 0;
+      border: 1px dashed rgba(183, 157, 230, 0.25); border-radius: 14px; padding: 16px 20px;
+    }
+    .cu-vacio a { color: #b79de6; font-weight: 700; text-decoration: none; }
+    .cu-vacio a:hover { text-decoration: underline; text-underline-offset: 3px; }
     .cu-vacio[hidden] { display: none; }
     .cu-gw { margin-top: 4px; }
 
-    /* chips compartidos (plan y REPROCANN) */
-    .cu-chip { display: inline-flex; align-items: center; font-size: 0.74rem; font-weight: 700;
-      padding: 5px 12px; border-radius: 999px; background: rgba(183, 157, 230, 0.12);
-      color: #b79de6; border: 1px solid rgba(183, 157, 230, 0.3); white-space: nowrap; }
-    .cu-chip.is-ok { background: rgba(60, 180, 146, 0.14); color: #5ecfae; border-color: rgba(60, 180, 146, 0.35); }
+    /* chips compartidos (plan y REPROCANN): la píldora de estado de membresías,
+       en versalitas chicas. Verde = al día / aprobado, ámbar = te toca a vos. */
+    .cu-chip { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 5px 13px; border-radius: 999px; background: rgba(183, 157, 230, 0.12);
+      color: #b79de6; border: 1px solid rgba(183, 157, 230, 0.3); white-space: nowrap; line-height: 1.4; }
+    .cu-chip.is-ok { background: rgba(79, 199, 158, 0.14); color: #5ecfae; border-color: rgba(79, 199, 158, 0.35); }
     .cu-chip.is-vos { background: rgba(230, 168, 62, 0.12); color: #e6a83e; border-color: rgba(230, 168, 62, 0.35); }
     .cu-chip.is-mal { background: rgba(255, 120, 120, 0.12); color: #ff9d9d; border-color: rgba(255, 120, 120, 0.35); }
     .cu-chip[hidden] { display: none; }
     .cu-saldo-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
     /* tarjeta REPROCANN */
-    .cu-rp-fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .cu-rp-vence { color: rgba(244, 241, 247, 0.6); font-size: 0.88rem; }
-    .cu-cert { display: block; margin-top: 14px; text-align: center; text-decoration: none;
-      background: rgba(60, 180, 146, 0.1); border: 1px solid rgba(60, 180, 146, 0.35);
-      border-radius: 14px; padding: 13px 16px; color: #f4f1f7; font-weight: 600; font-size: 0.93rem; }
-    .cu-cert:hover { background: rgba(60, 180, 146, 0.18); }
+    .cu-rp-fila { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .cu-rp-vence { color: rgba(244, 241, 247, 0.6); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+    /* El certificado es EL botón de esta tarjeta: panel verde con cuerpo,
+       icono a la izquierda y hover que responde. */
+    .cu-cert {
+      display: block; margin-top: 16px; text-align: center; text-decoration: none;
+      background: linear-gradient(155deg, rgba(79, 199, 158, 0.17), rgba(43, 138, 106, 0.08));
+      border: 1px solid rgba(79, 199, 158, 0.42);
+      border-radius: 14px; padding: 15px 18px; color: #f4f1f7; font-weight: 700; font-size: 0.95rem;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .cu-cert:hover {
+      background: linear-gradient(155deg, rgba(79, 199, 158, 0.26), rgba(43, 138, 106, 0.14));
+      border-color: rgba(79, 199, 158, 0.6);
+      transform: translateY(-1px); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    }
+    .cu-cert .fx-ico { width: 19px; height: 19px; color: #5ecfae; vertical-align: -4px; margin-right: 5px; }
     .cu-cert small { display: block; color: rgba(244, 241, 247, 0.55); font-weight: 400; font-size: 0.78rem; margin-top: 2px; }
     .cu-cert[hidden] { display: none; }
-    .cu-rp-ir { display: inline-block; margin-top: 12px; color: #b79de6; font-size: 0.86rem; text-decoration: none; }
-    .cu-rp-ir:hover { text-decoration: underline; }
+    /* El turno es un pendiente del socio: mismo panel, en ámbar. */
+    .cu-rp-turno {
+      background: linear-gradient(155deg, rgba(230, 168, 62, 0.15), rgba(230, 168, 62, 0.05));
+      border-color: rgba(230, 168, 62, 0.42);
+    }
+    .cu-rp-turno:hover {
+      background: linear-gradient(155deg, rgba(230, 168, 62, 0.24), rgba(230, 168, 62, 0.1));
+      border-color: rgba(230, 168, 62, 0.6);
+    }
+    .cu-rp-turno .fx-ico { color: #e6a83e; }
+    /* Los "Ver … →" de la casa: peso 700 en el violeta institucional. */
+    .cu-rp-ir { display: block; width: fit-content; margin-top: 14px; color: #b79de6; font-size: 0.86rem; font-weight: 700; text-decoration: none; }
+    .cu-rp-ir:hover { text-decoration: underline; text-underline-offset: 3px; }
 
     /* editor de la reserva pendiente */
     .cu-ed-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -568,31 +613,77 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-ed-btn.is-guardar { background: #b79de6; border: none; color: #1b1326; }
     .cu-ed-btn.is-guardar:disabled { opacity: 0.45; cursor: default; }
 
-    .cu-vermas { display: block; width: 100%; margin-top: 10px; background: none;
-      border: 1px solid rgba(183, 157, 230, 0.3); border-radius: 10px; color: #b79de6;
-      padding: 9px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: var(--font-ui); }
-    .cu-vermas:hover { background: rgba(183, 157, 230, 0.08); }
+    .cu-vermas { display: block; width: 100%; margin-top: 14px; background: none;
+      border: 1px solid rgba(183, 157, 230, 0.3); border-radius: 999px; color: #b79de6;
+      padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: var(--font-ui);
+      transition: background 0.15s ease, border-color 0.15s ease; }
+    .cu-vermas:hover { background: rgba(183, 157, 230, 0.1); border-color: rgba(183, 157, 230, 0.5); }
     .cu-vermas[hidden] { display: none; }
     #cu-retiros-sec[hidden] { display: none; }
+
+    /* Las tarjetas grandes hablan el idioma de membresías: nocturno violeta
+       con borde de familia. El plan lleva un aliento verde en su esquina (es
+       la tarjeta de la plata en gramos), el REPROCANN uno violeta. */
+    .cu-saldo-card {
+      background: #1b1326; border: 1px solid rgba(183, 157, 230, 0.18);
+      border-radius: 18px; padding: clamp(20px, 3vw, 26px) clamp(20px, 3.2vw, 28px);
+    }
+    #cu-saldo-sec .cu-saldo-card {
+      background: radial-gradient(130% 130% at 0% 0%, rgba(79, 199, 158, 0.08), rgba(79, 199, 158, 0) 55%), #1b1326;
+    }
+    #cu-rp-sec .cu-saldo-card {
+      background: radial-gradient(130% 130% at 0% 0%, rgba(183, 157, 230, 0.08), rgba(183, 157, 230, 0) 55%), #1b1326;
+    }
+
+    /* El saldo es EL número de la página: serif de la casa, con su eje óptico. */
+    .cu-saldo-num { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .cu-saldo-num b {
+      font-family: var(--font-display); font-optical-sizing: auto; font-weight: 500;
+      font-size: clamp(2.9rem, 6vw, 3.6rem); line-height: 0.95; color: #4FC79E;
+      letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+    }
+    .cu-saldo-num span { color: rgba(244, 241, 247, 0.55); font-size: 0.9rem; }
+    .cu-saldo-bar { height: 9px; border-radius: 999px; background: rgba(244, 241, 247, 0.08); overflow: hidden; margin: 18px 0 12px; }
+    .cu-saldo-bar i {
+      display: block; height: 100%; width: 0; border-radius: 999px;
+      background: linear-gradient(90deg, #2b8a6a, #4FC79E 70%, #7fe4bf);
+      box-shadow: 0 0 14px rgba(79, 199, 158, 0.4);
+      transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cu-saldo-sub { color: rgba(244, 241, 247, 0.62); font-size: 0.88rem; line-height: 1.5; margin: 0 0 8px; }
+    /* El aviso de la cuota ("al día" / "no registramos tu cuota") deja de ser
+       un texto suelto: es una línea con cuerpo que toma el color que le pinta
+       el JS (verde u ámbar) y arma su fondo y su borde desde currentColor. */
+    #cu-aldia {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; font-weight: 600; line-height: 1.4;
+      padding: 7px 13px; border-radius: 999px; margin: 2px 0 10px;
+      border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+      background: color-mix(in srgb, currentColor 11%, transparent);
+    }
     #cu-aldia[hidden] { display: none; }
 
-    /* saldo de gramos — nocturno de marca, verde solo para el dato */
-    .cu-saldo-card {
-      background: rgba(244, 241, 247, 0.04); border: 1px solid rgba(244, 241, 247, 0.12);
-      border-radius: 16px; padding: 20px 22px;
-    }
-    .cu-saldo-num { display: flex; align-items: baseline; gap: 8px; }
-    .cu-saldo-num b { font-family: var(--font-display); font-weight: 500; font-size: 2.6rem; line-height: 1; color: #3cb492; }
-    .cu-saldo-num span { color: rgba(244, 241, 247, 0.55); font-size: 0.9rem; }
-    .cu-saldo-bar { height: 8px; border-radius: 5px; background: rgba(244, 241, 247, 0.1); overflow: hidden; margin: 14px 0 8px; }
-    .cu-saldo-bar i { display: block; height: 100%; width: 0; background: #3cb492; border-radius: 5px; }
-    .cu-saldo-sub { color: rgba(244, 241, 247, 0.55); font-size: 0.85rem; margin: 0 0 6px; }
+    /* Tus retiros: tabla fina. Fechas y gramos en cifras tabulares, los
+       gramos a la derecha y en verde, separadores a media voz. */
+    .cu-retiros-cab,
     .cu-saldo-retiros > div {
-      display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px;
-      padding: 8px 0; border-top: 1px solid rgba(244, 241, 247, 0.08); font-size: 0.85rem;
+      display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px;
+      align-items: baseline;
     }
+    .cu-retiros-cab {
+      font-size: 0.64rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(244, 241, 247, 0.38); padding-bottom: 9px;
+      border-bottom: 1px solid rgba(183, 157, 230, 0.18);
+    }
+    .cu-retiros-cab b { text-align: right; font-weight: 700; }
+    .cu-saldo-retiros > div {
+      padding: 9px 0; border-top: 1px solid rgba(244, 241, 247, 0.06);
+      font-size: 0.88rem; font-variant-numeric: tabular-nums;
+    }
+    .cu-saldo-retiros > div:first-child { border-top: none; }
     .cu-saldo-retiros span:first-child { color: rgba(244, 241, 247, 0.45); }
-    .cu-saldo-retiros b { color: #3cb492; font-weight: 600; }
+    .cu-saldo-retiros span:nth-child(2) { color: rgba(244, 241, 247, 0.82); }
+    .cu-saldo-retiros b { color: #4FC79E; font-weight: 600; text-align: right; white-space: nowrap; }
     #cu-saldo-sec[hidden] { display: none; }
   </style>
 </Layout>

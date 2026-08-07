@@ -56,7 +56,17 @@
 @media (min-width: 900px) {
   .td-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .td-head > .td-brand { grid-column: 2; justify-self: center; }
-  .td-acciones { grid-column: 3; justify-self: end; }
+  .td-acciones { grid-column: 3; justify-self: end; flex-wrap: nowrap; }
+}
+/* La barra se libera de la columna de 1020px del contenido: presa ahí, a los
+   chips les quedaban ~450px y "Cerrar sesión" se caía a una segunda fila
+   torcida. Se ensancha centrada (como la barra de membresías) y el contenido
+   sigue en su columna angosta. */
+@media (min-width: 1200px) {
+  .td-head {
+    width: min(1720px, calc(100vw - 64px));
+    margin-inline: calc((100% - min(1720px, calc(100vw - 64px))) / 2);
+  }
 }
 @media (max-width: 899.98px) {
   .td-head > .td-brand { width: 100%; justify-content: center; }
