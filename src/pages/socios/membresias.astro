@@ -24,15 +24,33 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 >
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-main">
+    <!-- El mismo sello que el loader de la primera visita de la home: papel
+         blanco, el anillo tenue de referencia, el anillo que se llena en
+         barrido angular y la chala fija en el centro. -->
     <div id="mb-portero" class="mb-portero" hidden aria-hidden="true">
       <div class="mb-portero-anillo">
-        <img class="mb-portero-ring" src="/img/loader-ring.png" alt="" width="92" height="92" />
-        <img class="mb-portero-leaf" src="/img/loader-leaf.png" alt="" width="42" height="42" />
+        <img class="mb-portero-track" src="/img/loader-ring.png" alt="" />
+        <img class="mb-portero-fill" src="/img/loader-ring.png" alt="" />
+        <img class="mb-portero-leaf" src="/img/loader-leaf.png" alt="" />
       </div>
     </div>
     <script is:inline>
       // Síncrono a propósito: corre antes del primer paint de lo que sigue.
-      try { if (localStorage.getItem('flora-socio-hint')) document.getElementById('mb-portero').hidden = false } catch (e) {}
+      try {
+        if (localStorage.getItem('flora-socio-hint')) {
+          var portero0 = document.getElementById('mb-portero')
+          portero0.hidden = false
+          // El anillo de la home se llena con el progreso real de carga; acá
+          // no hay progreso que medir (la revalidación es una sola llamada),
+          // así que barre en bucle con la misma máscara cónica.
+          var fill0 = portero0.querySelector('.mb-portero-fill'), pct0 = 0
+          var timer0 = setInterval(function () {
+            if (portero0.hidden) { clearInterval(timer0); return }
+            pct0 = (pct0 + 2.4) % 112
+            fill0.style.setProperty('--pct', Math.min(100, pct0))
+          }, 16)
+        }
+      } catch (e) {}
     </script>
 
     <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
@@ -1237,22 +1255,30 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-aviso :global(b) { color: rgba(244, 241, 247, 0.92); }
 
-  /* El portero de la recarga: mismo lenguaje que el loader de la home. */
+  /* El portero de la recarga: el MISMO sello del loader de la primera visita
+     (page-loader de la home), calcado: papel blanco, anillo de referencia al
+     12%, anillo que se revela angularmente con máscara cónica, chala fija. */
   .mb-portero {
     position: fixed; inset: 0; z-index: 80;
-    display: grid; place-items: center;
-    background: #0c0713;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--fl-paper, #FFFFFF);
   }
   /* El display de autor le gana al display:none del atributo hidden: sin
      esta regla el velo quedaba puesto PARA SIEMPRE, para todo el mundo (y
      así se estrenó, colgado). La misma trampa ya está documentada en el
      subgrid del cierre. */
   .mb-portero[hidden] { display: none; }
-  .mb-portero-anillo { position: relative; width: 92px; height: 92px; }
-  .mb-portero-ring { width: 100%; height: 100%; animation: mb-girar 1.1s linear infinite; opacity: .85; }
-  .mb-portero-leaf { position: absolute; inset: 0; margin: auto; width: 42px; height: auto; }
-  @keyframes mb-girar { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .mb-portero-ring { animation: none; } }
+  .mb-portero-anillo {
+    width: clamp(150px, 34vw, 230px); height: clamp(150px, 34vw, 230px);
+    display: grid; place-items: center;
+  }
+  .mb-portero-anillo img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
+  .mb-portero-track { opacity: .12; }
+  .mb-portero-fill {
+    --pct: 0;
+    -webkit-mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+            mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+  }
   /* La vuelta feliz de Mercado Pago: mismo cartel, en verde. */
   .mb-aviso--ok {
     border-color: rgba(79, 199, 158, .45); background: rgba(14, 62, 48, .35);
