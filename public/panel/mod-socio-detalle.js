@@ -646,12 +646,21 @@
     const r = await fetch(`/api/panel/mp/link?socio_id=${s.id}`, { credentials: 'include' })
     const d = await r.json().catch(() => ({}))
     if (!r.ok) { cuerpo.innerHTML = `<p style="color:var(--dan);margin:0">${P.esc(d.error || 'Error ' + r.status)}</p>`; return }
+    let mandarIgual = false
     if (d.reprocann_ok === false) {
+      const vedado = ['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(d.reprocann_estado)
       cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0">El REPROCANN de <b>${P.esc(d.nombre)}</b> está
-        <span class="tag tag-deb">${P.esc(d.reprocann_paso || 'sin dato')}</span> — el débito con descuento se ofrece recién
-        cuando el trámite está subido (aprobado o en evaluación).</p>
-        <div class="pn-mod-acciones"><button class="btn btn-pri" onclick="Panel.cerrarModal()" type="button">Entendido</button></div>`
-      return
+        <span class="tag tag-deb">${P.esc(d.reprocann_paso || 'sin dato')}</span>. El débito con descuento se ofrece
+        normalmente con el trámite subido (aprobado o en evaluación), pero la decisión es tuya.</p>
+        ${vedado ? `<p style="color:var(--dan);margin:8px 0 0"><b>Ojo:</b> tiene pendiente la declaración jurada de renuncia
+        al autocultivo. Aunque pague, la membresía NO se activa hasta que su declaración esté verificada: la suscripción
+        va a quedar esperando en la cola.</p>` : ''}
+        <div class="pn-mod-acciones">
+          <button class="btn" onclick="Panel.cerrarModal()" type="button">Mejor no</button>
+          <button class="btn btn-pri" id="sd-mp-igual" type="button">Mandar igual</button>
+        </div>`
+      await new Promise((seguir) => cuerpo.querySelector('#sd-mp-igual').addEventListener('click', seguir, { once: true }))
+      mandarIgual = true
     }
     if (d.debito_estado === 'activa') {
       cuerpo.innerHTML = `<p style="color:var(--ink2);margin:0"><b>${P.esc(d.nombre)}</b> ya tiene el débito automático
@@ -697,7 +706,7 @@
     }))
     const registrar = (via) => fetch('/api/panel/mp/enviar', {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ socio_id: d.socio_id, via, tier: elegido.tier }),
+      body: JSON.stringify({ socio_id: d.socio_id, via, tier: elegido.tier, igual: mandarIgual }),
     })
     cuerpo.querySelector('#sd-mp-copiar').addEventListener('click', () => {
       navigator.clipboard.writeText(elegido.link)

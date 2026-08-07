@@ -246,6 +246,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
       socio_id: socio.id, nombre: socio.nombre, telefono: socio.telefono,
       reprocann_ok: REPROCANN_OK.has(String(socio.reprocann_estado)),
       reprocann_paso: PASO_LINDO[String(socio.reprocann_estado)] || String(socio.reprocann_estado || 'sin dato'),
+      reprocann_estado: String(socio.reprocann_estado || ''),
       tier: socio.tier || null, monto: plan?.monto ?? null, contado: plan?.contado ?? null, link: plan?.link ?? null,
       planes: opciones,
       debito_estado: socio.debito_estado, debito_fin: socio.debito_fin,
@@ -403,10 +404,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
          FROM socios s WHERE s.id = ?`,
     ).bind(socioId).first<{ id: number; nombre: string; email: string | null; reprocann_estado: string | null; tier: string | null }>();
     if (!socio) return json({ error: 'El socio no existe' }, 404);
-    // el 20% es para quien ya hizo la entrevista y tiene el trámite subido
-    if (!REPROCANN_OK.has(String(socio.reprocann_estado))) {
+    // el 20% es para quien ya hizo la entrevista y tiene el trámite subido;
+    // con `igual: true` el presidente decide mandarlo lo mismo (el modal ya
+    // le mostró la advertencia)
+    if (!REPROCANN_OK.has(String(socio.reprocann_estado)) && body.igual !== true) {
       const paso = PASO_LINDO[String(socio.reprocann_estado)] || 'sin dato';
-      return json({ error: `Su REPROCANN está «${paso}» — el link se manda recién con el trámite subido (aprobado o en evaluación)` }, 400);
+      return json({ error: `Su REPROCANN está «${paso}»: el link se manda con el trámite subido, o insistiendo con «mandar igual»` }, 400);
     }
     const planes = await planesDebito(env);
     // el tier puede venir elegido a mano (upgrade/downgrade desde el modal);
