@@ -1243,6 +1243,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: grid; place-items: center;
     background: #0c0713;
   }
+  /* El display de autor le gana al display:none del atributo hidden: sin
+     esta regla el velo quedaba puesto PARA SIEMPRE, para todo el mundo (y
+     así se estrenó, colgado). La misma trampa ya está documentada en el
+     subgrid del cierre. */
+  .mb-portero[hidden] { display: none; }
   .mb-portero-anillo { position: relative; width: 92px; height: 92px; }
   .mb-portero-ring { width: 100%; height: 100%; animation: mb-girar 1.1s linear infinite; opacity: .85; }
   .mb-portero-leaf { position: absolute; inset: 0; margin: auto; width: 42px; height: auto; }
