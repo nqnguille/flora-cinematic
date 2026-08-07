@@ -253,6 +253,24 @@ export async function leerMembresias(kv: KVNamespace): Promise<Membresias> {
   return normalizar(guardado);
 }
 
+/**
+ * Versión para el editor del panel: además del documento devuelve la `rev`,
+ * el número de versión que vive dentro del JSON de KV como `_rev`.
+ *
+ * Existe porque el dueño perdió CINCO veces la misma edición: el panel carga
+ * el doc al abrir y al guardar manda el DOCUMENTO ENTERO desde su memoria,
+ * así que una pestaña vieja pisaba todo lo guardado en el medio. Con la rev,
+ * el PUT puede rechazar (409) un guardado hecho sobre una versión vencida.
+ *
+ * `normalizar` arma el doc campo por campo, por eso `_rev` nunca llega a la
+ * página pública ni a `adherir`: solo el panel la ve, y va aparte del doc.
+ */
+export async function leerMembresiasAdmin(kv: KVNamespace): Promise<{ doc: Membresias; rev: number }> {
+  let guardado: (Partial<Membresias> & { _rev?: unknown }) | null = null;
+  try { guardado = (await kv.get(MEMBRESIAS_KEY, 'json')) as Partial<Membresias> & { _rev?: unknown }; } catch { /* sin doc: defaults */ }
+  return { doc: normalizar(guardado || {}), rev: Number(guardado?._rev) || 0 };
+}
+
 export function validarMembresias(entrada: unknown): { ok: true; doc: Membresias } | { ok: false; error: string } {
   if (typeof entrada !== 'object' || entrada === null) return { ok: false, error: 'falta el documento' };
   return { ok: true, doc: normalizar(entrada as Partial<Membresias>) };

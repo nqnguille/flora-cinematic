@@ -2,7 +2,7 @@
 // GET devuelve el documento vigente con sus defaults; PUT guarda el documento
 // entero. Mismo patrón que precios.ts y avisos.ts: un solo doc JSON en KV.
 import { requireCap } from '../../panel/_rol';
-import { leerMembresias, validarMembresias, MEMBRESIAS_KEY, ZONAS } from './_membresias';
+import { leerMembresiasAdmin, validarMembresias, MEMBRESIAS_KEY, ZONAS } from './_membresias';
 import { planesVigentes } from '../_planes';
 import { PASOS } from '../../panel/reprocann/_pasos';
 
@@ -57,7 +57,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     }
     return Response.json({ ok: true, estados });
   }
-  return Response.json({ ok: true, membresias: await leerMembresias(env.GENETICAS), zonas: ZONAS });
+  const { doc, rev } = await leerMembresiasAdmin(env.GENETICAS);
+  return Response.json({ ok: true, membresias: doc, rev, zonas: ZONAS });
 };
 
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
@@ -70,6 +71,25 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
   const res = validarMembresias((body as Record<string, unknown>)?.membresias);
   if (!res.ok) return Response.json({ ok: false, error: res.error }, { status: 400 });
 
+  // Concurrencia optimista: el editor manda el documento ENTERO desde su
+  // memoria, así que una pestaña que quedó vieja pisaba con datos viejos todo
+  // lo guardado en el medio (le pasó cinco veces al dueño con los mismos seis
+  // ítems). Cada versión lleva una `rev` adentro del JSON (`_rev`): el PUT
+  // solo se acepta si trae la rev vigente. Un panel viejo cacheado no manda
+  // rev y también recibe 409: es exactamente el guardado que hay que frenar.
+  // (KV no es atómico: dos guardados en el MISMO segundo aún podrían cruzarse,
+  // pero el caso real es la pestaña vieja, con minutos u horas de diferencia.)
+  const anterior = await env.GENETICAS.get(MEMBRESIAS_KEY);
+  let revVigente = 0;
+  try { revVigente = Number((JSON.parse(anterior || '{}') as { _rev?: unknown })._rev) || 0; } catch { /* doc viejo sin rev */ }
+  const revMandada = Number((body as Record<string, unknown>)?.rev);
+  if (!Number.isFinite(revMandada) || revMandada !== revVigente) {
+    return Response.json(
+      { ok: false, error: 'Otra pestaña guardó en el medio: recargá la página para no pisar esos cambios.', rev: revVigente },
+      { status: 409 }
+    );
+  }
+
   // Historial automático ANTES de pisar: cada guardado archiva la versión
   // anterior en una clave con fecha, con 90 días de vida. Existe porque el
   // 07/08/2026 una escritura externa pisó una edición manual completa y no
@@ -77,13 +97,21 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
   // que alguien escribió a mano. Recuperar = copiar una clave hist a la
   // clave viva (o pedírselo al asistente).
   try {
-    const anterior = await env.GENETICAS.get(MEMBRESIAS_KEY);
-    if (anterior && anterior !== JSON.stringify(res.doc)) {
+    // Se compara SIN `_rev`: si no, el número solo haría parecer distinto un
+    // guardado idéntico y se archivaría historial de más.
+    let contenidoAnterior = anterior;
+    try {
+      const { _rev, ...resto } = JSON.parse(anterior || 'null') || {};
+      contenidoAnterior = JSON.stringify(resto);
+    } catch { /* si no parsea, se compara crudo */ }
+    if (anterior && contenidoAnterior !== JSON.stringify(res.doc)) {
       const marca = new Date().toISOString().replace(/[:.]/g, '-');
       await env.GENETICAS.put(`${MEMBRESIAS_KEY}.hist.${marca}`, anterior, { expirationTtl: 60 * 60 * 24 * 90 });
     }
   } catch { /* el historial nunca bloquea el guardado */ }
 
-  await env.GENETICAS.put(MEMBRESIAS_KEY, JSON.stringify(res.doc));
-  return Response.json({ ok: true, membresias: res.doc });
+  // La rev nueva es el reloj, con el máximo por si el reloj retrocediera.
+  const revNueva = Math.max(Date.now(), revVigente + 1);
+  await env.GENETICAS.put(MEMBRESIAS_KEY, JSON.stringify({ ...res.doc, _rev: revNueva }));
+  return Response.json({ ok: true, membresias: res.doc, rev: revNueva });
 };

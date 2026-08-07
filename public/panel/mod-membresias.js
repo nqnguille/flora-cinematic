@@ -21,6 +21,14 @@
   let PLANES = []
   let ESTADOS = []
   let sucio = false
+  // La versión del documento que trajo el GET. Va en cada PUT: si otra
+  // pestaña guardó en el medio, el servidor contesta 409 en vez de dejar que
+  // esta pestaña (que tiene el doc viejo en memoria) pise esos cambios.
+  let REV = 0
+  // Qué claves tocó el usuario en ESTA pestaña. Ante un 409 se recarga el
+  // doc del servidor y se le vuelven a poner solo estas claves encima: no se
+  // pisa lo del otro ni se pierde lo tipeado acá.
+  let tocados = new Set()
 
   function errHttp(status) {
     if (status === 401) return 'Tu sesión venció. Recargá la página y volvé a entrar.'
@@ -246,20 +254,28 @@
 
   // Lo que se escribe se guarda en DOC al vuelo: así cambiar de zona no pierde
   // lo tipeado.
-  function tomarCampo(el) {
-    if (el.classList.contains('mb-tx')) { DOC[el.dataset.k] = el.value; return true }
+  // `marcar` distingue una edición real (queda anotada en `tocados`) del
+  // barrido de leerTextos() antes de guardar, que pasa por todos los campos
+  // visibles aunque nadie los haya tocado.
+  function tomarCampo(el, marcar = true) {
+    if (el.classList.contains('mb-tx')) {
+      DOC[el.dataset.k] = el.value
+      if (marcar) tocados.add(el.dataset.k)
+      return true
+    }
     if (el.dataset.lista && el.dataset.i !== undefined) {
       const l = DOC[el.dataset.lista] || (DOC[el.dataset.lista] = [])
       const i = Number(el.dataset.i)
       l[i] = l[i] || { t: '', d: '' }
       l[i][el.dataset.c] = el.value
+      if (marcar) tocados.add(el.dataset.lista)
       return true
     }
     return false
   }
 
   function leerTextos() {
-    cont.querySelectorAll('.mb-tx, .mb-li-t, .mb-li-d').forEach(tomarCampo)
+    cont.querySelectorAll('.mb-tx, .mb-li-t, .mb-li-d').forEach((el) => tomarCampo(el, false))
   }
 
   /* ---------- guardar ---------- */
@@ -273,9 +289,20 @@
       const res = await fetch(EP, {
         method: 'PUT', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ membresias: DOC }),
+        body: JSON.stringify({ membresias: DOC, rev: REV }),
       })
       const d = await res.json().catch(() => ({}))
+      if (res.status === 409) {
+        // Otra pestaña guardó después de que esta cargó. Se traen esos
+        // cambios y se vuelve a poner encima SOLO lo tocado acá: nada de
+        // pisar al otro con el doc viejo entero, nada de perder lo tipeado.
+        await recargarYConservar()
+        msg.textContent = 'Otra pestaña guardó en el medio. Traje esos cambios y conservé lo que escribiste acá: revisá y volvé a Guardar.'
+        msg.style.color = 'var(--dan)'
+        btn.disabled = false
+        btn.textContent = 'Guardar'
+        return
+      }
       if (!res.ok || !d.ok) {
         msg.textContent = d.error || errHttp(res.status)
         msg.style.color = 'var(--dan)'
@@ -284,6 +311,8 @@
         return
       }
       DOC = d.membresias
+      REV = d.rev || 0
+      tocados = new Set()
       sucio = false
       pintarTextos(); pintarPlanes(); pintarEstados()
       msg.style.color = ''
@@ -297,6 +326,24 @@
     }
   }
 
+  // Tras un 409: se baja el documento vigente (con su rev nueva) y se le
+  // vuelven a aplicar únicamente las claves que el usuario tocó en esta
+  // pestaña. Si los dos tocaron la misma clave gana lo de acá, pero queda a
+  // la vista para revisarlo antes de volver a guardar.
+  async function recargarYConservar() {
+    try {
+      const r = await fetch(EP, { credentials: 'include' })
+      if (!r.ok) return
+      const d = await r.json()
+      if (!d.ok || !d.membresias) return
+      const fresco = d.membresias
+      for (const k of tocados) fresco[k] = DOC[k]
+      DOC = fresco
+      REV = d.rev || 0
+      pintarTextos(); pintarEstados()
+    } catch { /* sin red: el próximo Guardar va a volver a chocar y avisar */ }
+  }
+
   async function cargar() {
     const caja = cont.querySelector('#mb-cuerpo')
     try {
@@ -304,6 +351,8 @@
       if (!res.ok) { caja.innerHTML = `<p class="ct-help">${P.esc(errHttp(res.status))}</p>`; caja.hidden = false; return }
       const dd = await res.json()
       DOC = dd.membresias
+      REV = dd.rev || 0
+      tocados = new Set()
       ZONAS = dd.zonas || []
       // Los planes se leen de la lista de precios vigente, que es donde de
       // verdad viven: acá se muestran para poder chequearlos de un vistazo.
@@ -386,6 +435,7 @@
         const set = new Set(DOC.estadosAdhesion || [])
         if (chk.checked) set.add(chk.value); else set.delete(chk.value)
         DOC.estadosAdhesion = [...set]
+        tocados.add('estadosAdhesion')
         chk.closest('.mb-estado').classList.toggle('on', chk.checked)
         pintarTotal()
         marcarSucio()
@@ -469,12 +519,14 @@
         if (mas) {
           const k = mas.dataset.lista
           DOC[k] = (DOC[k] || []).concat({ t: '', d: '' })
+          tocados.add(k)
           marcarSucio(); pintarTextos(); return
         }
         const menos = e.target.closest('.mb-li-x')
         if (menos) {
           const k = menos.dataset.lista
           DOC[k] = (DOC[k] || []).filter((_, i) => i !== Number(menos.dataset.i))
+          tocados.add(k)
           marcarSucio(); pintarTextos(); return
         }
         if (e.target.closest('#mb-guardar')) guardar()
