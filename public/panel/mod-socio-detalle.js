@@ -101,6 +101,7 @@
           ${paso ? `<span class="tag ${paso.quien === 'club' ? 'tag-mal' : paso.quien === 'paciente' ? 'tag-deb' : paso.quien === 'medico' ? 'tag-auto' : s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'autocultivo' ? 'tag-ok' : 'tag-off'}" title="${P.esc(paso.ayuda)}">${P.esc(paso.nombre)}</span>` : ''}
           ${chipCarta}
           ${s.estado === 'inactivo' ? '<span class="tag tag-off">inactivo</span>' : ''}
+          ${s.med_en_tratamiento ? `<span class="tag tag-ok" title="Señal del consultorio del Dr. Kalb (sin datos clínicos)${s.med_proxima_consulta ? ' · próxima consulta ' + new Date(s.med_proxima_consulta).toLocaleDateString('es-AR') : ''}">En tratamiento${s.med_proxima_consulta ? ' · próx. ' + new Date(s.med_proxima_consulta).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : ''}</span>` : ''}
         </div>
       </div>
       <div class="pn-drawer-cuerpo">
