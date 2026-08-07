@@ -161,15 +161,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // El contado arranca seleccionado: es el precio de referencia. El descuento
   // no es "otro precio", es lo que se desbloquea al suscribirse al débito.
 
-  // "EXTRA LARGE" no entra a 40px sin partirse en dos renglones, y partido deja
-  // de leerse como un nombre. Se abrevia SOLO acá, en lo que se ve: el string
-  // "EXTRA LARGE" es la clave de negocio del tier (viaja por precios,
-  // membresias, suscripciones y envios_debito en D1, y el webhook de Mercado
-  // Pago lo compara por igualdad), así que renombrarlo de verdad sería una
-  // migración de cuatro tablas. El repo ya hace esto mismo en los mails, con
-  // tierLindo() en functions/api/panel/mp.
-  const NOMBRE_CORTO = { 'EXTRA LARGE': 'XL' }
-
   function tarjeta(p) {
     const esMia = ACTUAL.tier && p.item === ACTUAL.tier
     // Un frasco por cada 10 g. El contorno solo se leía como envase vacío:
@@ -212,7 +203,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     return `<article class="mb-card${esMia ? ' mb-card--mia' : ''}">
       <span class="mb-mia"${esMia ? '' : ' aria-hidden="true"'}>${esMia ? esc(TX.insigniaMia || 'Tu membresía') : ''}</span>
       ${frascos}
-      <h3 class="mb-card-nom">${esc(NOMBRE_CORTO[p.item] || p.item)}</h3>
+      <h3 class="mb-card-nom">${esc(p.item)}</h3>
       ${detalle}
       <p class="mb-card-precio">${pesos(p.contado)}<span>${esc(TX.etiquetaPrecio || 'Contado o transferencia')}</span></p>
       ${gancho}
@@ -655,7 +646,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-gancho-precio {
     display: block; font-family: var(--font-display); font-weight: 600;
-    font-size: 24px; color: #f4f1f7; line-height: 1.1;
+    font-size: 27px; color: #f4f1f7; line-height: 1.1;
   }
   /* El ahorro en píldora verde sólida con letra oscura, ARRIBA del precio de
      débito: primero la noticia, después el número. El contado no se repite
@@ -755,7 +746,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho-ahorro { font-size: 8.5px; padding: 3px 8px; margin: 1px 0 4px; }
     .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
-    .mb-gancho-precio { font-size: 19px; }
+    .mb-gancho-precio { font-size: 21px; }
     .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
     .mb-adherir-mp { height: 11px; }
     .mb-frasco { width: 15px; height: 21px; }
@@ -777,6 +768,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { display: none; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
     .mb-card-det { margin-bottom: 7px; }
+    /* "EXTRA LARGE" a 13.5px no entra en la tarjeta de 320: un punto menos. */
+    .mb-card-nom { font-size: 12px; }
     /* La píldora, en un renglón sí o sí: a este ancho el texto más largo
        ("AHORRÁS $100.000/MES") mide ~101px contra ~105 de bloque. El nowrap
        es seguro solo porque el /mes va pegado al monto. */
@@ -943,7 +936,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        sillón. El nombre queda segundo pero con presencia propia: 2,9vh, un
        escalón y medio arriba de los 1,95vh que tenía. */
     .mb-card { padding: clamp(9px, 1.15vh, 15px) clamp(14px, 1.2vw, 22px); }
-    .mb-card-nom { font-size: clamp(18px, 2.9vh, 36px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
+    .mb-card-nom { font-size: clamp(17px, min(2.9vh, 1.7vw), 36px); letter-spacing: .08em; margin-bottom: clamp(4px, .6vh, 8px); }
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
     .mb-gancho-ahorro {
@@ -953,7 +946,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
-    .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
+    .mb-gancho-precio { font-size: clamp(24px, 3.4vh, 42px); }
     .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
     .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
     .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
@@ -996,8 +989,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     content: '';
     position: absolute;
     z-index: 0;
-    top: -26px; bottom: -26px; left: -90px; right: 26%;
-    background: linear-gradient(to right, rgba(9, 5, 14, 0) 0%, rgba(9, 5, 14, .88) 14%, rgba(9, 5, 14, .74) 58%, rgba(9, 5, 14, 0) 100%);
+    /* La caja ABRAZA al bloque de texto, no lo desborda: medido en producción,
+       con right:26% el degradé moría 263px por debajo de la tarjeta legal (la
+       dejaba sentada sobre media sombra), con -26px arriba quedaba a 6px de la
+       barra de navegación, y abajo pasaba por detrás de las tarjetas de
+       precios. right:45% muere en el canal entre columnas, y ±12px de
+       desborde vertical alcanzan para que el halo respire sin tocar a nadie. */
+    top: -12px; bottom: -12px; left: -56px; right: 45%;
+    background: linear-gradient(to right, rgba(9, 5, 14, 0) 0%, rgba(9, 5, 14, .86) 12%, rgba(9, 5, 14, .72) 62%, rgba(9, 5, 14, 0) 100%);
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
     pointer-events: none;
