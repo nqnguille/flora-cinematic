@@ -1053,17 +1053,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-adherir-mp { height: 15px; }
     .mb-mia { font-size: 9.5px; padding: 3px 9px; top: 9px; right: 11px; }
 
-    /* La banda de seis: tres por fila, dos filas, todo a media voz. */
-    .mb-items { grid-template-columns: repeat(3, 1fr); gap: 14px 8px; }
-    .mb-ico { width: 30px; height: 30px; margin-bottom: 5px; }
-    .mb-item-t { font-size: 11.5px; line-height: 1.25; margin-bottom: 2px; max-width: 15ch; }
-    .mb-item-d { font-size: 9.5px; line-height: 1.35; max-width: none; color: rgba(244, 241, 247, .55); }
+    /* La banda de seis: tres por fila, dos filas, todo a media voz. La regla
+       de los renglones vale también acá: 2 de título + 3 de descripción, con
+       tamaños calibrados para la columna de ~106px (el título más largo,
+       "Envío sin cargo en Neuquén Capital", entra en 2 a 10.5px; las
+       descripciones de 51-57 caracteres caen en 3 a 9px). */
+    .mb-items { grid-template-columns: repeat(3, 1fr); gap: 20px 10px; }
+    .mb-ico { width: 48px; height: 48px; margin-bottom: 8px; }
+    /* Medidas en ch: el conteo de renglones deja de depender del ancho de la
+       columna (a 430 la descripción caía en 2, a 320 el título en 3). */
+    .mb-item-t { font-size: 10.5px; line-height: 1.25; margin-bottom: 3px; max-width: 17ch; }
+    .mb-item-d { font-size: 9px; line-height: 1.4; max-width: 19ch; margin-inline: auto; color: rgba(244, 241, 247, .55); }
 
-    /* El sello legal, compacto (el JS lo muda debajo del slider). */
-    .mb-sello { padding: 12px 14px; gap: 6px; margin-top: 4px; }
+    /* El sello legal, compacto (el JS lo muda debajo del slider), con aire
+       de los puntitos. */
+    .mb-sello { padding: 12px 14px; gap: 6px; margin-top: 20px; }
     .mb-sello-lb { font-size: 9.5px; }
     .mb-sello-txt { font-size: 11.5px; line-height: 1.45; }
     .mb-sello-link { font-size: 11.5px; }
+  }
+
+  /* El 2+3 de la banda también en el teléfono más angosto: medio punto menos
+     de fuente, mismas medidas en ch. */
+  @media (max-width: 349.98px) {
+    .mb-item-t { font-size: 9.5px; }
+    .mb-item-d { font-size: 8.5px; max-width: 20ch; }
   }
 </style>
 
@@ -1091,43 +1105,29 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   .mb-hero { margin: 0 0 var(--mb-v4); position: relative; }
-  /* Cama oscura detras del encabezado: sin esto el texto cae sobre el video y
-     el contraste no llega al minimo legible. Se difumina en los cuatro lados
-     (el degrade horizontal apaga izquierda y derecha, la mascara vertical apaga
-     arriba y abajo) para que no se vea un rectangulo negro recortado. */
-  .mb-hero::before {
+  /* ── La cama oscura del título, versión definitiva ──
+     Antes era una caja rectangular colgada del hero, y quedó corrida TRES
+     veces: cada vez que el título se movía (subir el hero, flotar la volanta,
+     centrar el logo), la caja seguía anclada a la geometría vieja. Ahora es
+     una ELIPSE RADIAL pegada al propio bloque de texto (.mb-hero-copy):
+     - se mueve con el texto, no puede quedar desalineada;
+     - su borde se desvanece a cero en TODAS las direcciones: no hay canto
+       visible que pueda delatar una posición, ni sobre fondo claro;
+     - termina donde termina el bloque, así nunca se mete debajo del badge
+       legal ni detrás de las tarjetas. */
+  .mb-hero-copy { position: relative; }
+  .mb-hero-copy::before {
     content: '';
     position: absolute;
-    z-index: 0;
-    /* La caja ABRAZA al bloque de texto, no lo desborda: medido en producción,
-       con right:26% el degradé moría 263px por debajo de la tarjeta legal (la
-       dejaba sentada sobre media sombra), con -26px arriba quedaba a 6px de la
-       barra de navegación, y abajo pasaba por detrás de las tarjetas de
-       precios. right:45% muere en el canal entre columnas, y ±12px de
-       desborde vertical alcanzan para que el halo respire sin tocar a nadie. */
-    top: -12px; bottom: -12px; left: -56px; right: 45%;
-    background: linear-gradient(to right, rgba(9, 5, 14, 0) 0%, rgba(9, 5, 14, .86) 12%, rgba(9, 5, 14, .72) 62%, rgba(9, 5, 14, 0) 100%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 20%, #000 80%, rgba(0, 0, 0, 0) 100%);
+    z-index: -1;
+    /* Desborda alrededor del texto (arriba cubre también la volanta cuando
+       flota). Los radios de la elipse son EXACTAMENTE la mitad de la caja
+       (50%/50% al centro): el degradé llega a cero justo en el borde, por
+       definición, en todas las direcciones. No existe el canto visible. */
+    top: -46px; bottom: -34px; left: -120px; right: -120px;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%,
+      rgba(9, 5, 14, .84) 0%, rgba(9, 5, 14, .78) 42%, rgba(9, 5, 14, .5) 72%, rgba(9, 5, 14, 0) 100%);
     pointer-events: none;
-  }
-  /* Mientras el hero esté apilado a ancho completo, la cama no puede cortar al
-     26%: la bajada quedaba sobre el video pelado. El corte va en 1199,98 y no
-     en 900 porque el hero recién se parte en dos columnas a los 1200: entre
-     901 y 1199 volvía la versión de escritorio sobre un hero apilado y se veía
-     el canto vertical al 74% del ancho.
-
-     Los -24px fijos de los costados sobresalían del padding real del
-     contenedor (18px abajo de 600) y agregaban 6px de scroll horizontal.
-     Colgados del MISMO clamp que el padding, la cama termina siempre al ras
-     del borde de la ventana, en cualquier ancho. */
-  @media (max-width: 1199.98px) {
-    .mb-hero::before {
-      left: calc(-1 * clamp(18px, 3vw, 32px));
-      right: calc(-1 * clamp(18px, 3vw, 32px));
-      top: -20px; bottom: -14px;
-      background: linear-gradient(to bottom, rgba(9, 5, 14, .84) 0%, rgba(9, 5, 14, .74) 100%);
-    }
   }
   .mb-hero-txt { position: relative; z-index: 1; }
   /* En el celular el selector va debajo del texto; en pantalla grande comparten
@@ -1284,10 +1284,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       scrollbar-width: none;
     }
     #mb-content .mb-grid::-webkit-scrollbar { display: none; }
+    #mb-content .mb-grid > :global(.mb-card) { flex: 0 0 min(88vw, 430px); scroll-snap-align: center; }
     /* Los puntitos: tantos como tarjetas, el lleno es la que está clavada.
        Los <i> los escribe el JS: van con :global o el alcance de Astro no
        los toca (la trampa de siempre de esta página). */
-    .mb-dots { display: flex; justify-content: center; gap: 7px; margin-top: 10px; }
+    .mb-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
     .mb-dots :global(i) {
       width: 7px; height: 7px; border-radius: 50%;
       background: rgba(244, 241, 247, .28); transition: background .2s, transform .2s;
