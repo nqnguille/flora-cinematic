@@ -710,11 +710,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
     font-size: 17px; font-weight: 600; line-height: 1.2;
     color: #f4f1f7; letter-spacing: 0; text-transform: none; margin: 0 0 3px;
+    /* La regla de los DOS renglones: la medida va en ch (escala con la fuente,
+       así el conteo no cambia con el viewport) y balance reparte las palabras
+       mitad y mitad. Los seis títulos miden 21-34 caracteres: a 17ch por
+       renglón, todos caen en dos. */
+    max-width: 17ch; margin-inline: auto; text-wrap: balance;
   }
   .mb-item-d {
     display: block; font-family: var(--font-ui);
     font-size: 14px; font-weight: 400; line-height: 1.5;
     color: rgba(244, 241, 247, .62); margin: 0;
+    /* Y la de los TRES: las seis explicaciones se emparejaron a 59-71
+       caracteres, que a 24ch por renglón dan tres en todos lados. */
+    max-width: 24ch; margin-inline: auto;
   }
   /* Sobre video, todo lo que no está en una tarjeta necesita sombra. */
   .mb-item-t, .mb-item-d { text-shadow: 0 1px 16px rgba(0, 0, 0, .65); }

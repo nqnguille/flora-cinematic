@@ -89,15 +89,15 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   cicloTitulo: '¿Cómo funciona?',
   ciclo: [
     { t: 'Te suscribís con Mercado Pago', d: 'Podés elegir pagar con débito, crédito o dinero en cuenta.' },
-    { t: 'Cada mes, sin hacer nada', d: 'Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.' },
-    { t: 'Variedad a elección', d: 'Reservás desde la carta las genéticas que quieras, hasta completar los gramos de tu plan.' },
+    { t: 'Cada mes, sin hacer nada', d: 'Tus gramos se habilitan solos en tu cuenta, listos para retirar.' },
+    { t: 'Variedad a elección', d: 'Elegí tus favoritas en la carta de genéticas, hasta completar tu plan.' },
   ],
 
   beneficiosTitulo: 'Beneficios exclusivos',
   beneficios: [
-    { t: '{dto} menos, por 3 meses', d: 'Ese precio queda fijo aunque suba la lista.' },
-    { t: 'Envío sin cargo', d: 'A tu domicilio en Neuquén capital, al siguiente día hábil.' },
-    { t: 'No perdés lo que no retirás', d: 'Si un mes no podés pasar, se te acumula.' },
+    { t: '{dto} menos, por 3 meses', d: 'Ese precio te queda congelado aunque la lista suba en el medio.' },
+    { t: 'Envío sin cargo', d: 'Te llevamos el pedido a tu domicilio al siguiente día hábil.' },
+    { t: 'No perdés lo que no retirás', d: 'Si un mes no pasás a retirarlos, se acumulan para el siguiente.' },
   ],
 
   verifTitulo: 'Antes de suscribirte',
