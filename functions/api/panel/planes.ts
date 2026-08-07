@@ -166,6 +166,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (mpPlanId) {
     const r = await consultarMP(env, mpPlanId);
     if (!r.ok) return json({ error: r.error }, 400);
+    // Cada guardado reafirma la back_url del plan: es la vuelta de MP que
+    // identifica al socio por su sesión (/api/socios/volviste). Mejor efecto:
+    // los planes nuevos nacen con vuelta sin que nadie se acuerde.
+    await fetch(`https://api.mercadopago.com/preapproval_plan/${mpPlanId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ back_url: 'https://floraong.ar/api/socios/volviste' }),
+    }).catch(() => {});
     const cobra = r.plan.auto_recurring?.transaction_amount;
     if (r.plan.status && r.plan.status !== 'active') avisoMP = `El plan está ${r.plan.status} en Mercado Pago.`;
     else if (debito !== null && cobra != null && Math.round(cobra) !== debito) {

@@ -537,6 +537,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     if (b) { adherir(b); return }
   })
 
+  // La vuelta de Mercado Pago: /api/socios/volviste redirige acá con
+  // ?adherido. Se celebra, se limpia la URL, y el estado real igual lo trae
+  // la API (debitoActivo) al cargar.
+  const vuelta = new URLSearchParams(location.search).get('adherido')
+  if (vuelta) {
+    history.replaceState(null, '', location.pathname)
+    const av = document.getElementById('mb-aviso')
+    if (av) {
+      av.hidden = false
+      av.classList.add('mb-aviso--ok')
+      av.textContent = vuelta === 'pendiente'
+        ? 'Tu adhesión quedó registrada y espera la aprobación de Mercado Pago. Apenas se confirme, la vas a ver acá.'
+        : '¡Listo! Tu débito automático quedó activo: tus gramos se habilitan solos cada mes.'
+    }
+  }
+
   async function cargar() {
     // Sin sesión válida no se pinta nada: queda la pantalla de acceso.
     const yoRes = await fetch('/api/socios/yo', { credentials: 'include' })
@@ -1194,6 +1210,11 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border-radius: 12px; padding: 12px 16px;
   }
   .mb-aviso :global(b) { color: rgba(244, 241, 247, 0.92); }
+  /* La vuelta feliz de Mercado Pago: mismo cartel, en verde. */
+  .mb-aviso--ok {
+    border-color: rgba(79, 199, 158, .45); background: rgba(14, 62, 48, .35);
+    color: rgba(244, 241, 247, .9); font-weight: 600;
+  }
   .mb-aviso :global(a) { color: #4FC79E; font-weight: 700; text-underline-offset: 3px; }
   .mb-vacio {
     text-align: center; font-family: var(--font-ui); font-size: 14px;

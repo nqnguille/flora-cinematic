@@ -18,6 +18,9 @@
 // El token vive como secret MP_ACCESS_TOKEN en Cloudflare Pages — nunca en el repo.
 import { requireCap, puede } from '../_rol';
 import { procesarPagoAprobado, aplicarPreapproval, descubrirPreapproval, asegurarMembresiaDebito } from '../../mp/webhook';
+
+// A dónde vuelve el socio después de autorizar el débito en MP.
+const BACK_URL_VUELTA = 'https://floraong.ar/api/socios/volviste';
 import { tokens } from '../reprocann/_unificar';
 
 interface Env {
@@ -483,10 +486,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     const planes = await planesDebito(env);
     let descubiertas = 0;
     const planesInactivos: string[] = [];
+    const backurlReparadas: string[] = [];
     for (const [tier, plan] of Object.entries(planes)) {
       const info = await mpFetch(env, `/preapproval_plan/${plan.plan_id}`);
       const repeticiones = info.ok ? Number((info.data.auto_recurring as Record<string, unknown> | undefined)?.repetitions) || null : null;
       if (info.ok && String(info.data.status) !== 'active') planesInactivos.push(tier);
+      // La back_url es la que cierra el circuito de autogestión (la vuelta de
+      // MP identifica al socio por su sesión). Los planes se crearon a mano y
+      // nacieron sin ella: cada sincronización la asegura.
+      if (info.ok && String(info.data.back_url || '') !== BACK_URL_VUELTA) {
+        await fetch(`https://api.mercadopago.com/preapproval_plan/${plan.plan_id}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ back_url: BACK_URL_VUELTA }),
+        }).then((r) => { if (r.ok) backurlReparadas.push(tier); }).catch(() => {});
+      }
       for (let offset = 0; offset < 500; offset += 50) {
         const r = await mpFetch(env, `/preapproval/search?preapproval_plan_id=${plan.plan_id}&limit=50&offset=${offset}`);
         if (!r.ok || !Array.isArray(r.data.results)) break;
@@ -554,7 +568,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       `SELECT COUNT(*) n FROM suscripciones WHERE socio_id IS NULL AND no_es_socio = 0 AND estado != 'cancelada'`,
     ).first<{ n: number }>();
     return json({
-      ok: true, descubiertas, revisadas, cambiadas, rescatados, depuradas,
+      ok: true, descubiertas, revisadas, cambiadas, rescatados, depuradas, backurl_reparadas: backurlReparadas,
       sinIdentificar: sinIdentificar?.n ?? 0, planesInactivos,
     });
   }
