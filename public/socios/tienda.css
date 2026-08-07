@@ -46,8 +46,24 @@
 /* ── Contenido ── */
 .td-content { max-width: 1020px; margin: 0 auto; padding: clamp(24px, 3.5vw, 48px) clamp(18px, 3vw, 32px) 140px; }
 .td-content[hidden] { display: none; }
-.td-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.td-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; position: relative; }
 .td-head .td-back { font-weight: 600; }
+/* La barra unificada del portal: el logo FLORA club centrado en el ancho y
+   TODOS los controles a la derecha, en .td-acciones. El centrado es una
+   grilla con laterales minmax(0,1fr): con 1fr a secas las columnas respetan
+   el min-content de los chips y el "centro" se corre hacia la izquierda.
+   En pantallas angostas se apila: logo centrado arriba, chips abajo. */
+@media (min-width: 900px) {
+  .td-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .td-head > .td-brand { grid-column: 2; justify-self: center; }
+  .td-acciones { grid-column: 3; justify-self: end; }
+}
+@media (max-width: 899.98px) {
+  .td-head > .td-brand { width: 100%; justify-content: center; }
+  .td-acciones { width: 100%; justify-content: center; }
+}
+.td-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-left: auto; }
+.td-acciones .td-logout { margin-left: 0; }
 .td-logout {
   margin-left: auto;
   background: none; border: 1px solid var(--td-line); border-radius: 999px;

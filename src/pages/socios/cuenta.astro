@@ -24,9 +24,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     <!-- ── Cuenta ── -->
     <div id="cu-content" class="td-content" hidden>
       <div class="td-head">
-        <a href="/" class="td-back">← Volver al sitio</a>
         <div class="td-brand"><img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" /><span class="td-brand-name"><em>club</em></span></div>
-        <button id="cu-logout" class="td-logout" type="button">Cerrar sesión</button>
+        <div class="td-acciones">
+          <a href="/" class="td-back">← Volver al sitio</a>
+          <a href="/socios/carta/" class="td-back">Carta</a>
+          <a href="/socios/membresias/" class="td-back">Membresías</a>
+          <button id="cu-logout" class="td-logout" type="button">Cerrar sesión</button>
+        </div>
       </div>
 
       <div class="cu-perfil">
@@ -48,6 +52,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <div class="cu-saldo-bar"><i id="cu-saldo-fill"></i></div>
           <p class="cu-saldo-sub" id="cu-saldo-sub"></p>
           <p class="cu-saldo-sub" id="cu-aldia" hidden></p>
+          <!-- Link a la página de membresías (mismo estilo que "Ver el trámite completo") -->
+          <a class="cu-rp-ir" href="/socios/membresias/">Ver membresías →</a>
         </div>
       </section>
 

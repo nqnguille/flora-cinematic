@@ -25,9 +25,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     <div id="rp-content" class="td-content" hidden>
       <div class="td-head">
-        <a href="/socios/cuenta/" class="td-back">← Mi cuenta</a>
         <div class="td-brand"><img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" /><span class="td-brand-name"><em>club</em></span></div>
-        <button id="rp-logout" class="td-logout" type="button">Cerrar sesión</button>
+        <div class="td-acciones">
+          <a href="/socios/cuenta/" class="td-back">← Mi cuenta</a>
+          <a href="/socios/carta/" class="td-back">Carta</a>
+          <a href="/socios/membresias/" class="td-back">Membresías</a>
+          <button id="rp-logout" class="td-logout" type="button">Cerrar sesión</button>
+        </div>
       </div>
 
       <h1 class="td-title">Tu <em>REPROCANN</em></h1>

@@ -65,8 +65,8 @@ export const MAX_ITEMS = 6;
 
 export const MEMBRESIAS_DEFAULT: Membresias = {
   navCuenta: '← Mi cuenta',
-  ctaCarta: 'Ver la carta de genéticas',
-  ctaWhatsapp: 'Consultar por WhatsApp',
+  ctaCarta: 'Carta',
+  ctaWhatsapp: 'WhatsApp',
   navSalir: 'Cerrar sesión',
 
   eyebrow: 'Solo para socios',

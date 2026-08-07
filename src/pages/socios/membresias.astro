@@ -65,7 +65,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <div class="mb-acciones">
           <a href="/socios/cuenta/" class="td-back mb-chip" id="mb-nav-cuenta">← Mi cuenta</a>
           <a class="mb-chip mb-chip--pri" id="mb-cta-carta" href="/socios/carta/"></a>
-          <a class="mb-chip" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
           <button id="mb-logout" class="td-logout mb-chip" type="button">Cerrar sesión</button>
         </div>
       </div>
@@ -111,6 +110,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <p id="mb-aviso" class="mb-aviso" hidden></p>
 
       <div id="mb-grid" class="mb-grid"></div>
+      <div class="mb-dots" id="mb-dots" aria-hidden="true"></div>
 
       <!-- Cierre en tres columnas: por qué conviene, cómo sigue, y la letra
            chica. Apilado ocupaba 1199 px de más y dejaba la página en 2,08
@@ -231,6 +231,26 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   function pintarPlanes() {
     document.getElementById('mb-grid').innerHTML = PLANES.map(tarjeta).join('')
     document.getElementById('mb-vacio').hidden = PLANES.length > 0
+    // Los puntitos del slider del celular: uno por tarjeta, prendido el que
+    // el snap dejó clavado. En pantallas grandes el CSS los esconde.
+    const dots = document.getElementById('mb-dots')
+    if (dots) {
+      dots.innerHTML = PLANES.map(() => '<i></i>').join('')
+      const riel = document.getElementById('mb-grid')
+      const marcar = () => {
+        const hijos = [...riel.children]
+        if (!hijos.length) return
+        const centro = riel.scrollLeft + riel.clientWidth / 2
+        let mejor = 0, dist = Infinity
+        hijos.forEach((c, i) => {
+          const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - centro)
+          if (d < dist) { dist = d; mejor = i }
+        })
+        ;[...dots.children].forEach((p, i) => p.classList.toggle('act', i === mejor))
+      }
+      riel.addEventListener('scroll', marcar, { passive: true })
+      marcar()
+    }
     // Las dos columnas se muestran siempre. Antes se escondían cuando el
     // REPROCANN no estaba habilitado, junto con el botón: ahora que el botón
     // está siempre, esconder la explicación de qué es el débito dejaría la
@@ -444,7 +464,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // el sello del encabezado. Los textos siguen guardados en el backoffice
     // por si se quiere volver a mostrar.
     set('mb-cta-carta', tx.ctaCarta)
-    set('mb-cta-wa', tx.ctaWhatsapp)
+    // En el celular el sello legal baja: primero los precios, después el
+    // marco. En el DOM vive en el hero (la TV lo quiere arriba), así que se
+    // muda una sola vez acá.
+    if (matchMedia('(max-width: 767px)').matches) {
+      const sello = document.querySelector('.mb-sello')
+      const cierre = document.querySelector('.mb-cierre')
+      if (sello && cierre && sello.nextElementSibling !== cierre) cierre.before(sello)
+    }
   }
 
   // Un click: se registra la adhesión y se abre el checkout de Mercado Pago.
@@ -786,7 +813,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { display: none; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
     .mb-card-det { margin-bottom: 7px; }
-    /* "EXTRA LARGE" a 13.5px no entra en la tarjeta de 320: un punto menos. */
+    /* "EXTRA LARGE" a 13.5px no entra en la tarjeta de 320: un punto menos.
+       (En el slider de <768 este valor lo pisa el bloque final del estilo
+       global: acá solo importa si algún día vuelve la grilla 2x2.) */
     .mb-card-nom { font-size: 12px; }
     /* La píldora, en un renglón sí o sí: a este ancho el texto más largo
        ("AHORRÁS $100.000/MES") mide ~101px contra ~105 de bloque. El nowrap
@@ -979,6 +1008,40 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
     .mb-mia { font-size: clamp(9px, 1.05vh, 12px); padding: clamp(3px, .4vh, 5px) clamp(8px, .9vh, 12px); }
+  }
+
+  /* ── El celular, replanteado: tarjetas GRANDES en el slider y la banda de
+     seis en dos filas de tres, chiquita. Este bloque vive al FINAL a
+     propósito: pisa las compresiones de 560/400 (que estaban pensadas para
+     tarjetas de 155px en la grilla 2x2) porque en el riel cada tarjeta ocupa
+     el 82% de la pantalla y vuelve a haber lugar. ── */
+  @media (max-width: 767.98px) {
+    .mb-card { padding: 18px 16px 20px; border-radius: 18px; }
+    .mb-frasco { width: 24px; height: 29px; }
+    .mb-frascos { gap: 5px; margin-bottom: 8px; flex-wrap: nowrap; }
+    .mb-card-nom { font-size: 21px; letter-spacing: .08em; }
+    .mb-card-det { font-size: 13.5px; margin-bottom: 12px; }
+    .mb-card-precio { font-size: 38px; }
+    .mb-card-precio span { display: block; font-size: 12px; }
+    .mb-gancho { margin: 14px 0 0; padding: 13px 12px 14px; }
+    .mb-gancho-lb { font-size: 10.5px; letter-spacing: .1em; }
+    .mb-gancho-ahorro { font-size: 10.5px; padding: 4px 11px; margin: 2px 0 5px; white-space: nowrap; }
+    .mb-gancho-precio { font-size: 28px; }
+    .mb-adherir { font-size: 13px; gap: 7px; padding: 10px 14px; flex-wrap: nowrap; }
+    .mb-adherir-mp { height: 15px; }
+    .mb-mia { font-size: 9.5px; padding: 3px 9px; top: 9px; right: 11px; }
+
+    /* La banda de seis: tres por fila, dos filas, todo a media voz. */
+    .mb-items { grid-template-columns: repeat(3, 1fr); gap: 14px 8px; }
+    .mb-ico { width: 30px; height: 30px; margin-bottom: 5px; }
+    .mb-item-t { font-size: 11.5px; line-height: 1.25; margin-bottom: 2px; max-width: 15ch; }
+    .mb-item-d { font-size: 9.5px; line-height: 1.35; max-width: none; color: rgba(244, 241, 247, .55); }
+
+    /* El sello legal, compacto (el JS lo muda debajo del slider). */
+    .mb-sello { padding: 12px 14px; gap: 6px; margin-top: 4px; }
+    .mb-sello-lb { font-size: 9.5px; }
+    .mb-sello-txt { font-size: 11.5px; line-height: 1.45; }
+    .mb-sello-link { font-size: 11.5px; }
   }
 </style>
 
@@ -1178,11 +1241,55 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* "Cerrar sesión" traía un margin-left:auto de tienda.css que lo empujaba
      al extremo; acá ya está dentro del grupo de la derecha. */
   #mb-content .td-logout.mb-chip { margin-left: 0; }
+
+  /* ── El slider del celular ──
+     Las cuatro tarjetas dejan la grilla 2x2 y pasan a un riel horizontal con
+     snap nativo: cada tarjeta ocupa el 82% del ancho (grande de verdad) y la
+     siguiente asoma por la derecha, que es la señal de que se puede deslizar.
+     Sin flechas ni librerías: overflow + scroll-snap del navegador. */
+  @media (max-width: 767.98px) {
+    #mb-content .mb-grid {
+      display: flex; gap: 12px;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+      /* Sangra hasta los bordes de la pantalla para que el asomo se vea. */
+      margin-inline: calc(-1 * var(--mb-pad));
+      padding: 4px var(--mb-pad) 8px;
+      scrollbar-width: none;
+    }
+    #mb-content .mb-grid::-webkit-scrollbar { display: none; }
+    /* Los puntitos: tantos como tarjetas, el lleno es la que está clavada.
+       Los <i> los escribe el JS: van con :global o el alcance de Astro no
+       los toca (la trampa de siempre de esta página). */
+    .mb-dots { display: flex; justify-content: center; gap: 7px; margin-top: 10px; }
+    .mb-dots :global(i) {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(244, 241, 247, .28); transition: background .2s, transform .2s;
+    }
+    .mb-dots :global(i.act) { background: #4FC79E; transform: scale(1.25); }
+  }
+  @media (min-width: 768px) { .mb-dots { display: none; } }
   /* tienda.css deja 6px entre la barra de chips y el encabezado, contra los
      30-34px que separan todo lo demás: la volanta quedaba colgada del botón
      "Mi cuenta" como si fuera parte de la barra. En la TV no se nota porque el
      bloque va centrado a lo alto, pero en el celular sí. */
-  #mb-content .td-head { margin-bottom: var(--mb-v3); }
+  /* El logo centrado en el ancho con una grilla 1fr/auto/1fr: las dos
+     columnas laterales miden lo mismo por definición, así que el centro es
+     el centro real de la página, no "lo que sobra" después de los chips. */
+  #mb-content .td-head {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center; margin-bottom: var(--mb-v3);
+  }
+  /* Entre 900 y 1679 el contenido mide 1020px: para que los cuatro chips
+     entren en su mitad sin tocar el logo, se achican un punto. */
+  @media (min-width: 900px) and (max-width: 1679.98px) {
+    #mb-content :global(.mb-chip) { font-size: 12px; padding: 7px 12px; }
+  }
+  #mb-content .td-head .td-brand { grid-column: 2; }
+  #mb-content .mb-acciones { grid-column: 3; justify-self: end; }
+  @media (max-width: 899.98px) {
+    #mb-content .td-head { display: flex; flex-wrap: wrap; justify-content: center; }
+    #mb-content .mb-acciones { margin-left: 0; justify-content: center; }
+  }
 
   /* tienda.css cierra con 140px abajo, reservados para la barra flotante de la
      tienda (.td-bar), que en esta página no existe: en un teléfono son media
@@ -1258,7 +1365,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* Acá el bloque va centrado a lo alto, así que el hueco entre la barra y el
        encabezado lo reparte el centrado: alcanza con que escale con la altura,
        no hace falta el aire que necesita el celular. */
-    #mb-content .td-head { margin-bottom: clamp(6px, .9vh, 13px); }
+    #mb-content .td-head { margin-bottom: clamp(3px, .45vh, 7px); }
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
