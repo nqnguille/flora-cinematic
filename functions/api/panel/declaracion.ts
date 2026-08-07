@@ -395,26 +395,35 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ).bind(domicilio || null, localidad || null, provincia || null, socioId).run();
   }
 
-  const p = await leerPlantilla(env);
-  const ahora = new Date();
-  const datos: DatosSocio = { ...socio, domicilio, localidad, provincia };
-  const texto = armarTexto(p, datos, diagnostico, ahora);
-  const hash = await sha256([p.version, ...texto.parrafos, texto.cierre].join('\n'));
+  const res = await generarDeclaracion(env, socioId, { ...socio, domicilio, localidad, provincia }, diagnostico, auth.email || 'panel');
+  return json({ ok: true, declaracion_id: res.declaracion_id, hash: res.hash, html: res.html });
+};
 
+// Genera y registra la declaración de un socio. Compartida entre el POST del
+// panel, el asistente de conversión y la puerta de autoservicio del portal:
+// un solo lugar para el texto, el hash y el avance de estado.
+export async function generarDeclaracion(
+  env: { DB: D1Database; GENETICAS: KVNamespace },
+  socioId: number,
+  datos: DatosSocio,
+  diagnostico: string,
+  generadaPor: string,
+): Promise<{ declaracion_id: number; hash: string; html: string }> {
+  const p = await leerPlantilla(env);
+  const texto = armarTexto(p, datos, diagnostico, new Date());
+  const hash = await sha256([p.version, ...texto.parrafos, texto.cierre].join('\n'));
   const ins = await env.DB.prepare(
     `INSERT INTO declaraciones (socio_id, tipo, version, texto_hash, estado, generada_por, nota)
       VALUES (?, 'vinculacion', ?, ?, 'generada', ?, ?)`,
-  ).bind(socioId, p.version, hash, auth.email, diagnostico).run();
+  ).bind(socioId, p.version, hash, generadaPor, diagnostico).run();
   const decId = Number(ins.meta?.last_row_id);
-
   // queda esperando la firma del paciente
   await env.DB.prepare(
     `UPDATE socios SET reprocann_estado = 'ddjj_pendiente', reprocann_actualizado = datetime('now')
       WHERE id = ? AND reprocann_estado IN ('autocultivo', 'sin_iniciar', 'revisar')`,
   ).bind(socioId).run();
-
-  return json({ ok: true, declaracion_id: decId, hash, html: documentoHtml(p, texto, hash) });
-};
+  return { declaracion_id: decId, hash, html: documentoHtml(p, texto, hash) };
+}
 
 export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   const auth = await requireCap(request, env, 'reprocann_editar');

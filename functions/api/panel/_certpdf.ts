@@ -16,7 +16,12 @@ export interface DatosCertificado {
   domicilio?: string;
   localidad?: string;
   provincia?: string;
+  cp?: string;
   vence?: string;        // ISO yyyy-mm-dd
+  emision?: string;      // ISO yyyy-mm-dd
+  tramite?: string;      // id de trámite REPROCANN
+  modalidad?: string;    // 'autocultivo' | 'ong' | el texto que traiga
+  plantas?: number;      // plantas florecidas autorizadas (tope legal 9)
   diagnostico?: string;
   codigo?: string;       // código de vinculación, si figura
   texto?: string;        // el texto plano completo, para depurar desde el panel
@@ -82,7 +87,11 @@ const PROMPT_CREDENCIAL =
   'Esta imagen es parte de una credencial o constancia del REPROCANN (Registro del Programa Cannabis, Argentina). ' +
   'Leé el texto impreso y devolvé SOLO un objeto JSON, sin explicación, con las claves que realmente veas: ' +
   '"dni" (solo dígitos), "nombre" (apellido y nombres del paciente), "domicilio" (calle y número), ' +
-  '"localidad", "provincia", "vence" (fecha de vencimiento, dd/mm/aaaa), "diagnostico" (SOLO si figura un ' +
+  '"localidad", "provincia", "cp" (código postal), "vence" (fecha de vencimiento, dd/mm/aaaa), ' +
+  '"emision" (fecha de emisión, dd/mm/aaaa), "id_tramite" (el número que figura como Id trámite), ' +
+  '"modalidad" ("autocultivo" si dice Paciente con autocultivo, "ong" si dice vinculado a una organización), ' +
+  '"plantas" (cantidad de plantas florecidas autorizadas, solo el número), ' +
+  '"diagnostico" (SOLO si figura un ' +
   'diagnóstico médico explícito; la condición de vinculación como "autocultivo" u "ONG" NO es un diagnóstico). ' +
   'Si un dato no aparece en la imagen, no incluyas su clave. No inventes nada.';
 
@@ -141,6 +150,11 @@ async function leerDeImagenes(pdf: NonNullable<Awaited<ReturnType<typeof getDocu
     if (!out.localidad) out.localidad = texto(j.localidad);
     if (!out.provincia) out.provincia = texto(j.provincia);
     if (!out.diagnostico) { const t = texto(j.diagnostico); if (t && !RE_NO_DIAGNOSTICO.test(t)) out.diagnostico = t; }
+    if (!out.cp) { const t = texto(j.cp); if (t && /^[A-Z]?\d{4}/i.test(t)) out.cp = t.slice(0, 8); }
+    if (!out.tramite) { const t = texto(j.id_tramite); const tm = t ? t.match(/\d{4,}/) : null; if (tm) out.tramite = tm[0]; }
+    if (!out.modalidad) { const t = texto(j.modalidad); if (t) out.modalidad = /autocultivo/i.test(t) ? 'autocultivo' : /ong|organizaci/i.test(t) ? 'ong' : undefined; }
+    if (out.plantas === undefined) { const n = Number(j.plantas); if (Number.isFinite(n) && n >= 1 && n <= 20) out.plantas = n; }
+    if (!out.emision) { const t = texto(j.emision); const fm = t ? t.match(RE_FECHA) : null; if (fm) out.emision = aIso(fm); }
     if (!out.vence) { const t = texto(j.vence); const fm = t ? t.match(RE_FECHA) : null; if (fm) out.vence = aIso(fm); }
   }
   return sinVacios(out) as DatosCertificado;
@@ -170,6 +184,18 @@ function leerDeTexto(texto: string): DatosCertificado {
 
   const diag = despuesDe(lineas, /\bdiagn[oó]stico\b/i);
   if (diag) d.diagnostico = diag.slice(0, 300);
+
+  const tram = despuesDe(lineas, /\bid\s+tr[aá]mite\b|\bn[°º.]?\s*(?:de\s+)?tr[aá]mite\b/i);
+  if (tram) { const tm = tram.match(/\d{4,}/); if (tm) d.tramite = tm[0]; }
+  const cp = despuesDe(lineas, /\bc[oó]digo\s+postal\b|\bC\.?P\.?\b/i);
+  if (cp) { const cm2 = cp.match(/\b[A-Z]?\d{4}\b/i); if (cm2) d.cp = cm2[0]; }
+  const plantas = despuesDe(lineas, /plantas\s+florecidas\s+autorizadas/i);
+  if (plantas) { const pm = plantas.match(/\d{1,2}/); if (pm) d.plantas = Number(pm[0]); }
+  if (/paciente\s+con\s+autocultivo/i.test(plano)) d.modalidad = 'autocultivo';
+  else if (/vinculad[oa]\s+a\s+(?:una\s+)?(?:ONG|organizaci[oó]n|persona\s+jur[ií]dica)/i.test(plano)) d.modalidad = 'ong';
+  const emisionTxt = despuesDe(lineas, /\bfecha\s+(?:de\s+)?emisi[oó]n\b/i);
+  const em = emisionTxt ? emisionTxt.match(RE_FECHA) : null;
+  if (em) d.emision = aIso(em);
 
   const cod = despuesDe(lineas, /\bc[oó]digo(?:\s+de)?\s+vinculaci[oó]n\b/i);
   if (cod) {

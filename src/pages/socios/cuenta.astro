@@ -358,6 +358,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const res = await fetch('/api/socios/codigo', { credentials: 'include' })
         if (!res.ok) return
         const d = await res.json()
+        rpInfo = d // la puerta del certificado cruza este estado con el de la DDJJ
+        evaluarCertCta()
         const chip = document.getElementById('cu-rp-chip')
         const vence = document.getElementById('cu-rp-vence')
         if (!d.vinculado) { chip.textContent = 'Sin vincular'; chip.className = 'cu-chip'; return }
@@ -412,7 +414,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     function pintarDdjj(d) {
       const sec = document.getElementById('cu-dj-sec')
       const card = document.getElementById('cu-dj-card')
-      if (!d || !d.aplica) { sec.hidden = true; return }
+      if (!d || !d.aplica) {
+        // Sin declaración no siempre es "nada que hacer": si el socio figura
+        // como autocultivador, esta misma tarjeta se vuelve la puerta para
+        // subir su certificado (evaluarCertCta decide con las dos respuestas).
+        djAplica = false
+        sec.hidden = true
+        evaluarCertCta()
+        return
+      }
+      djAplica = true
       if (d.estado === 'generada') {
         card.innerHTML = `
           <div class="cu-rp-fila"><span class="cu-chip is-vos">Te toca firmar</span></div>
@@ -429,6 +440,90 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <p class="cu-dj-intro">Tu declaración quedó verificada: estamos pasando tu REPROCANN a Flora y no tenés que hacer nada más. Ya podés adherirte a tu membresía desde <a href="/socios/membresias/">Membresías</a>.</p>`
       } else { sec.hidden = true; return }
       sec.hidden = false
+    }
+
+    /* ── La puerta de autoservicio del autocultivador ──
+       Si la DDJJ dice "no aplica" pero el REPROCANN dice "autocultivador",
+       lo que falta es el certificado: el socio lo sube acá, el server lo lee
+       y le deja la renuncia lista para firmar en la misma sentada. Las dos
+       respuestas llegan en paralelo, así que cada carga anota lo suyo y la
+       que llega última pinta. */
+    let djAplica = null // null = /api/socios/ddjj todavía no respondió
+    let rpInfo = null   // la respuesta de /api/socios/codigo
+
+    function evaluarCertCta() {
+      if (djAplica !== false || !rpInfo || rpInfo.estado !== 'autocultivo') return
+      const sec = document.getElementById('cu-dj-sec')
+      const card = document.getElementById('cu-dj-card')
+      if (rpInfo.certificado) {
+        // ya subió (o el club ya lo cargó) y la declaración todavía no está:
+        // la está armando el equipo, no hay nada más que apretar
+        card.innerHTML = `
+          <div class="cu-rp-fila"><span class="cu-chip">Certificado recibido</span></div>
+          <p class="cu-dj-intro">Recibimos tu certificado: te avisamos en cuanto tu declaración esté lista.</p>`
+        sec.hidden = false
+        return
+      }
+      card.innerHTML = `
+        <div class="cu-rp-fila"><span class="cu-chip is-vos">Pasate a Flora</span></div>
+        <p class="cu-dj-intro">¿Querés que Flora cultive por vos? Subí tu certificado REPROCANN y te dejamos la renuncia lista para firmar acá mismo.</p>
+        <input type="file" id="cu-dj-cert-file" accept="application/pdf,.pdf" hidden />
+        <button class="cu-cert cu-dj-abrir" id="cu-dj-cert-btn" type="button"><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M4.4 15.6v3.2a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2v-3.2"/></g><g class="fx-lleno"><path d="M12 2.8l4.8 5.2h-3.1v7h-3.4V8H7.2z"/></g></svg> Subir mi certificado (PDF)<small>Lo leemos al toque y armamos tu declaración.</small></button>
+        <p id="cu-dj-cert-msg" class="cu-dj-msg" hidden></p>`
+      const file = document.getElementById('cu-dj-cert-file')
+      document.getElementById('cu-dj-cert-btn').addEventListener('click', () => file.click())
+      file.addEventListener('change', () => {
+        if (file.files && file.files[0]) subirCert(file.files[0])
+        file.value = '' // que se pueda reelegir el mismo archivo tras un error
+      })
+      sec.hidden = false
+    }
+
+    async function subirCert(f) {
+      const btn = document.getElementById('cu-dj-cert-btn')
+      const msg = document.getElementById('cu-dj-cert-msg')
+      const aviso = (t, mal) => {
+        msg.textContent = t
+        msg.classList.toggle('is-error', !!mal)
+        msg.hidden = false
+      }
+      if (!/pdf$/i.test(f.type || '') && !/\.pdf$/i.test(f.name || '')) return aviso('Subí el PDF oficial de tu certificado.', true)
+      if (f.size > 8 * 1024 * 1024) return aviso('El PDF es muy pesado (máx. 8 MB).', true)
+      btn.disabled = true
+      aviso('Subiendo y leyendo tu certificado…', false)
+      try {
+        const b64 = await new Promise((res, rej) => {
+          const r = new FileReader()
+          r.onload = () => res(r.result)
+          r.onerror = () => rej(new Error('lectura'))
+          r.readAsDataURL(f)
+        })
+        const r = await fetch('/api/socios/certificado', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdf_base64: b64 }),
+        })
+        const d = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          btn.disabled = false
+          return aviso(d.error || 'No se pudo subir. Probá de nuevo.', true)
+        }
+        if (d.ddjj_generada) {
+          // la declaración ya existe: recargar las dos tarjetas hace aparecer
+          // el "Te toca firmar" al toque, en esta misma tarjeta
+          cargarDdjj()
+          cargarReprocann()
+        } else {
+          // el certificado quedó, pero la DDJJ la va a armar el equipo (falta
+          // el diagnóstico, o el DNI no coincidió): el botón se apaga y queda
+          // el mensaje. No se repinta para no pisar la advertencia.
+          rpInfo.certificado = true
+          aviso(d.advertencia || 'Recibimos tu certificado: te avisamos en cuanto tu declaración esté lista.', false)
+        }
+      } catch {
+        btn.disabled = false
+        aviso('Error de red. Probá de nuevo.', true)
+      }
     }
 
     function abrirDdjj(d) {

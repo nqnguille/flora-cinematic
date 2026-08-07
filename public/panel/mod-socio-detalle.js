@@ -119,6 +119,11 @@
         : cumFila('pend', 'Vinculación con Flora', 'trámite en curso'))
       filas.push(`<div class="sd-cum" id="sd-cum-ddjj">${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(rc) ? '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo (art. 4° ter inc. c)</span><span class="sd-cum-det">⏳</span>' : '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo</span><span class="sd-cum-det">no aplica: vinculación directa</span>'}</div>`)
       filas.push('<div class="sd-cum" id="sd-cum-cert"><span class="sd-cum-ico">·</span><span>Certificado REPROCANN archivado</span><span class="sd-cum-det">⏳</span></div>')
+      if (s.reprocann_plantas) {
+        filas.push(s.reprocann_plantas <= 9
+          ? cumFila('ok', 'Plantas florecidas autorizadas', s.reprocann_plantas + ' de 9 (Anexo IV)')
+          : cumFila('mal', 'Plantas autorizadas EXCEDEN el tope', s.reprocann_plantas + ' de 9 (Anexo IV)'))
+      }
       if (d.saldo && typeof d.saldo.retiradoMes === 'number') {
         filas.push(d.saldo.retiradoMes <= 40
           ? cumFila('ok', 'Dispensa del mes dentro del tope', d.saldo.retiradoMes + ' g de 40 g (Anexo IV)')

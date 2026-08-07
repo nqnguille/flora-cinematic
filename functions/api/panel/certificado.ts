@@ -89,19 +89,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let leido: Record<string, string> = {};
   try {
     const datos = await leerCertificado(bytes.buffer as ArrayBuffer);
-    const campos: Array<[string, string | undefined]> = [
+    const campos: Array<[string, string | number | undefined]> = [
       ['documento', datos.dni], ['domicilio', datos.domicilio],
       ['localidad', datos.localidad], ['provincia', datos.provincia],
-      ['reprocann_vence', datos.vence],
+      ['reprocann_vence', datos.vence], ['reprocann_tramite', datos.tramite],
+      ['reprocann_plantas', datos.plantas],
     ];
     for (const [col, val] of campos) {
       if (!val) continue;
       const r = await env.DB.prepare(
         `UPDATE socios SET ${col} = ?, actualizado = datetime('now') WHERE id = ? AND (${col} IS NULL OR ${col} = '')`,
       ).bind(val, socioId).run();
-      if (r.meta.changes) leido[col] = val;
+      if (r.meta.changes) leido[col] = String(val);
     }
     if (datos.diagnostico) leido.diagnostico = datos.diagnostico;
+    if (datos.modalidad) leido.modalidad = datos.modalidad;
     if (datos.codigo) leido.codigo = datos.codigo;
   } catch { /* leer el PDF nunca rompe la subida */ }
 

@@ -948,6 +948,226 @@
   }
 
 
+  // ============ Convertir autocultivador (cv-): del PDF a la DDJJ ============
+  // El circuito que Sofi hacía saltando entre pantallas, en un solo modal:
+  // arrastra el PDF del certificado, el servidor lo lee (texto o visión),
+  // usa o crea la ficha, guarda el certificado y genera la declaración.
+  // Cierra con el WhatsApp que lo invita a firmar en el portal.
+
+  // El mismo mensaje de waDdjj (mod-socio-detalle.js): invita a firmar desde
+  // su cuenta, sin imprimir nada. wa.me quiere el número internacional: a los
+  // celulares argentinos de 10 cifras se les antepone 549.
+  function cvWa(nombre, telefono) {
+    const nom = String(nombre || '').split(' ')[0]
+    const txt = `Hola ${nom}! Ya está lista tu declaración jurada para pasarte a Flora. `
+      + `Es el paso que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: `
+      + `no se pueden tener las dos modalidades a la vez.\n\n`
+      + `La podés firmar directo desde tu cuenta, sin imprimir nada:\n`
+      + `1. Entrá a https://floraong.ar/socios/ con tu Google\n`
+      + `2. En "Mi cuenta" vas a ver la tarjeta DECLARACIÓN JURADA\n`
+      + `3. Leela y firmala con tu nombre y tu DNI\n\n`
+      + `Con eso seguimos nosotros el trámite. Cualquier duda antes de firmar, escribime.`
+    let tel = digitsOnly(telefono)
+    if (tel.length === 10) tel = '549' + tel
+    return `https://wa.me/${tel}?text=${encodeURIComponent(txt)}`
+  }
+
+  function cvAbrir() {
+    let pdfB64 = null            // se reenvía con la confirmación (el server no lo retiene)
+    let socioIdPend = null       // socio ya resuelto, esperando diagnóstico/domicilio
+
+    const ov = P.modal('Convertir autocultivador', '<div id="cv-cuerpo"></div>')
+    const cuerpo = ov.querySelector('#cv-cuerpo')
+    const setMsg = (texto, err) => {
+      const el = cuerpo.querySelector('#cv-msg')
+      if (!el) return
+      el.className = 'msg' + (err ? ' err' : '')
+      el.textContent = texto
+    }
+
+    async function cvPost(body, boton) {
+      if (boton) boton.disabled = true
+      setMsg('⏳ procesando…')
+      let r, d
+      try {
+        r = await fetch('/api/panel/conversion', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        d = await r.json().catch(() => ({}))
+      } catch {
+        if (boton) boton.disabled = false
+        setMsg('✗ sin conexión — probá de nuevo', true)
+        return
+      }
+      if (!r.ok) {
+        if (boton) boton.disabled = false
+        setMsg('✗ ' + (d.error || errHttp(r.status)), true)
+        return
+      }
+      if (d.paso === 'revisar') pintarRevisar(d)
+      else if (d.paso === 'falta_diagnostico') { muCargar(true); pintarFalta(d) }
+      else if (d.paso === 'listo') { muCargar(true); pintarListo(d) }
+      else setMsg('✗ respuesta inesperada del servidor', true)
+    }
+
+    /* Paso 1: el PDF del certificado */
+    function pintarSubir() {
+      cuerpo.innerHTML = `
+        <p class="so-help" style="margin:0 0 12px">Subí el certificado REPROCANN (PDF) del autocultivador.
+        Se lee solo: con su DNI se busca o se crea la ficha, el certificado queda guardado y sale la
+        declaración jurada para que la firme en el portal.</p>
+        <div class="cv-drop" id="cv-drop" role="button" tabindex="0" aria-label="Elegir el PDF del certificado">
+          <b>Arrastrá el PDF acá</b>
+          <span>o hacé click para elegirlo (máx. 8 MB)</span>
+        </div>
+        <input type="file" id="cv-file" accept="application/pdf" hidden />
+        <p class="msg" id="cv-msg" style="margin:10px 0 0" aria-live="polite"></p>`
+      const drop = cuerpo.querySelector('#cv-drop')
+      const file = cuerpo.querySelector('#cv-file')
+      drop.addEventListener('click', () => file.click())
+      drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click() } })
+      ;['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('on') }))
+      ;['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('on') }))
+      drop.addEventListener('drop', (e) => cvArchivo(e.dataTransfer && e.dataTransfer.files[0]))
+      file.addEventListener('change', () => cvArchivo(file.files[0]))
+    }
+
+    function cvArchivo(f) {
+      if (!f) return
+      if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name || '')) { setMsg('✗ Tiene que ser un PDF', true); return }
+      if (f.size > 8 * 1024 * 1024) { setMsg('✗ El PDF es muy pesado (máx. 8 MB)', true); return }
+      const drop = cuerpo.querySelector('#cv-drop')
+      if (drop) drop.innerHTML = `<b>📄 ${P.esc(f.name)}</b><span>⏳ leyendo el certificado…</span>`
+      const fr = new FileReader()
+      fr.onerror = () => setMsg('✗ No se pudo leer el archivo', true)
+      fr.onload = () => {
+        pdfB64 = String(fr.result).replace(/^data:[^;]*;base64,/, '')
+        cvPost({ pdf_base64: pdfB64 })
+      }
+      fr.readAsDataURL(f)
+    }
+
+    /* Paso 2: revisar lo leído antes de crear a nadie */
+    function pintarRevisar(d) {
+      const L = d.leido || {}
+      cuerpo.innerHTML = `
+        <p class="so-help" style="margin:0 0 4px">Esto es lo que se pudo leer del PDF — corregí lo que haga falta.</p>
+        <p class="so-help" style="margin:0 0 12px"><b>${L.dni ? 'Ese DNI no está en el padrón: se crea una ficha nueva.'
+          : 'No se pudo leer el DNI: completalo a mano.'}</b>
+          Si el DNI es de un socio ya cargado, al confirmar se usa su ficha (no se duplica).</p>
+        <div style="display:grid;gap:10px">
+          <div class="grid2">
+            <div><label class="lb" for="cv-nombre">Nombre y apellido</label>
+              <input class="input" id="cv-nombre" value="${P.esc(L.nombre || '')}" /></div>
+            <div><label class="lb" for="cv-dni">DNI</label>
+              <input class="input" id="cv-dni" inputmode="numeric" maxlength="10" value="${P.esc(L.dni || '')}" placeholder="sin puntos" /></div>
+          </div>
+          <div class="grid2">
+            <div><label class="lb" for="cv-dom">Domicilio</label>
+              <input class="input" id="cv-dom" value="${P.esc(L.domicilio || '')}" placeholder="Calle y número" /></div>
+            <div><label class="lb" for="cv-vence">Vence su credencial</label>
+              <input class="input" id="cv-vence" type="date" value="${P.esc(L.vence || '')}" /></div>
+          </div>
+          <div class="grid2">
+            <div><label class="lb" for="cv-loc">Localidad</label>
+              <input class="input" id="cv-loc" value="${P.esc(L.localidad || '')}" /></div>
+            <div><label class="lb" for="cv-prov">Provincia</label>
+              <input class="input" id="cv-prov" value="${P.esc(L.provincia || 'Neuquén')}" /></div>
+          </div>
+          <div class="grid2">
+            <div><label class="lb" for="cv-diag">Diagnóstico</label>
+              <input class="input" id="cv-diag" maxlength="300" value="${P.esc(L.diagnostico || '')}"
+                placeholder="…acredita la existencia de ___" /></div>
+            <div><label class="lb" for="cv-tel">Teléfono</label>
+              <input class="input" id="cv-tel" type="tel" placeholder="+54 9 299…" /></div>
+          </div>
+        </div>
+        <div class="pn-mod-acciones">
+          <button class="btn" id="cv-otra" type="button">← Otro PDF</button>
+          <button class="btn btn-pri" id="cv-conf" type="button">Confirmar y seguir</button>
+        </div>
+        <p class="msg" id="cv-msg" style="margin:8px 0 0" aria-live="polite"></p>`
+      cuerpo.querySelector('#cv-otra').addEventListener('click', () => { pdfB64 = null; pintarSubir() })
+      cuerpo.querySelector('#cv-conf').addEventListener('click', (ev) => {
+        const val = (sel) => { const el = cuerpo.querySelector(sel); return el ? el.value.trim() : '' }
+        const documento = val('#cv-dni').replace(/\D/g, '')
+        if (!val('#cv-nombre')) { setMsg('✗ Falta el nombre', true); return }
+        if (documento.length < 7 || documento.length > 8) { setMsg('✗ El DNI tiene 7 u 8 números', true); return }
+        cvPost({
+          pdf_base64: pdfB64, confirmar_creacion: true,
+          nombre: val('#cv-nombre'), documento,
+          domicilio: val('#cv-dom'), localidad: val('#cv-loc'), provincia: val('#cv-prov'),
+          vence: val('#cv-vence'), diagnostico: val('#cv-diag'), telefono: val('#cv-tel'),
+        }, ev.target)
+      })
+    }
+
+    /* Paso 3: lo que el PDF no dijo (diagnóstico, y teléfono/domicilio si faltan) */
+    function pintarFalta(d) {
+      socioIdPend = d.socio_id
+      const s = d.socio || {}
+      cuerpo.innerHTML = `
+        <div class="card" style="box-shadow:none;background:var(--card2);margin-bottom:10px">
+          <b>${P.esc(s.nombre || '')}</b>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">${s.creado ? 'Ficha nueva creada' : 'Ficha ya existente'} · certificado guardado</div>
+        </div>
+        <p class="so-help" style="margin:0 0 10px">Para armar la declaración jurada falta lo de acá abajo.
+        El diagnóstico lo define el médico: es lo que funda la prescripción.</p>
+        <div style="display:grid;gap:10px">
+          <div><label class="lb" for="cv-diag2">Diagnóstico</label>
+            <input class="input" id="cv-diag2" maxlength="300" value="${P.esc(d.diagnostico || '')}"
+              placeholder="…acredita la existencia de ___" /></div>
+          ${d.falta_domicilio ? `<div><label class="lb" for="cv-dom2">Domicilio</label>
+            <input class="input" id="cv-dom2" placeholder="Calle y número" /></div>` : ''}
+          ${d.falta_telefono ? `<div><label class="lb" for="cv-tel2">Teléfono</label>
+            <input class="input" id="cv-tel2" type="tel" placeholder="+54 9 299… (para mandarle el WhatsApp)" /></div>` : ''}
+        </div>
+        <div class="pn-mod-acciones">
+          <button class="btn btn-pri" id="cv-gen" type="button">Generar la declaración</button>
+        </div>
+        <p class="msg" id="cv-msg" style="margin:8px 0 0" aria-live="polite"></p>`
+      cuerpo.querySelector('#cv-gen').addEventListener('click', (ev) => {
+        const val = (sel) => { const el = cuerpo.querySelector(sel); return el ? el.value.trim() : '' }
+        const diag = val('#cv-diag2')
+        if (!diag) { setMsg('✗ Falta el diagnóstico', true); return }
+        if (d.falta_domicilio && !val('#cv-dom2')) { setMsg('✗ Falta el domicilio: la declaración lo lleva', true); return }
+        const body = { socio_id: socioIdPend, diagnostico: diag }
+        if (d.falta_domicilio) body.domicilio = val('#cv-dom2')
+        if (d.falta_telefono && val('#cv-tel2')) body.telefono = val('#cv-tel2')
+        cvPost(body, ev.target)
+      })
+    }
+
+    /* Paso final: resumen + WhatsApp de firma + ficha */
+    function pintarListo(d) {
+      const s = d.socio || {}
+      cuerpo.innerHTML = `
+        <div style="text-align:center;padding:6px 0 4px">
+          <div class="cv-ok">✓ Listo</div>
+          <p style="color:var(--ink2);margin:8px 0 0"><b>${P.esc(s.nombre || '')}</b> —
+            ${s.creado ? 'ficha nueva creada' : 'ficha ya existente'}, certificado guardado.</p>
+          <p class="so-help" style="margin:6px 0 0">${d.ya_firmada
+            ? 'Ya tenía su declaración firmada: no se generó otra. No falta nada de este trámite.'
+            : 'La declaración jurada quedó generada. Falta que la firme desde su cuenta en el portal.'}</p>
+        </div>
+        <div class="pn-mod-acciones">
+          ${!d.ya_firmada && s.telefono ? `<a class="btn btn-pri" href="${P.esc(cvWa(s.nombre, s.telefono))}"
+            target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito: lo invita a firmar desde su cuenta.">Mandarle el WhatsApp de firma</a>` : ''}
+          ${!d.ya_firmada && !s.telefono ? '<span class="so-help">Sin teléfono en la ficha: avisale vos que firme en floraong.ar/socios/</span>' : ''}
+          <button class="btn" id="cv-ficha" type="button">Abrir ficha</button>
+          <button class="btn ${d.ya_firmada || !s.telefono ? 'btn-pri' : ''}" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
+        </div>`
+      cuerpo.querySelector('#cv-ficha').addEventListener('click', () => {
+        P.cerrarModal()
+        window.PanelSocioDetalle.abrir(Number(s.id), () => muCargar(true))
+      })
+    }
+
+    pintarSubir()
+  }
+
+
   // ============ Unificar pacientes (ru-): el volcado oficial del portal ============
   // El portal de REPROCANN (cuenta de la ONG) es la única fuente con el DNI
   // oficial de cada trámite. El volcado entra acá, el matching propone pares
@@ -1616,6 +1836,8 @@
           ${editar ? `
           <div class="card" style="margin-bottom:10px">
             <div class="fila"><span class="k">Socio nuevo</span><span class="pn-sp"></span>
+              ${P.puede('reprocann_editar') ? `<button class="btn" id="so-convertir" type="button"
+                title="Subís el PDF de su certificado y sale la ficha + la declaración jurada lista para firmar">🌱 Convertir autocultivador</button>` : ''}
               <button class="btn btn-pri" id="so-alta-completa" type="button">+ Dar de alta</button></div>
             <p class="so-help">El alta completa: acceso a la carta, ficha en el padrón, membresía y el primer cobro
             — todo de una vez. Si dejó una solicitud web, sus datos vienen precargados.</p>
@@ -1701,6 +1923,8 @@
 
       const altaBtn = el.querySelector('#so-alta-completa')
       if (altaBtn) altaBtn.addEventListener('click', () => altaAbrir())
+      const convBtn = el.querySelector('#so-convertir')
+      if (convBtn) convBtn.addEventListener('click', () => cvAbrir())
       const altaForm = el.querySelector('#so-alta')
       if (altaForm) altaForm.addEventListener('submit', onAlta)
 

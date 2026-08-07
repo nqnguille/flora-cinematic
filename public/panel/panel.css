@@ -778,8 +778,12 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
 }
 .sd-tabbtn:hover { color: var(--vio); background: color-mix(in srgb, var(--vio) 8%, transparent); }
 .sd-tabbtn.on { background: var(--vio); color: #fff; }
-.sd-tab { display: none; grid-column: 2; grid-row: 1; overflow-y: auto; padding: 14px 24px 34px; min-width: 0; }
+.sd-tab { display: none; grid-column: 2; grid-row: 1; overflow-y: auto; padding: 14px 28px 34px; min-width: 0; }
 .sd-tab.on { display: block; }
+/* que el ancho del modal no estire los formularios: el contenido de una sola
+   columna se planta en ~720px; las grillas dobles pueden usar más */
+.sd-tab > :not(.sd-cols) { max-width: 720px; }
+.sd-cols { max-width: 1120px; }
 .sd-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; align-items: start; }
 .sd-cols > details { min-width: 0; }
 @media (max-width: 900px) {
@@ -805,3 +809,18 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
 .sd-cum.is-mal { background: rgba(214, 69, 69, 0.08); }
 .sd-cum.is-mal .sd-cum-ico { color: var(--dan, #d64545); }
 .sd-cum-det { margin-left: auto; font-size: 12px; color: var(--muted); text-align: right; }
+
+/* ── Convertir autocultivador (cv-): asistente del PDF a la DDJJ ── */
+.cv-drop {
+  display: grid; justify-items: center; gap: 4px; padding: 36px 18px;
+  border: 2px dashed var(--line); border-radius: 12px; cursor: pointer;
+  text-align: center; color: var(--ink2); font-size: 14px;
+  background: color-mix(in srgb, var(--line) 12%, transparent);
+  transition: border-color .15s ease, background .15s ease;
+}
+.cv-drop span { color: var(--muted); font-size: 12px; }
+.cv-drop:hover, .cv-drop:focus-visible, .cv-drop.on {
+  border-color: var(--vio);
+  background: color-mix(in srgb, var(--vio) 7%, transparent);
+}
+.cv-ok { font-family: var(--font-display); font-size: 26px; color: var(--grn); }
