@@ -15,6 +15,44 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 >
   <link rel="stylesheet" href="/socios/tienda.css" />
   <main class="td-main">
+    <!-- El mismo sello que el loader de la primera visita de la home: papel
+         blanco, el anillo tenue de referencia, el anillo que se llena en
+         barrido angular y la chala fija en el centro. -->
+    <div id="cu-portero" class="cu-portero" hidden aria-hidden="true">
+      <div class="cu-portero-anillo">
+        <img class="cu-portero-track" src="/img/loader-ring.png" alt="" />
+        <img class="cu-portero-fill" src="/img/loader-ring.png" alt="" />
+        <img class="cu-portero-leaf" src="/img/loader-leaf.png" alt="" />
+      </div>
+    </div>
+    <script is:inline>
+      // Síncrono a propósito: corre antes del primer paint de lo que sigue.
+      try {
+        if (localStorage.getItem('flora-socio-hint')) {
+          var portero0 = document.getElementById('cu-portero')
+          portero0.hidden = false
+          // La O se dibuja UNA sola vez, completa, con easing (suave al
+          // final), en ~950ms. El contrato con el resto de la página vive en
+          // dos banderitas del DOM: 'completo' la pone esta animación al
+          // terminar; 'soltar' la pone quien quiera levantar el velo. El velo
+          // se levanta recién cuando las dos están: así la vuelta nunca corta
+          // la O a medio dibujar, y la O nunca arranca de nuevo.
+          var fill0 = portero0.querySelector('.cu-portero-fill')
+          var ini0 = null, dur0 = 950
+          function paso0(t) {
+            if (ini0 === null) ini0 = t
+            var k = Math.min(1, (t - ini0) / dur0)
+            var e = 1 - Math.pow(1 - k, 3)  // easeOutCubic: fluido, sin golpe
+            fill0.style.setProperty('--pct', (e * 100).toFixed(2))
+            if (k < 1) { requestAnimationFrame(paso0); return }
+            portero0.dataset.completo = '1'
+            if (portero0.dataset.soltar === '1') portero0.hidden = true
+          }
+          requestAnimationFrame(paso0)
+        }
+      } catch (e) {}
+    </script>
+
     <!-- ── Login ── -->
     <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
       <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
@@ -213,12 +251,31 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       cargar()
     }
 
+    const portero = document.getElementById('cu-portero')
+    // Levantar el velo respetando el contrato: si la O ya se completó, va; si
+    // todavía se está dibujando, deja la banderita y la levanta la animación.
+    const soltarPortero = () => {
+      if (!portero) return
+      if (portero.dataset.completo === '1') portero.hidden = true
+      else portero.dataset.soltar = '1'
+    }
+    // Red de seguridad: si la red se cuelga, el velo no puede ser una trampa
+    // (acá sí a mano, sin esperar a nadie).
+    setTimeout(() => { if (portero) portero.hidden = true }, 6000)
+
     async function cargar() {
       const [yoRes, pedRes] = await Promise.all([
         fetch('/api/socios/yo', { credentials: 'include' }),
         fetch('/api/socios/pedidos', { credentials: 'include' }),
       ])
-      if (!yoRes.ok || !pedRes.ok) return false
+      // Sin sesión válida no se pinta nada: queda la pantalla de acceso. La
+      // marquita se borra para que la próxima recarga muestre el login directo.
+      if (!yoRes.ok || !pedRes.ok) {
+        try { localStorage.removeItem('flora-socio-hint') } catch (e) {}
+        soltarPortero()
+        return false
+      }
+      try { localStorage.setItem('flora-socio-hint', '1') } catch (e) {}
       const yo = await yoRes.json()
       const ped = await pedRes.json()
 
@@ -239,6 +296,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
       document.getElementById('socios-login').hidden = true
       document.getElementById('cu-content').hidden = false
+      soltarPortero()
       cargarSaldo()
       cargarReprocann()
       return true
@@ -404,6 +462,35 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   <style is:global>
     html, body { background-color: #130d1c; }
+
+    /* El portero de la recarga: el sello del loader de la primera visita, en
+       su versión NOCTURNA. El papel blanco es el gesto cinematográfico de la
+       home; adentro del portal la base es el violeta profundo de la casa, y el
+       anillo (que en el PNG es violeta oscuro) se aclara por filtro a lavanda
+       para lucir sobre el fondo. */
+    .cu-portero {
+      position: fixed; inset: 0; z-index: 80;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(120% 90% at 50% 40%, #241733 0%, #150d22 55%, #0c0713 100%);
+    }
+    /* El display de autor le gana al display:none del atributo hidden: sin
+       esta regla el velo quedaba puesto PARA SIEMPRE, para todo el mundo (y
+       así se estrenó, colgado). La misma trampa ya está documentada en
+       membresías. */
+    .cu-portero[hidden] { display: none; }
+    .cu-portero-anillo {
+      width: clamp(150px, 34vw, 230px); height: clamp(150px, 34vw, 230px);
+      display: grid; place-items: center;
+    }
+    .cu-portero-anillo img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
+    .cu-portero-leaf { filter: brightness(1.35) saturate(1.05); }
+    .cu-portero-track { opacity: .18; filter: brightness(2.4); }
+    .cu-portero-fill {
+      filter: brightness(2.4) saturate(.85);
+      --pct: 0;
+      -webkit-mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+              mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+    }
     /* Iconos duotono HD — el idioma de membresías: continente en contorno,
        contenido en relleno, detalle fino solo en el aire del dibujo. */
     .fx-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }

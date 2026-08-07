@@ -14,6 +14,46 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   noindex={true}
 >
   <main class="pt-main">
+    <!-- El portero de la recarga, calcado de membresías: el mismo sello del
+         loader de la primera visita de la home (anillo tenue de referencia,
+         anillo que se llena en barrido angular y la chala fija al centro),
+         en versión nocturna. Solo lo ve quien ya entró antes (marquita
+         flora-socio-hint); el visitante nuevo va directo al login. -->
+    <div id="pt-portero" class="pt-portero" hidden aria-hidden="true">
+      <div class="pt-portero-anillo">
+        <img class="pt-portero-track" src="/img/loader-ring.png" alt="" />
+        <img class="pt-portero-fill" src="/img/loader-ring.png" alt="" />
+        <img class="pt-portero-leaf" src="/img/loader-leaf.png" alt="" />
+      </div>
+    </div>
+    <script is:inline>
+      // Síncrono a propósito: corre antes del primer paint de lo que sigue.
+      try {
+        if (localStorage.getItem('flora-socio-hint')) {
+          var portero0 = document.getElementById('pt-portero')
+          portero0.hidden = false
+          // La O se dibuja UNA sola vez, completa, con easing (suave al
+          // final), en ~950ms. El contrato con el resto de la página vive en
+          // dos banderitas del DOM: 'completo' la pone esta animación al
+          // terminar; 'soltar' la pone quien quiera levantar el velo. El velo
+          // se levanta recién cuando las dos están: así la vuelta nunca corta
+          // la O a medio dibujar, y la O nunca arranca de nuevo.
+          var fill0 = portero0.querySelector('.pt-portero-fill')
+          var ini0 = null, dur0 = 950
+          function paso0(t) {
+            if (ini0 === null) ini0 = t
+            var k = Math.min(1, (t - ini0) / dur0)
+            var e = 1 - Math.pow(1 - k, 3)  // easeOutCubic: fluido, sin golpe
+            fill0.style.setProperty('--pct', (e * 100).toFixed(2))
+            if (k < 1) { requestAnimationFrame(paso0); return }
+            portero0.dataset.completo = '1'
+            if (portero0.dataset.soltar === '1') portero0.hidden = true
+          }
+          requestAnimationFrame(paso0)
+        }
+      } catch (e) {}
+    </script>
+
     <SociosLogin title="Acceso exclusivo para<br /><em class='sl-accent-green'>miembros del club</em>" joinPrompt>
       <Fragment slot="note">Validamos tu identidad en nuestra base de pacientes.<br />No compartimos tus datos.</Fragment>
     </SociosLogin>
@@ -71,6 +111,18 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       document.getElementById('pt-content').hidden = false
     }
 
+    const portero = document.getElementById('pt-portero')
+    // Levantar el velo respetando el contrato: si la O ya se completó, va; si
+    // todavía se está dibujando, deja la banderita y la levanta la animación.
+    const soltarPortero = () => {
+      if (!portero) return
+      if (portero.dataset.completo === '1') portero.hidden = true
+      else portero.dataset.soltar = '1'
+    }
+    // Red de seguridad: si la red se cuelga, el velo no puede ser una trampa
+    // (acá sí a mano, sin esperar a nadie).
+    setTimeout(() => { if (portero) portero.hidden = true }, 6000)
+
     function showLoginError(message) {
       const msg = document.getElementById('socios-login-msg')
       if (message === '__NOSOCIO__') {
@@ -83,9 +135,17 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     async function loadPrecios() {
+      // Sin sesión válida no se pinta nada: queda la pantalla de acceso. La
+      // marquita se borra para que la próxima recarga muestre el login directo.
       const res = await fetch('/api/socios/precios', { credentials: 'include' })
-      if (!res.ok) return false
+      if (!res.ok) {
+        try { localStorage.removeItem('flora-socio-hint') } catch (e) {}
+        soltarPortero()
+        return false
+      }
+      try { localStorage.setItem('flora-socio-hint', '1') } catch (e) {}
       showContent()
+      soltarPortero()
       // Nombre real en el saludo — si falla, se queda el "socio" genérico
       // del markup en vez de romper la carga del portal por esto.
       fetch('/api/socios/yo', { credentials: 'include' })
@@ -254,6 +314,38 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     z-index: 0;
   }
   .pt-main > * { position: relative; z-index: 1; }
+
+  /* El portero de la recarga: el sello del loader de la primera visita, en
+     su versión NOCTURNA (mismo velo que membresías). El papel blanco es el
+     gesto cinematográfico de la home; adentro del portal la base es el
+     violeta profundo de la casa, y el anillo (que en el PNG es violeta
+     oscuro) se aclara por filtro a lavanda para lucir sobre el fondo.
+     Va por id: la regla `.pt-main > *` (0-1-1) le ganaría a una clase suelta
+     (0-1-0) y le pisaría el position:fixed y el z-index. z-index 80 porque
+     lo más alto de la página es el modal de términos (SociosTos, 50). */
+  #pt-portero {
+    position: fixed; inset: 0; z-index: 80;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(120% 90% at 50% 40%, #241733 0%, #150d22 55%, #0c0713 100%);
+  }
+  /* El display de autor le gana al display:none del atributo hidden: sin
+     esta regla el velo quedaba puesto PARA SIEMPRE, para todo el mundo (y
+     así se estrenó, colgado). La misma trampa ya está documentada en el
+     subgrid del cierre de membresías. */
+  #pt-portero[hidden] { display: none; }
+  .pt-portero-anillo {
+    width: clamp(150px, 34vw, 230px); height: clamp(150px, 34vw, 230px);
+    display: grid; place-items: center;
+  }
+  .pt-portero-anillo img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
+  .pt-portero-leaf { filter: brightness(1.35) saturate(1.05); }
+  .pt-portero-track { opacity: .18; filter: brightness(2.4); }
+  .pt-portero-fill {
+    filter: brightness(2.4) saturate(.85);
+    --pct: 0;
+    -webkit-mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+            mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
+  }
 
   .pt-title { font-family: var(--font-display); font-weight: 500; color: var(--pt-cream); font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.05; }
   .pt-title em { font-style: italic; color: var(--pt-violet); }
