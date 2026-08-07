@@ -80,7 +80,7 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   etiquetaPrecio: 'Contado o transferencia',
   retiro: 'Lo retirás en la sede',
   etiquetaPrecio2: 'Con débito automático',
-  ahorro: 'ahorrás {monto} por mes',
+  ahorro: 'ahorrás {monto}/mes',
   envio: '+ envío sin cargo',
   botonSuscribir: 'Suscribir por 3 meses',
   insigniaMia: 'Tu membresía',

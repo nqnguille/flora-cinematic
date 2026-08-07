@@ -204,8 +204,9 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
+          ${p.contado ? `<s class="mb-gancho-antes">${pesos(p.contado)}</s>` : ''}
           <b class="mb-gancho-precio">${pesos(p.debito)}</b>
-          ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto} por mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
+          ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto}/mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
           ${btn}
         </div>`
       : ''
@@ -646,9 +647,19 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-display); font-weight: 600;
     font-size: 24px; color: #f4f1f7; line-height: 1.1;
   }
-  .mb-gancho-ahorro {
+  /* El patrón clásico del descuento, en dos golpes que se leen sin leer: el
+     precio de contado TACHADO arriba del precio con débito (el salto se ve en
+     los números mismos), y el ahorro en píldora verde sólida con letra oscura,
+     lo más contrastado de la tarjeta para su mejor noticia. */
+  .mb-gancho-antes {
     display: block; font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, .55); margin-top: 3px;
+    color: rgba(244, 241, 247, .42); text-decoration-thickness: 1.5px;
+  }
+  .mb-gancho-ahorro {
+    display: inline-block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 800;
+    letter-spacing: .03em; text-transform: uppercase;
+    color: #08160f; background: linear-gradient(135deg, #63d9ae, #3cb492);
+    border-radius: 999px; padding: 4px 11px; margin-top: 6px;
   }
   .mb-gancho .mb-adherir { margin-top: 11px; }
 
@@ -743,9 +754,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { font-size: 10.5px; }
     .mb-card-nom { font-size: 13.5px; letter-spacing: .06em; }
     .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
-    .mb-gancho-ahorro { font-size: 10.5px; }
+    .mb-gancho-ahorro { font-size: 8.5px; padding: 3px 8px; margin-top: 4px; }
     .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
+    .mb-gancho-antes { font-size: 10px; }
     .mb-gancho-precio { font-size: 19px; }
     .mb-adherir { font-size: 10.5px; padding: 9px 10px; max-width: 100%; }
     .mb-frasco { width: 15px; height: 21px; }
@@ -768,6 +780,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { display: none; }
     .mb-gancho { margin: 8px -2px 0; padding: 8px 7px 9px; }
     .mb-card-det { margin-bottom: 7px; }
+    /* La píldora, en un renglón sí o sí: a este ancho el texto más largo
+       ("AHORRÁS $100.000/MES") mide ~101px contra ~105 de bloque. El nowrap
+       es seguro solo porque el /mes va pegado al monto. */
+    .mb-gancho-ahorro { font-size: 7.5px; padding: 3px 7px; white-space: nowrap; }
     .mb-frascos { gap: 2px; margin-bottom: 5px; }
     .mb-frasco { width: 12px; height: 17px; }
     /* El botón es lo que primero se rompe: "Suscribir con" no parte y el logo
@@ -936,7 +952,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-nom { font-size: clamp(18px, 2.9vh, 36px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
-    .mb-gancho-ahorro { font-size: clamp(11px, 1.3vh, 15px); margin-top: clamp(3px, .55vh, 8px); }
+    .mb-gancho-antes { font-size: clamp(11px, 1.3vh, 15px); }
+    .mb-gancho-ahorro {
+      font-size: clamp(10px, 1.2vh, 14px);
+      padding: clamp(3px, .5vh, 7px) clamp(9px, 1.3vh, 16px);
+      margin-top: clamp(4px, .6vh, 9px);
+    }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
