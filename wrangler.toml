@@ -26,6 +26,10 @@ id = "2d141ca74029483f81490cc81c1490e9"
 binding = "SOLICITUDES"
 id = "e8dfc462239049eb9ce4e2e93425ebe5"
 
+# IA de visión: lee la credencial REPROCANN cuando el PDF viene sin capa de texto
+[ai]
+binding = "AI"
+
 # Certificados REPROCANN (PDF oficial de cada socio, para su "guantera digital")
 [[kv_namespaces]]
 binding = "CERTIFICADOS"

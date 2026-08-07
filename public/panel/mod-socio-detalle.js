@@ -38,12 +38,19 @@
   // se adjunta a mano: wa.me solo lleva texto.
   function waDdjj(s) {
     const nom = (s.nombre || '').split(' ')[0]
-    const txt = `Hola ${nom}! Te paso la declaración jurada para que puedas pasarte a Flora. `
-      + `Es el papel que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: `
+    const txt = `Hola ${nom}! Ya está lista tu declaración jurada para pasarte a Flora. `
+      + `Es el paso que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: `
       + `no se pueden tener las dos modalidades a la vez.\n\n`
-      + `Lo que tenés que hacer es imprimirla, firmarla y mandarnos una foto. Con eso seguimos nosotros el trámite.\n\n`
-      + `Cualquier duda antes de firmar, escribime.`
-    return `https://wa.me/${String(s.telefono || '').replace(/\D/g, '')}?text=${encodeURIComponent(txt)}`
+      + `La podés firmar directo desde tu cuenta, sin imprimir nada:\n`
+      + `1. Entrá a https://floraong.ar/socios/ con tu Google\n`
+      + `2. En "Mi cuenta" vas a ver la tarjeta DECLARACIÓN JURADA\n`
+      + `3. Leela y firmala con tu nombre y tu DNI\n\n`
+      + `Con eso seguimos nosotros el trámite. Cualquier duda antes de firmar, escribime.`
+    // wa.me quiere el número internacional: a los celulares argentinos de 10
+    // cifras se les antepone 549
+    let tel = String(s.telefono || '').replace(/\D/g, '')
+    if (tel.length === 10) tel = '549' + tel
+    return `https://wa.me/${tel}?text=${encodeURIComponent(txt)}`
   }
 
   let velo = null
@@ -474,7 +481,7 @@
       <p class="so-help" style="margin:2px 0 0">Lo escribe ${P.esc(d.plantilla.medico)} (${P.esc(d.plantilla.matricula)}), que es quien firma la prescripción. No queda guardado como dato clínico del padrón.</p>
 
       <div class="fila" style="margin-top:10px;flex-wrap:wrap">
-        ${dec && !verificada && s.telefono ? `<a class="btn" href="${P.esc(waDdjj(s))}" target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito. El PDF lo adjuntás vos.">WhatsApp para mandarla</a>` : ''}
+        ${dec && !verificada && s.telefono ? `<a class="btn" href="${P.esc(waDdjj(s))}" target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito: lo invita a firmar desde su cuenta.">WhatsApp para avisarle</a>` : ''}
         ${dec ? '<a class="btn" id="sd-dj-ver" href="/api/panel/declaracion?socio_id=' + s.id + '&ver=1" target="_blank" rel="noopener">Ver / imprimir</a>' : ''}
         ${dec && ['firmada', 'verificada'].includes(dec.estado) ? '<a class="btn" href="/api/panel/declaracion?declaracion_id=' + dec.id + '&firmada=1" target="_blank" rel="noopener">Ver la firmada</a>' : ''}
         <span class="pn-sp"></span>

@@ -7,7 +7,8 @@
 // los rótulos donde aparezcan, en cualquier orden, y devuelve solo lo que
 // encuentra. Si el PDF es una foto escaneada sin capa de texto, devuelve
 // vacío y los campos manuales siguen mandando: esto completa, nunca bloquea.
-import { extractText, getDocumentProxy } from 'unpdf';
+import { extractText, extractImages, getDocumentProxy } from 'unpdf';
+import { encode as encodePng } from 'fast-png';
 
 export interface DatosCertificado {
   dni?: string;
@@ -42,15 +43,110 @@ function despuesDe(lineas: string[], etiquetas: RegExp): string | null {
   return null;
 }
 
-export async function leerCertificado(bytes: ArrayBuffer): Promise<DatosCertificado> {
+export async function leerCertificado(bytes: ArrayBuffer, ai?: Ai): Promise<DatosCertificado> {
   let texto = '';
+  let pdf: Awaited<ReturnType<typeof getDocumentProxy>> | null = null;
   try {
-    const pdf = await getDocumentProxy(new Uint8Array(bytes));
+    pdf = await getDocumentProxy(new Uint8Array(bytes));
     const r = await extractText(pdf, { mergePages: true });
     texto = String(r.text || '');
   } catch {
     return {}; // no era un PDF legible: campos manuales
   }
+  const porTexto = leerDeTexto(texto);
+  // La credencial oficial (la tarjetita para plastificar) trae los datos como
+  // IMAGEN, no como texto: si el texto no dio ni DNI ni vencimiento, se le
+  // pide a la IA de visión de Cloudflare que lea las imágenes embebidas.
+  if (!porTexto.dni && !porTexto.vence && ai && pdf) {
+    try {
+      const porImagen = await leerDeImagenes(pdf, ai);
+      return { ...porImagen, ...sinVacios(porTexto) };
+    } catch (e) { console.error('certpdf: fallo la lectura por imagen:', e); /* la IA nunca rompe la subida */ }
+  }
+  return porTexto;
+}
+
+function sinVacios<T extends object>(o: T): Partial<T> {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v)) as Partial<T>;
+}
+
+function aBase64(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+
+const PROMPT_CREDENCIAL =
+  'Esta imagen es parte de una credencial o constancia del REPROCANN (Registro del Programa Cannabis, Argentina). ' +
+  'Leé el texto impreso y devolvé SOLO un objeto JSON, sin explicación, con las claves que realmente veas: ' +
+  '"dni" (solo dígitos), "nombre" (apellido y nombres del paciente), "domicilio" (calle y número), ' +
+  '"localidad", "provincia", "vence" (fecha de vencimiento, dd/mm/aaaa), "diagnostico" (SOLO si figura un ' +
+  'diagnóstico médico explícito; la condición de vinculación como "autocultivo" u "ONG" NO es un diagnóstico). ' +
+  'Si un dato no aparece en la imagen, no incluyas su clave. No inventes nada.';
+
+// La credencial trae la condición de vinculación ("Paciente con autocultivo",
+// "Vinculado a ONG"...), que no es un diagnóstico médico: se descarta.
+const RE_NO_DIAGNOSTICO = /autocultivo|cultivo|vinculaci[oó]n|vinculad[oa]|\bong\b|reprocann/i;
+
+async function leerDeImagenes(pdf: NonNullable<Awaited<ReturnType<typeof getDocumentProxy>>>, ai: Ai): Promise<DatosCertificado> {
+  const out: DatosCertificado = {};
+  const candidatas: Array<{ png: Uint8Array }> = [];
+  for (let pagina = 1; pagina <= Math.min(pdf.numPages, 2); pagina++) {
+    let imgs: Awaited<ReturnType<typeof extractImages>> = [];
+    try { imgs = await extractImages(pdf, pagina); } catch { continue; }
+    for (const im of imgs) {
+      const razon = im.width / im.height;
+      // tarjetas apaisadas (la credencial es ~1.58); afuera QRs (cuadrados),
+      // banners anchos y gigantografías decorativas
+      if (im.width < 400 || im.width > 2000 || im.height < 200 || razon < 1.2 || razon > 2.1) continue;
+      const canales = (im as { channels?: number }).channels || 4;
+      candidatas.push({
+        png: encodePng({
+          width: im.width, height: im.height,
+          data: new Uint8Array(im.data.buffer, im.data.byteOffset, im.data.byteLength),
+          channels: canales as 1 | 2 | 3 | 4, depth: 8,
+        }),
+      });
+      if (candidatas.length >= 3) break;
+    }
+    if (candidatas.length >= 3) break;
+  }
+
+  for (const c of candidatas) {
+    // mistral-small-3.1: modelo de visión de Workers AI sin gate de licencia
+    // (llama-3.2-11b-vision exige aceptar la licencia de Meta por cuenta) y
+    // que recibe la imagen como data URI en messages, el único formato que el
+    // binding transporta sin pelearse con el esquema del modelo.
+    const r = (await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct' as Parameters<Ai['run']>[0], {
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: PROMPT_CREDENCIAL },
+          { type: 'image_url', image_url: { url: `data:image/png;base64,${aBase64(c.png)}` } },
+        ],
+      }],
+      max_tokens: 512,
+    })) as { response?: string; description?: string; choices?: Array<{ message?: { content?: string } }> };
+    const crudo = r.response || r.description || r.choices?.[0]?.message?.content || '';
+    const m = String(crudo).match(/\{[\s\S]*\}/);
+    if (!m) continue;
+    let j: Record<string, unknown>;
+    try { j = JSON.parse(m[0]); } catch { continue; }
+    const texto = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 300) : undefined);
+    if (!out.dni) { const t = texto(j.dni); if (t) { const d = t.replace(/\D/g, ''); if (d.length >= 7 && d.length <= 8) out.dni = d; } }
+    if (!out.nombre) out.nombre = texto(j.nombre);
+    if (!out.domicilio) out.domicilio = texto(j.domicilio);
+    if (!out.localidad) out.localidad = texto(j.localidad);
+    if (!out.provincia) out.provincia = texto(j.provincia);
+    if (!out.diagnostico) { const t = texto(j.diagnostico); if (t && !RE_NO_DIAGNOSTICO.test(t)) out.diagnostico = t; }
+    if (!out.vence) { const t = texto(j.vence); const fm = t ? t.match(RE_FECHA) : null; if (fm) out.vence = aIso(fm); }
+  }
+  return sinVacios(out) as DatosCertificado;
+}
+
+function leerDeTexto(texto: string): DatosCertificado {
   if (!texto.trim()) return {};
 
   const plano = texto.replace(/ /g, ' ');
