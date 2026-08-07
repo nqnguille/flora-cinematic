@@ -40,15 +40,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (localStorage.getItem('flora-socio-hint')) {
           var portero0 = document.getElementById('mb-portero')
           portero0.hidden = false
-          // El anillo de la home se llena con el progreso real de carga; acá
-          // no hay progreso que medir (la revalidación es una sola llamada),
-          // así que barre en bucle con la misma máscara cónica.
-          var fill0 = portero0.querySelector('.mb-portero-fill'), pct0 = 0
-          var timer0 = setInterval(function () {
-            if (portero0.hidden) { clearInterval(timer0); return }
-            pct0 = (pct0 + 2.4) % 112
-            fill0.style.setProperty('--pct', Math.min(100, pct0))
-          }, 16)
+          // La O se dibuja UNA sola vez, completa, con easing (suave al
+          // final), en ~950ms. El contrato con el resto de la página vive en
+          // dos banderitas del DOM: 'completo' la pone esta animación al
+          // terminar; 'soltar' la pone quien quiera levantar el velo. El velo
+          // se levanta recién cuando las dos están: así la vuelta nunca corta
+          // la O a medio dibujar, y la O nunca arranca de nuevo.
+          var fill0 = portero0.querySelector('.mb-portero-fill')
+          var ini0 = null, dur0 = 950
+          function paso0(t) {
+            if (ini0 === null) ini0 = t
+            var k = Math.min(1, (t - ini0) / dur0)
+            var e = 1 - Math.pow(1 - k, 3)  // easeOutCubic: fluido, sin golpe
+            fill0.style.setProperty('--pct', (e * 100).toFixed(2))
+            if (k < 1) { requestAnimationFrame(paso0); return }
+            portero0.dataset.completo = '1'
+            if (portero0.dataset.soltar === '1') portero0.hidden = true
+          }
+          requestAnimationFrame(paso0)
         }
       } catch (e) {}
     </script>
@@ -583,7 +592,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
 
   const portero = document.getElementById('mb-portero')
-  // Red de seguridad: si la red se cuelga, el velo no puede ser una trampa.
+  // Levantar el velo respetando el contrato: si la O ya se completó, va; si
+  // todavía se está dibujando, deja la banderita y la levanta la animación.
+  const soltarPortero = () => {
+    if (!portero) return
+    if (portero.dataset.completo === '1') portero.hidden = true
+    else portero.dataset.soltar = '1'
+  }
+  // Red de seguridad: si la red se cuelga, el velo no puede ser una trampa
+  // (acá sí a mano, sin esperar a nadie).
   setTimeout(() => { if (portero) portero.hidden = true }, 6000)
 
   async function cargar() {
@@ -592,7 +609,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const yoRes = await fetch('/api/socios/yo', { credentials: 'include' })
     if (!yoRes.ok) {
       try { localStorage.removeItem('flora-socio-hint') } catch (e) {}
-      if (portero) portero.hidden = true
+      soltarPortero()
       return false
     }
     try { localStorage.setItem('flora-socio-hint', '1') } catch (e) {}
@@ -605,7 +622,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     document.getElementById('socios-login').hidden = true
     document.getElementById('mb-content').hidden = false
-    if (portero) portero.hidden = true
+    soltarPortero()
     return true
   }
 
