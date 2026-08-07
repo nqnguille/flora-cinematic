@@ -97,6 +97,24 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <!-- Cierre en tres columnas: por qué conviene, cómo sigue, y la letra
            chica. Apilado ocupaba 1199 px de más y dejaba la página en 2,08
            pantallas de TV; en columnas usa el ancho, que es lo que sobra. -->
+      <!-- Los degradés de los iconos 3D de la banda. Van UNA vez acá, en el
+           HTML estático, porque los SVG que los usan los inyecta el JS y un
+           url(#id) resuelve contra el documento entero. -->
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+          <linearGradient id="mbgV" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dcccf6"/><stop offset=".45" stop-color="#B79DE6"/><stop offset="1" stop-color="#7a58b8"/></linearGradient>
+          <linearGradient id="mbgVd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8f6cc9"/><stop offset="1" stop-color="#503379"/></linearGradient>
+          <linearGradient id="mbgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9df0cd"/><stop offset=".5" stop-color="#4FC79E"/><stop offset="1" stop-color="#2b8a6a"/></linearGradient>
+          <linearGradient id="mbgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fdcf9"/><stop offset="1" stop-color="#009EE3"/></linearGradient>
+          <linearGradient id="mbgA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffdf8e"/><stop offset=".5" stop-color="#ffb84d"/><stop offset="1" stop-color="#e88a12"/></linearGradient>
+          <linearGradient id="mbgAd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e89b2e"/><stop offset="1" stop-color="#a85c05"/></linearGradient>
+          <linearGradient id="mbgR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb3a3"/><stop offset=".5" stop-color="#ff7a63"/><stop offset="1" stop-color="#d13f34"/></linearGradient>
+          <linearGradient id="mbgRd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d95c4b"/><stop offset="1" stop-color="#8f2a22"/></linearGradient>
+          <linearGradient id="mbgCr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset=".55" stop-color="#f3e8d2"/><stop offset="1" stop-color="#cdb98f"/></linearGradient>
+          <linearGradient id="mbgGl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".34"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".08"/><stop offset="1" stop-color="#ffffff" stop-opacity=".22"/></linearGradient>
+          <filter id="mbgS" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6"/></filter>
+        </defs>
+      </svg>
       <div class="mb-cierre">
 
       <!-- El ciclo, con el patrón de pasos numerados de la home (número en
@@ -243,40 +261,65 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   //     propio: es una marca de terceros y la reconocible es la de ellos. El
   //     asset ya estaba en el repo (public/img/mp-iso.png, solo la burbuja).
   const ICO_MP = `<img class="mb-ico mb-ico--img" src="/img/mp-iso.png" alt="" width="100" height="70" loading="lazy">`
-  // 2 · Disponibilidad automática → el mes que vuelve a empezar solo, con los
-  //     gramos ya adentro. La flecha que se muerde la cola es el "sin hacer
-  //     nada"; la punta va RELLENA (a lo lejos una punta de trazo se deshace) y
-  //     los tres tics finos de atrás son el movimiento.
-  const ICO_CICLO = ico(`
-    <g class="mb-ico-traz"><path d="M20.5 12.4A8.4 8.4 0 1 1 17.8 6.1"/></g>
-    <g class="mb-ico-lleno"><path d="M21.9 1.7v5.9h-5.9z"/><rect x="10" y="7.2" width="4" height="2.1" rx=".9"/><rect x="8.7" y="9.8" width="6.6" height="7.4" rx="1.9"/></g>
-    <g class="mb-ico-fino"><path d="M3.4 17.6l-1.2 1.2M5.4 19.5l-.9 1.4M2.5 14.9l-1.5.6"/></g>`)
-  // 3 · Variedad a elección → la carta de genéticas: el cogollo arriba y los
-  //     renglones de la lista abajo. El detalle fino: el tallo con su par de
-  //     hojitas, dibujado en el aire que queda entre el cogollo y la lista.
-  const ICO_CARTA = ico(`
-    <g class="mb-ico-traz"><rect x="4" y="2.3" width="16" height="19.4" rx="2.6"/></g>
-    <g class="mb-ico-lleno"><circle cx="9.3" cy="7.4" r="1.7"/><circle cx="12" cy="6.5" r="1.9"/><circle cx="14.7" cy="7.4" r="1.7"/><rect x="7.9" y="7.2" width="8.2" height="3.6" rx="1.4"/><rect x="7.7" y="16" width="8.6" height="1.6" rx=".8"/><rect x="7.7" y="18.8" width="5.6" height="1.6" rx=".8"/></g>
-    <g class="mb-ico-fino"><path d="M12 10.8v3M12 12.4l-1.7-1M12 12.4l1.7-1"/></g>`)
-  // 4 · Tanto por ciento menos → la etiqueta de precio con el % adentro (más
-  //     literal que una flecha) y el hilo fino pasando por el ojal.
-  const ICO_ETIQUETA = ico(`
-    <g class="mb-ico-traz"><path d="M11.4 2.6h7.3a1.8 1.8 0 0 1 1.8 1.8v7.3a1.8 1.8 0 0 1-.53 1.27l-6.9 6.9a1.8 1.8 0 0 1-2.55 0l-6.05-6.05a1.8 1.8 0 0 1 0-2.55l6.9-6.9a1.8 1.8 0 0 1 1.27-.53Z"/></g>
-    <g class="mb-ico-lleno"><circle cx="16.5" cy="7.5" r="1.5"/><circle cx="8.9" cy="11.1" r="1.9"/><circle cx="13.1" cy="15.3" r="1.9"/><path d="M13.2 8.9l1.5 1.5-6.1 6.1-1.5-1.5z"/></g>
-    <g class="mb-ico-fino"><path d="M16.5 5.2c0-1.8 1.9-2.4 3-1.5"/><circle cx="8.9" cy="11.1" r=".6"/><circle cx="13.1" cy="15.3" r=".6"/></g>`)
-  // 5 · Envío sin cargo → la camioneta en movimiento: el paquete relleno viaja
-  //     adentro de la caja, y las dos ráfagas finas de atrás son la velocidad.
-  const ICO_ENVIO = ico(`
-    <g class="mb-ico-traz"><rect x="3.4" y="6.1" width="10.5" height="9.7" rx="1.9"/><path d="M13.9 9.3h3.6l3.2 3.4v3.1h-6.8z"/></g>
-    <g class="mb-ico-lleno"><circle cx="8" cy="18.1" r="2.1"/><circle cx="17.1" cy="18.1" r="2.1"/><rect x="5.6" y="9.9" width="4" height="3.9" rx=".9"/></g>
-    <g class="mb-ico-fino"><path d="M.6 8.6h1.7M.2 11.6h2.1M.6 14.6h1.7"/></g>`)
-  // 6 · No perdés lo que no retirás → el mismo frasco de las tarjetas, con el
-  //     nivel más alto y un signo de más: lo que no sacaste, se suma. Las
-  //     rayitas finas de la pared son la medida, como en un vaso graduado.
-  const ICO_ACUMULA = ico(`
-    <g class="mb-ico-traz"><rect x="8.2" y="1.7" width="7.6" height="2.8" rx="1"/><path d="M8.7 4.5h6.6a3 3 0 0 1 3 3v11.5a3 3 0 0 1-3 3H8.7a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3Z"/></g>
-    <g class="mb-ico-lleno"><rect x="7.4" y="12.3" width="9.2" height="8.4" rx="2"/><path d="M19.4 2.8h1.9v2.3h2.3V7h-2.3v2.3h-1.9V7h-2.3V5.1h2.3z"/></g>
-    <g class="mb-ico-fino"><path d="M7.4 7.4h1.6M7.4 9.6h1.1"/></g>`)
+  // Los cinco beneficios van en pseudo-3D a todo color, como los tiles de una
+  // app: volúmenes con degradé, cara clara arriba a la izquierda, sombra de
+  // apoyo abluada abajo. Cada beneficio tiene su color (violeta la renovación,
+  // crema y verde la carta, coral el descuento, ámbar el envío, y el acumulado
+  // guiña al celeste de MP), emparejados en tamaño óptico con el isotipo
+  // oficial: el dibujo vive en la franja 8..40 del lienzo de 48.
+  const ico3d = (d) => `<svg class="mb-ico" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="41.6" rx="14" ry="2.6" fill="#000" opacity=".38" filter="url(#mbgS)"/>${d}</svg>`
+
+  const ICO_CICLO = ico3d(`
+    <path d="M37.4 24a13.5 13.5 0 1 1-4.3-9.9" fill="none" stroke="url(#mbgV)" stroke-width="6.2" stroke-linecap="round"/>
+    <path d="M40.6 8.3v9.6h-9.6z" fill="url(#mbgA)"/>
+    <rect x="20.3" y="16.2" width="7.4" height="3.8" rx="1.6" fill="url(#mbgG)"/>
+    <rect x="18.3" y="20.7" width="11.4" height="13.2" rx="3.4" fill="url(#mbgG)"/>
+    <rect x="18.3" y="20.7" width="11.4" height="13.2" rx="3.4" fill="url(#mbgGl)"/>
+    <ellipse cx="21.8" cy="23.6" rx="2.2" ry="1.3" fill="#fff" opacity=".4" transform="rotate(-24 21.8 23.6)"/>`)
+
+  const ICO_CARTA = ico3d(`
+    <rect x="14.6" y="10.4" width="21" height="28" rx="3.8" fill="#a8926a" transform="rotate(6 25 24)"/>
+    <rect x="12.5" y="9" width="21" height="28" rx="3.8" fill="url(#mbgCr)" transform="rotate(-3 23 23)"/>
+    <circle cx="19.6" cy="16.8" r="2.9" fill="url(#mbgG)"/>
+    <circle cx="25" cy="15.3" r="3.3" fill="url(#mbgG)"/>
+    <circle cx="28.2" cy="18.2" r="2.7" fill="url(#mbgG)"/>
+    <rect x="17.2" y="16.4" width="13" height="5.6" rx="2.6" fill="url(#mbgG)" transform="rotate(-3 23.7 19.2)"/>
+    <rect x="16.8" y="26" width="13.2" height="2.6" rx="1.3" fill="url(#mbgR)" transform="rotate(-3 23.4 27.3)"/>
+    <rect x="17.3" y="30.6" width="8.6" height="2.6" rx="1.3" fill="#c9b890" opacity=".8" transform="rotate(-3 21.6 31.9)"/>
+    <ellipse cx="17" cy="12.6" rx="2.9" ry="1.5" fill="#fff" opacity=".5" transform="rotate(-28 17 12.6)"/>`)
+
+  const ICO_ETIQUETA = ico3d(`
+    <path d="M26.2 9h9.4a3.1 3.1 0 0 1 3.1 3.1v9.4a3.1 3.1 0 0 1-.9 2.2L27 34.5a3.1 3.1 0 0 1-4.4 0l-8.7-8.7a3.1 3.1 0 0 1 0-4.4L24 10z" fill="url(#mbgRd)" transform="translate(1.4 1.7)"/>
+    <path d="M26.2 9h9.4a3.1 3.1 0 0 1 3.1 3.1v9.4a3.1 3.1 0 0 1-.9 2.2L27 34.5a3.1 3.1 0 0 1-4.4 0l-8.7-8.7a3.1 3.1 0 0 1 0-4.4L24 10z" fill="url(#mbgR)"/>
+    <circle cx="33.2" cy="14.4" r="2.7" fill="#7c221b"/>
+    <circle cx="32.7" cy="13.9" r="1.8" fill="#511410"/>
+    <path d="M33 10.6c.2-2.5 2.9-3.5 4.7-2.2" fill="none" stroke="url(#mbgCr)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="21.2" cy="20.8" r="3" fill="url(#mbgCr)"/>
+    <circle cx="27.4" cy="27" r="3" fill="url(#mbgCr)"/>
+    <path d="M27.6 17.3l2.6 2.6-9 9-2.6-2.6z" fill="url(#mbgA)"/>
+    <ellipse cx="20.3" cy="14.2" rx="3" ry="1.6" fill="#fff" opacity=".32" transform="rotate(-38 20.3 14.2)"/>`)
+
+  const ICO_ENVIO = ico3d(`
+    <rect x="6.4" y="13.8" width="19.6" height="16.6" rx="3" fill="url(#mbgA)"/>
+    <rect x="6.4" y="13.8" width="19.6" height="5.6" rx="2.8" fill="#fff" opacity=".18"/>
+    <path d="M26 19h6.8l5.7 6v5.4H26z" fill="url(#mbgAd)"/>
+    <path d="M28 20.9h4l3.4 3.6H28z" fill="url(#mbgC)"/>
+    <rect x="10.6" y="19.2" width="7.4" height="6.9" rx="1.6" fill="url(#mbgG)"/>
+    <rect x="13.85" y="19.2" width="1.1" height="6.9" fill="#fff" opacity=".45"/>
+    <circle cx="13.4" cy="32.2" r="4" fill="#241733"/><circle cx="13.4" cy="32.2" r="1.7" fill="#6b5390"/>
+    <circle cx="32.4" cy="32.2" r="4" fill="#241733"/><circle cx="32.4" cy="32.2" r="1.7" fill="#6b5390"/>
+    <path d="M3 17.4h2.1M2.5 21.8h2.6M3 26.2h2.1" stroke="#ffdf8e" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+    <ellipse cx="10.8" cy="16.1" rx="2.9" ry="1.4" fill="#fff" opacity=".36" transform="rotate(-18 10.8 16.1)"/>`)
+
+  const ICO_ACUMULA = ico3d(`
+    <rect x="16.4" y="8.4" width="13" height="4.9" rx="2" fill="url(#mbgVd)"/>
+    <path d="M17.4 13.3h11a4.7 4.7 0 0 1 4.7 4.7v16.5a4.7 4.7 0 0 1-4.7 4.7h-11a4.7 4.7 0 0 1-4.7-4.7V18a4.7 4.7 0 0 1 4.7-4.7Z" fill="url(#mbgV)" opacity=".55"/>
+    <path d="M12.7 23.6h20.4v10.9a4.7 4.7 0 0 1-4.7 4.7h-11a4.7 4.7 0 0 1-4.7-4.7z" fill="url(#mbgG)"/>
+    <path d="M12.7 23.6c3.5 1.4 7 1.4 10.2 0s6.7-1.4 10.2 0" fill="none" stroke="#9df0cd" stroke-width="1.4" opacity=".85"/>
+    <rect x="15.1" y="15.2" width="1.4" height="21" rx=".7" fill="url(#mbgGl)"/>
+    <circle cx="34.8" cy="14.6" r="6.1" fill="url(#mbgC)"/>
+    <path d="M34.8 11.3v6.6M31.5 14.6h6.6" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/>`)
+
   // Si el panel carga un ítem de más, ese cae acá y no rompe la fila.
   const ICO_FLOR = ico(`
     <g class="mb-ico-traz"><path d="M12 21.4v-6.6"/></g>
@@ -623,25 +666,22 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      seis siguen apilados: en fila quedarían columnas de 110px y ahí no entra
      una frase. La fila de seis empieza recién en la pantalla grande. */
   .mb-item { padding-top: 0; display: grid; justify-items: center; }
-  /* Los iconos en el mismo violeta que los frascos: los dos son el dibujo de
-     algo, no un número. El verde quedó reservado para la plata. */
+  /* Los tiles 3D de la banda: cada beneficio con su color, como los tiles de
+     una app de consumo. La sombra suave de acá es la que los separa del video;
+     la sombra de APOYO (la elipse abluada de abajo) viene dibujada adentro de
+     cada SVG. El color: #B79DE6 queda de red para el ICO_FLOR de repuesto,
+     que sigue siendo duotono. */
   .mb-ico {
     width: 34px; height: 34px; margin: 0 0 9px; color: #B79DE6;
-    /* Sobre video, un trazo fino sin sombra desaparece igual que el texto. */
-    filter: drop-shadow(0 1px 12px rgba(0, 0, 0, .7));
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, .55));
   }
-  /* La misma regla que el frasco de las tarjetas: continente en contorno,
-     contenido en relleno. Es lo que hace que a cuatro metros se lea algo lleno
-     y no un alambre. */
+  /* El idioma duotono queda vivo para el icono de repuesto (ICO_FLOR). */
   .mb-ico-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-ico-lleno { fill: currentColor; stroke: none; opacity: .95; }
-  /* La tercera capa del duotono HD: el detalle interior, en trazo fino y a
-     media voz. Vive solo en el AIRE del dibujo (nunca sobre un relleno, donde
-     no se vería) y a 18px desaparece sin ensuciar: es el detalle que aparece
-     cuando el icono está grande y sobra resolución. */
   .mb-ico-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; opacity: .5; }
   /* El isotipo de MP es una imagen 100x70: entra en la misma caja cuadrada que
-     los SVG sin deformarse, y hereda la misma sombra. */
+     los SVG sin deformarse. Los 3D están dibujados en la franja central de su
+     lienzo justamente para empatar el tamaño óptico con este óvalo. */
   .mb-ico--img { object-fit: contain; }
   .mb-item-t {
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
