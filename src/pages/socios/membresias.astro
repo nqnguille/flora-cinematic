@@ -1255,13 +1255,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-aviso :global(b) { color: rgba(244, 241, 247, 0.92); }
 
-  /* El portero de la recarga: el MISMO sello del loader de la primera visita
-     (page-loader de la home), calcado: papel blanco, anillo de referencia al
-     12%, anillo que se revela angularmente con máscara cónica, chala fija. */
+  /* El portero de la recarga: el sello del loader de la primera visita, en
+     su versión NOCTURNA. El papel blanco es el gesto cinematográfico de la
+     home; adentro del portal la base es el violeta profundo de la casa, y el
+     anillo (que en el PNG es violeta oscuro) se aclara por filtro a lavanda
+     para lucir sobre el fondo. */
   .mb-portero {
     position: fixed; inset: 0; z-index: 80;
     display: flex; align-items: center; justify-content: center;
-    background: var(--fl-paper, #FFFFFF);
+    background: radial-gradient(120% 90% at 50% 40%, #241733 0%, #150d22 55%, #0c0713 100%);
   }
   /* El display de autor le gana al display:none del atributo hidden: sin
      esta regla el velo quedaba puesto PARA SIEMPRE, para todo el mundo (y
@@ -1273,8 +1275,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: grid; place-items: center;
   }
   .mb-portero-anillo img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
-  .mb-portero-track { opacity: .12; }
+  .mb-portero-leaf { filter: brightness(1.35) saturate(1.05); }
+  .mb-portero-track { opacity: .18; filter: brightness(2.4); }
   .mb-portero-fill {
+    filter: brightness(2.4) saturate(.85);
     --pct: 0;
     -webkit-mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
             mask-image: conic-gradient(from 180deg, #000 calc(var(--pct) * 1%), transparent 0);
