@@ -133,6 +133,7 @@ export function documentoHtml(p: Plantilla, texto: ReturnType<typeof armarTexto>
   .firma-e { margin-top: 44px; border: 1.5px solid #381f56; border-radius: 6px; padding: 14px 18px; font-size: 9.5pt; line-height: 1.75; page-break-inside: avoid; }
   .firma-e .fe-tit { font-weight: bold; letter-spacing: .08em; margin-bottom: 8px; }
   .firma-e .fe-hash { font-family: ui-monospace, monospace; font-size: 7pt; color: #555; word-break: break-all; margin-top: 6px; }
+  .firma-e .fe-holo { display: block; max-width: 300px; max-height: 120px; margin: 2px 0 10px; }
   .pie { margin-top: 34px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 7.5pt; color: #888; font-family: ui-monospace, monospace; }
   .barra { position: sticky; top: 0; background: #f4f2f7; border-bottom: 1px solid #ddd; padding: 10px 16px; text-align: center; font-family: system-ui, sans-serif; font-size: 13px; }
   .barra button { font: inherit; padding: 6px 14px; border: 1px solid #381f56; background: #381f56; color: #fff; border-radius: 3px; cursor: pointer; }

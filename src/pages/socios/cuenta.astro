@@ -166,6 +166,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <input id="cu-dj-nombre" class="cu-dj-input" type="text" autocomplete="name" placeholder="Nombre y apellido" />
         <label class="cu-dj-lab" for="cu-dj-dni">Tu DNI (solo números)</label>
         <input id="cu-dj-dni" class="cu-dj-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Sin puntos" />
+        <label class="cu-dj-lab">Tu firma, dibujada con el dedo (o el mouse)</label>
+        <div class="cu-dj-pad">
+          <canvas id="cu-dj-firma"></canvas>
+          <span class="cu-dj-pad-guia" id="cu-dj-pad-guia">Firmá acá adentro</span>
+          <button type="button" id="cu-dj-borrar" class="cu-dj-pad-borrar" hidden>Borrar</button>
+        </div>
         <label class="cu-dj-check">
           <input type="checkbox" id="cu-dj-acepto" />
           <span>Leí y acepto: esta firma electrónica expresa mi voluntad.</span>
@@ -436,18 +442,85 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       const msg = document.getElementById('cu-dj-msg')
       msg.hidden = true
       msg.classList.remove('is-error')
-      validarDdjj()
       document.getElementById('cu-dj-modal').hidden = false
+      padPreparar()
+      padLimpiar()
       document.getElementById('cu-dj-doc').scrollTop = 0
     }
     // expuesto como los modales de la casa (window.showSociosTos)
     window.showFloraDdjj = abrirDdjj
 
-    // el botón de firmar recién se enciende con nombre + DNI + checkbox
+    // ── el pad de la firma manuscrita: se dibuja con el dedo o el mouse y la
+    //    imagen queda impresa en el documento sellado ──
+    const pad = document.getElementById('cu-dj-firma')
+    const padCtx = pad.getContext('2d')
+    let padTrazos = 0
+    let padDibujando = false
+    function padPreparar() {
+      const cs = pad.parentElement.getBoundingClientRect()
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      pad.width = Math.round(cs.width * dpr)
+      pad.height = Math.round(150 * dpr)
+      padCtx.scale(dpr, dpr)
+      padCtx.lineWidth = 2.4
+      padCtx.lineCap = 'round'
+      padCtx.lineJoin = 'round'
+      // tinta clara en pantalla (el modal es oscuro); al exportar se recolorea
+      // a tinta oscura, que es como queda impresa en el documento
+      padCtx.strokeStyle = '#e9e2f7'
+    }
+    function padLimpiar() {
+      padCtx.clearRect(0, 0, pad.width, pad.height)
+      padTrazos = 0
+      document.getElementById('cu-dj-pad-guia').hidden = false
+      document.getElementById('cu-dj-borrar').hidden = true
+      validarDdjj()
+    }
+    function padPunto(e) {
+      const r = pad.getBoundingClientRect()
+      return [e.clientX - r.left, e.clientY - r.top]
+    }
+    pad.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
+      pad.setPointerCapture(e.pointerId)
+      padDibujando = true
+      const [x, y] = padPunto(e)
+      padCtx.beginPath()
+      padCtx.moveTo(x, y)
+      padCtx.lineTo(x + 0.1, y + 0.1) // el punto suelto también pinta
+      padCtx.stroke()
+      padTrazos++
+      document.getElementById('cu-dj-pad-guia').hidden = true
+      document.getElementById('cu-dj-borrar').hidden = false
+      validarDdjj()
+    })
+    pad.addEventListener('pointermove', (e) => {
+      if (!padDibujando) return
+      const [x, y] = padPunto(e)
+      padCtx.lineTo(x, y)
+      padCtx.stroke()
+    })
+    ;['pointerup', 'pointercancel'].forEach((ev) => pad.addEventListener(ev, () => { padDibujando = false }))
+    document.getElementById('cu-dj-borrar').addEventListener('click', padLimpiar)
+
+    function padExportar() {
+      const off = document.createElement('canvas')
+      off.width = pad.width
+      off.height = pad.height
+      const o = off.getContext('2d')
+      o.drawImage(pad, 0, 0)
+      o.globalCompositeOperation = 'source-in'
+      o.fillStyle = '#1c1633'
+      o.fillRect(0, 0, off.width, off.height)
+      return off.toDataURL('image/png')
+    }
+
+    // el botón de firmar recién se enciende con nombre + DNI + checkbox + firma dibujada
     function validarDdjj() {
       const ok = document.getElementById('cu-dj-nombre').value.trim().length > 0 &&
         document.getElementById('cu-dj-dni').value.replace(/\D/g, '').length >= 7 &&
-        document.getElementById('cu-dj-acepto').checked
+        document.getElementById('cu-dj-acepto').checked &&
+        padTrazos > 0
       document.getElementById('cu-dj-firmar').disabled = !ok
     }
     ;['cu-dj-nombre', 'cu-dj-dni'].forEach((id) => document.getElementById(id).addEventListener('input', validarDdjj))
@@ -471,6 +544,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             nombre_tipeado: document.getElementById('cu-dj-nombre').value,
             dni_tipeado: document.getElementById('cu-dj-dni').value,
             acepto: document.getElementById('cu-dj-acepto').checked,
+            firma_imagen: padExportar(),
           }),
         })
         const d = await r.json().catch(() => ({}))
@@ -904,6 +978,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       color: #f4f1f7; font-family: var(--font-ui); font-size: 1rem; padding: 12px 14px;
     }
     .cu-dj-input:focus { outline: none; border-color: #b79de6; }
+    .cu-dj-pad {
+      position: relative; margin: 4px 0 14px; border: 1.5px dashed rgba(122, 92, 178, 0.55);
+      border-radius: 10px; background: rgba(255, 255, 255, 0.045); overflow: hidden;
+    }
+    .cu-dj-pad canvas { display: block; width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
+    .cu-dj-pad-guia {
+      position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+      color: rgba(235, 228, 248, 0.35); font-size: 14px; letter-spacing: 0.04em; font-style: italic;
+    }
+    .cu-dj-pad-borrar {
+      position: absolute; top: 8px; right: 8px; font: inherit; font-size: 12px; padding: 4px 12px;
+      border: 1px solid rgba(235, 228, 248, 0.25); border-radius: 999px; background: rgba(28, 22, 51, 0.75);
+      color: rgba(235, 228, 248, 0.85); cursor: pointer;
+    }
+
     .cu-dj-check {
       display: flex; align-items: flex-start; gap: 0.6rem;
       font-size: 0.88rem; font-weight: 600; color: #f4f1f7;

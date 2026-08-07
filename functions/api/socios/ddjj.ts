@@ -111,7 +111,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const esSocio = await env.SOCIOS.get(email.toLowerCase());
   if (!esSocio) return json({ error: 'Sin acceso' }, 403);
 
-  let body: { nombre_tipeado?: unknown; dni_tipeado?: unknown; acepto?: unknown };
+  let body: { nombre_tipeado?: unknown; dni_tipeado?: unknown; acepto?: unknown; firma_imagen?: unknown };
   try { body = await request.json(); } catch { return json({ error: 'Datos inválidos' }, 400); }
 
   if (body.acepto !== true) return json({ error: 'Falta marcar que leíste y aceptás la declaración.' }, 400);
@@ -142,8 +142,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const ip = request.headers.get('CF-Connecting-IP') || '';
   const ua = request.headers.get('User-Agent') || '';
   const cuando = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  // La firma dibujada en pantalla: obligatoria, y queda impresa en el
+  // documento. Solo se acepta un PNG chico en data-URL; el charset base64 se
+  // valida para poder incrustarlo en el HTML sin riesgo de inyección.
+  const firmaImagen = String(body.firma_imagen ?? '');
+  if (!firmaImagen.startsWith('data:image/png;base64,')) {
+    return json({ error: 'Falta tu firma dibujada en el recuadro (si no lo ves, recargá la página).' }, 400);
+  }
+  const firmaB64 = firmaImagen.slice('data:image/png;base64,'.length);
+  if (!/^[A-Za-z0-9+/=]+$/.test(firmaB64) || firmaB64.length < 500 || firmaB64.length > 400_000) {
+    return json({ error: 'La firma dibujada no llegó bien: probá dibujarla de nuevo.' }, 400);
+  }
+
   const firmaHtml = `<div class="firma-e">
     <div class="fe-tit">FIRMA ELECTRÓNICA</div>
+    <img class="fe-holo" src="data:image/png;base64,${firmaB64}" alt="Firma manuscrita de ${esc(nombre)}" />
     Firmado en el portal de socios por: <b>${esc(nombre)}</b><br />
     DNI confirmado: <b>${esc(dni)}</b> · Cuenta: ${esc(email)}<br />
     Fecha y hora: ${esc(cuando)}<br />
