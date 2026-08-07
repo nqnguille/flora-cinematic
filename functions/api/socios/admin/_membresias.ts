@@ -82,7 +82,7 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   etiquetaPrecio2: 'Con débito automático',
   ahorro: 'ahorrás {monto}/mes',
   envio: '+ envío sin cargo',
-  botonSuscribir: 'Suscribir por 3 meses',
+  botonSuscribir: 'Suscribir con',
   insigniaMia: 'Tu membresía',
   vacio: 'Todavía no hay membresías cargadas.',
 
@@ -153,7 +153,7 @@ export const ZONAS: {
       { k: 'etiquetaPrecio2', lb: 'Rótulo del bloque de débito', max: 40, ayuda: 'Vacío = no se muestra el bloque.' },
       { k: 'ahorro', lb: 'Cuánto ahorra', max: 60, ayuda: 'Usá {monto} donde va la plata.' },
       { k: 'envio', lb: 'Línea del envío', max: 60 },
-      { k: 'botonSuscribir', lb: 'Botón de suscripción', max: 40 },
+      { k: 'botonSuscribir', lb: 'Botón de suscripción', max: 40, ayuda: 'Al lado va el logo de Mercado Pago.' },
       { k: 'insigniaMia', lb: 'Marca de su membresía', max: 40 },
       { k: 'vacio', lb: 'Si no hay ninguna cargada', max: 120 },
     ],

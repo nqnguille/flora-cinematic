@@ -195,7 +195,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     // así que mostrarlo no habilita a nadie que no corresponda.
     const puedeBoton = ofreceDebito && !ACTUAL.debitoActivo
     const btn = puedeBoton
-      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>${esc(TX.botonSuscribir || 'Suscribir por 3 meses')}</span></button>`
+      ? `<button type="button" class="mb-adherir" data-tier="${esc(p.item)}"><span>${esc(TX.botonSuscribir || 'Suscribir con')}</span><img class="mb-adherir-mp" src="/img/mp-logo-full.png" alt="Mercado Pago" width="284" height="74" /></button>`
       : ''
 
     // El precio de referencia arriba, y el débito abajo como el beneficio que
@@ -628,6 +628,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* En la tarjeta angosta del celular, el texto partía en dos renglones y el
      botón crecía al doble de alto. */
   .mb-adherir span { white-space: nowrap; }
+  .mb-adherir-mp { height: 15px; width: auto; display: block; flex: none; }
   .mb-adherir:hover { filter: brightness(.94); }
   .mb-adherir:disabled { opacity: .6; cursor: default; }
   /* El bloque que desbloquea el descuento. Va con el celeste de Mercado Pago
@@ -759,7 +760,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
     .mb-gancho-antes { font-size: 10px; }
     .mb-gancho-precio { font-size: 19px; }
-    .mb-adherir { font-size: 10.5px; padding: 9px 10px; max-width: 100%; }
+    .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
+    .mb-adherir-mp { height: 11px; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
@@ -793,7 +795,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
        contra los 105px que deja la tarjeta a 320px. El flex-wrap queda de red:
        si alguna vez no entra, parte en dos renglones en vez de desbordar. */
     .mb-gancho .mb-adherir { margin-top: 8px; }
-    .mb-adherir { font-size: 9px; padding: 8px 6px; }
+    .mb-adherir { font-size: 8.5px; gap: 3px; padding: 8px 5px; flex-wrap: wrap; }
+    .mb-adherir-mp { height: 8px; }
   }
 
   /* ── El cartel de verificación ── */
@@ -962,7 +965,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
     .mb-gancho-precio { font-size: clamp(20px, 2.7vh, 32px); }
     .mb-gancho-lb { font-size: clamp(10px, 1.2vh, 14px); margin-bottom: clamp(3px, .55vh, 8px); }
-    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) clamp(14px, 1.6vh, 22px); }
+    .mb-adherir { font-size: clamp(11px, 1.35vh, 15px); padding: clamp(8px, 1.2vh, 13px) 14px; }
+    .mb-adherir-mp { height: clamp(13px, 1.6vh, 18px); }
     .mb-frasco { width: clamp(20px, 2.6vh, 32px); height: clamp(24px, 3.1vh, 38px); }
     .mb-frascos { margin: 0 0 clamp(5px, .75vh, 10px); gap: clamp(4px, .55vh, 8px); }
     .mb-gancho .mb-adherir { margin-top: clamp(8px, 1.35vh, 20px); }
