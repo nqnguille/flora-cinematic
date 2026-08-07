@@ -44,13 +44,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
                muted loop playsinline autoplay preload="none" crossorigin="anonymous"></video>
       </div>
 
+      <!-- El logo respira solo a la izquierda; todos los controles, incluido
+           el volver, van juntos a la derecha. -->
       <div class="td-head">
-        <a href="/socios/cuenta/" class="td-back mb-chip" id="mb-nav-cuenta">← Mi cuenta</a>
         <div class="td-brand">
           <img class="td-brand-logo" src="/img/flora-logo-white.png" alt="Flora" width="1472" height="298" />
           <span class="td-brand-name"><em>club</em></span>
         </div>
         <div class="mb-acciones">
+          <a href="/socios/cuenta/" class="td-back mb-chip" id="mb-nav-cuenta">← Mi cuenta</a>
           <a class="mb-chip mb-chip--pri" id="mb-cta-carta" href="/socios/carta/"></a>
           <a class="mb-chip" id="mb-cta-wa" href="https://wa.me/5492996375723?text=Hola%20Flora%2C%20quiero%20consultar%20por%20mi%20membres%C3%ADa" target="_blank" rel="noopener noreferrer"></a>
           <button id="mb-logout" class="td-logout mb-chip" type="button">Cerrar sesión</button>
@@ -76,22 +78,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       <header class="mb-hero">
         <div class="mb-hero-txt">
           <div class="mb-hero-copy">
-            <span class="mb-eyebrow reveal" id="mb-eyebrow"></span>
-            <h1 class="mb-title reveal" data-reveal-delay="90" id="mb-title"></h1>
-            <p class="mb-lead reveal" data-reveal-delay="180" id="mb-lead"></p>
+            <span class="mb-eyebrow" id="mb-eyebrow"></span>
+            <h1 class="mb-title" id="mb-title"></h1>
+            <p class="mb-lead" id="mb-lead"></p>
           </div>
           <!-- El sello legal, al lado del título: es lo primero que tiene que
                quedar claro en un TV que mira gente que todavía no es socia. -->
           <aside class="mb-sello">
             <span class="mb-sello-lb" id="mb-sello-lb">Ley 27.350 · REPROCANN</span>
-            <p class="mb-sello-txt" id="mb-sello-txt"></p>
-            <!-- Los dos caminos para profundizar: el marco legal contado en la
-                 landing y los términos con URL propia. Son hijos estáticos: el
-                 JS solo pisa el rótulo y el texto, a esto no lo toca. -->
-            <nav class="mb-sello-cta" aria-label="Información legal">
-              <a href="/#legalidad">Conocé el marco legal →</a>
-              <a href="/terminos/">Términos y condiciones →</a>
-            </nav>
+            <!-- Los links legales viven DENTRO del párrafo, a continuación del
+                 texto: una fila menos de alto en el sello. El JS pisa solo el
+                 <span> del texto, los links quedan. -->
+            <p class="mb-sello-txt"><span id="mb-sello-txt"></span>
+              <a class="mb-sello-link" href="/#legalidad">Conocé el marco legal →</a>
+              <a class="mb-sello-link" href="/terminos/">Términos y condiciones →</a></p>
           </aside>
         </div>
       </header>
@@ -128,14 +128,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
            serif verde sobre línea superior). Cuenta lo que hoy no se explicaba
            en ningún lado: qué pasa después de adherirse. -->
       <section class="mb-ciclo" id="mb-ciclo" hidden aria-label="Cómo funciona el débito">
-        <header class="mb-sec-head reveal">
+        <header class="mb-sec-head">
           <h2 class="mb-h2" id="mb-ciclo-t">¿Cómo funciona?</h2>
         </header>
         <ul class="mb-items" id="mb-ciclo-items"></ul>
       </section>
 
       <section class="mb-beneficios" id="mb-beneficios" hidden>
-        <header class="mb-sec-head reveal">
+        <header class="mb-sec-head">
           <h2 class="mb-h2" id="mb-benef-t">Beneficios exclusivos</h2>
         </header>
         <!-- Acá va el POR QUÉ, no el cómo: el cómo lo cuenta el ciclo de al lado.
@@ -872,15 +872,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     margin: 0; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.5;
     color: rgba(244, 241, 247, .72); text-wrap: pretty;
   }
-  /* Los CTA del sello: dos links chicos en línea, en el violeta del marco
-     institucional. En fila y no apilados: el sello tiene prohibido crecer en
-     alto (tiene que entrar en la primera pantalla de la TV). */
-  .mb-sello-cta { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-  .mb-sello-cta a {
-    font-family: var(--font-ui); font-size: 12px; font-weight: 700;
-    color: #B79DE6; text-decoration: none;
+  /* Los links legales corren dentro del párrafo, en el violeta del marco
+     institucional, con nowrap para que cada uno parta entero de renglón. */
+  .mb-sello-link {
+    font-weight: 700; color: #B79DE6; text-decoration: none;
+    white-space: nowrap; margin-right: 10px;
   }
-  .mb-sello-cta a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .mb-sello-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   @media (min-width: 1200px) {
     /* En el encabezado se apoya a la derecha del título, en el hueco que dejó
@@ -907,8 +905,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       gap: clamp(2px, .35vh, 5px);
     }
     .mb-sello-lb { font-size: clamp(9px, 1.1vh, 12px); }
-    .mb-sello-cta { gap: 3px clamp(12px, 1.6vh, 22px); margin-top: clamp(2px, .3vh, 5px); }
-    .mb-sello-cta a { font-size: clamp(10px, 1.15vh, 14px); }
     .mb-sello-txt { font-size: clamp(11px, 1.2vh, 14px); line-height: 1.5; }
   }
 
@@ -1048,7 +1044,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   }
   .mb-title {
     font-family: var(--font-display); font-weight: 600; font-optical-sizing: auto;
-    font-size: clamp(28px, 5.4vw, 42px); line-height: 1.15;
+    font-size: clamp(30px, 6vw, 48px); line-height: 1.12;
     color: #f4f1f7; margin: 0 0 var(--mb-v2); text-wrap: balance;
   }
   /* "de flores" va en itálica CREMA, no en verde: decidido mirando las dos
@@ -1059,8 +1055,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   /* Sobre una foto, un párrafo al 66% de opacidad se pierde entre las hojas.
      La sombra sola no alcanza cuando el fondo tiene zonas claras. */
   .mb-lead {
-    font-family: var(--font-ui); font-size: 15px; line-height: 1.65;
-    color: rgba(248, 246, 252, 0.88); margin: 0;
+    font-family: var(--font-ui); font-size: 16.5px; line-height: 1.6;
+    color: rgba(248, 246, 252, 0.9); margin: 0;
   }
 
   /* Sobre video el texto necesita sombra sí o sí, igual que en el resto del
@@ -1256,8 +1252,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
     .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(6px, .95vh, 13px) 0; }
-    .mb-primera .mb-title { font-size: clamp(32px, 5vh, 62px); margin-bottom: clamp(6px, .9vh, 13px); }
-    .mb-primera .mb-lead { font-size: clamp(12px, 1.35vh, 16px); line-height: 1.5; max-width: 74ch; margin-top: 0; color: rgba(244, 241, 247, .78); }
+    .mb-primera .mb-title { font-size: clamp(34px, 5.6vh, 70px); margin-bottom: clamp(6px, .9vh, 13px); }
+    .mb-primera .mb-lead { font-size: clamp(12.5px, 1.5vh, 18px); line-height: 1.55; max-width: 74ch; margin-top: 0; color: rgba(244, 241, 247, .84); }
     .mb-primera .mb-eyebrow { font-size: clamp(10px, 1.15vh, 13px); letter-spacing: .2em; margin-bottom: clamp(5px, .8vh, 11px); }
 
     .mb-primera .mb-grid {
