@@ -953,7 +953,13 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       column-gap: var(--mb-gap);
       align-items: start;
     }
-    .mb-primera .mb-hero-copy { grid-column: span 2; min-width: 0; }
+    .mb-primera .mb-hero-copy { grid-column: span 2; min-width: 0; position: relative; }
+    /* El título y el badge legal arrancan a la MISMA altura: los dos son
+       hijos del mismo renglón (align-items: start), y lo único que empujaba
+       al título hacia abajo era la volanta. La volanta sale del flujo y
+       flota arriba del renglón: EXCLUSIVO SOCIOS queda como antesala y
+       "Membresías de flores" queda hombro a hombro con el badge. */
+    .mb-primera .mb-eyebrow { position: absolute; bottom: 100%; left: 0; margin: 0 0 clamp(5px, .8vh, 11px); }
     .mb-primera .mb-sello {
       grid-column: span 2;
       margin-top: 0;
@@ -1390,7 +1396,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
     /* El hero se lleva menos aire que en el celular: acá lo que tiene que
        pesar son los precios. Medido a 1080p pasa de 370px a ~250px. */
-    .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(6px, .95vh, 13px) 0; }
+    /* El padding de arriba le hace lugar a la volanta flotante. */
+    .mb-primera .mb-hero { margin-bottom: clamp(10px, 1.5vh, 22px); padding: clamp(20px, 2.3vh, 32px) 0 clamp(6px, .95vh, 13px); }
     .mb-primera .mb-title { font-size: clamp(34px, 5.6vh, 70px); margin-bottom: clamp(6px, .9vh, 13px); }
     .mb-primera .mb-lead { font-size: clamp(12.5px, 1.5vh, 18px); line-height: 1.55; max-width: 74ch; margin-top: 0; color: rgba(244, 241, 247, .84); }
     .mb-primera .mb-eyebrow { font-size: clamp(10px, 1.15vh, 13px); letter-spacing: .2em; margin-bottom: clamp(5px, .8vh, 11px); }

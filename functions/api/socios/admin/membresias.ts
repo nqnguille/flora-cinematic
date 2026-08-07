@@ -70,6 +70,20 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
   const res = validarMembresias((body as Record<string, unknown>)?.membresias);
   if (!res.ok) return Response.json({ ok: false, error: res.error }, { status: 400 });
 
+  // Historial automático ANTES de pisar: cada guardado archiva la versión
+  // anterior en una clave con fecha, con 90 días de vida. Existe porque el
+  // 07/08/2026 una escritura externa pisó una edición manual completa y no
+  // había de dónde recuperarla: nunca más un solo punto de falla para textos
+  // que alguien escribió a mano. Recuperar = copiar una clave hist a la
+  // clave viva (o pedírselo al asistente).
+  try {
+    const anterior = await env.GENETICAS.get(MEMBRESIAS_KEY);
+    if (anterior && anterior !== JSON.stringify(res.doc)) {
+      const marca = new Date().toISOString().replace(/[:.]/g, '-');
+      await env.GENETICAS.put(`${MEMBRESIAS_KEY}.hist.${marca}`, anterior, { expirationTtl: 60 * 60 * 24 * 90 });
+    }
+  } catch { /* el historial nunca bloquea el guardado */ }
+
   await env.GENETICAS.put(MEMBRESIAS_KEY, JSON.stringify(res.doc));
   return Response.json({ ok: true, membresias: res.doc });
 };
