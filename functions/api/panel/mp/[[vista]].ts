@@ -24,6 +24,7 @@ const BACK_URL_VUELTA = 'https://floraong.ar/api/socios/volviste';
 import { tokens } from '../reprocann/_unificar';
 
 interface Env {
+  AGENTE_TOKEN?: string;
   DB: D1Database;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
@@ -365,9 +366,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
-  const auth = await requireCap(request, env, ['mp_enviar', 'mp_gestionar']);
-  if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
   const vista = Array.isArray(params.vista) ? params.vista[0] : params.vista;
+  // La misma puerta de máquina que ya usa el volcado de REPROCANN, con el
+  // mismo límite: SOLO para `sincronizar`, que no decide nada (copia lo que
+  // dice Mercado Pago y repara la back_url de los planes). Permite correr la
+  // sincronización sin un humano logueado: el asistente o, mañana, un cron.
+  const cab = request.headers.get('Authorization') || '';
+  const esAgente = vista === 'sincronizar' && env.AGENTE_TOKEN
+    && cab.startsWith('Bearer ') && cab.slice(7).trim() === env.AGENTE_TOKEN;
+  if (!esAgente) {
+    const auth = await requireCap(request, env, ['mp_enviar', 'mp_gestionar']);
+    if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
+  }
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
 
