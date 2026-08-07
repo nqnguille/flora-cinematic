@@ -58,6 +58,7 @@
   let alCambiar = null
   let tabActiva = 'resumen'
   let ultimoId = null
+  let fichaMax = false
 
   function cerrar() {
     velo?.remove(); caja?.remove()
@@ -71,7 +72,7 @@
     if (ultimoId !== id) { tabActiva = 'resumen'; ultimoId = id }
     cerrar()
     velo = document.createElement('div'); velo.className = 'pn-drawer-velo'
-    caja = document.createElement('aside'); caja.className = 'pn-drawer'
+    caja = document.createElement('aside'); caja.className = 'pn-drawer' + (fichaMax ? ' max' : '')
     caja.innerHTML = '<div class="pn-drawer-cuerpo"><div class="vacio">⏳ Abriendo la ficha…</div></div>'
     document.body.append(velo, caja)
     velo.addEventListener('click', cerrar)
@@ -131,6 +132,7 @@
 
     caja.innerHTML = `
       <button class="pn-drawer-x" type="button" aria-label="Cerrar">✕</button>
+      <button class="pn-ficha-max" id="sd-max" type="button" title="Expandir / achicar">⛶</button>
       <div class="pn-drawer-cab">
         <div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>
           <div><div style="font-family:var(--font-display);font-size:19px">${P.esc(s.nombre)}</div>
@@ -152,8 +154,18 @@
         </div>
 
         <div class="sd-tab ${tabActiva === 'resumen' ? 'on' : ''}" data-tab="resumen">
+          <div class="sd-cols">
           <details open><summary>Cumplimiento Res. 1780/2025</summary>
             <div class="sd-cum-lista">${cumplimiento}</div>
+          </details>
+          <div>
+          <details open><summary>Cuenta y accesos</summary>
+            <div style="margin-top:8px;font-size:13px;color:var(--ink2);display:grid;gap:4px">
+              <div>${chipCarta}${typeof d.carta.logins === 'number' ? ` · ${d.carta.logins} ingreso${d.carta.logins === 1 ? '' : 's'}` : ''}</div>
+              ${d.carta.temporal ? `<div>Acceso de prueba${d.carta.tempExpiraEn ? ` hasta ${fFecha(d.carta.tempExpiraEn)}` : ''}</div>` : ''}
+              <div style="color:var(--muted);font-size:12px">${d.carta.tosAceptado ? `Términos aceptados ${fFecha(d.carta.tosAceptado)}${d.carta.tosVersion ? ' · versión ' + P.esc(d.carta.tosVersion) : ''}` : 'Términos: sin registro de aceptación'}</div>
+              ${s.adhesion_habilitada ? `<div style="color:var(--grn,#2c9a6f);font-size:12px">✓ Adhesión al débito habilitada ${hace(s.adhesion_habilitada)}${s.adhesion_habilitada_por ? ' por ' + P.esc(s.adhesion_habilitada_por) : ''}</div>` : ''}
+            </div>
           </details>
           <details open><summary>Consultorio</summary>
             <div style="margin-top:8px;font-size:13px;color:var(--ink2)">
@@ -163,7 +175,9 @@
               <div style="color:var(--muted);font-size:12px;margin-top:4px">La historia clínica vive en el consultorio (drezequielkalb.com), bajo secreto profesional: acá solo llega la señal, nunca datos clínicos.</div>
             </div>
           </details>
-          <div class="fila" style="margin-top:12px;flex-wrap:wrap">
+          </div>
+          </div>
+          <div class="fila" style="margin-top:14px;flex-wrap:wrap">
             ${mp ? '<button class="btn btn-pri" id="sd-r-debito" type="button">$ Mandar link de pago</button>' : ''}
             ${s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a>` : ''}
           </div>
@@ -219,10 +233,12 @@
             son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.
             El débito recién se habilita con la declaración firmada y verificada.</p>
           <div id="sd-ddjj" style="margin-top:10px"><div style="color:var(--muted);font-size:12px">⏳ buscando…</div></div>
+          ${typeof d.declaraciones_total === 'number' && d.declaraciones_total > 1 ? `<p style="margin:8px 0 0;font-size:12px;color:var(--muted)">Historial: ${d.declaraciones_total} declaraciones registradas (incluye anuladas).</p>` : ''}
         </details>` : ''}
         </div>
 
         <div class="sd-tab ${tabActiva === 'eco' ? 'on' : ''}" data-tab="eco">
+          <div class="sd-cols">
           <details open><summary>Membresía</summary>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             ${d.membresia && d.membresia.modalidad === 'plan'
@@ -255,6 +271,18 @@
             <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
           </div>` : ''}
         </details>
+          </div>
+          ${(d.suscripciones || []).length ? `<details open><summary>Suscripciones (historial completo)</summary>
+            <div style="margin-top:6px">${d.suscripciones.map((su) => `<div class="sd-fila-h">
+              <b>${P.esc(su.tier || '—')}</b>
+              <span class="tag ${su.estado === 'activa' ? 'tag-ok' : su.estado === 'cancelada' ? 'tag-off' : 'tag-deb'}">${P.esc(su.estado)}</span>
+              <span>${P.fmt(su.monto)}/mes</span>
+              <span style="color:var(--muted)">cuotas acreditadas: ${su.racha_meses ?? 0}</span>
+              ${su.fin ? `<span style="color:var(--muted)">hasta ${fFecha(su.fin)}</span>` : ''}
+              <span class="pn-sp"></span>
+              <span style="color:var(--muted);font-size:11px">${P.esc(su.origen || '')}${su.mp_ref ? ' · …' + P.esc(su.mp_ref) : ''} · ${fFecha(su.creado)}</span>
+            </div>`).join('')}</div>
+          </details>` : ''}
           <details open><summary>Pagos recientes</summary>
             <div style="margin-top:6px;font-size:13px;color:var(--ink2)">${d.movimientos ? `<b style="display:block;margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
             ${d.movimientos.length ? d.movimientos.map((x) => `<div class="fila" style="padding:3px 0">
@@ -264,6 +292,7 @@
         </div>
 
         <div class="sd-tab ${tabActiva === 'retiros' ? 'on' : ''}" data-tab="retiros">
+          <div class="sd-cols">
           <details open><summary>Saldo</summary>
             ${d.saldo && d.membresia ? (() => {
             const sal = d.saldo
@@ -292,6 +321,7 @@
               <span>${fFecha(x.fecha)} · ${P.esc(x.producto || 'flores')}</span><span class="pn-sp"></span>
               <span>${x.gramos ? x.gramos + ' g' : (x.unidades || '') + ' u'}</span></div>`).join('') : '<div style="color:var(--muted)">Sin retiros.</div>'}</div>
         </details>
+        </div>
         </div>
 
         <div class="sd-tab ${tabActiva === 'datos' ? 'on' : ''}" data-tab="datos">
@@ -336,6 +366,10 @@
       caja.querySelectorAll('.sd-tab').forEach((t) => t.classList.toggle('on', t.dataset.tab === tabActiva))
     }))
     caja.querySelector('#sd-r-debito')?.addEventListener('click', () => modalDebito(s))
+    caja.querySelector('#sd-max')?.addEventListener('click', () => {
+      fichaMax = !fichaMax
+      caja.classList.toggle('max', fichaMax)
+    })
 
     const msgDe = (sel) => caja.querySelector(sel)
     const aviso = (sel, texto, clase) => { const m = msgDe(sel); m.className = 'msg ' + (clase || ''); m.textContent = texto }

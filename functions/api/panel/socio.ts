@@ -23,7 +23,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!Number.isFinite(id)) return json({ error: 'Falta id' }, 400);
 
   const verPlata = puede(auth.rol, 'finanzas_ver');
-  const [socio, membresia, susc, envio, dispensas, movimientos, saldo] = await Promise.all([
+  const [socio, membresia, susc, envio, dispensas, movimientos, saldo, suscripciones, declTotal] = await Promise.all([
     env.DB.prepare(`SELECT * FROM socios WHERE id = ? AND (numero IS NULL OR numero != -1)`).bind(id).first<Record<string, unknown>>(),
     env.DB.prepare(
       // Un plan prepago SIEMPRE tiene fecha de fin, así que pedir `hasta IS
@@ -44,15 +44,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       `SELECT tier, via, enviado FROM envios_debito WHERE socio_id = ? ORDER BY enviado DESC LIMIT 1`,
     ).bind(id).first(),
     env.DB.prepare(
-      `SELECT fecha, producto, gramos, unidades FROM dispensas WHERE socio_id = ? ORDER BY fecha DESC, id DESC LIMIT 5`,
+      `SELECT fecha, producto, gramos, unidades FROM dispensas WHERE socio_id = ? ORDER BY fecha DESC, id DESC LIMIT 15`,
     ).bind(id).all(),
     verPlata
       ? env.DB.prepare(
           `SELECT fecha, categoria, concepto, neto, medio, estado FROM movimientos
-            WHERE socio_id = ? AND tipo = 'ingreso' ORDER BY fecha DESC, id DESC LIMIT 5`,
+            WHERE socio_id = ? AND tipo = 'ingreso' ORDER BY fecha DESC, id DESC LIMIT 15`,
         ).bind(id).all()
       : Promise.resolve(null),
     saldoDe(env, id).catch(() => null),
+    env.DB.prepare(
+      `SELECT id, tier, estado, monto, racha_meses, fin, creado, origen, mp_preapproval_id FROM suscripciones
+        WHERE socio_id = ? ORDER BY id DESC`,
+    ).bind(id).all<Record<string, unknown>>(),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM declaraciones WHERE socio_id = ?`).bind(id).first<{ n: number }>(),
   ]);
   if (!socio) return json({ error: 'No existe' }, 404);
 
@@ -74,9 +79,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     debito: susc ? { ...susc, ultimo_envio: envio || null } : (envio ? { estado: null, ultimo_envio: envio } : null),
     dispensas: dispensas.results,
     movimientos: movimientos ? movimientos.results : null,
+    // Historial completo de suscripciones. El mp_preapproval_id es sensible:
+    // viaja recortado a los últimos 8 caracteres como referencia (mp_ref).
+    suscripciones: (suscripciones?.results || []).map(({ mp_preapproval_id, ...s }) => ({
+      ...s,
+      mp_ref: mp_preapproval_id ? String(mp_preapproval_id).slice(-8) : null,
+    })),
+    declaraciones_total: declTotal?.n ?? 0,
     carta: carta ? {
       acceso: true, lastLogin: carta.lastLogin || null, logins: carta.logins || 0,
       temporal: !!carta.temporal, tempExpiraEn: carta.tempExpiraEn || null,
+      tosAceptado: carta.tosAcceptedAt || null, tosVersion: carta.tosAcceptedVersion || null,
     } : { acceso: false },
   });
 };
