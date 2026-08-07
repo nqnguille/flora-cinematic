@@ -204,9 +204,8 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     const gancho = ofreceDebito
       ? `<div class="mb-gancho">
           <span class="mb-gancho-lb">${esc(TX.etiquetaPrecio2 || 'Con débito automático')}</span>
-          ${p.contado ? `<s class="mb-gancho-antes">${pesos(p.contado)}</s>` : ''}
-          <b class="mb-gancho-precio">${pesos(p.debito)}</b>
           ${p.contado ? `<span class="mb-gancho-ahorro">${esc((TX.ahorro || 'ahorrás {monto}/mes').replace('{monto}', pesos(p.contado - p.debito)))}</span>` : ''}
+          <b class="mb-gancho-precio">${pesos(p.debito)}</b>
           ${btn}
         </div>`
       : ''
@@ -257,10 +256,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // se decide una sola vez desde el CSS.
   const ico = (d) => `<svg class="mb-ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`
 
-  // 1 · Te suscribís con Mercado Pago → el isotipo OFICIAL de MP, no un dibujo
-  //     propio: es una marca de terceros y la reconocible es la de ellos. El
-  //     asset ya estaba en el repo (public/img/mp-iso.png, solo la burbuja).
-  const ICO_MP = `<img class="mb-ico mb-ico--img" src="/img/mp-iso.png" alt="" width="100" height="70" loading="lazy">`
   // Los cinco beneficios van en pseudo-3D a todo color, como los tiles de una
   // app: volúmenes con degradé, cara clara arriba a la izquierda, sombra de
   // apoyo abluada abajo. Cada beneficio tiene su color (violeta la renovación,
@@ -268,6 +263,20 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // guiña al celeste de MP), emparejados en tamaño óptico con el isotipo
   // oficial: el dibujo vive en la franja 8..40 del lienzo de 48.
   const ico3d = (d) => `<svg class="mb-ico" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="41.6" rx="14" ry="2.6" fill="#000" opacity=".38" filter="url(#mbgS)"/>${d}</svg>`
+
+  // 1 · Te suscribís con Mercado Pago → la billetera con las tarjetas
+  //     asomando: el dibujo de su propio copy ("pagá con débito, crédito o
+  //     dinero en cuenta"). El logo oficial de MP no se fue de la tarjeta:
+  //     vive en el botón de suscribir, que es el momento donde sella confianza.
+  const ICO_BILLETERA = ico3d(`
+    <rect x="12" y="10" width="12" height="14" rx="2" fill="url(#mbgC)" transform="rotate(-12 18 17)"/>
+    <rect x="18.6" y="8.6" width="12" height="14" rx="2" fill="url(#mbgR)" transform="rotate(-2 24.6 15.6)"/>
+    <rect x="25" y="9.6" width="12" height="14" rx="2" fill="url(#mbgA)" transform="rotate(9 31 16.6)"/>
+    <rect x="6.4" y="17.6" width="35.2" height="20" rx="3.4" fill="url(#mbgV)"/>
+    <rect x="6.4" y="17.6" width="35.2" height="5.2" rx="2.6" fill="#fff" opacity=".14"/>
+    <path d="M28.6 24h13v7.4h-13a3.7 3.7 0 0 1 0-7.4Z" fill="url(#mbgVd)"/>
+    <circle cx="31" cy="27.7" r="1.8" fill="url(#mbgG)"/>
+    <ellipse cx="12.4" cy="20.8" rx="3" ry="1.5" fill="#fff" opacity=".34" transform="rotate(-16 12.4 20.8)"/>`)
 
   // El concepto dejó de ser "renovación" (la flecha circular se leía como un
   //     reintento) y pasó a ser EL MES: un calendario con el cogollo puesto en
@@ -352,7 +361,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   // Los iconos van por posición dentro de su lista, no por el texto: el texto
   // se edita desde el backoffice y matchear por palabras sería adivinar.
   const ICONOS = {
-    ciclo: [ICO_MP, ICO_MES, ICO_CARTA],
+    ciclo: [ICO_BILLETERA, ICO_MES, ICO_CARTA],
     beneficios: [ICO_ETIQUETA, ICO_ENVIO, ICO_ACUMULA],
   }
 
@@ -648,19 +657,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     display: block; font-family: var(--font-display); font-weight: 600;
     font-size: 24px; color: #f4f1f7; line-height: 1.1;
   }
-  /* El patrón clásico del descuento, en dos golpes que se leen sin leer: el
-     precio de contado TACHADO arriba del precio con débito (el salto se ve en
-     los números mismos), y el ahorro en píldora verde sólida con letra oscura,
-     lo más contrastado de la tarjeta para su mejor noticia. */
-  .mb-gancho-antes {
-    display: block; font-family: var(--font-ui); font-size: 12px;
-    color: rgba(244, 241, 247, .42); text-decoration-thickness: 1.5px;
-  }
+  /* El ahorro en píldora verde sólida con letra oscura, ARRIBA del precio de
+     débito: primero la noticia, después el número. El contado no se repite
+     tachado acá: ya está en grande dos renglones más arriba. */
   .mb-gancho-ahorro {
     display: inline-block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 800;
     letter-spacing: .03em; text-transform: uppercase;
     color: #08160f; background: linear-gradient(135deg, #63d9ae, #3cb492);
-    border-radius: 999px; padding: 4px 11px; margin-top: 6px;
+    border-radius: 999px; padding: 4px 11px; margin: 2px 0 6px;
   }
   .mb-gancho .mb-adherir { margin-top: 11px; }
 
@@ -706,21 +710,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      cada SVG. El color: #B79DE6 queda de red para el ICO_FLOR de repuesto,
      que sigue siendo duotono. */
   .mb-ico {
-    width: 34px; height: 34px; margin: 0 0 9px; color: #B79DE6;
+    width: 43px; height: 43px; margin: 0 0 5px; color: #B79DE6;
     filter: drop-shadow(0 2px 10px rgba(0, 0, 0, .55));
-    /* Con cajas distintas (los SVG van 25% más grandes que el isotipo para
-       empatar masa óptica), el renglón compartido de iconos los centra. */
     align-self: center;
   }
-  svg.mb-ico { width: 43px; height: 43px; margin-bottom: 5px; }
   /* El idioma duotono queda vivo para el icono de repuesto (ICO_FLOR). */
   .mb-ico-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
   .mb-ico-lleno { fill: currentColor; stroke: none; opacity: .95; }
   .mb-ico-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; opacity: .5; }
-  /* El isotipo de MP es una imagen 100x70: entra en la misma caja cuadrada que
-     los SVG sin deformarse. Los 3D están dibujados en la franja central de su
-     lienzo justamente para empatar el tamaño óptico con este óvalo. */
-  .mb-ico--img { object-fit: contain; }
   .mb-item-t {
     display: block; font-family: var(--font-display); font-optical-sizing: auto;
     font-size: 17px; font-weight: 600; line-height: 1.2;
@@ -755,18 +752,16 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-precio span { font-size: 10.5px; }
     .mb-card-nom { font-size: 13.5px; letter-spacing: .06em; }
     .mb-card-det { font-size: 11.5px; margin-bottom: 10px; }
-    .mb-gancho-ahorro { font-size: 8.5px; padding: 3px 8px; margin-top: 4px; }
+    .mb-gancho-ahorro { font-size: 8.5px; padding: 3px 8px; margin: 1px 0 4px; }
     .mb-gancho { margin: 11px -2px 0; padding: 9px 8px 10px; }
     .mb-gancho-lb { font-size: 9px; letter-spacing: .06em; }
-    .mb-gancho-antes { font-size: 10px; }
     .mb-gancho-precio { font-size: 19px; }
     .mb-adherir { font-size: 10.5px; gap: 5px; padding: 9px 10px; max-width: 100%; }
     .mb-adherir-mp { height: 11px; }
     .mb-frasco { width: 15px; height: 21px; }
     .mb-frascos { gap: 3px; margin-bottom: 6px; }
     .mb-mia { font-size: 8px; padding: 2px 6px; top: 6px; right: 7px; }
-    .mb-ico { width: 30px; height: 30px; margin-bottom: 7px; }
-    svg.mb-ico { width: 38px; height: 38px; margin-bottom: 4px; }
+    .mb-ico { width: 38px; height: 38px; margin-bottom: 4px; }
   }
 
   /* En teléfonos chicos, lo que sobra se saca: la etiqueta del precio la
@@ -923,10 +918,6 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     /* Los iconos, del tamaño de los frascos de las tarjetas: son la misma
        familia de dibujos y tienen que pesar igual. */
     .mb-ico {
-      width: clamp(38px, 6vh, 76px); height: clamp(38px, 6vh, 76px);
-      margin-bottom: clamp(7px, 1.05vh, 15px);
-    }
-    svg.mb-ico {
       width: clamp(48px, 7.5vh, 95px); height: clamp(48px, 7.5vh, 95px);
       margin-bottom: clamp(4px, .6vh, 9px);
     }
@@ -955,11 +946,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .mb-card-nom { font-size: clamp(18px, 2.9vh, 36px); letter-spacing: .1em; margin-bottom: clamp(4px, .6vh, 8px); }
     .mb-card-det { font-size: clamp(13px, 1.75vh, 20px); margin-bottom: clamp(7px, 1.05vh, 14px); }
     .mb-card-precio { font-size: clamp(31px, 4.3vh, 53px); line-height: 1.05; margin: clamp(4px, .6vh, 9px) 0 0; }
-    .mb-gancho-antes { font-size: clamp(11px, 1.3vh, 15px); }
     .mb-gancho-ahorro {
       font-size: clamp(10px, 1.2vh, 14px);
       padding: clamp(3px, .5vh, 7px) clamp(9px, 1.3vh, 16px);
-      margin-top: clamp(4px, .6vh, 9px);
+      margin: clamp(1px, .2vh, 3px) 0 clamp(4px, .6vh, 9px);
     }
     .mb-card-precio span { font-size: clamp(11px, 1.35vh, 15px); margin-top: clamp(3px, .4vh, 6px); }
     .mb-gancho { margin-top: clamp(10px, 1.35vh, 20px); padding: clamp(8px, 1.15vh, 17px) clamp(11px, .9vw, 17px); }
