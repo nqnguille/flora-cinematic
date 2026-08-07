@@ -180,7 +180,7 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 // devolvía a `autocultivo` y borraba el trabajo en curso — justo el de las
 // personas que alguien está atendiendo, y encima un estado que no se puede
 // reconstruir mirando el portal (el papel firmado está en un cajón, no ahí).
-const SOLO_DEL_CLUB = new Set(['ddjj_pendiente', 'ddjj_firmada']);
+const SOLO_DEL_CLUB = new Set(['ddjj_pendiente', 'ddjj_firmada', 'conversion']);
 
 async function sincronizarSocio(env: Env, socioId: number, per: TramitePortal, hoy: string): Promise<boolean> {
   const paso = pasoDe(per, hoy);
@@ -358,7 +358,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     // Estados que maneja el club a mano y que el organismo no puede reconstruir:
     // no se pisan nunca. Se le deja el número y una nota para que un humano los
     // resuelva (ej. un socio en 'autocultivo' que se está pasando a Flora).
-    const PROTEGIDOS = new Set(['ddjj_pendiente', 'ddjj_firmada', 'revisar', 'autocultivo']);
+    const PROTEGIDOS = new Set(['ddjj_pendiente', 'ddjj_firmada', 'conversion', 'revisar', 'autocultivo']);
     let socioTocado: { id: number; estado: string; protegido?: boolean } | null = null;
     if (dni || codigo) {
       let socio = dni

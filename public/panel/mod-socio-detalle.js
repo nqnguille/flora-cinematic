@@ -189,7 +189,7 @@
         </details>
 
         <details ${paso && (paso.quien === 'club' || paso.quien === 'paciente' || paso.quien === 'medico') ? 'open' : ''}><summary>REPROCANN</summary>
-          <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
+          <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
           ${P.puede('reprocann_editar') ? `

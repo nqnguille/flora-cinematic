@@ -364,6 +364,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const TXT = {
           aprobado: ['✓ Aprobado', 'is-ok'], autocultivo: ['Autocultivador', 'is-ok'],
           ddjj_pendiente: ['Te toca firmar la declaración', 'is-vos'], ddjj_firmada: ['Declaración en verificación', ''],
+          conversion: ['Pasando tu REPROCANN a Flora', 'is-ok'],
           en_evaluacion: ['En evaluación', ''], revision_medica: ['En corrección', ''],
           a_vincular: ['Vinculándote', ''], cargado: ['Te toca firmar', 'is-vos'],
           observado: ['Observado', 'is-vos'], codigo_listo: ['Con el médico', ''],
@@ -373,7 +374,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         const [txt, cls] = TXT[d.estado] || [d.estado || '—', '']
         chip.textContent = txt
         chip.className = 'cu-chip ' + cls
-        if (d.vence && ['aprobado', 'autocultivo', 'vencido'].includes(d.estado)) {
+        if (d.vence && ['aprobado', 'autocultivo', 'conversion', 'vencido'].includes(d.estado)) {
           const dias = Math.floor((Date.parse(d.vence) - Date.now()) / 86400000)
           const f = d.vence.slice(0, 10).split('-').reverse().join('/')
           vence.textContent = dias < 0 ? `venció el ${f}` : `vence el ${f} · faltan ${dias} días`
@@ -425,7 +426,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       } else if (d.estado === 'verificada') {
         card.innerHTML = `
           <div class="cu-rp-fila"><span class="cu-chip is-ok">✓ Verificada</span></div>
-          <p class="cu-dj-intro">Tu declaración quedó verificada: tu vinculación con Flora ya está en marcha. El próximo paso lo ves arriba, en <b>Tu REPROCANN</b>.</p>`
+          <p class="cu-dj-intro">Tu declaración quedó verificada: estamos pasando tu REPROCANN a Flora y no tenés que hacer nada más. Ya podés adherirte a tu membresía desde <a href="/socios/membresias/">Membresías</a>.</p>`
       } else { sec.hidden = true; return }
       sec.hidden = false
     }

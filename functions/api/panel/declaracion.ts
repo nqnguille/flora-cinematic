@@ -336,7 +336,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `UPDATE declaraciones SET estado = 'verificada', verificada = datetime('now'), verificada_por = ? WHERE id = ?`,
     ).bind(auth.email, decId).run();
     await env.DB.prepare(
-      `UPDATE socios SET reprocann_estado = 'esperando_codigo', reprocann_actualizado = datetime('now')
+      `UPDATE socios SET reprocann_estado = 'conversion', reprocann_actualizado = datetime('now')
         WHERE id = ? AND reprocann_estado IN ('autocultivo', 'ddjj_pendiente', 'ddjj_firmada')`,
     ).bind(dec.socio_id).run();
     return json({ ok: true, verificada: true });

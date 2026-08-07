@@ -92,6 +92,9 @@ const MOTIVO_SIN_DATO = 'Todavía no tenemos registrado el estado de tu REPROCAN
 
 export function puedeAdherir(estado: string | null, habilitados: string[], habilitadoAparte = false): { puede: boolean; motivo: string | null } {
   if (estado && VEDADOS_DDJJ.has(estado)) return { puede: false, motivo: MOTIVOS[estado] || MOTIVO_SIN_DATO };
+  // declaración verificada = atajo completo: puede adherirse ya, la
+  // reinscripción ante el Ministerio es cocina interna del club
+  if (estado === 'conversion') return { puede: true, motivo: null };
   // la habilitación individual la concede el panel a un socio puntual, por
   // encima de la lista general de estados
   if (habilitadoAparte) return { puede: true, motivo: null };
