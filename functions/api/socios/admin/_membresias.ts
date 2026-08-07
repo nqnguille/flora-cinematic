@@ -89,7 +89,7 @@ export const MEMBRESIAS_DEFAULT: Membresias = {
   cicloTitulo: '¿Cómo funciona?',
   ciclo: [
     { t: 'Te suscribís con Mercado Pago', d: 'Podés elegir pagar con débito, crédito o dinero en cuenta.' },
-    { t: 'Disponibilidad automática', d: 'Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.' },
+    { t: 'Cada mes, sin hacer nada', d: 'Tus gramos contratados se habilitan en tu cuenta para que retires cuando quieras.' },
     { t: 'Variedad a elección', d: 'Reservás desde la carta las genéticas que quieras, hasta completar los gramos de tu plan.' },
   ],
 
