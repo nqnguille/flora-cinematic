@@ -50,6 +50,21 @@ export async function procesarPagoAprobado(env: EnvMp, pago: Record<string, unkn
     susc = await env.DB.prepare(`SELECT id, socio_id, mp_plan_id FROM suscripciones WHERE mp_preapproval_id = ?`)
       .bind(preId).first();
   }
+  if (!susc && preId && env.MP_ACCESS_TOKEN) {
+    // Carrera clásica de MP: el aviso del pago llega antes que el de la
+    // suscripción (pasó con Denis, 07/08). En vez de dejar el pago suelto,
+    // se consulta el preapproval ya mismo y se descubre la suscripción.
+    const r = await fetch(`${MP}/preapproval/${preId}`, {
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}` },
+    });
+    if (r.ok) {
+      const pre = await r.json<Record<string, unknown>>();
+      await descubrirPreapproval(env, pre);
+      await aplicarPreapproval(env, pre);
+      susc = await env.DB.prepare(`SELECT id, socio_id, mp_plan_id FROM suscripciones WHERE mp_preapproval_id = ?`)
+        .bind(preId).first();
+    }
+  }
   const payerId = String((pago.payer as Record<string, unknown> | undefined)?.id || '') || null;
   if (!susc && payerId) {
     susc = await env.DB.prepare(
@@ -67,6 +82,25 @@ export async function procesarPagoAprobado(env: EnvMp, pago: Record<string, unkn
     if (email) {
       const s = await env.DB.prepare(`SELECT id FROM socios WHERE email = ?`).bind(email).first<{ id: number }>();
       socioId = s?.id ?? null;
+    }
+  }
+
+  // 2bis) La suscripción existe pero está huérfana y el pagador matchea un
+  // socio: se identifica acá mismo (guardarraíl de siempre: si ese socio ya
+  // tiene otra suscripción viva, no se pisa nada y decide el panel). Cierra
+  // el caso "pagó desde el link de WhatsApp y nunca volvió por el portal".
+  if (susc && susc.socio_id === null && socioId) {
+    const viva = await env.DB.prepare(
+      `SELECT id FROM suscripciones WHERE socio_id = ? AND estado IN ('activa','pendiente','pausada') AND id != ?`,
+    ).bind(socioId, susc.id).first();
+    if (!viva) {
+      await env.DB.prepare(
+        `UPDATE suscripciones SET socio_id = ?, actualizado = datetime('now') WHERE id = ? AND socio_id IS NULL`,
+      ).bind(socioId, susc.id).run();
+      susc.socio_id = socioId;
+      await env.DB.prepare(
+        `UPDATE movimientos SET socio_id = COALESCE(socio_id, ?) WHERE suscripcion_id = ?`,
+      ).bind(socioId, susc.id).run();
     }
   }
 
