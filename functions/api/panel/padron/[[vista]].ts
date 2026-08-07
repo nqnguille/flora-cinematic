@@ -206,6 +206,13 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
     cambios.push('documento = ?'); valores.push(doc);
   }
   if ('nota' in body) { cambios.push('nota = ?'); valores.push(String(body.nota || '').trim().slice(0, 400) || null); }
+  // habilitación individual para adherirse desde el portal: true la concede
+  // (queda cuándo y quién), false la retira
+  if ('adhesion_habilitada' in body) {
+    const dar = body.adhesion_habilitada === true;
+    cambios.push('adhesion_habilitada = ?'); valores.push(dar ? new Date().toISOString() : null);
+    cambios.push('adhesion_habilitada_por = ?'); valores.push(dar ? auth.email || null : null);
+  }
   // domicilio: lo pide la declaración jurada y es el mismo dato que va a hacer
   // falta el día que entreguemos a domicilio
   if ('domicilio' in body) { cambios.push('domicilio = ?'); valores.push(String(body.domicilio || '').trim().slice(0, 200) || null); }

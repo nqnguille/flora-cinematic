@@ -81,10 +81,20 @@ const MOTIVOS: Record<string, string> = {
   rechazado: 'Tu solicitud de REPROCANN fue rechazada. Escribinos para ver cómo seguir.',
   vencido: 'Tu REPROCANN venció: hay que renovarlo antes de adherirte.',
   autocultivo: 'Figurás como autocultivo, así que no dependés de Flora para tu cultivo.',
+  ddjj_pendiente: 'Antes de adherirte tenés que firmar tu declaración jurada: está en Mi cuenta esperándote.',
+  ddjj_firmada: 'Tu declaración jurada está firmada y en verificación. En cuanto la verifiquemos, podés adherirte.',
 };
+
+// Con declaración jurada pendiente no hay adhesión posible, ni siquiera con
+// habilitación individual: es el requisito legal de la renuncia al autocultivo.
+const VEDADOS_DDJJ = new Set(['autocultivo', 'ddjj_pendiente', 'ddjj_firmada']);
 const MOTIVO_SIN_DATO = 'Todavía no tenemos registrado el estado de tu REPROCANN. Escribinos y lo vemos.';
 
-export function puedeAdherir(estado: string | null, habilitados: string[]): { puede: boolean; motivo: string | null } {
+export function puedeAdherir(estado: string | null, habilitados: string[], habilitadoAparte = false): { puede: boolean; motivo: string | null } {
+  if (estado && VEDADOS_DDJJ.has(estado)) return { puede: false, motivo: MOTIVOS[estado] || MOTIVO_SIN_DATO };
+  // la habilitación individual la concede el panel a un socio puntual, por
+  // encima de la lista general de estados
+  if (habilitadoAparte) return { puede: true, motivo: null };
   if (estado && habilitados.includes(estado)) return { puede: true, motivo: null };
   return { puede: false, motivo: (estado && MOTIVOS[estado]) || MOTIVO_SIN_DATO };
 }
@@ -95,11 +105,12 @@ export async function situacionDelSocio(env: EnvPlanes, email: string): Promise<
   modalidad: string | null;
   debitoActivo: boolean;
   reprocann: string | null;
+  adhesionHabilitada: boolean;
 }> {
   const socio = await env.DB.prepare(
-    `SELECT id, reprocann_estado FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
-  ).bind(email.toLowerCase()).first<{ id: number; reprocann_estado: string | null }>();
-  if (!socio) return { socioId: null, tier: null, modalidad: null, debitoActivo: false, reprocann: null };
+    `SELECT id, reprocann_estado, adhesion_habilitada FROM socios WHERE email = ? AND (numero IS NULL OR numero != -1)`,
+  ).bind(email.toLowerCase()).first<{ id: number; reprocann_estado: string | null; adhesion_habilitada: string | null }>();
+  if (!socio) return { socioId: null, tier: null, modalidad: null, debitoActivo: false, reprocann: null, adhesionHabilitada: false };
 
   const [memb, susc] = await Promise.all([
     env.DB.prepare(
@@ -118,5 +129,6 @@ export async function situacionDelSocio(env: EnvPlanes, email: string): Promise<
     modalidad: memb?.modalidad ?? null,
     debitoActivo: !!susc,
     reprocann: socio.reprocann_estado ?? null,
+    adhesionHabilitada: !!socio.adhesion_habilitada,
   };
 }

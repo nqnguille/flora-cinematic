@@ -49,7 +49,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // La regla de verdad está acá, no en el botón: el navegador puede llamar
   // este endpoint directamente.
   const { estadosAdhesion } = await leerMembresias(env.GENETICAS);
-  const veredicto = puedeAdherir(situacion.reprocann, estadosAdhesion);
+  const veredicto = puedeAdherir(situacion.reprocann, estadosAdhesion, situacion.adhesionHabilitada);
   if (!veredicto.puede) {
     return Response.json({ ok: false, error: veredicto.motivo }, { status: 409 });
   }

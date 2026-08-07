@@ -179,8 +179,11 @@
               ${d.debito.fin ? ` · termina ${fFecha(d.debito.fin)}` : ''}` : 'Sin suscripción todavía.'}
             ${d.debito?.ultimo_envio ? `<div style="color:var(--muted);font-size:12px;margin-top:4px">link ${P.esc(d.debito.ultimo_envio.tier)} mandado ${hace(d.debito.ultimo_envio.enviado)} por ${d.debito.ultimo_envio.via === 'email' ? 'email' : 'WhatsApp'}</div>` : ''}
           </div>
+          ${s.adhesion_habilitada ? `<div style="font-size:12px;color:var(--grn,#4c9);margin-top:6px">✓ Puede adherirse desde su cuenta (habilitado ${hace(s.adhesion_habilitada)}${s.adhesion_habilitada_por ? ' por ' + P.esc(s.adhesion_habilitada_por) : ''})</div>` : ''}
           ${mp ? `<div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn btn-pri" id="sd-debito" type="button">$ Mandar link de pago</button>
+            <button class="btn" id="sd-adhesion" type="button">${s.adhesion_habilitada ? 'Quitarle la habilitación' : 'Dejar que se adhiera desde su cuenta'}</button>
+            ${s.adhesion_habilitada && s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${(() => { let t = String(s.telefono).replace(/\D/g, ''); return t.length === 10 ? '549' + t : t })()}?text=${encodeURIComponent(`Hola ${String(s.nombre || '').split(' ')[0]}! Ya podés adherirte al débito automático con el 20% de descuento directo desde tu cuenta de Flora: entrá a https://floraong.ar/socios/membresias/ con tu Google, elegí tu membresía y listo. Cualquier duda escribime.`)}">Avisarle por WhatsApp</a>` : ''}
             <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
           </div>` : ''}
         </details>
@@ -365,6 +368,22 @@
       alCambiar?.(); abrir(s.id, alCambiar)
     })
     caja.querySelector('#sd-debito')?.addEventListener('click', () => modalDebito(s))
+    caja.querySelector('#sd-adhesion')?.addEventListener('click', async (e) => {
+      const dar = !s.adhesion_habilitada
+      const vedado = ['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(s.reprocann_estado)
+      if (dar && vedado) {
+        const ok = await P.confirmar('Tiene pendiente la declaración jurada de renuncia al autocultivo: aunque lo habilites, el portal no le va a dejar adherirse hasta que su declaración esté verificada. ¿Habilitarlo igual (queda listo para cuando firme)?')
+        if (!ok) return
+      }
+      e.target.disabled = true
+      const r = await fetch('/api/panel/padron/socio', {
+        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: s.id, adhesion_habilitada: dar }),
+      })
+      e.target.disabled = false
+      if (!r.ok) return
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
     caja.querySelector('#sd-no-insistir')?.addEventListener('click', async (e) => {
       e.target.disabled = true
       await fetch('/api/panel/mp/no-insistir', {
