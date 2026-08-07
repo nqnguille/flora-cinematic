@@ -32,14 +32,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
         <div class="gn-topbar-right">
         <button id="gn-cart-trigger" class="gn-cart-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Tu reserva" title="Tu reserva">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg>
           <span id="gn-cart-badge" class="gn-cart-badge" hidden></span>
         </button>
         <div class="gn-ctrls" role="group" aria-label="Control del carrusel">
-          <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
-          <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></svg><svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6l10.5-6.8z"/></svg></button>
-          <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
-          <button id="gn-fs" class="gn-ctrl gn-ctrl-fs" type="button" aria-label="Pantalla completa"><svg class="ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 0-1 1h-4"/></svg><svg class="ic-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v3a2 2 0 0 1-2 2H4M15 4v3a2 2 0 0 0 2 2h3M9 20v-3a2 2 0 0 0-2-2H4M15 20v-3a2 2 0 0 1 2-2h3"/></svg></button>
+          <button id="gn-prev" class="gn-ctrl" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button id="gn-playpause" class="gn-ctrl gn-ctrl-pp" type="button" aria-label="Pausar"><svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-lleno"><rect x="6.5" y="5" width="3.7" height="14" rx="1"/><rect x="13.8" y="5" width="3.7" height="14" rx="1"/></g></svg><svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-lleno"><path d="M8 5.2v13.6l10.5-6.8z"/></g></svg></button>
+          <button id="gn-next" class="gn-ctrl" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          <button id="gn-fs" class="gn-ctrl gn-ctrl-fs" type="button" aria-label="Pantalla completa"><svg class="ic-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 0-1 1h-4"/></svg><svg class="ic-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v3a2 2 0 0 1-2 2H4M15 4v3a2 2 0 0 0 2 2h3M9 20v-3a2 2 0 0 0-2-2H4M15 20v-3a2 2 0 0 1 2-2h3"/></svg></button>
         </div>
         <a href="/socios/cuenta/" class="gn-logout gn-cuenta">Mi cuenta</a>
         <button id="gn-logout" class="gn-logout" type="button" aria-label="Volver a la home">Salir</button>
@@ -129,14 +129,23 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
     }
 
-    const LEAF_SVG = '<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6Z" fill="currentColor"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+    // Duotono HD: silueta rellena, tallo en contorno y la nervadura como CALADO
+    // (subpath evenodd, no un trazo encima: currentColor sobre currentColor no
+    // se vería). El tallo lleva sus atributos inline porque este viewBox es de
+    // 32 y el 1.7 de .fx-traz está calibrado para 24 (32/24 ≈ 2.3).
+    const LEAF_SVG = '<svg viewBox="0 0 32 32" aria-hidden="true"><path class="fx-lleno" fill-rule="evenodd" d="M16 6C16 6 10 10 10 17C10 20.3137 12.6863 23 16 23C19.3137 23 22 20.3137 22 17C22 10 16 6 16 6ZM15.3 10.5h1.4v10h-1.4Z"/><line x1="16" y1="22" x2="16" y2="27" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" opacity=".8"/></svg>'
 
     // Formatos: FLORES = "bud con hojitas" (elegido por Guille, ronda 3 del selector):
     // nug festoneado de cálices + tricomas + sugar leaves en la base + tallito.
-    const ICON_FLOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5A2.4 2.4 0 0 1 16 7A2.4 2.4 0 0 1 17.5 11A2.4 2.4 0 0 1 16.3 15.2A2.5 2.5 0 0 1 13.2 17.8A2.2 2.2 0 0 1 9.6 17.4A2.3 2.3 0 0 1 6.8 14.6A2.4 2.4 0 0 1 6.4 10.4A2.5 2.5 0 0 1 8.6 6.6A2.2 2.2 0 0 1 12 5Z"/><path d="M8.4 17.6Q6.4 19 4.2 18.3Q5.2 16.2 7.4 15.9"/><path d="M15.6 17.6Q17.6 19 19.8 18.3Q18.8 16.2 16.6 15.9"/><path d="M12 18.6V21.2"/><circle cx="10.4" cy="9" r="0.95" fill="currentColor" stroke="none"/><circle cx="13.8" cy="8.6" r="0.95" fill="currentColor" stroke="none"/><circle cx="11.6" cy="12.2" r="0.95" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13" r="0.95" fill="currentColor" stroke="none"/></svg>'
+    // Duotono HD: el nug y sus sugar leaves en contorno, el centro y los
+    // tricomas en relleno, dos hojitas finas en el aire del tallo (como el
+    // ICO_FLOR de membresías).
+    const ICON_FLOR = '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M12 5A2.4 2.4 0 0 1 16 7A2.4 2.4 0 0 1 17.5 11A2.4 2.4 0 0 1 16.3 15.2A2.5 2.5 0 0 1 13.2 17.8A2.2 2.2 0 0 1 9.6 17.4A2.3 2.3 0 0 1 6.8 14.6A2.4 2.4 0 0 1 6.4 10.4A2.5 2.5 0 0 1 8.6 6.6A2.2 2.2 0 0 1 12 5Z"/><path d="M8.4 17.6Q6.4 19 4.2 18.3Q5.2 16.2 7.4 15.9"/><path d="M15.6 17.6Q17.6 19 19.8 18.3Q18.8 16.2 16.6 15.9"/><path d="M12 18.6V21.2"/></g><g class="fx-lleno"><circle cx="12" cy="10.9" r="2.1"/><circle cx="8.9" cy="8.7" r="0.95"/><circle cx="15.1" cy="8.5" r="0.95"/><circle cx="8.7" cy="13.1" r="0.95"/><circle cx="15.3" cy="13.3" r="0.95"/></g><g class="fx-fino"><path d="M12 19.9l-1.5-.9M12 19.9l1.5-.9"/></g></svg>'
     // Mismo diseño de cono, redibujado a caja plena y MÁS LARGO (pedido de Guille):
     // ocupa todo el alto del viewBox, sin necesitar compensación de escala en CSS.
-    const ICON_PREROLL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.4 21.4 9.1 7Q9 5.9 9.9 5.5L14.1 5.5Q15 5.9 14.9 7L13.6 21.4Q13.5 22.3 12 22.3Q10.5 22.3 10.4 21.4Z"/><path d="M10.6 18.5Q12 17.8 13.4 18.5"/><path d="M9.9 5.5Q12 3.2 14.1 5.5" fill="currentColor"/></svg>'
+    // Duotono HD: el cuerpo del cono en contorno, la punta torcida rellena y
+    // dos hilos finos de humo en el aire de arriba.
+    const ICON_PREROLL = '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M10.4 21.4 9.1 7Q9 5.9 9.9 5.5L14.1 5.5Q15 5.9 14.9 7L13.6 21.4Q13.5 22.3 12 22.3Q10.5 22.3 10.4 21.4Z"/><path d="M10.6 18.5Q12 17.8 13.4 18.5"/></g><g class="fx-lleno"><path d="M9.9 5.5Q12 3.2 14.1 5.5Z"/></g><g class="fx-fino"><path d="M10.6 2.9 10.1 1.7M13.4 2.9 13.9 1.7"/></g></svg>'
     const FORMATO = {
       flor: { label: 'Flores', svg: ICON_FLOR },
       preroll: { label: 'Preroll', svg: ICON_PREROLL },
@@ -549,7 +558,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <button class="gn-dd-toggle" type="button">
           <span class="gn-dd-name">${DIM_LABEL[dim]}</span>
           <span class="gn-dd-count"></span>
-          <svg class="gn-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <svg class="gn-dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="gn-dd-panel" hidden>${allRow}${opts}</div>`
       const toggle = el.querySelector('.gn-dd-toggle')
@@ -1328,6 +1337,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
      un bug del compositor de Chrome en desktop que pinta la pantalla de negro
      al repintar — ya ennegreció el admin. La carta vive en la TV: fuera. */
   body::after { display: none !important; }
+
+  /* Iconos duotono HD — el idioma de membresías: continente en contorno,
+     contenido en relleno, detalle fino solo en el aire del dibujo. */
+  .fx-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }
+  .fx-lleno { fill: currentColor; stroke: none; opacity: 0.95; }
+  .fx-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
 
   .gn-main {
     --gn-bg:      #130d1c;  /* violeta casi negro (deriva del #381F56) */

@@ -81,7 +81,7 @@ const breadcrumbSchema = {
           <li><a href="https://consultorio.floraong.ar/">Consultorio</a></li>
         <li>
           <a href="/socios/" class="nav-socios">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
             Acceso socios
           </a>
         </li>
@@ -90,15 +90,15 @@ const breadcrumbSchema = {
             <img class="nav-hola-foto" data-socio-foto alt="" width="22" height="22" hidden />
             <span>¡Hola, <b data-socio-nombre></b>!</span>
           </a>
-          <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+          <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
         </li>
       </ul>
 
       <!-- Mobile: Acceso socios compacto, siempre visible -->
       <a href="/socios/cuenta/" class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</a>
-      <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+      <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
       <a href="/socios/" class="nav-socios nav-socios--mobile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
         Acceso socios
       </a>
 
@@ -145,7 +145,7 @@ const breadcrumbSchema = {
           <li class="drawer-socio-only"><button type="button" class="drawer-logout nav-logout-action">Cerrar sesión</button></li>
           <li>
             <a href="/socios/" class="drawer-cta drawer-cta--socios">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
               Acceso socios
             </a>
           </li>
@@ -202,4 +202,15 @@ const breadcrumbSchema = {
   .td-legal :global(p:last-child) { margin-bottom: 0; }
   .td-legal :global(strong) { color: rgba(28, 22, 38, 0.85); font-weight: 700; }
   .td-legal :global(a) { color: var(--fl-green, #148A91); font-weight: 600; text-underline-offset: 2px; }
+</style>
+
+<style is:global>
+  /* ── Idioma "Duotono HD" de los iconos de Flora ──
+     Definido una sola vez acá para el shell y las tres páginas de catálogo
+     que renderizan adentro (aceites / cremas / extracciones). Va is:global
+     porque los iconos de extracciones entran por set:html y no reciben el
+     atributo de alcance de Astro. Mismas reglas que en la home. */
+  .fx-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+  .fx-lleno { fill: currentColor; stroke: none; opacity: .95; }
+  .fx-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: .5; }
 </style>

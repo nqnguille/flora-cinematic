@@ -59,7 +59,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             <span class="cu-chip" id="cu-rp-chip">…</span>
             <span class="cu-rp-vence" id="cu-rp-vence"></span>
           </div>
-          <a class="cu-cert" id="cu-cert" href="/api/socios/certificado" hidden>📄 Descargar mi certificado (PDF)<small>Tu certificado oficial, siempre a mano.</small></a>
+          <a class="cu-cert" id="cu-cert" href="/api/socios/certificado" hidden><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M6.2 2.8h7.6l4.4 4.4v13a1.6 1.6 0 0 1-1.6 1.6H6.2a1.6 1.6 0 0 1-1.6-1.6V4.4a1.6 1.6 0 0 1 1.6-1.6Z"/></g><g class="fx-lleno"><path d="M13.6 2.8v4.6h4.6z"/><rect x="7.4" y="11.6" width="9.2" height="1.9" rx=".95"/><rect x="7.4" y="15.2" width="6.2" height="1.9" rx=".95"/></g></svg> Descargar mi certificado (PDF)<small>Tu certificado oficial, siempre a mano.</small></a>
           <a class="cu-cert cu-rp-turno" id="cu-rp-turno" href="https://consultorio.floraong.ar/?agendar=1" hidden></a>
           <a class="cu-rp-ir" href="/socios/reprocann/">Ver el trámite completo →</a>
         </div>
@@ -122,7 +122,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
             ${badge(p.estado)}
           </div>
           <p class="cu-pedido-items">${lineas(p)}</p>
-          ${p.nota ? `<p class="cu-pedido-nota">📝 ${esc(p.nota)}</p>` : ''}
+          ${p.nota ? `<p class="cu-pedido-nota"><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="4.2" y="3" width="13.6" height="18" rx="2.2"/></g><g class="fx-lleno"><rect x="7" y="7.6" width="7" height="1.7" rx=".85"/><rect x="7" y="11" width="5.4" height="1.7" rx=".85"/><path d="M13.7 15.2l2.1 2.1 5.6-5.6-2.1-2.1z"/><path d="M12.6 18.4l1.1-3.2 2.1 2.1z"/></g></svg> ${esc(p.nota)}</p>` : ''}
         </article>`
     }
 
@@ -153,7 +153,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
               </div>
             </div>`).join('')}
           ${conPrecio ? `<div class="cu-ed-total"><span>Total estimado${hayFlores ? ' (productos)' : ''}</span><b>$ ${conPrecio.toLocaleString('es-AR')}</b></div>` : ''}
-          ${p.nota ? `<p class="cu-pedido-nota">📝 ${esc(p.nota)}</p>` : ''}
+          ${p.nota ? `<p class="cu-pedido-nota"><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="4.2" y="3" width="13.6" height="18" rx="2.2"/></g><g class="fx-lleno"><rect x="7" y="7.6" width="7" height="1.7" rx=".85"/><rect x="7" y="11" width="5.4" height="1.7" rx=".85"/><path d="M13.7 15.2l2.1 2.1 5.6-5.6-2.1-2.1z"/><path d="M12.6 18.4l1.1-3.2 2.1 2.1z"/></g></svg> ${esc(p.nota)}</p>` : ''}
           <div class="cu-ed-acciones">
             <button class="cu-ed-btn is-borrar" id="cu-ed-cancelar" type="button">Cancelar reserva</button>
             <button class="cu-ed-btn is-guardar" id="cu-ed-guardar" type="button" disabled>Guardar cambios</button>
@@ -272,10 +272,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           const dias = d.vence ? Math.floor((Date.parse(d.vence) - Date.now()) / 86400000) : null
           const faltaEntrevista = ['sin_iniciar', 'esperando_codigo', 'revisar', 'codigo_listo'].includes(d.estado)
           if (d.estado === 'vencido' || (dias != null && dias <= 60)) {
-            turno.innerHTML = '📅 Agendar la consulta de renovación<small>Tu certificado ' + (dias != null && dias < 0 ? 'venció' : 'está por vencer') + ': se renueva con una consulta.</small>'
+            turno.innerHTML = '<svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="3.4" y="4.8" width="17.2" height="16" rx="2.4"/><path d="M8 2.4v4M16 2.4v4"/></g><g class="fx-lleno"><rect x="4.4" y="5.8" width="15.2" height="3.6"/><circle cx="8.4" cy="14" r="1.4"/><rect x="11.6" y="12.9" width="5.4" height="2.2" rx="1.1"/><rect x="7" y="16.6" width="10" height="2.2" rx="1.1"/></g></svg> Agendar la consulta de renovación<small>Tu certificado ' + (dias != null && dias < 0 ? 'venció' : 'está por vencer') + ': se renueva con una consulta.</small>'
             turno.hidden = false
           } else if (faltaEntrevista) {
-            turno.innerHTML = '📅 Agendar tu entrevista médica<small>Es el paso que falta para que salga tu REPROCANN.</small>'
+            turno.innerHTML = '<svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="3.4" y="4.8" width="17.2" height="16" rx="2.4"/><path d="M8 2.4v4M16 2.4v4"/></g><g class="fx-lleno"><rect x="4.4" y="5.8" width="15.2" height="3.6"/><circle cx="8.4" cy="14" r="1.4"/><rect x="11.6" y="12.9" width="5.4" height="2.2" rx="1.1"/><rect x="7" y="16.6" width="10" height="2.2" rx="1.1"/></g></svg> Agendar tu entrevista médica<small>Es el paso que falta para que salga tu REPROCANN.</small>'
             turno.hidden = false
           }
         }
@@ -398,6 +398,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 
   <style is:global>
     html, body { background-color: #130d1c; }
+    /* Iconos duotono HD — el idioma de membresías: continente en contorno,
+       contenido en relleno, detalle fino solo en el aire del dibujo. */
+    .fx-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }
+    .fx-lleno { fill: currentColor; stroke: none; opacity: 0.95; }
+    .fx-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
+    .fx-ico { width: 15px; height: 15px; vertical-align: -2px; }
     .cu-perfil { display: flex; align-items: center; gap: 18px; margin: 18px 0 30px; }
     .cu-foto { border-radius: 50%; border: 2px solid rgba(183, 157, 230, 0.4); }
     .cu-foto[hidden] { display: none; }

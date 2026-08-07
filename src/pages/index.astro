@@ -329,7 +329,7 @@ const websiteSchema = {
       <li><a href="https://consultorio.floraong.ar/">Consultorio</a></li>
       <li>
         <a href="/socios/" class="nav-socios">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
           Acceso socios
         </a>
       </li>
@@ -338,15 +338,15 @@ const websiteSchema = {
           <img class="nav-hola-foto" data-socio-foto alt="" width="22" height="22" hidden />
           <span>¡Hola, <b data-socio-nombre></b>!</span>
         </a>
-        <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+        <a href="/socios/carta/" class="nav-cta nav-cta--carta"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
       </li>
     </ul>
 
     <!-- Mobile: Acceso socios compacto, siempre visible -->
     <a href="/socios/cuenta/" class="nav-hola nav-hola--mobile" data-socio-hola hidden>¡Hola, <b data-socio-nombre></b>!</a>
-    <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px"><circle cx="9" cy="20" r="1.6"/><circle cx="17.5" cy="20" r="1.6"/><path d="M3 3.5h2.2l2.4 12h10.2l2.2-8.5H6"/></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
+    <a href="/socios/carta/" class="nav-cta nav-cta--mobile nav-cta--carta"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><g class="fx-traz"><path d="M2.6 3.4h2.4l2.1 10.8h11.3l2-7.6H6.1"/></g><g class="fx-lleno"><circle cx="9" cy="19" r="2"/><circle cx="16.6" cy="19" r="2"/><rect x="8" y="8.4" width="8.6" height="3.6" rx="1.2"/></g></svg> Carrito <span class="nav-carrito-n" data-carrito-n hidden></span></a>
     <a href="/socios/" class="nav-socios nav-socios--mobile">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
       Acceso socios
     </a>
 
@@ -398,7 +398,7 @@ const websiteSchema = {
         <li class="drawer-socio-only"><button type="button" class="drawer-logout nav-logout-action">Cerrar sesión</button></li>
         <li>
           <a href="/socios/" class="drawer-cta drawer-cta--socios">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4"/></g><g class="fx-lleno"><circle cx="12" cy="14.4" r="1.8"/><rect x="11.2" y="15.4" width="1.6" height="3" rx=".8"/></g></svg>
             Acceso socios
           </a>
         </li>
@@ -516,7 +516,7 @@ const websiteSchema = {
                   <span class="fl-perfil-card-title">{p.title}</span>
                   <span class="fl-perfil-card-desc">{p.desc}</span>
                   <button type="button" class="fl-perfil-card-info" data-perfil-open={p.id} data-cta={`Perfil · ${p.tag} · ver info`}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><circle cx="12" cy="12" r="9"/></g><g class="fx-lleno"><circle cx="12" cy="7.8" r="1.3"/><rect x="10.9" y="10.4" width="2.2" height="6.8" rx="1.1"/></g></svg>
                     + info
                   </button>
                 </div>
@@ -559,7 +559,7 @@ const websiteSchema = {
 
         <div class="fl-perfil-modal-cta-wrap">
           <a class="fl-perfil-modal-cta" id="fl-perfil-modal-cta" href="#" target="_blank" rel="noopener noreferrer" data-cta="Perfil modal · WhatsApp">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.477-.911zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
             <span id="fl-perfil-modal-cta-label">Hablar con Flora sobre este caso</span>
           </a>
           <a class="fl-perfil-modal-cta fl-perfil-modal-cta--turno" href="https://consultorio.floraong.ar/?agendar=1" data-cta="Perfil modal · agendar turno">Agendar la entrevista médica</a>
@@ -568,7 +568,7 @@ const websiteSchema = {
 
         <div class="fl-perfil-modal-note" role="note">
           <span class="fl-perfil-modal-note-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></g><g class="fx-lleno"><rect x="10.9" y="8.8" width="2.2" height="5.8" rx="1.1"/><circle cx="12" cy="17.2" r="1.3"/></g></svg>
             Lo que no garantizamos
           </span>
           <p id="fl-perfil-modal-nopromete"></p>
@@ -721,7 +721,7 @@ const websiteSchema = {
         <a class="fl-panel fl-panel-1" href="/aceites/" role="listitem" aria-label="Aceites, vía sublingual">
           <img class="fl-panel-img" src="/img/panel-aceites.jpg" alt="" loading="lazy" width="690" height="1226" />
           <span class="fl-panel-route" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3c-3.5 4.8-6 8.3-6 11.5A6 6 0 0 0 12 20.5a6 6 0 0 0 6-6C18 11.3 15.5 7.8 12 3z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M12 3c-3.5 4.8-6 8.3-6 11.5A6 6 0 0 0 12 20.5a6 6 0 0 0 6-6C18 11.3 15.5 7.8 12 3z"/></g><g class="fx-lleno"><path d="M12 10.5c-1.7 2.3-2.9 4-2.9 5.5a2.9 2.9 0 0 0 5.8 0c0-1.5-1.2-3.2-2.9-5.5z"/></g></svg>
             Sublingual
           </span>
           <span class="fl-panel-body">
@@ -734,7 +734,7 @@ const websiteSchema = {
         <a class="fl-panel fl-panel-2" href="/cremas/" role="listitem" aria-label="Cremas, vía tópica">
           <img class="fl-panel-img" src="/img/panel-cremas.jpg" alt="" loading="lazy" width="947" height="1434" />
           <span class="fl-panel-route" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 12.5V5a1.4 1.4 0 0 1 2.8 0v6"/><path d="M10.3 10.8V3.8a1.4 1.4 0 0 1 2.8 0v7.4"/><path d="M13.1 11V5.2a1.4 1.4 0 0 1 2.8 0v7.3"/><path d="M15.9 12.2V8.6a1.4 1.4 0 0 1 2.8 0v5.9a6.5 6.5 0 0 1-6.5 6.5h-.7a6.5 6.5 0 0 1-4.85-2.17l-2.9-3.23a1.3 1.3 0 0 1 1.9-1.77l1.65 1.62"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16"/><path d="m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path d="m2 15 6 6"/></g><g class="fx-lleno"><path d="M16 2.2c-1.6 2.2-2.7 3.7-2.7 5.2a2.7 2.7 0 0 0 5.4 0c0-1.5-1.1-3-2.7-5.2z"/></g></svg>
             Tópica
           </span>
           <span class="fl-panel-body">
@@ -747,7 +747,7 @@ const websiteSchema = {
         <a class="fl-panel fl-panel-3" href="/extracciones/" role="listitem" aria-label="Extracciones, vía inhalatoria">
           <img class="fl-panel-img" src="/img/panel-extracciones.jpg" alt="" loading="lazy" width="765" height="1360" />
           <span class="fl-panel-route" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.2-3.7"/><path d="M3 12.5h15a2.5 2.5 0 1 1-2.2 3.7"/><path d="M3 17h9"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.2-3.7"/><path d="M3 12.5h15a2.5 2.5 0 1 1-2.2 3.7"/><path d="M3 17h9"/></g><g class="fx-lleno"><path d="M21.4 2.6c-2.1.1-3.4 1.1-3.7 2.9.7.5 1.6.5 2.4 0 .9-.6 1.4-1.6 1.3-2.9z"/><path d="M19.9 18.3c-2.1.1-3.4 1.1-3.7 2.9.7.5 1.6.5 2.4 0 .9-.6 1.4-1.6 1.3-2.9z"/></g></svg>
             Inhalatoria
           </span>
           <span class="fl-panel-body">
@@ -760,7 +760,7 @@ const websiteSchema = {
         <a class="fl-panel fl-panel-4" href="#acceso" role="listitem" aria-label="Flores, vía inhalatoria">
           <img class="fl-panel-img" src="/img/panel-flores.jpg" alt="" loading="lazy" width="941" height="1672" />
           <span class="fl-panel-route" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.2-3.7"/><path d="M3 12.5h15a2.5 2.5 0 1 1-2.2 3.7"/><path d="M3 17h9"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M3 8h11.5a2.5 2.5 0 1 0-2.2-3.7"/><path d="M3 12.5h15a2.5 2.5 0 1 1-2.2 3.7"/><path d="M3 17h9"/></g><g class="fx-lleno"><path d="M21.4 2.6c-2.1.1-3.4 1.1-3.7 2.9.7.5 1.6.5 2.4 0 .9-.6 1.4-1.6 1.3-2.9z"/><path d="M19.9 18.3c-2.1.1-3.4 1.1-3.7 2.9.7.5 1.6.5 2.4 0 .9-.6 1.4-1.6 1.3-2.9z"/></g></svg>
             Inhalatoria
           </span>
           <span class="fl-panel-body">
@@ -857,11 +857,11 @@ const websiteSchema = {
 
                 <div class="fl-oil-actions">
                   <a class="fl-oil-btn" href={a.href} target="_blank" rel="noopener noreferrer">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 13.8 3.5 12.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20.2 12 20.2zm4.5-5.8c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.477-.911zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
                     Consultar por este aceite
                   </a>
                   <a class="fl-oil-download" href={a.pdf} download>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 21V5a2 2 0 0 1 2-2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M12 11v5"/><path d="m9.5 14 2.5 2.5 2.5-2.5"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><path d="M6.2 2.8h7.6l4.4 4.4v13a1.6 1.6 0 0 1-1.6 1.6H6.2a1.6 1.6 0 0 1-1.6-1.6V4.4a1.6 1.6 0 0 1 1.6-1.6Z"/></g><g class="fx-lleno"><path d="M13.6 2.8v4.6h4.6z"/><rect x="7.4" y="9.2" width="5" height="1.9" rx=".95"/><path d="M10.9 12.6h2.2v3.2h2.1L12 19.4l-3.2-3.6h2.1z"/></g></svg>
                     Descargar análisis de cromatografía
                   </a>
                 </div>
@@ -1311,3 +1311,15 @@ const websiteSchema = {
     })()
   </script>
 </Layout>
+
+<style is:global>
+  /* ── Idioma "Duotono HD" de los iconos de Flora ──
+     Tres capas, siempre en currentColor sobre viewBox 24x24:
+     el continente en contorno (fx-traz), el contenido en relleno (fx-lleno)
+     y el detalle fino (fx-fino) solo en iconos que se ven a 24px o más.
+     Va is:global porque el mismo idioma lo usan SVGs que se inyectan por JS
+     (no reciben el atributo de alcance de Astro). */
+  .fx-traz { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+  .fx-lleno { fill: currentColor; stroke: none; opacity: .95; }
+  .fx-fino { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: .5; }
+</style>
