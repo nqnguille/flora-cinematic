@@ -222,7 +222,8 @@
         ${P.puede('reprocann_editar') ? `
         <details ${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(s.reprocann_estado) ? 'open' : ''}><summary>Declaración jurada</summary>
           <p class="so-help" style="margin:8px 0 0">Para vincularse a Flora tiene que renunciar al autocultivo: las modalidades
-            son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.</p>
+            son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.
+            El débito recién se habilita con la declaración firmada y verificada.</p>
           <div id="sd-ddjj" style="margin-top:10px"><div style="color:var(--muted);font-size:12px">⏳ buscando…</div></div>
         </details>` : ''}
 
@@ -437,35 +438,50 @@
     const faltaDni = !d.socio.documento
     const dom = [d.socio.domicilio, d.socio.localidad, d.socio.provincia].filter(Boolean).join(', ')
 
+    // El chip cuenta en qué momento del proceso está: la firma del socio
+    // primero, la verificación del club después. Recién verificada habilita.
+    const CHIP = {
+      generada: ['tag-deb', 'esperando la firma'],
+      firmada: ['tag-auto', 'firmada · falta verificar'],
+      verificada: ['tag-ok', 'verificada ✓'],
+    }
+    const chip = dec ? (CHIP[dec.estado] || CHIP.generada) : null
+    const verificada = dec && dec.estado === 'verificada'
+
     zona.innerHTML = `
-      ${dec ? `<div class="fila" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
-        <span class="tag ${dec.estado === 'firmada' ? 'tag-ok' : 'tag-deb'}">${dec.estado === 'firmada' ? 'firmada' : 'esperando la firma'}</span>
-        <span style="font-size:12px;color:var(--muted)">generada ${fFecha(dec.generada)}${dec.generada_por ? ' por ' + P.esc(dec.generada_por) : ''}${dec.firmada ? ' · firmada ' + fFecha(dec.firmada) : ''}</span>
+      ${dec ? `<div style="margin-bottom:10px">
+        <div class="fila" style="flex-wrap:wrap;gap:6px">
+          <span class="tag ${chip[0]}">${chip[1]}</span>
+          <span style="font-size:12px;color:var(--muted)">generada ${fFecha(dec.generada)}${dec.generada_por ? ' por ' + P.esc(dec.generada_por) : ''}${dec.firmada ? ' · firmada ' + fFecha(dec.firmada) : ''}${verificada && dec.verificada ? ' · verificada ' + fFecha(dec.verificada) + (dec.verificada_por ? ' por ' + P.esc(dec.verificada_por) : '') : ''}</span>
+        </div>
+        ${dec.firma_texto ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">firmada en el portal como «${P.esc(dec.firma_texto)}»</div>` : ''}
       </div>` : ''}
 
       ${faltaDni ? '<div class="msg err" style="margin-bottom:6px">Cargale el DNI en Contacto: sin eso la declaración no sirve.</div>' : ''}
       ${!dom ? '<div class="msg" style="margin-bottom:6px;color:var(--ink2)">Completá el domicilio acá abajo o en Contacto.</div>' : ''}
 
       <div class="campo"><label class="lb">Domicilio para la declaración</label>
-        <input class="input" id="sd-dj-dom" placeholder="Calle y número" value="${P.esc(d.socio.domicilio || '')}" /></div>
+        <input class="input" id="sd-dj-dom" placeholder="Calle y número" value="${P.esc(d.socio.domicilio || d.sugerido?.domicilio || '')}" /></div>
       <div class="grid2" style="gap:10px">
         <div class="campo"><label class="lb">Localidad</label>
-          <input class="input" id="sd-dj-loc" value="${P.esc(d.socio.localidad || '')}" /></div>
+          <input class="input" id="sd-dj-loc" value="${P.esc(d.socio.localidad || d.sugerido?.localidad || '')}" /></div>
         <div class="campo"><label class="lb">Provincia</label>
-          <input class="input" id="sd-dj-prov" value="${P.esc(d.socio.provincia || '')}" /></div>
+          <input class="input" id="sd-dj-prov" value="${P.esc(d.socio.provincia || d.sugerido?.provincia || '')}" /></div>
       </div>
       <div class="campo"><label class="lb">Diagnóstico que funda la prescripción</label>
-        <input class="input" id="sd-dj-diag" maxlength="300" placeholder="Tal cual va en el texto: «…acredita la existencia de ___»" value="${P.esc(dec?.nota || '')}" /></div>
+        <input class="input" id="sd-dj-diag" maxlength="300" placeholder="Tal cual va en el texto: «…acredita la existencia de ___»" value="${P.esc(dec?.nota || d.sugerido?.diagnostico || '')}" /></div>
+      ${d.sugerido?.diagnostico && !dec?.nota ? '<p class="so-help" style="margin:2px 0 0;color:var(--ok,#7c6)">Leído del PDF del REPROCANN subido: revisalo antes de generar.</p>' : ''}
       <p class="so-help" style="margin:2px 0 0">Lo escribe ${P.esc(d.plantilla.medico)} (${P.esc(d.plantilla.matricula)}), que es quien firma la prescripción. No queda guardado como dato clínico del padrón.</p>
 
       <div class="fila" style="margin-top:10px;flex-wrap:wrap">
-        ${dec && s.telefono ? `<a class="btn" href="${P.esc(waDdjj(s))}" target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito. El PDF lo adjuntás vos.">WhatsApp para mandarla</a>` : ''}
+        ${dec && !verificada && s.telefono ? `<a class="btn" href="${P.esc(waDdjj(s))}" target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito. El PDF lo adjuntás vos.">WhatsApp para mandarla</a>` : ''}
         ${dec ? '<a class="btn" id="sd-dj-ver" href="/api/panel/declaracion?socio_id=' + s.id + '&ver=1" target="_blank" rel="noopener">Ver / imprimir</a>' : ''}
-        ${dec && dec.estado === 'firmada' ? '<a class="btn" href="/api/panel/declaracion?declaracion_id=' + dec.id + '&firmada=1" target="_blank" rel="noopener">Ver la firmada</a>' : ''}
+        ${dec && ['firmada', 'verificada'].includes(dec.estado) ? '<a class="btn" href="/api/panel/declaracion?declaracion_id=' + dec.id + '&firmada=1" target="_blank" rel="noopener">Ver la firmada</a>' : ''}
         <span class="pn-sp"></span>
-        ${dec && dec.estado !== 'firmada' ? '<button class="btn btn-peligro" id="sd-dj-anular" type="button">Anular</button>' : ''}
-        ${dec ? '<button class="btn" id="sd-dj-adjuntar" type="button">Adjuntar firmada</button>' : ''}
-        <button class="btn btn-pri" id="sd-dj-generar" type="button" ${faltaDni ? 'disabled' : ''}>${dec ? 'Generar de nuevo' : 'Generar declaración'}</button>
+        ${dec && dec.estado === 'generada' ? '<button class="btn btn-peligro" id="sd-dj-anular" type="button">Anular</button>' : ''}
+        ${dec && !verificada ? '<button class="btn" id="sd-dj-adjuntar" type="button">Adjuntar firmada</button>' : ''}
+        ${!dec || !verificada ? `<button class="btn btn-pri" id="sd-dj-generar" type="button" ${faltaDni ? 'disabled' : ''}>${dec ? 'Generar de nuevo' : 'Generar declaración'}</button>` : ''}
+        ${dec && dec.estado === 'firmada' && P.puede('reprocann_editar') ? '<button class="btn btn-pri" id="sd-dj-verificar" type="button">Verificar y habilitar</button>' : ''}
         <input type="file" id="sd-dj-file" accept="application/pdf,image/jpeg,image/png" hidden />
       </div>
       <p class="msg" id="sd-msg-dj" style="margin:6px 0 0"></p>`
@@ -523,6 +539,22 @@
         method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ declaracion_id: dec.id }),
       })
+      alCambiar?.(); abrir(s.id, alCambiar)
+    })
+
+    // Verificar: el club revisa la firmada y la da por buena. El backend pasa
+    // al socio a esperando_codigo (sale del embudo de autocultivo) y recién
+    // ahí se le puede habilitar el débito.
+    zona.querySelector('#sd-dj-verificar')?.addEventListener('click', async (e) => {
+      if (!(await P.confirmar('Vas a dar por buena la DDJJ firmada: el socio deja el autocultivo y sigue el trámite normal. ¿Confirmás?', 'Sí, verificar'))) return
+      e.target.disabled = true
+      decir('⏳ verificando…')
+      const r = await fetch('/api/panel/declaracion', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ declaracion_id: dec.id, verificar: true }),
+      })
+      const res = await r.json().catch(() => ({}))
+      if (!r.ok) { e.target.disabled = false; decir('✗ ' + (res.error || 'no se pudo'), 'err'); return }
       alCambiar?.(); abrir(s.id, alCambiar)
     })
   }

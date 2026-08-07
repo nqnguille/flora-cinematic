@@ -16,6 +16,7 @@
 //   POST   {declaracion_id, archivo_base64, archivo_tipo} → adjunta la firmada
 //   DELETE {declaracion_id}         → anula
 import { requireCap } from './_rol';
+import { leerCertificado } from './_certpdf';
 
 interface Env {
   DB: D1Database;
@@ -52,7 +53,7 @@ const PLANTILLA_DEFAULT = {
   cierre: 'En prueba de conformidad, firmo la presente declaración jurada en la ciudad de {ciudad}, a los {dia} días del mes de {mes} del año {anio}.',
 };
 
-type Plantilla = typeof PLANTILLA_DEFAULT;
+export type Plantilla = typeof PLANTILLA_DEFAULT;
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -61,12 +62,15 @@ function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
-function esc(s: unknown): string {
+export function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 }
 
-async function leerPlantilla(env: Env): Promise<Plantilla> {
+// El tipo del parámetro es solo lo que la función usa (el KV de la plantilla):
+// así también la puede llamar el endpoint del socio (../socios/ddjj.ts), cuyo
+// Env no es idéntico al del panel.
+export async function leerPlantilla(env: { GENETICAS: KVNamespace }): Promise<Plantilla> {
   try {
     const guardada = await env.GENETICAS.get('ddjj_plantilla', 'json');
     if (guardada && typeof guardada === 'object') return { ...PLANTILLA_DEFAULT, ...(guardada as object) } as Plantilla;
@@ -74,19 +78,19 @@ async function leerPlantilla(env: Env): Promise<Plantilla> {
   return PLANTILLA_DEFAULT;
 }
 
-async function sha256(texto: string): Promise<string> {
+export async function sha256(texto: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-interface DatosSocio {
+export interface DatosSocio {
   nombre: string; documento?: string | null;
   domicilio?: string | null; localidad?: string | null; provincia?: string | null;
 }
 
 // Arma el texto final. Devuelve los párrafos ya resueltos: es lo que se
 // imprime y lo que se hashea, así el hash prueba exactamente qué firmó.
-function armarTexto(p: Plantilla, s: DatosSocio, diagnostico: string, fecha: Date) {
+export function armarTexto(p: Plantilla, s: DatosSocio, diagnostico: string, fecha: Date) {
   const domicilioCompleto = [s.domicilio, s.localidad, s.provincia].filter(Boolean).join(', ');
   const vars: Record<string, string> = {
     nombre: s.nombre || '',
@@ -110,7 +114,11 @@ function armarTexto(p: Plantilla, s: DatosSocio, diagnostico: string, fecha: Dat
   };
 }
 
-function documentoHtml(p: Plantilla, texto: ReturnType<typeof armarTexto>, hash: string): string {
+// `firmaHtml` (opcional): cuando el socio firma electrónicamente en el portal,
+// el bloque de firma reemplaza los renglones punteados de la firma manuscrita
+// y la barra deja de pedir que se imprima para firmar. Sin ese parámetro, el
+// documento es exactamente el de siempre (el que genera e imprime el panel).
+export function documentoHtml(p: Plantilla, texto: ReturnType<typeof armarTexto>, hash: string, firmaHtml?: string): string {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8" />
 <title>Declaración jurada · ${esc(texto.vars.nombre)}</title>
 <style>
@@ -122,22 +130,25 @@ function documentoHtml(p: Plantilla, texto: ReturnType<typeof armarTexto>, hash:
   p { margin: 0 0 13px; text-align: justify; }
   .cierre { margin-top: 24px; }
   .firmas { margin-top: 52px; line-height: 2.4; }
+  .firma-e { margin-top: 44px; border: 1.5px solid #381f56; border-radius: 6px; padding: 14px 18px; font-size: 9.5pt; line-height: 1.75; page-break-inside: avoid; }
+  .firma-e .fe-tit { font-weight: bold; letter-spacing: .08em; margin-bottom: 8px; }
+  .firma-e .fe-hash { font-family: ui-monospace, monospace; font-size: 7pt; color: #555; word-break: break-all; margin-top: 6px; }
   .pie { margin-top: 34px; padding-top: 8px; border-top: 1px solid #ccc; font-size: 7.5pt; color: #888; font-family: ui-monospace, monospace; }
   .barra { position: sticky; top: 0; background: #f4f2f7; border-bottom: 1px solid #ddd; padding: 10px 16px; text-align: center; font-family: system-ui, sans-serif; font-size: 13px; }
   .barra button { font: inherit; padding: 6px 14px; border: 1px solid #381f56; background: #381f56; color: #fff; border-radius: 3px; cursor: pointer; }
   @media print { .barra { display: none; } .hoja { padding: 0; } }
 </style></head><body>
-<div class="barra">Imprimí o guardá como PDF, y hacela firmar. <button onclick="window.print()" type="button">Imprimir</button></div>
+<div class="barra">${firmaHtml ? 'Documento firmado electrónicamente.' : 'Imprimí o guardá como PDF, y hacela firmar.'} <button onclick="window.print()" type="button">Imprimir</button></div>
 <div class="hoja">
   <h1>${esc(p.titulo)}</h1>
   <p class="sub">${esc(p.subtitulo)}</p>
   ${texto.parrafos.map((t) => `<p>${esc(t)}</p>`).join('\n  ')}
   <p class="cierre">${esc(texto.cierre)}</p>
-  <div class="firmas">
+  ${firmaHtml || `<div class="firmas">
     Firma del paciente: ......................................................<br />
     Aclaración: ..............................................................<br />
     DNI: .....................................................................
-  </div>
+  </div>`}
   <p class="pie">${esc(p.entidad)} · CUIT ${esc(p.cuit)} · plantilla ${esc(p.version)} · ${esc(hash.slice(0, 16))}</p>
 </div></body></html>`;
 }
@@ -234,6 +245,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   ).bind(socioId).first();
   const p = await leerPlantilla(env);
 
+  // Si el socio tiene su certificado REPROCANN subido y la declaración todavía
+  // se puede (re)generar, el PDF habla por él: se leen de ahí el diagnóstico
+  // oficial (el presentado al Ministerio) y los datos que falten. Solo
+  // sugerencias: el panel las muestra, quien genera decide.
+  let sugerido: Record<string, string> | null = null;
+  const decEstado = dec ? String((dec as Record<string, unknown>).estado) : '';
+  if (!dec || decEstado === 'generada' || decEstado === 'anulada') {
+    const pdf = await env.CERTIFICADOS.get(`cert:${socioId}`, 'arrayBuffer');
+    if (pdf) {
+      const datos = await leerCertificado(pdf);
+      const { texto: _t, ...resto } = datos;
+      if (Object.keys(resto).length) sugerido = resto as Record<string, string>;
+    }
+  }
+
   return json({
     ok: true,
     socio: {
@@ -242,6 +268,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       reprocann_estado: socio.reprocann_estado,
     },
     declaracion: dec || null,
+    sugerido,
     plantilla: { version: p.version, medico: p.medico, matricula: p.matricula, entidad: p.entidad },
   });
 };

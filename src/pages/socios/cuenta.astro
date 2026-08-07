@@ -109,6 +109,15 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         </div>
       </section>
 
+      <!-- DECLARACIÓN JURADA: la renuncia al autocultivo que el socio firma
+           acá mismo, en el portal. Solo aparece si /api/socios/ddjj dice que
+           le aplica (autocultivadores en conversión); para el resto del
+           padrón la sección no existe. -->
+      <section class="cu-sec" id="cu-dj-sec" hidden>
+        <h2 class="cu-sec-title">Declaración jurada</h2>
+        <div class="cu-saldo-card" id="cu-dj-card"></div>
+      </section>
+
       <section class="cu-sec">
         <h2 class="cu-sec-title">Reserva en curso</h2>
         <div id="cu-activo" class="cu-lista"></div>
@@ -135,6 +144,38 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         <h2 class="cu-sec-title">Categorías</h2>
         <SociosGateway class="cu-gw" />
       </section>
+    </div>
+
+    <!-- Modal de la declaración jurada: el documento completo scrolleable,
+         los dos campos de la firma y el checkbox. Mismo lenguaje de overlay
+         que el modal de términos (SociosTos). -->
+    <div id="cu-dj-modal" class="cu-dj-modal" hidden data-lenis-prevent>
+      <div class="cu-dj-modal-card" role="dialog" aria-modal="true" aria-labelledby="cu-dj-title">
+        <h2 id="cu-dj-title" class="cu-dj-title">Declaración <em>jurada</em></h2>
+        <p class="cu-dj-meta" id="cu-dj-meta"></p>
+        <!-- El marco (fondo, borde, radius) y el scroll van en DOS divs a
+             propósito: una capa de scroll compuesta CON fondo y radius adentro
+             de un modal con backdrop-filter se renderiza invertida en Chrome
+             (misma familia de bugs de compositor que el grano de la casa). El
+             scroll pelado adentro, como el cuerpo del modal de términos, no
+             dispara el bug. -->
+        <div class="cu-dj-doc">
+          <div id="cu-dj-doc" class="cu-dj-doc-scroll"></div>
+        </div>
+        <label class="cu-dj-lab" for="cu-dj-nombre">Tu nombre completo, como figura en tu DNI</label>
+        <input id="cu-dj-nombre" class="cu-dj-input" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+        <label class="cu-dj-lab" for="cu-dj-dni">Tu DNI (solo números)</label>
+        <input id="cu-dj-dni" class="cu-dj-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Sin puntos" />
+        <label class="cu-dj-check">
+          <input type="checkbox" id="cu-dj-acepto" />
+          <span>Leí y acepto: esta firma electrónica expresa mi voluntad.</span>
+        </label>
+        <p id="cu-dj-msg" class="cu-dj-msg" hidden></p>
+        <div class="cu-dj-actions">
+          <button id="cu-dj-cerrar" class="cu-dj-btn-ghost" type="button">Cerrar</button>
+          <button id="cu-dj-firmar" class="cu-dj-btn-primary" type="button" disabled>Firmar declaración</button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -301,6 +342,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       soltarPortero()
       cargarSaldo()
       cargarReprocann()
+      cargarDdjj()
       return true
     }
 
@@ -315,6 +357,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
         if (!d.vinculado) { chip.textContent = 'Sin vincular'; chip.className = 'cu-chip'; return }
         const TXT = {
           aprobado: ['✓ Aprobado', 'is-ok'], autocultivo: ['Autocultivador', 'is-ok'],
+          ddjj_pendiente: ['Te toca firmar la declaración', 'is-vos'], ddjj_firmada: ['Declaración en verificación', ''],
           en_evaluacion: ['En evaluación', ''], revision_medica: ['En corrección', ''],
           a_vincular: ['Vinculándote', ''], cargado: ['Te toca firmar', 'is-vos'],
           observado: ['Observado', 'is-vos'], codigo_listo: ['Con el médico', ''],
@@ -346,6 +389,114 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           }
         }
       } catch { /* la tarjeta queda con el chip vacío, nada más */ }
+    }
+
+    /* ── Declaración jurada: la renuncia al autocultivo se firma acá ── */
+    // Si la API falla o dice que no aplica, la sección simplemente no existe:
+    // este fetch jamás bloquea ni rompe el resto de la cuenta.
+    async function cargarDdjj() {
+      try {
+        const res = await fetch('/api/socios/ddjj', { credentials: 'include' })
+        if (!res.ok) return
+        pintarDdjj(await res.json())
+      } catch { /* la sección queda oculta, nada más */ }
+    }
+
+    function pintarDdjj(d) {
+      const sec = document.getElementById('cu-dj-sec')
+      const card = document.getElementById('cu-dj-card')
+      if (!d || !d.aplica) { sec.hidden = true; return }
+      if (d.estado === 'generada') {
+        card.innerHTML = `
+          <div class="cu-rp-fila"><span class="cu-chip is-vos">Te toca firmar</span></div>
+          <p class="cu-dj-intro">Para que Flora cultive por vos, REPROCANN exige que renuncies al autocultivo. Esa renuncia es esta declaración jurada, ya redactada a tu nombre: leela completa y firmala acá, con tu nombre y tu DNI.</p>
+          <button class="cu-cert cu-dj-abrir" id="cu-dj-abrir" type="button"><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="4.2" y="3" width="13.6" height="18" rx="2.2"/></g><g class="fx-lleno"><rect x="7" y="7.6" width="7" height="1.7" rx=".85"/><rect x="7" y="11" width="5.4" height="1.7" rx=".85"/><path d="M13.7 15.2l2.1 2.1 5.6-5.6-2.1-2.1z"/><path d="M12.6 18.4l1.1-3.2 2.1 2.1z"/></g></svg> Leer y firmar<small>Tu firma electrónica queda sellada con fecha, hora y evidencia.</small></button>`
+        document.getElementById('cu-dj-abrir').addEventListener('click', () => abrirDdjj(d))
+      } else if (d.estado === 'firmada') {
+        card.innerHTML = `
+          <div class="cu-rp-fila"><span class="cu-chip">Firmada · en verificación</span></div>
+          <p class="cu-dj-intro">Ya firmaste tu renuncia al autocultivo. El equipo la va a verificar y tu trámite sigue solo.</p>`
+      } else if (d.estado === 'verificada') {
+        card.innerHTML = `
+          <div class="cu-rp-fila"><span class="cu-chip is-ok">✓ Verificada</span></div>
+          <p class="cu-dj-intro">Tu declaración quedó verificada: tu vinculación con Flora ya está en marcha. El próximo paso lo ves arriba, en <b>Tu REPROCANN</b>.</p>`
+      } else { sec.hidden = true; return }
+      sec.hidden = false
+    }
+
+    function abrirDdjj(d) {
+      document.getElementById('cu-dj-meta').textContent = `${d.documento.entidad} · plantilla ${d.documento.version}`
+      document.getElementById('cu-dj-doc').innerHTML =
+        `<h3>${esc(d.documento.titulo)}</h3><p class="cu-dj-sub">${esc(d.documento.subtitulo)}</p>` +
+        d.documento.parrafos.map((t) => `<p>${esc(t)}</p>`).join('') +
+        `<p class="cu-dj-cierre">${esc(d.documento.cierre)}</p>`
+      document.getElementById('cu-dj-nombre').value = ''
+      document.getElementById('cu-dj-dni').value = ''
+      document.getElementById('cu-dj-acepto').checked = false
+      const msg = document.getElementById('cu-dj-msg')
+      msg.hidden = true
+      msg.classList.remove('is-error')
+      validarDdjj()
+      document.getElementById('cu-dj-modal').hidden = false
+      document.getElementById('cu-dj-doc').scrollTop = 0
+    }
+    // expuesto como los modales de la casa (window.showSociosTos)
+    window.showFloraDdjj = abrirDdjj
+
+    // el botón de firmar recién se enciende con nombre + DNI + checkbox
+    function validarDdjj() {
+      const ok = document.getElementById('cu-dj-nombre').value.trim().length > 0 &&
+        document.getElementById('cu-dj-dni').value.replace(/\D/g, '').length >= 7 &&
+        document.getElementById('cu-dj-acepto').checked
+      document.getElementById('cu-dj-firmar').disabled = !ok
+    }
+    ;['cu-dj-nombre', 'cu-dj-dni'].forEach((id) => document.getElementById(id).addEventListener('input', validarDdjj))
+    document.getElementById('cu-dj-acepto').addEventListener('change', validarDdjj)
+    document.getElementById('cu-dj-cerrar').addEventListener('click', () => { document.getElementById('cu-dj-modal').hidden = true })
+    document.getElementById('cu-dj-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'cu-dj-modal') document.getElementById('cu-dj-modal').hidden = true // clic afuera cierra
+    })
+    document.getElementById('cu-dj-firmar').addEventListener('click', firmarDdjj)
+
+    async function firmarDdjj() {
+      const btn = document.getElementById('cu-dj-firmar')
+      const msg = document.getElementById('cu-dj-msg')
+      btn.disabled = true
+      btn.textContent = 'Firmando…'
+      try {
+        const r = await fetch('/api/socios/ddjj', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre_tipeado: document.getElementById('cu-dj-nombre').value,
+            dni_tipeado: document.getElementById('cu-dj-dni').value,
+            acepto: document.getElementById('cu-dj-acepto').checked,
+          }),
+        })
+        const d = await r.json().catch(() => ({}))
+        btn.textContent = 'Firmar declaración'
+        if (!r.ok) {
+          msg.textContent = d.error || 'No se pudo firmar. Probá de nuevo.'
+          msg.classList.add('is-error')
+          msg.hidden = false
+          btn.disabled = false
+          return
+        }
+        msg.textContent = 'Firmada. El equipo la va a verificar y tu trámite sigue solo.'
+        msg.classList.remove('is-error')
+        msg.hidden = false
+        setTimeout(() => {
+          document.getElementById('cu-dj-modal').hidden = true
+          cargarDdjj()
+          cargarReprocann()
+        }, 2600)
+      } catch {
+        msg.textContent = 'Error de red. Probá de nuevo.'
+        msg.classList.add('is-error')
+        msg.hidden = false
+        btn.disabled = false
+        btn.textContent = 'Firmar declaración'
+      }
     }
 
     // Saldo de gramos (solo gramos — la plata no viaja hasta acá)
@@ -685,5 +836,103 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .cu-saldo-retiros span:nth-child(2) { color: rgba(244, 241, 247, 0.82); }
     .cu-saldo-retiros b { color: #4FC79E; font-weight: 600; text-align: right; white-space: nowrap; }
     #cu-saldo-sec[hidden] { display: none; }
+
+    /* ── Declaración jurada ── */
+    #cu-dj-sec[hidden] { display: none; }
+    .cu-dj-intro { color: rgba(244, 241, 247, 0.62); font-size: 0.88rem; line-height: 1.55; margin: 12px 0 0; }
+    /* El botón de firmar es el panel de acción de la tarjeta (idioma de
+       .cu-cert), en la variante violeta de la casa. */
+    .cu-dj-abrir {
+      width: 100%; cursor: pointer; font-family: var(--font-ui);
+      background: linear-gradient(155deg, rgba(183, 157, 230, 0.16), rgba(183, 157, 230, 0.05));
+      border-color: rgba(183, 157, 230, 0.42);
+    }
+    .cu-dj-abrir:hover {
+      background: linear-gradient(155deg, rgba(183, 157, 230, 0.25), rgba(183, 157, 230, 0.1));
+      border-color: rgba(183, 157, 230, 0.6);
+    }
+    .cu-dj-abrir .fx-ico { color: #b79de6; }
+
+    /* El modal habla el mismo idioma que el de términos (SociosTos): overlay
+       nocturno con blur, tarjeta violeta de la casa. El documento adentro se
+       lee como papel: serif, justificado, con su propio scroll. */
+    .cu-dj-modal {
+      position: fixed !important; inset: 0 !important; z-index: 60 !important;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      background: rgba(10, 6, 16, 0.7);
+      backdrop-filter: blur(6px);
+      font-family: var(--font-ui);
+    }
+    .cu-dj-modal[hidden] { display: none; }
+    .cu-dj-modal-card {
+      width: 100%; max-width: 680px; max-height: 92svh;
+      overflow-y: auto;
+      background: #1b1326;
+      border: 1px solid rgba(183, 157, 230, 0.16);
+      border-radius: 22px;
+      padding: clamp(22px, 3.5vw, 34px);
+      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+    }
+    .cu-dj-title {
+      font-family: var(--font-display); font-weight: 400;
+      font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1; margin: 0 0 0.4rem;
+      color: #f4f1f7;
+    }
+    .cu-dj-title em { font-style: italic; color: #3cb492; }
+    .cu-dj-meta { font-size: 0.75rem; color: rgba(244, 241, 247, 0.55); font-style: italic; margin: 0 0 1rem; }
+    .cu-dj-doc {
+      padding: 16px 12px 16px 18px; margin-bottom: 0.4rem;
+      background: rgba(244, 241, 247, 0.04);
+      border: 1px solid rgba(183, 157, 230, 0.16); border-radius: 12px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    .cu-dj-doc-scroll { max-height: 36svh; overflow-y: auto; padding-right: 8px; }
+    .cu-dj-doc h3 { font-size: 0.9rem; letter-spacing: 0.06em; text-align: center; color: #f4f1f7; margin: 0 0 2px; font-weight: 700; }
+    .cu-dj-sub { text-align: center; font-size: 0.72rem; color: rgba(244, 241, 247, 0.5); margin: 0 0 14px !important; }
+    .cu-dj-doc p { font-size: 0.85rem; line-height: 1.65; color: rgba(244, 241, 247, 0.75); text-align: justify; margin: 0 0 11px; }
+    .cu-dj-cierre { margin-top: 6px; }
+    .cu-dj-lab {
+      display: block; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #b79de6;
+      margin: 0.95rem 0 0.35rem;
+    }
+    .cu-dj-input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(244, 241, 247, 0.05);
+      border: 1px solid rgba(183, 157, 230, 0.3); border-radius: 12px;
+      color: #f4f1f7; font-family: var(--font-ui); font-size: 1rem; padding: 12px 14px;
+    }
+    .cu-dj-input:focus { outline: none; border-color: #b79de6; }
+    .cu-dj-check {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      font-size: 0.88rem; font-weight: 600; color: #f4f1f7;
+      margin-top: 1.05rem; padding-top: 0.9rem;
+      border-top: 1px solid rgba(183, 157, 230, 0.16);
+      cursor: pointer;
+    }
+    .cu-dj-check input { width: 18px; height: 18px; accent-color: #b79de6; flex-shrink: 0; cursor: pointer; margin-top: 1px; }
+    .cu-dj-msg { font-size: 0.88rem; font-weight: 600; color: #3cb492; margin: 0.9rem 0 0; }
+    .cu-dj-msg.is-error { color: #f2818a; }
+    .cu-dj-msg[hidden] { display: none; }
+    .cu-dj-actions { display: flex; justify-content: flex-end; gap: 0.7rem; margin-top: 1.3rem; flex-wrap: wrap; }
+    .cu-dj-btn-primary {
+      font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;
+      border: none; border-radius: 999px; padding: 0.7rem 1.5rem;
+      background: #b79de6; color: #130d1c;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.15s ease, transform 0.08s ease;
+    }
+    .cu-dj-btn-primary:hover { background: #c8b2ec; }
+    .cu-dj-btn-primary:active { transform: scale(0.97); }
+    .cu-dj-btn-primary:disabled { opacity: 0.5; cursor: default; }
+    .cu-dj-btn-ghost {
+      font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700;
+      border: 1px solid rgba(183, 157, 230, 0.16); border-radius: 999px; padding: 0.7rem 1.5rem;
+      background: none; color: #f4f1f7;
+      cursor: pointer; white-space: nowrap;
+      transition: border-color 0.15s ease;
+    }
+    .cu-dj-btn-ghost:hover { border-color: #b79de6; }
   </style>
 </Layout>

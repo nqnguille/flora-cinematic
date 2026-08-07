@@ -6,6 +6,7 @@
 //   POST   {socio_id, pdf_base64} → guarda (valida %PDF y tamaño)
 //   DELETE {socio_id}             → borra
 import { requireCap } from './_rol';
+import { leerCertificado } from './_certpdf';
 
 interface Env {
   DB: D1Database;
@@ -79,7 +80,32 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     nombre: socio.nombre, bytes: bytes.length,
     subido: new Date().toISOString(), por: auth.email,
   }));
-  return json({ ok: true, bytes: bytes.length });
+
+  // El PDF ES la fuente: lo que el certificado dice del socio completa la
+  // ficha solo (y de ahí lo toma la DDJJ). Regla de oro: solo llena campos
+  // VACÍOS, nunca pisa lo que alguien escribió a mano. El diagnóstico no se
+  // guarda en socios (es dato clínico): viaja en la respuesta para que el
+  // panel lo ofrezca como sugerencia al generar la declaración.
+  let leido: Record<string, string> = {};
+  try {
+    const datos = await leerCertificado(bytes.buffer as ArrayBuffer);
+    const campos: Array<[string, string | undefined]> = [
+      ['documento', datos.dni], ['domicilio', datos.domicilio],
+      ['localidad', datos.localidad], ['provincia', datos.provincia],
+      ['reprocann_vence', datos.vence],
+    ];
+    for (const [col, val] of campos) {
+      if (!val) continue;
+      const r = await env.DB.prepare(
+        `UPDATE socios SET ${col} = ?, actualizado = datetime('now') WHERE id = ? AND (${col} IS NULL OR ${col} = '')`,
+      ).bind(val, socioId).run();
+      if (r.meta.changes) leido[col] = val;
+    }
+    if (datos.diagnostico) leido.diagnostico = datos.diagnostico;
+    if (datos.codigo) leido.codigo = datos.codigo;
+  } catch { /* leer el PDF nunca rompe la subida */ }
+
+  return json({ ok: true, bytes: bytes.length, leido });
 };
 
 export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
