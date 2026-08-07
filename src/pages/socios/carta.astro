@@ -1534,33 +1534,50 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-logout:hover { background: rgba(244, 241, 247, 0.14); }
   .gn-logout:hover { border-color: var(--gn-violet); }
 
-  /* Filtros centrados en una sola línea */
-  /* Filtros dentro del topbar (en el medio, una sola línea) */
+  /* Filtros a la IZQUIERDA del topbar (columna 1 de la grilla). Si la columna
+     queda más angosta que los filtros, scrollean horizontal DENTRO de su
+     contenedor (nunca desbordan la página); la máscara del borde derecho hace
+     que el corte se lea como "hay más" y no como un bug. flex-start y no
+     center: centrar un scroller deja su comienzo recortado e inalcanzable. */
   .gn-filters {
+    grid-column: 1;
+    grid-row: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.45rem;
     flex-wrap: nowrap;
-    flex: 1 1 auto;
     min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
   }
+  .gn-filters::-webkit-scrollbar { display: none; }
 
-  /* Barra superior derecha: controles discretos + Salir */
+  /* Topbar con el criterio de membresías: logo FLORA centrado en el ancho,
+     filtros a la izquierda, navegación (carrito + controles + chips) a la
+     derecha. Grilla 1fr/auto/1fr con minmax(0,…): las dos columnas laterales
+     miden lo mismo por definición, así el centro es el centro REAL de la
+     página (con 1fr a secas el min-content de los filtros corre el logo —
+     trampa ya documentada en membresias.astro). grid-row:1 explícito en las
+     tres piezas: el DOM va logo→filtros→nav y el autoplacement, si no,
+     mandaría los filtros (col 1) a una segunda fila por venir después del
+     logo (col 2). */
   .gn-topbar {
     flex: 0 0 auto;
     z-index: 25;
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    column-gap: clamp(0.8rem, 1.2vw, 1.25rem);
     margin-bottom: clamp(8px, 1.2vh, 16px);
   }
   .gn-logo { height: clamp(24px, 2.7vh, 36px); width: auto; display: block; }
-  .gn-logo-link { display: block; flex-shrink: 0; line-height: 0; }
+  .gn-logo-link { grid-column: 2; grid-row: 1; justify-self: center; display: block; flex-shrink: 0; line-height: 0; }
   .gn-logo-link:focus-visible { outline: 2px solid var(--gn-green); outline-offset: 3px; border-radius: 4px; }
-  .gn-topbar-right { display: flex; align-items: center; gap: 0.6rem; }
+  .gn-topbar-right { grid-column: 3; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
 
   .gn-search-wrap { position: relative; flex: 0 0 auto; width: clamp(150px, 20vw, 240px); }
   .gn-search-wrap svg {
@@ -1594,10 +1611,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     border: none;
     background: none;
     font-family: var(--font-ui);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--gn-muted);
-    padding: 0.4rem 1.1rem;
+    padding: 0.4rem 0.9rem;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -1650,10 +1667,10 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
   .gn-dd[hidden] { display: none; }
   .gn-dd-toggle {
     display: inline-flex; align-items: center; gap: 0.5rem;
-    font-family: var(--font-ui); font-size: 0.92rem; font-weight: 600;
+    font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600;
     color: var(--gn-cream); background: var(--gn-card);
     border: 1px solid rgba(244, 241, 247, 0.2); border-radius: 999px;
-    padding: 0.78rem 1.2rem; cursor: pointer; /* misma altura que el segmentado */
+    padding: 0.78rem 0.95rem; cursor: pointer; /* misma altura que el segmentado */
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .gn-dd-toggle:hover { border-color: rgba(244, 241, 247, 0.3); }
@@ -2648,30 +2665,21 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-meter-fill, .gn-item-img { animation: none !important; transition: none !important; }
   }
 
-  /* Topbar en 2 renglones (logo + controles arriba, filtros abajo) mucho
-     antes que el layout mobile: en una fila los filtros solo entran en
-     pantallas muy anchas — cuando no entraban, se deslizaban POR DEBAJO
-     del carrito y los controles (el carrito quedaba pisando "Sabores").
-     1680 → 1800: el chip "Membresías" suma ~110px a la derecha, así que
-     la fila única necesita ese margen extra para que los filtros entren. */
-  @media (max-width: 1800px) {
-    .gn-topbar { flex-wrap: wrap; row-gap: 0.6rem; margin-bottom: 2px; }
+  /* Topbar APILADO (logo centrado arriba, navegación en fila, filtros en su
+     fila) cuando la grilla de 3 columnas ya no da. Reemplaza al viejo corte
+     de 1800px, que regulaba el wrap de los filtros: ahora los filtros
+     scrollean dentro de su columna, así que el límite lo pone la columna
+     derecha (carrito + controles + chips ≈ 527px de mínimo, no se achica ni
+     scrollea): 2×527 + logo + gaps + padding ≈ 1310px → corte en 1440. */
+  @media (max-width: 1439.98px) {
+    .gn-topbar { display: flex; flex-direction: column; align-items: center; row-gap: 0.6rem; margin-bottom: 2px; }
     .gn-logo-link { order: 1; }
-    .gn-topbar-right { order: 2; }
-    /* Filtros: UNA sola fila deslizable a lo ancho. Máscara en el borde
-       derecho para que el corte se lea como "hay más" y no como un bug. */
-    .gn-filters {
-      order: 3;
-      flex: 1 1 100%;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 2px;
-      mask-image: linear-gradient(to right, #000 92%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
-    }
-    .gn-filters::-webkit-scrollbar { display: none; }
+    /* La navegación WRAPEA (centrada) en vez de desbordar: su nowrap era LA
+       causa del scroll lateral en mobile — .gn-topbar-right (527px de
+       min-content) empujaba la página más allá del viewport del teléfono
+       (verificado midiendo: 541px de scrollWidth en un viewport de 390). */
+    .gn-topbar-right { order: 2; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+    .gn-filters { order: 3; width: 100%; }
   }
 
   @media (max-width: 760px) {
@@ -2689,6 +2697,14 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     .gn-seg-label { padding-left: 0.5rem; }
     .gn-seg-btn { padding: 0.35rem 0.85rem; font-size: 0.88rem; }
     .gn-dd-toggle { padding: 0.6rem 1rem; font-size: 0.88rem; }
+    /* Navegación compacta: los mismos botones (ids intactos), en tamaño de
+       teléfono, para que la fila wrapee en 2 renglones prolijos y no en 3. */
+    .gn-topbar-right { gap: 0.45rem; row-gap: 0.5rem; }
+    .gn-ctrl { width: 34px; height: 34px; }
+    .gn-ctrl svg { width: 17px; height: 17px; }
+    .gn-cart-trigger { width: 34px; height: 34px; }
+    .gn-cart-trigger svg { width: 16px; height: 16px; }
+    .gn-logout { padding: 0.42rem 0.85rem; font-size: 0.8rem; }
 
     /* Carrusel: SIN altura fija (hereda flex:1 1 auto/min-height:0 de la
        regla base) para que ocupe todo lo que topbar+pagefoot no usan — un
