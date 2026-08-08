@@ -154,8 +154,8 @@
       </div>
       <div class="pn-drawer-cuerpo">
         <div class="sd-tabs" role="tablist">
-          ${[['resumen', 'Resumen'], ['tramite', 'Trámite'], ['legal', 'Legal'], ['eco', 'Económico'], ['retiros', 'Retiros'], ['datos', 'Datos']]
-            .filter(([id]) => id !== 'legal' || P.puede('reprocann_editar'))
+          ${[['resumen', 'Resumen'], ['legajo', '🩺 Legajo'], ['tramite', 'Trámite'], ['legal', 'Legal'], ['eco', 'Económico'], ['retiros', 'Retiros'], ['datos', 'Datos']]
+            .filter(([id]) => (id !== 'legal' || P.puede('reprocann_editar')) && (id !== 'legajo' || P.puede('padron_ver')))
             .map(([id, tx]) => `<button type="button" class="sd-tabbtn ${tabActiva === id ? 'on' : ''}" data-tab="${id}">${tx}</button>`).join('')}
         </div>
 
@@ -187,6 +187,10 @@
             ${mp ? '<button class="btn btn-pri" id="sd-r-debito" type="button">$ Mandar link de pago</button>' : ''}
             ${s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="${P.esc(waDe(s))}">WhatsApp del paso</a>` : ''}
           </div>
+        </div>
+
+        <div class="sd-tab ${tabActiva === 'legajo' ? 'on' : ''}" data-tab="legajo">
+          <div id="sd-legajo"><div style="margin-top:8px;color:var(--muted);font-size:13px">⏳ pidiendo el legajo al consultorio…</div></div>
         </div>
 
         <div class="sd-tab ${tabActiva === 'tramite' ? 'on' : ''}" data-tab="tramite">
@@ -367,11 +371,22 @@
 
     caja.querySelector('.pn-drawer-x').addEventListener('click', cerrar)
 
+    // El legajo del consultorio se pide UNA vez por pintada, y recién al
+    // entrar a la solapa: es un viaje a otro sistema, no viaja con la ficha.
+    let legajoPedido = false
+    const cargarLegajo = () => {
+      if (legajoPedido) return
+      legajoPedido = true
+      pintarLegajo(s)
+    }
+
     caja.querySelectorAll('.sd-tabbtn').forEach((b) => b.addEventListener('click', () => {
       tabActiva = b.dataset.tab
       caja.querySelectorAll('.sd-tabbtn').forEach((x) => x.classList.toggle('on', x === b))
       caja.querySelectorAll('.sd-tab').forEach((t) => t.classList.toggle('on', t.dataset.tab === tabActiva))
+      if (tabActiva === 'legajo') cargarLegajo()
     }))
+    if (tabActiva === 'legajo') cargarLegajo()
     caja.querySelector('#sd-r-debito')?.addEventListener('click', () => modalDebito(s))
     caja.querySelector('#sd-max')?.addEventListener('click', () => {
       fichaMax = !fichaMax
@@ -582,6 +597,116 @@
       aviso('#sd-msg-zona', r.ok ? '✔ acceso quitado' : '✗ no se pudo', r.ok ? 'ok' : 'err')
       if (r.ok) { alCambiar?.(); abrir(s.id, alCambiar) }
     })
+  }
+
+  // Legajo del paciente en el consultorio (drezequielkalb.com): visor EN VIVO,
+  // acá no se guarda nada. Lo administrativo lo ve cualquiera con padron_ver;
+  // la sección clínica solo llega si el CONSULTORIO reconoce al usuario del
+  // panel como médico (su lista MEDICOS decide, no el club).
+  async function pintarLegajo(s) {
+    const zona = caja.querySelector('#sd-legajo')
+    if (!zona) return
+    let d
+    try {
+      const r = await fetch(`/api/panel/legajo?socio_id=${s.id}`, { credentials: 'include' })
+      d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'error ' + r.status)
+    } catch (e) {
+      zona.innerHTML = `<div class="msg err" style="margin-top:8px">✗ ${P.esc(e.message || 'El consultorio no contestó: probá de nuevo')}</div>`
+      return
+    }
+    const base = d.consultorio_base || 'https://drezequielkalb.com'
+    const btnAbrir = (pid) => pid
+      ? `<a class="btn" target="_blank" rel="noopener" href="${P.esc(`${base}/paciente?id=${pid}`)}">Abrir en el consultorio</a>`
+      : '<span class="btn" aria-disabled="true" style="opacity:.45;pointer-events:none">Abrir en el consultorio</span>'
+
+    if (!d.existe) {
+      zona.innerHTML = `
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">Sin legajo en el consultorio para este DNI.</div>
+        <div class="fila" style="margin-top:10px">${btnAbrir(null)}</div>`
+      return
+    }
+
+    const p = d.paciente || {}
+    const res = d.resumen || {}
+    const fHora = (iso) => (iso && String(iso).length >= 16 ? ' · ' + String(iso).slice(11, 16) : '')
+
+    const TAG_TURNO = { atendido: 'tag-ok', agendado: 'tag-auto', pendiente_pago: 'tag-deb', cancelado: 'tag-off' }
+    const PAGO = { aprobado: 'pagado', pendiente: 'pago pendiente', manual: 'pago manual', vencido: 'pago vencido' }
+    const filaTurno = (t) => {
+      const est = t.atendido || t.estado === 'atendido' ? 'atendido' : (t.estado || '—')
+      return `<div class="fila" style="padding:3px 0;gap:6px;flex-wrap:wrap">
+        <span>${fFecha(t.inicio)}${fHora(t.inicio)}</span>
+        <span style="color:var(--muted)">${P.esc(t.modalidad || '—')}</span>
+        <span class="tag ${TAG_TURNO[est] || 'tag-off'}">${P.esc(est)}</span>
+        <span class="pn-sp"></span>
+        <span style="color:var(--muted);font-size:12px">${P.esc(PAGO[t.pago_estado] || '')}</span>
+      </div>`
+    }
+
+    // el REPROCANN según el consultorio, solo si difiere de la ficha del club
+    const rc = d.reprocann || {}
+    const norm = (v) => String(v ?? '').trim()
+    const rcDifiere = [
+      [s.reprocann_codigo, rc.codigo],
+      [s.reprocann_tramite, rc.tramite],
+      [s.reprocann_estado, rc.estado],
+      [norm(s.reprocann_vence).slice(0, 10), norm(rc.vence).slice(0, 10)],
+    ].some(([mio, suyo]) => (norm(mio) || norm(suyo)) && norm(mio) !== norm(suyo))
+
+    const cli = d.clinica
+    const bloqueTitulo = (tx) => `<b style="display:block;margin-top:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">${tx}</b>`
+    const clinicaHtml = cli ? `
+      <details open><summary>Historia clínica</summary>
+        <div style="margin-top:4px;font-size:11px;color:var(--muted)">Visible solo para el rol médico · vive en el consultorio, acá no queda guardada.</div>
+        ${(cli.notas || []).length ? `${bloqueTitulo('Notas de evolución (últimas ' + cli.notas.length + ')')}
+          ${cli.notas.map((n) => `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2)">
+            <div class="fila" style="gap:6px;flex-wrap:wrap"><b>${fFecha(n.fecha)}</b><span>${P.esc(n.motivo || 'sin motivo')}</span>${n.estado && n.estado !== 'firmada' ? '<span class="tag tag-deb">borrador</span>' : ''}</div>
+            ${n.evaluacion ? `<div style="margin-top:2px">${P.esc(n.evaluacion)}</div>` : ''}
+            ${n.plan ? `<div style="margin-top:2px;color:var(--muted)">Plan: ${P.esc(n.plan)}</div>` : ''}
+          </div>`).join('')}` : '<div style="margin-top:8px;color:var(--muted);font-size:13px">Sin notas de evolución.</div>'}
+        ${(cli.diagnosticos || []).length ? `${bloqueTitulo('Diagnósticos activos')}
+          ${cli.diagnosticos.map((x) => `<div class="fila" style="padding:3px 0;gap:6px;font-size:13px;color:var(--ink2)">
+            <span>${x.principal ? '★ ' : ''}${P.esc(x.texto)}</span>
+            ${x.cie10 ? `<span style="color:var(--muted);font-size:12px">${P.esc(x.cie10)}</span>` : ''}
+          </div>`).join('')}` : ''}
+        ${(cli.medicacion || []).length ? `${bloqueTitulo('Medicación activa')}
+          ${cli.medicacion.map((m) => `<div class="fila" style="padding:3px 0;gap:6px;font-size:13px;color:var(--ink2);flex-wrap:wrap">
+            <span><b>${P.esc(m.nombre)}</b>${m.quimiotipo ? ' · ' + P.esc(m.quimiotipo) : ''}${m.ratio ? ' (' + P.esc(m.ratio) + ')' : ''}</span>
+            <span style="color:var(--muted);font-size:12px">${P.esc([m.dosis, m.via, m.frecuencia].filter(Boolean).join(' · '))}</span>
+          </div>`).join('')}` : ''}
+        ${(cli.alergias || []).length ? `${bloqueTitulo('Alergias')}
+          ${cli.alergias.map((a) => `<div class="fila" style="padding:3px 0;gap:6px;font-size:13px;color:var(--ink2)">
+            <span>${P.esc(a.sustancia)}</span>
+            <span style="color:var(--muted);font-size:12px">${P.esc([a.reaccion, a.gravedad].filter(Boolean).join(' · '))}</span>
+          </div>`).join('')}` : ''}
+      </details>`
+      : '<div style="margin-top:10px;font-size:12px;color:var(--muted)">La historia clínica es visible solo para el médico.</div>'
+
+    zona.innerHTML = `
+      <details open><summary>Consultorio del Dr. Kalb</summary>
+        <div style="margin-top:8px;font-size:13px;color:var(--ink2);display:grid;gap:4px">
+          <div class="fila" style="gap:6px;flex-wrap:wrap"><b>${P.esc(p.nombre || s.nombre)}</b>
+            ${p.obra_social ? `<span class="tag tag-off">${P.esc(p.obra_social)}</span>` : '<span style="color:var(--muted);font-size:12px">sin obra social cargada</span>'}</div>
+          <div>Última atención: <b>${res.ultima_atencion ? fFecha(res.ultima_atencion) : 'nunca'}</b> · ${res.consultas_totales || 0} consulta${res.consultas_totales === 1 ? '' : 's'}</div>
+          <div>Próximo turno: <b>${res.proximo_turno ? fFecha(res.proximo_turno) + fHora(res.proximo_turno) : 'sin turno agendado'}</b></div>
+        </div>
+      </details>
+      <details open><summary>Turnos</summary>
+        <div style="margin-top:6px;font-size:13px;color:var(--ink2)">
+          ${(d.turnos || []).length ? d.turnos.map(filaTurno).join('') : '<div style="color:var(--muted)">Sin turnos registrados.</div>'}
+        </div>
+      </details>
+      ${rcDifiere ? `<details open><summary>REPROCANN según el consultorio</summary>
+        <div style="margin-top:6px;font-size:13px;color:var(--ink2);display:grid;gap:3px">
+          <div>Estado: <b>${P.esc(rc.estado || 'sin dato')}</b>${rc.vence ? ` · vence ${fFecha(rc.vence)}` : ''}</div>
+          ${rc.codigo ? `<div>Código: <b style="letter-spacing:.06em">${P.esc(rc.codigo)}</b></div>` : ''}
+          ${rc.tramite ? `<div>Trámite Nº ${P.esc(rc.tramite)}</div>` : ''}
+          <div style="color:var(--muted);font-size:12px">Difiere de la ficha del club (solapa Trámite): revisá cuál está al día.</div>
+        </div>
+      </details>` : ''}
+      ${clinicaHtml}
+      <div class="fila" style="margin-top:12px">${btnAbrir(p.id)}</div>`
   }
 
   // Declaración jurada: el papel con el que un autocultivador se pasa a Flora.

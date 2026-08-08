@@ -2,6 +2,13 @@ name = "flora-ong"
 compatibility_date = "2026-06-01"
 pages_build_output_dir = "dist"
 
+# El consultorio del Dr. Kalb (mismo proyecto Pages sirve el apex y hc.; el
+# apex es el canónico). El panel le pide el legajo del paciente EN VIVO por
+# /api/club/legajo — acá nunca se replican datos clínicos. El token va como
+# secret de Pages (CONSULTORIO_TOKEN), nunca en este archivo.
+[vars]
+CONSULTORIO_BASE = "https://drezequielkalb.com"
+
 [[kv_namespaces]]
 binding = "SOCIOS"
 id = "02022a171c04447f86fa4336cbe0c3e0"
