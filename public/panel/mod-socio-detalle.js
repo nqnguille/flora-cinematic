@@ -142,7 +142,7 @@
       <div class="pn-drawer-cab">
         <div class="fila"><span class="av">${P.esc(P.iniciales(s.nombre))}</span>
           <div><div style="font-family:var(--font-display);font-size:19px">${P.esc(s.nombre)}</div>
-          <div style="color:var(--muted);font-size:12px">${s.numero ? '#' + s.numero + ' · ' : ''}${P.esc(s.email || 'sin email')}</div></div></div>
+          <div style="color:var(--muted);font-size:12px">${s.numero ? '#' + s.numero + ' · ' : ''}${P.esc(s.email || 'sin email')}${s.documento ? ' · DNI ' + P.esc(s.documento) : ''}${s.telefono ? ' · <a href="' + P.esc(waDe(s)) + '" target="_blank" rel="noopener" style="color:var(--grn,#2c9a6f);text-decoration:none">' + P.esc(s.telefono) + '</a>' : ''}</div></div></div>
         <div class="fila" style="margin-top:6px;flex-wrap:wrap;gap:4px">
           ${d.membresia ? `<span class="tag ${d.membresia.modalidad === 'plan' ? 'tag-auto' : 'tag-ok'}">${P.esc(d.membresia.tier)}${d.membresia.modalidad === 'debito' ? ' · débito' : d.membresia.modalidad === 'plan' ? ' · plan' : ''}</span>` : '<span class="tag tag-off">sin membresía</span>'}
           ${chipDebito}
@@ -161,26 +161,27 @@
 
         <div class="sd-tab ${tabActiva === 'resumen' ? 'on' : ''}" data-tab="resumen">
           <div class="sd-cols">
-          <details open><summary>Cumplimiento Res. 1780/2025</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">Cumplimiento Res. 1780/2025</h3>
             <div class="sd-cum-lista">${cumplimiento}</div>
-          </details>
+          </section>
           <div>
-          <details open><summary>Cuenta y accesos</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">Cuenta y accesos</h3>
             <div style="margin-top:8px;font-size:13px;color:var(--ink2);display:grid;gap:4px">
               <div>${chipCarta}${typeof d.carta.logins === 'number' ? ` · ${d.carta.logins} ingreso${d.carta.logins === 1 ? '' : 's'}` : ''}</div>
               ${d.carta.temporal ? `<div>Acceso de prueba${d.carta.tempExpiraEn ? ` hasta ${fFecha(d.carta.tempExpiraEn)}` : ''}</div>` : ''}
               <div style="color:var(--muted);font-size:12px">${d.carta.tosAceptado ? `Términos aceptados ${fFecha(d.carta.tosAceptado)}${d.carta.tosVersion ? ' · versión ' + P.esc(d.carta.tosVersion) : ''}` : 'Términos: sin registro de aceptación'}</div>
               ${s.adhesion_habilitada ? `<div style="color:var(--grn,#2c9a6f);font-size:12px">✓ Adhesión al débito habilitada ${hace(s.adhesion_habilitada)}${s.adhesion_habilitada_por ? ' por ' + P.esc(s.adhesion_habilitada_por) : ''}</div>` : ''}
             </div>
-          </details>
-          <details open><summary>Consultorio</summary>
+          </section>
+          <section class="sd-bl"><h3 class="sd-bl-t">Consultorio</h3>
             <div style="margin-top:8px;font-size:13px;color:var(--ink2)">
               ${s.med_en_tratamiento
                 ? `✓ En tratamiento con el Dr. Kalb${s.med_proxima_consulta ? ` · próxima consulta ${new Date(s.med_proxima_consulta).toLocaleDateString('es-AR')}` : ''}`
                 : 'Sin señal del consultorio para este DNI.'}
-              <div style="color:var(--muted);font-size:12px;margin-top:4px">La historia clínica vive en el consultorio (drezequielkalb.com), bajo secreto profesional: acá solo llega la señal, nunca datos clínicos.</div>
+              <div style="color:var(--muted);font-size:12px;margin-top:4px">Turnos, asistencias e historia clínica se leen en vivo del consultorio: la clínica solo la ve el rol médico.</div>
+              <div class="fila" style="margin-top:8px"><button class="btn" id="sd-r-legajo" type="button">🩺 Ver legajo</button></div>
             </div>
-          </details>
+          </section>
           </div>
           </div>
           <div class="fila" style="margin-top:14px;flex-wrap:wrap">
@@ -194,7 +195,7 @@
         </div>
 
         <div class="sd-tab ${tabActiva === 'tramite' ? 'on' : ''}" data-tab="tramite">
-          <details ${paso && (paso.quien === 'club' || paso.quien === 'paciente' || paso.quien === 'medico') ? 'open' : ''}><summary>REPROCANN</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">REPROCANN</h3>
           <div class="so-timeline">${pasos.filter((p) => !['revisar', 'rechazado', 'vencido', 'autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(p.id) || p.id === s.reprocann_estado).map((p, i) =>
             `<div class="so-tl-paso ${p.id === s.reprocann_estado ? 'actual' : (actualIdx >= 0 && i < actualIdx ? 'hecho' : '')}" title="${P.esc(p.ayuda)}">${P.esc(p.nombre)}</div>`).join('')}
           </div>
@@ -234,23 +235,27 @@
               <button class="btn btn-peligro" id="sd-cert-borrar" type="button" hidden>Quitar</button>
               <input type="file" id="sd-cert-file" accept="application/pdf" hidden />` : ''}
           </div>
-        </details>
+        </section>
         </div>
 
         ${P.puede('reprocann_editar') ? `<div class="sd-tab ${tabActiva === 'legal' ? 'on' : ''}" data-tab="legal">` : '<div hidden>'}
           ${P.puede('reprocann_editar') ? `
-        <details ${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada'].includes(s.reprocann_estado) ? 'open' : ''}><summary>Declaración jurada</summary>
-          <p class="so-help" style="margin:8px 0 0">Para vincularse a Flora tiene que renunciar al autocultivo: las modalidades
-            son excluyentes. Esto genera el papel con sus datos ya puestos, listo para imprimir y firmar.
-            El débito recién se habilita con la declaración firmada y verificada.</p>
+        <section class="sd-bl"><h3 class="sd-bl-t">Declaración jurada</h3>
+          ${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(s.reprocann_estado)
+            ? `<p class="so-help" style="margin:8px 0 0">Viene del autocultivo: para vincularse a Flora tiene que renunciar,
+              porque las modalidades son excluyentes. Esto arma el papel con sus datos ya puestos; lo firma en su cuenta
+              y el débito se habilita cuando lo verificás.</p>`
+            : `<p class="so-help" style="margin:8px 0 0">Entra por el camino del trámite nuevo, así que la firma que le toca
+              es el <b>consentimiento</b> en Mi Argentina, no esta declaración. Se genera igual si alguna vez figuró como
+              autocultivador y hay que documentar la renuncia.</p>`}
           <div id="sd-ddjj" style="margin-top:10px"><div style="color:var(--muted);font-size:12px">⏳ buscando…</div></div>
           ${typeof d.declaraciones_total === 'number' && d.declaraciones_total > 1 ? `<p style="margin:8px 0 0;font-size:12px;color:var(--muted)">Historial: ${d.declaraciones_total} declaraciones registradas (incluye anuladas).</p>` : ''}
-        </details>` : ''}
+        </section>` : ''}
         </div>
 
         <div class="sd-tab ${tabActiva === 'eco' ? 'on' : ''}" data-tab="eco">
           <div class="sd-cols">
-          <details open><summary>Membresía</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">Membresía</h3>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             ${d.membresia && d.membresia.modalidad === 'plan'
               ? `<span class="tag tag-auto">${P.esc(d.membresia.tier)} · plan prepago</span>`
@@ -266,8 +271,8 @@
               : '<button class="btn" id="sd-plan-vender" type="button">Venderle un plan prepago</button>'}
           </div>` : ''}
           <p class="msg" id="sd-msg-memb" style="margin:6px 0 0"></p>
-        </details>
-          <details open><summary>Débito automático</summary>
+        </section>
+          <section class="sd-bl"><h3 class="sd-bl-t">Débito automático</h3>
           <div style="margin-top:10px;font-size:13px;color:var(--ink2)">
             ${d.debito?.estado ? `${chipDebito} ${d.debito.monto ? `<b>${P.fmt(d.debito.monto)}</b>/mes` : ''}
               ${d.debito.estado === 'activa' ? ` · cuota ${d.debito.racha_meses % 3 === 0 && d.debito.racha_meses > 0 ? 3 : d.debito.racha_meses % 3}/3` : ''}
@@ -281,9 +286,9 @@
             ${s.adhesion_habilitada && s.telefono ? `<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${(() => { let t = String(s.telefono).replace(/\D/g, ''); return t.length === 10 ? '549' + t : t })()}?text=${encodeURIComponent(`Hola ${String(s.nombre || '').split(' ')[0]}! Ya podés adherirte al débito automático con el 20% de descuento directo desde tu cuenta de Flora: entrá a https://floraong.ar/socios/membresias/ con tu Google, elegí tu membresía y listo. Cualquier duda escribime.`)}">Avisarle por WhatsApp</a>` : ''}
             <button class="btn" id="sd-no-insistir" type="button">${s.debito_no_insistir ? 'Volver a ofrecer' : 'No insistir'}</button>
           </div>` : ''}
-        </details>
+        </section>
           </div>
-          ${(d.suscripciones || []).length ? `<details open><summary>Suscripciones (historial completo)</summary>
+          ${(d.suscripciones || []).length ? `<section class="sd-bl"><h3 class="sd-bl-t">Suscripciones (historial completo)</h3>
             <div style="margin-top:6px">${d.suscripciones.map((su) => `<div class="sd-fila-h">
               <b>${P.esc(su.tier || '—')}</b>
               <span class="tag ${su.estado === 'activa' ? 'tag-ok' : su.estado === 'cancelada' ? 'tag-off' : 'tag-deb'}">${P.esc(su.estado)}</span>
@@ -293,18 +298,18 @@
               <span class="pn-sp"></span>
               <span style="color:var(--muted);font-size:11px">${P.esc(su.origen || '')}${su.mp_ref ? ' · …' + P.esc(su.mp_ref) : ''} · ${fFecha(su.creado)}</span>
             </div>`).join('')}</div>
-          </details>` : ''}
-          <details open><summary>Pagos recientes</summary>
+          </section>` : ''}
+          <section class="sd-bl"><h3 class="sd-bl-t">Pagos recientes</h3>
             <div style="margin-top:6px;font-size:13px;color:var(--ink2)">${d.movimientos ? `<b style="display:block;margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Pagos</b>
             ${d.movimientos.length ? d.movimientos.map((x) => `<div class="fila" style="padding:3px 0">
               <span>${fFecha(x.fecha)} · ${P.esc(x.concepto || x.categoria)}</span><span class="pn-sp"></span>
               <span style="font-weight:600">${P.fmt(x.neto)}</span></div>`).join('') : '<div style="color:var(--muted)">Sin pagos.</div>'}` : ''}</div>
-          </details>
+          </section>
         </div>
 
         <div class="sd-tab ${tabActiva === 'retiros' ? 'on' : ''}" data-tab="retiros">
           <div class="sd-cols">
-          <details open><summary>Saldo</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">Saldo</h3>
             ${d.saldo && d.membresia ? (() => {
             const sal = d.saldo
             if (sal.tipo === 'plan') {
@@ -325,18 +330,18 @@
               ${deuda ? ' <span class="tag tag-deb">sin pago este mes</span>' : ''}</div>`
           })() : ''}
             ${!d.saldo || !d.membresia ? '<div style="margin-top:8px;color:var(--muted);font-size:13px">Sin membresía activa: no hay saldo que mostrar.</div>' : ''}
-          </details>
-          <details open><summary>Retiros recientes</summary>
+          </section>
+          <section class="sd-bl"><h3 class="sd-bl-t">Retiros recientes</h3>
           <div style="margin-top:6px;font-size:13px;color:var(--ink2)"><b style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Retiros</b>
             ${d.dispensas.length ? d.dispensas.map((x) => `<div class="fila" style="padding:3px 0">
               <span>${fFecha(x.fecha)} · ${P.esc(x.producto || 'flores')}</span><span class="pn-sp"></span>
               <span>${x.gramos ? x.gramos + ' g' : (x.unidades || '') + ' u'}</span></div>`).join('') : '<div style="color:var(--muted)">Sin retiros.</div>'}</div>
-        </details>
+        </section>
         </div>
         </div>
 
         <div class="sd-tab ${tabActiva === 'datos' ? 'on' : ''}" data-tab="datos">
-          <details open><summary>Contacto</summary>
+          <section class="sd-bl"><h3 class="sd-bl-t">Contacto</h3>
           <div class="campo"><label class="lb">Email de Google</label>
             <input class="input sd-campo" data-campo="email" value="${P.esc(s.email || '')}" ${editar ? '' : 'disabled'} /></div>
           <div class="grid2" style="gap:10px">
@@ -357,15 +362,16 @@
             <input class="input sd-campo" data-campo="nota" value="${P.esc(s.nota || '')}" ${editar ? '' : 'disabled'} /></div>
           ${editar ? '<div class="fila" style="margin-top:10px"><span class="pn-sp"></span><button class="btn" id="sd-guardar-contacto" type="button">Guardar contacto</button></div>' : ''}
           <p class="msg" id="sd-msg-contacto" style="margin:6px 0 0"></p>
-        </details>
-          ${editar ? `<details><summary>Zona peligrosa</summary>
+        </section>
+          ${editar ? `<section class="sd-bl sd-bl--peligro"><h3 class="sd-bl-t">Zona peligrosa</h3>
+          <p class="so-help" style="margin:2px 0 0">Acciones que cambian el acceso del paciente. Se pueden revertir, pero se notan.</p>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
             <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar socio'}</button>
             ${P.puede('papelera_gestionar') ? `<button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>` : ''}
             ${d.carta.acceso && P.puede('carta_gestionar') ? '<button class="btn btn-peligro" id="sd-quitar-carta" type="button">Quitar acceso a la carta</button>' : ''}
           </div>
           <p class="msg" id="sd-msg-zona" style="margin:6px 0 0"></p>
-        </details>` : ''}
+        </section>` : ''}
         </div>
       </div>`
 
@@ -388,6 +394,8 @@
     }))
     if (tabActiva === 'legajo') cargarLegajo()
     caja.querySelector('#sd-r-debito')?.addEventListener('click', () => modalDebito(s))
+    caja.querySelector('#sd-r-legajo')?.addEventListener('click', () =>
+      caja.querySelector('.sd-tabbtn[data-tab="legajo"]')?.click())
     caja.querySelector('#sd-max')?.addEventListener('click', () => {
       fichaMax = !fichaMax
       caja.classList.toggle('max', fichaMax)
@@ -498,7 +506,7 @@
       if (n) { abrir(s.id, alCambiar) } else { est.textContent = 'no encontró datos nuevos (¿cupo de visión agotado? probá más tarde)' }
     })
     caja.querySelector('#sd-cert-borrar')?.addEventListener('click', async () => {
-      if (!(await P.confirmar('¿Quitar el certificado PDF de este socio?', 'Sí, quitar'))) return
+      if (!(await P.confirmar('¿Quitar el certificado PDF de este paciente?', 'Sí, quitar'))) return
       await fetch('/api/panel/certificado', {
         method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ socio_id: s.id }),
@@ -657,7 +665,7 @@
     const cli = d.clinica
     const bloqueTitulo = (tx) => `<b style="display:block;margin-top:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">${tx}</b>`
     const clinicaHtml = cli ? `
-      <details open><summary>Historia clínica</summary>
+      <section class="sd-bl"><h3 class="sd-bl-t">Historia clínica</h3>
         <div style="margin-top:4px;font-size:11px;color:var(--muted)">Visible solo para el rol médico · vive en el consultorio, acá no queda guardada.</div>
         ${(cli.notas || []).length ? `${bloqueTitulo('Notas de evolución (últimas ' + cli.notas.length + ')')}
           ${cli.notas.map((n) => `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2)">
@@ -680,31 +688,31 @@
             <span>${P.esc(a.sustancia)}</span>
             <span style="color:var(--muted);font-size:12px">${P.esc([a.reaccion, a.gravedad].filter(Boolean).join(' · '))}</span>
           </div>`).join('')}` : ''}
-      </details>`
+      </section>`
       : '<div style="margin-top:10px;font-size:12px;color:var(--muted)">La historia clínica es visible solo para el médico.</div>'
 
     zona.innerHTML = `
-      <details open><summary>Consultorio del Dr. Kalb</summary>
+      <section class="sd-bl"><h3 class="sd-bl-t">Consultorio del Dr. Kalb</h3>
         <div style="margin-top:8px;font-size:13px;color:var(--ink2);display:grid;gap:4px">
           <div class="fila" style="gap:6px;flex-wrap:wrap"><b>${P.esc(p.nombre || s.nombre)}</b>
             ${p.obra_social ? `<span class="tag tag-off">${P.esc(p.obra_social)}</span>` : '<span style="color:var(--muted);font-size:12px">sin obra social cargada</span>'}</div>
           <div>Última atención: <b>${res.ultima_atencion ? fFecha(res.ultima_atencion) : 'nunca'}</b> · ${res.consultas_totales || 0} consulta${res.consultas_totales === 1 ? '' : 's'}</div>
           <div>Próximo turno: <b>${res.proximo_turno ? fFecha(res.proximo_turno) + fHora(res.proximo_turno) : 'sin turno agendado'}</b></div>
         </div>
-      </details>
-      <details open><summary>Turnos</summary>
+      </section>
+      <section class="sd-bl"><h3 class="sd-bl-t">Turnos</h3>
         <div style="margin-top:6px;font-size:13px;color:var(--ink2)">
           ${(d.turnos || []).length ? d.turnos.map(filaTurno).join('') : '<div style="color:var(--muted)">Sin turnos registrados.</div>'}
         </div>
-      </details>
-      ${rcDifiere ? `<details open><summary>REPROCANN según el consultorio</summary>
+      </section>
+      ${rcDifiere ? `<section class="sd-bl"><h3 class="sd-bl-t">REPROCANN según el consultorio</h3>
         <div style="margin-top:6px;font-size:13px;color:var(--ink2);display:grid;gap:3px">
           <div>Estado: <b>${P.esc(rc.estado || 'sin dato')}</b>${rc.vence ? ` · vence ${fFecha(rc.vence)}` : ''}</div>
           ${rc.codigo ? `<div>Código: <b style="letter-spacing:.06em">${P.esc(rc.codigo)}</b></div>` : ''}
           ${rc.tramite ? `<div>Trámite Nº ${P.esc(rc.tramite)}</div>` : ''}
           <div style="color:var(--muted);font-size:12px">Difiere de la ficha del club (solapa Trámite): revisá cuál está al día.</div>
         </div>
-      </details>` : ''}
+      </section>` : ''}
       ${clinicaHtml}
       <div class="fila" style="margin-top:12px">${btnAbrir(p.id)}</div>`
   }

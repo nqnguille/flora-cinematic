@@ -524,14 +524,16 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
   font-size: 19px; color: var(--muted); cursor: pointer; padding: 6px; line-height: 1;
 }
 .pn-drawer-x:hover { color: var(--ink); }
-.pn-drawer details { border-top: 1px solid var(--line); padding: 10px 0; }
-.pn-drawer details summary {
-  cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: 0.09em;
-  text-transform: uppercase; color: var(--muted); list-style: none; user-select: none;
+/* Bloques de la ficha: siempre a la vista (nada plegado: si está en la
+   solapa, se ve). El título ordena, no esconde. */
+.pn-drawer .sd-bl { border-top: 1px solid var(--line); padding: 14px 0 4px; }
+.pn-drawer .sd-tab > .sd-bl:first-child,
+.pn-drawer .sd-cols > .sd-bl:first-child,
+.pn-drawer .sd-cols > div > .sd-bl:first-child { border-top: none; padding-top: 4px; }
+.pn-drawer .sd-bl-t {
+  margin: 0 0 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--muted);
 }
-.pn-drawer details summary::-webkit-details-marker { display: none; }
-.pn-drawer details summary::after { content: ' ›'; }
-.pn-drawer details[open] summary::after { content: ' ⌄'; }
 .pn-drawer .campo { display: grid; gap: 4px; margin-top: 10px; }
 .pn-drawer .campo .lb { margin: 0; }
 
@@ -844,3 +846,8 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
 .fz-pv-det summary { cursor: pointer; padding: 10px 2px; font-size: 13px; color: var(--ink2); list-style-position: inside; }
 .fz-pv-det summary:hover { color: var(--ink); }
 .fz-pv-det[open] summary { color: var(--ink); font-weight: 600; }
+.pn-drawer .sd-bl--peligro {
+  border: 1px solid rgba(214, 69, 69, 0.30); border-radius: 10px;
+  background: rgba(214, 69, 69, 0.045); padding: 12px 14px; margin-top: 18px;
+}
+.pn-drawer .sd-bl--peligro .sd-bl-t { color: var(--dan, #d64545); }

@@ -622,7 +622,7 @@
       if (pre) Object.assign(datos, pre)
     } catch { /* precarga rota: alta vacía normal */ }
 
-    const ov = P.modal('Socio nuevo', '<div id="al-cuerpo"></div>')
+    const ov = P.modal('Paciente nuevo', '<div id="al-cuerpo"></div>')
     const cuerpo = ov.querySelector('#al-cuerpo')
 
     const pasosHtml = () => `<div class="al-pasos">${ALTA_PASOS.map((n, i) =>
@@ -881,7 +881,7 @@
             body: JSON.stringify({ socio_id: d.socioId, via: 'whatsapp' }),
           }).catch(() => { /* el registro nunca bloquea el alta */ })
         } else {
-          extra = `<p class="msg err" style="margin-top:10px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el socio quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
+          extra = `<p class="msg err" style="margin-top:10px">No hay plan de Mercado Pago cargado para ${P.esc(datos.tier)} — el paciente quedó dado de alta igual; mandale el link desde Finanzas → Débito automático.</p>`
         }
       }
       // Autocultivador que se pasa: la declaración jurada sale acá mismo,
@@ -1089,7 +1089,7 @@
         <p class="so-help" style="margin:0 0 4px">Esto es lo que se pudo leer del PDF — corregí lo que haga falta.</p>
         <p class="so-help" style="margin:0 0 12px"><b>${L.dni ? 'Ese DNI no está en el padrón: se crea una ficha nueva.'
           : 'No se pudo leer el DNI: completalo a mano.'}</b>
-          Si el DNI es de un socio ya cargado, al confirmar se usa su ficha (no se duplica).</p>
+          Si el DNI es de un paciente ya cargado, al confirmar se usa su ficha (no se duplica).</p>
         <div style="display:grid;gap:10px">
           <div class="grid2">
             <div><label class="lb" for="cv-nombre">Nombre y apellido</label>
@@ -1278,7 +1278,7 @@
 
       ${revisar.length ? `<div class="card" style="margin-bottom:14px;border-left:3px solid var(--amb)">
         <span class="k">Revisar con cuidado (${revisar.length})</span>
-        <p class="so-help">Datos que se contradicen o más de un socio posible — mirá bien antes de confirmar.</p>
+        <p class="so-help">Datos que se contradicen o más de un paciente posible — mirá bien antes de confirmar.</p>
         ${revisar.map((g) => g.candidatos.length === 1 ? ruFila(g, g.candidatos[0], true)
           : `<div style="padding:9px 0;border-top:1px solid var(--line)">
               <div><b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
@@ -1543,14 +1543,14 @@
       editar = P.puede('padron_editar')
       el.innerHTML = `
         <div class="subs" id="so-subs">
-          <button type="button" class="on" data-sub="maestra">Socios</button>
+          <button type="button" class="on" data-sub="maestra">Padrón</button>
           ${P.puede('reprocann_editar') ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
         </div>
 
         <div id="so-maestra">
           ${editar ? `
           <div class="card" style="margin-bottom:10px">
-            <div class="fila"><span class="k">Socio nuevo</span><span class="pn-sp"></span>
+            <div class="fila"><span class="k">Paciente nuevo</span><span class="pn-sp"></span>
               ${P.puede('reprocann_editar') ? `<button class="btn" id="so-convertir" type="button"
                 title="Subís el PDF de su certificado y sale la ficha + la declaración jurada lista para firmar">🌱 Convertir autocultivador</button>` : ''}
               <button class="btn btn-pri" id="so-alta-completa" type="button">+ Dar de alta</button></div>
