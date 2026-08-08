@@ -1,10 +1,13 @@
 /* Módulo Inicio (prefijo ik-): la fila HOY compacta + el kanban del viaje
    del socio. Sin drag & drop a propósito: la etapa se DERIVA de los datos
-   y avanza con acciones reales (cargar código, verificar firma, mandar
-   link), no arrastrando tarjetas.
-   Encima del tablero hay una barra de filtros client-side (lente de tiempo
-   + comportamiento, combinables) y el estado "frío": cards dormidas a mano
-   que no se muestran salvo con su chip. */
+   y avanza con acciones reales (contactar, cargar código, verificar firma,
+   mandar link), no arrastrando tarjetas.
+   Desde el 08/08 el kanban ABSORBIÓ el tablero de Leads (la pestaña de
+   Socios se borró): las cards de lead viven acá, con sus acciones reusadas
+   vía window.PanelLeads (mod-socios.js). Encima del tablero hay una barra
+   de filtros client-side (buscador + lente de tiempo + comportamiento,
+   combinables) y el estado "frío": cards dormidas a mano que no se
+   muestran salvo con su chip. */
 (() => {
   'use strict'
   const P = window.Panel
@@ -28,7 +31,6 @@
     vencido: 'Renovar el certificado',
     rechazado: 'Rearmar el trámite',
   }
-  const NOMBRE_ETAPA_LEAD = { nuevo: 'nuevo', contactado: 'contactado', entrevista: 'entrevista' }
 
   const dosPalabras = (n) => String(n || '—').trim().split(/\s+/).slice(0, 2).join(' ')
   const avatar = (n) => `<span class="av">${P.esc(P.iniciales ? P.iniciales(n) : '?')}</span>`
@@ -37,6 +39,8 @@
     const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
     return m ? `${m[3]}/${m[2]}` : ''
   }
+  const LD = () => window.PanelLeads || null
+  const LD_UI = () => (window.PanelLeads && window.PanelLeads.ui) || null
 
   // ---------- tiempo y estancamiento ----------
   const diasDesde = (ts) => {
@@ -57,7 +61,7 @@
 
   // El timestamp más significativo de cada card, para la lente de tiempo y
   // el estancamiento (documentado acá y calzado con lo que manda inicio.ts):
-  //   leads      → creado (cuándo golpeó la puerta)
+  //   leads      → etapa_desde (cuánto lleva parado en su etapa; si no, creado)
   //   entrevista → reprocann_actualizado (último movimiento del trámite)
   //   firmas     → dec_firmada || dec_generada || reprocann_actualizado
   //                (el último hito del papel en juego)
@@ -66,7 +70,7 @@
   //   adheridos  → actualizado de la suscripción (último latido del débito)
   // Sin fecha = se trata como MUY inactivo (cae en 14d+ y 30d+, nunca en 7d).
   const tsDe = (col, it) => {
-    if (col === 'leads') return it.creado
+    if (it.etapa) return it.etapa_desde || it.creado   // un lead, en cualquier columna
     if (col === 'firmas') return it.dec_firmada || it.dec_generada || it.actualizado
     return it.actualizado
   }
@@ -79,6 +83,8 @@
   let lente = 'todos'          // todos | act7 | inact14 | inact30
   const comps = new Set()      // consulta | vencer | club (se combinan en Y)
   let verFrios = false
+  let busca = ''
+  let buscaT = null
 
   async function recargar() {
     if (!cont || cargando) return
@@ -110,6 +116,7 @@
     if (comp === 'club') {
       // "nos toca" = la pelota es nuestra: quien='club', o el chip violeta
       // (verificar la dec firmada / mandar el link del débito)
+      if (it.etapa) return false // el lead corre por su propio embudo
       if (col === 'entrevista' || col === 'ministerio') return it.quien === 'club'
       if (col === 'firmas') return it.dec_estado === 'firmada'
       if (col === 'vinculados') return !it.no_insistir
@@ -117,12 +124,39 @@
     }
     return true
   }
-  const pasaFiltros = (col, it) => pasaLente(diasSin(col, it)) && [...comps].every((c) => pasaComp(c, col, it))
-  const hayFiltro = () => lente !== 'todos' || comps.size > 0
+  // buscador: nombre / email / teléfono, en TODAS las columnas
+  const pasaBusca = (it) => {
+    if (!busca) return true
+    return [it.nombre, it.email, it.telefono].some((v) => String(v || '').toLowerCase().includes(busca))
+  }
+  const pasaFiltros = (col, it) => pasaBusca(it)
+    && pasaLente(diasSin(col, it))
+    && [...comps].every((c) => pasaComp(c, col, it))
+  const hayFiltro = () => lente !== 'todos' || comps.size > 0 || !!busca
 
-  function visiblesDe(colId, colData) {
-    const base = verFrios ? (colData.frios ? colData.frios.items : []) : colData.items
-    return base.filter((it) => pasaFiltros(colId, it))
+  // De dónde salen las cards de cada columna. LEADS = leads en nuevo o
+  // contactado; ENTREVISTA es MIXTA: arriba los leads en etapa entrevista
+  // (orden: turno más próximo primero), abajo los socios en preparación.
+  const ordenTurno = (a, b) => {
+    const ta = a.turno_fecha ? Date.parse(String(a.turno_fecha).replace(' ', 'T') + 'Z') : Infinity
+    const tb = b.turno_fecha ? Date.parse(String(b.turno_fecha).replace(' ', 'T') + 'Z') : Infinity
+    return (ta - tb) || String(a.etapa_desde || '').localeCompare(String(b.etapa_desde || ''))
+  }
+  function itemsDe(colId, deFrios) {
+    const k = datos.kanban
+    const pick = (cd) => (cd ? (deFrios ? (cd.frios ? cd.frios.items : []) : cd.items) : [])
+    if (colId === 'leads') return pick(k.leads).filter((l) => l.etapa !== 'entrevista')
+    if (colId === 'entrevista') {
+      const deLead = pick(k.leads).filter((l) => l.etapa === 'entrevista').sort(ordenTurno)
+      return [...deLead, ...pick(k.entrevista)]
+    }
+    return pick(k[colId])
+  }
+  const visiblesDe = (colId) => itemsDe(colId, verFrios).filter((it) => pasaFiltros(colId, it))
+  const leadDe = (id) => {
+    const cd = datos && datos.kanban && datos.kanban.leads
+    if (!cd) return null
+    return cd.items.find((x) => Number(x.id) === id) || (cd.frios ? cd.frios.items.find((x) => Number(x.id) === id) : null) || null
   }
 
   // ---------- fila HOY ----------
@@ -152,7 +186,8 @@
   }
 
   // ---------- barra de filtros ----------
-  function barraFiltros(k) {
+  function barraFiltros() {
+    const k = datos.kanban
     // contadores client-side sobre lo cargado (cards vivas de todas las
     // columnas); el de fríos es el total REAL que manda el server
     const c = { act7: 0, inact14: 0, inact30: 0, consulta: 0, vencer: 0, club: 0 }
@@ -174,6 +209,8 @@
     const chipL = (id, txt, n) => `<button class="chip${lente === id ? ' on' : ''}" data-lente="${id}" type="button">${txt}${n === undefined ? '' : ` <span class="ik-cnt">${n}</span>`}</button>`
     const chipC = (id, txt, n) => `<button class="chip${comps.has(id) ? ' on' : ''}" data-comp="${id}" type="button">${txt} <span class="ik-cnt">${n}</span></button>`
     return `<div class="ik-filtros">
+      <input class="input ik-buscar" type="search" placeholder="Buscar por nombre, mail o teléfono…"
+        value="${P.esc(busca)}" autocomplete="off" />
       ${chipL('todos', 'Todos')}
       ${chipL('act7', '🔥 Activos 7d', c.act7)}
       ${chipL('inact14', '🕐 Sin actividad 14d+', c.inact14)}
@@ -184,6 +221,7 @@
       ${chipC('club', '🟣 Nos toca', c.club)}
       <span class="pn-sp"></span>
       <button class="chip ik-chip-frios${verFrios ? ' on' : ''}" data-frios type="button">😴 Fríos <span class="ik-cnt">${frios}</span></button>
+      ${k.leads && LD() && P.puede('leads_gestionar') ? '<button class="btn btn-pri ik-nuevo-lead" type="button">+ Lead</button>' : ''}
     </div>`
   }
 
@@ -199,24 +237,64 @@
       : `<button class="ik-qa ik-frio" type="button" data-nombre="${P.esc(dosPalabras(it.nombre))}" data-tip="Pasar a frío: sale del tablero">😴</button>`
   }
 
+  // Piezas comunes de una card de lead (badges y acciones vienen del viejo
+  // tablero, reusadas tal cual vía PanelLeads.ui)
+  function ldPiezas(l) {
+    const ui = LD_UI()
+    const gestionar = P.puede('leads_gestionar')
+    const wa = LD() ? LD().whatsappDe(l) : null
+    return {
+      badges: ui ? `${ui.badgeOrigen(l)}${ui.chipPago(l)}` : '',
+      rc: ui ? ui.chipReprocann(l) : '',
+      turno: ui ? ui.turnoLinea(l) : '',
+      contacto: (l.email || l.telefono)
+        ? `<div class="ik-sub">${P.esc([l.email, l.telefono].filter(Boolean).join(' · '))}</div>` : '',
+      nota: l.nota ? `<div class="ik-sub ik-nota">📝 ${P.esc(l.nota)}</div>` : '',
+      wa: wa ? `<a class="ik-qa2 ik-ld-wa" href="${P.esc(wa)}" target="_blank" rel="noopener" data-tip="Escribirle por WhatsApp">💬</a>` : '',
+      menu: gestionar ? '<div class="ld-menu ik-menu"><button class="btn ld-menubtn ik-ld-menu" type="button" aria-label="Más acciones" aria-expanded="false">⋯</button></div>' : '',
+      gestionar,
+    }
+  }
+
+  // LEADS (nuevo + contactado): la riqueza del tablero viejo en una card
   function cardLead(l) {
-    const rc = l.reprocann
-    const partes = []
-    if (rc && rc.modalidad) partes.push(rc.modalidad)
-    if (rc && rc.plantas !== undefined && rc.plantas !== null) partes.push(`${rc.plantas} plantas`)
-    return `<div class="ik-card ik-lead${l.frio ? ' ik-fria' : ''}" data-lead="${l.id}">
+    const z = ldPiezas(l)
+    const etTag = l.etapa === 'contactado' ? '<span class="tag tag-auto">contactado</span>' : '<span class="tag tag-off">nuevo</span>'
+    const avance = !z.gestionar ? '' : (l.etapa === 'nuevo'
+      ? '<button class="ik-chip ik-chip-club ik-ld-mover" data-etapa="contactado" type="button">→ Contactados</button>'
+      : '<button class="ik-chip ik-chip-club ik-ld-mover" data-etapa="entrevista" type="button">→ Entrevista</button>')
+    return `<div class="ik-card ik-lead ik-q-club${l.frio ? ' ik-fria' : ''}" data-lead="${l.id}">
       ${avatar(l.nombre || l.email)}
       <div class="ik-c-body">
-        <b>${P.esc(dosPalabras(l.nombre || l.email || '(sin nombre)'))}</b>
-        <div class="ik-sub">${marcaTiempo(l.creado)} · ${P.esc(NOMBRE_ETAPA_LEAD[l.etapa] || l.etapa)}${l.tiene_adjunto ? ' · 📎' : ''}</div>
-        ${rc ? `<div class="ik-chips"><span class="tag tag-ok">🌱 REPROCANN ✓${partes.length ? ' ' + P.esc(partes.join(' · ')) : ''}</span></div>` : ''}
+        <b>${P.esc(dosPalabras(l.nombre || l.email || '(sin nombre)'))} ${etTag}${l.tiene_adjunto ? ' <span data-tip="Mandó su credencial">📎</span>' : ''}</b>
+        <div class="ik-sub">${marcaTiempo(l.etapa_desde || l.creado, ' en esta etapa')}</div>
+        ${z.contacto}${z.nota}
+        ${z.badges ? `<div class="ik-chips">${z.badges}</div>` : ''}${z.rc}${z.turno}
+        <div class="ik-chips ik-acciones">${avance}${z.wa}<span class="pn-sp"></span>${z.menu}</div>
       </div>
       ${botonFrio(l, true)}
     </div>`
   }
 
-  // ENTREVISTA: el camino "desde cero" en preparación (con la señal del
-  // consultorio: la próxima consulta agendada, destacada)
+  // Lead en ENTREVISTA: el turno del consultorio manda y el alta es LA acción
+  function cardLeadEntrevista(l) {
+    const z = ldPiezas(l)
+    const alta = z.gestionar ? '<button class="ik-chip ik-chip-club ik-ld-alta" type="button">📋 Dar de alta</button>' : ''
+    return `<div class="ik-card ik-lead ik-q-club${l.frio ? ' ik-fria' : ''}" data-lead="${l.id}">
+      ${avatar(l.nombre || l.email)}
+      <div class="ik-c-body">
+        <b>${P.esc(dosPalabras(l.nombre || l.email || '(sin nombre)'))}${l.tiene_adjunto ? ' <span data-tip="Mandó su credencial">📎</span>' : ''}</b>
+        <div class="ik-sub">${marcaTiempo(l.etapa_desde || l.creado, ' en entrevista')}</div>
+        ${z.contacto}${z.nota}
+        ${z.badges ? `<div class="ik-chips">${z.badges}</div>` : ''}${z.rc}${z.turno}
+        <div class="ik-chips ik-acciones">${alta}${z.wa}<span class="pn-sp"></span>${z.menu}</div>
+      </div>
+      ${botonFrio(l, true)}
+    </div>`
+  }
+
+  // ENTREVISTA (socios): el camino "desde cero" en preparación (con la señal
+  // del consultorio: la próxima consulta agendada, destacada)
   function cardEntrevista(s) {
     const q = pelota(s.quien)
     const conConsulta = s.prox_dias !== null && s.prox_dias !== undefined && s.prox_dias >= 0
@@ -308,29 +386,42 @@
   }
 
   // ---------- columnas ----------
+  // ENTREVISTA es mixta: la card decide su renderer por el tipo del item
+  // (un lead trae `etapa`; un socio en preparación trae `estado`).
   const COLS = [
-    { id: 'leads', emoji: '📥', titulo: 'Leads', vacio: 'Nadie golpeando la puerta hoy.', card: cardLead, mas: 'leads' },
-    { id: 'entrevista', emoji: '🩺', titulo: 'Entrevista', vacio: 'Nadie preparando su entrada.', card: cardEntrevista, mas: 'socios' },
+    { id: 'leads', emoji: '📥', titulo: 'Leads', vacio: 'Nadie golpeando la puerta hoy.', card: cardLead },
+    { id: 'entrevista', emoji: '🩺', titulo: 'Entrevista', vacio: 'Nadie preparando su entrada.', card: (it) => (it.etapa ? cardLeadEntrevista(it) : cardEntrevista(it)), mas: 'socios' },
     { id: 'firmas', emoji: '✍️', titulo: 'Firmas', vacio: 'Nada esperando una firma.', card: cardFirma, mas: 'socios' },
     { id: 'ministerio', emoji: '🏛️', titulo: 'Ministerio', vacio: 'Nada durmiendo en el Ministerio.', card: cardMinisterio, mas: 'socios' },
     { id: 'vinculados', emoji: '🌿', titulo: 'Vinculados', vacio: 'Sin candidatos al débito.', card: cardVinculado, mas: 'suscripciones' },
     { id: 'adheridos', emoji: '💳', titulo: 'Adheridos', vacio: 'Todavía nadie en débito.', card: cardAdherido, mas: 'suscripciones' },
   ]
 
-  function columna(def, colData) {
+  function columna(def) {
+    const k = datos.kanban
+    const colData = def.id === 'entrevista' ? (k.entrevista || k.leads) : k[def.id]
     if (!colData) return '' // el rol no ve esta columna
-    const visibles = visiblesDe(def.id, colData)
+    const visibles = visiblesDe(def.id)
     const filtrado = verFrios || hayFiltro()
-    // sin filtros manda el total real del server; filtrando, lo que se ve
-    const n = filtrado ? visibles.length : colData.total
-    const base = verFrios ? (colData.frios ? colData.frios.items : []) : colData.items
+    const base = itemsDe(def.id, verFrios)
+    // sin filtros manda el server (con lo cargado como respaldo); filtrando,
+    // lo que se ve. La columna de leads no tiene módulo destino (el tablero
+    // viejo se borró): su "+N más" es informativo.
+    let n = visibles.length
+    let deMas = 0
+    if (!filtrado) {
+      if (def.id === 'leads') { deMas = k.leads ? k.leads.total - k.leads.items.length : 0; n = base.length }
+      else if (def.id === 'entrevista') { deMas = k.entrevista ? k.entrevista.total - k.entrevista.items.length : 0; n = base.length + deMas }
+      else { deMas = colData.total - colData.items.length; n = colData.total }
+    }
     const vacioTxt = base.length ? 'Nada pasa este filtro.' : (verFrios ? 'Sin fríos acá.' : def.vacio)
-    const deMas = (!filtrado && colData.total > colData.items.length) ? colData.total - colData.items.length : 0
     return `<section class="ik-col" data-col="${def.id}">
       <header class="ik-col-h"><span>${def.emoji} ${def.titulo}</span><b class="ik-n">${n}</b></header>
       <div class="ik-cards">
         ${visibles.length ? visibles.map(def.card).join('') : `<div class="ik-vacio">${vacioTxt}</div>`}
-        ${deMas > 0 ? `<button class="ik-mas" type="button" data-mas="${def.mas}">+${deMas} más</button>` : ''}
+        ${deMas > 0 ? (def.mas
+    ? `<button class="ik-mas" type="button" data-mas="${def.mas}">+${deMas} más</button>`
+    : `<div class="ik-mas ik-mas-info">+${deMas} más</div>`) : ''}
       </div>
     </section>`
   }
@@ -345,7 +436,7 @@
     cont.innerHTML = `
       <p style="color:var(--ink2);margin:0 0 12px">${P.esc(hoyLindo)}</p>
       ${filaHoy(datos)}
-      ${k ? `${barraFiltros(k)}<div class="ik-board${verFrios ? ' ik-modo-frios' : ''}">${COLS.map((c) => columna(c, k[c.id])).join('')}</div>` : ''}`
+      ${k ? `${barraFiltros()}<div class="ik-board${verFrios ? ' ik-modo-frios' : ''}">${COLS.map(columna).join('')}</div>` : ''}`
   }
 
   // ---------- frío / revivir ----------
@@ -354,10 +445,10 @@
   function sacarDeKanban(esLead, id) {
     const k = datos && datos.kanban
     if (!k) return null
-    for (const def of COLS) {
-      const cd = k[def.id]
+    for (const nombre of ['leads', 'entrevista', 'firmas', 'ministerio', 'vinculados', 'adheridos']) {
+      const cd = k[nombre]
       if (!cd) continue
-      if (esLead !== (def.id === 'leads')) continue
+      if (esLead !== (nombre === 'leads')) continue
       for (const lista of [cd.items, (cd.frios && cd.frios.items) || []]) {
         const i = lista.findIndex((x) => Number(x.id) === id)
         if (i === -1) continue
@@ -392,14 +483,42 @@
     render()
   }
 
-  // navegación al tablero de leads (mismo truco que los tiles con data-filtro)
-  function irALeads() {
-    try {
-      const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
-      nav.sub = 'leads'
-      sessionStorage.setItem('so-nav', JSON.stringify(nav))
-    } catch { /* nada */ }
-    P.ir('socios')
+  // ---------- menú ⋯ de un lead (acciones del viejo tablero, vía PanelLeads) ----------
+  function abrirMenuLead(btn) {
+    const caja = btn.closest('.ld-menu')
+    const abierto = caja.querySelector('.ld-menupanel')
+    cont.querySelectorAll('.ld-menupanel').forEach((x) => x.remove())
+    cont.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
+    if (abierto) return
+    const l = leadDe(Number(btn.closest('.ik-card').dataset.lead))
+    if (!l) return
+    const ETAPAS = [['nuevo', 'Nuevos'], ['contactado', 'Contactados'], ['entrevista', 'Entrevista']]
+    const op = []
+    op.push('<button class="btn ik-m-alta" type="button">📋 Dar de alta</button>')
+    ETAPAS.forEach(([e2, nom2]) => {
+      if (e2 !== l.etapa) op.push(`<button class="btn ik-m-mover" data-etapa="${e2}" type="button">Mover a ${nom2}</button>`)
+    })
+    op.push('<button class="btn ik-m-nota" type="button">✏️ Nota</button>')
+    if (l.email) op.push('<button class="btn ik-m-acceso" type="button">Acceso 7 días a la carta</button>')
+    if (l.reprocann && l.email && P.puede('reprocann_editar')) op.push('<button class="btn ik-m-convertir" type="button">🌱 Convertir</button>')
+    if (l.tiene_adjunto) op.push('<button class="btn ik-m-ddjj" type="button">📄 Declaración jurada</button>')
+    op.push('<button class="btn ik-m-perdido" type="button">Marcar perdido</button>')
+    op.push('<button class="btn btn-peligro ik-m-borrar" type="button">🗑 Borrar del todo</button>')
+    const panel = document.createElement('div')
+    panel.className = 'ld-menupanel'
+    panel.innerHTML = op.join('')
+    caja.appendChild(panel)
+    btn.setAttribute('aria-expanded', 'true')
+  }
+
+  function modalNota(l) {
+    const ov = P.modal(`Nota — ${l.nombre || l.email || 'lead'}`, `
+      <input class="input" id="ik-nota-txt" maxlength="300" value="${P.esc(l.nota || '')}" placeholder="De dónde salió, qué busca…" />
+      <div class="pn-mod-acciones"><button class="btn btn-pri" id="ik-nota-ok" type="button">Guardar</button></div>`)
+    ov.querySelector('#ik-nota-ok').addEventListener('click', async () => {
+      await LD().guardarNota(l.id, ov.querySelector('#ik-nota-txt').value.trim(), () => recargar())
+      P.cerrarModal()
+    })
   }
 
   P.registrar('inicio', {
@@ -412,7 +531,28 @@
         if (document.visibilityState === 'visible' && cont.classList.contains('on')) recargar()
       })
 
-      cont.addEventListener('click', (e) => {
+      // buscador: filtra en memoria con debounce, sin repedir al server
+      cont.addEventListener('input', (e) => {
+        const inp = e.target.closest('.ik-buscar')
+        if (!inp) return
+        clearTimeout(buscaT)
+        const v = inp.value
+        buscaT = setTimeout(() => {
+          busca = v.trim().toLowerCase()
+          render()
+          const nuevo = cont.querySelector('.ik-buscar')
+          if (nuevo) { try { nuevo.focus(); nuevo.setSelectionRange(v.length, v.length) } catch { /* inputs search sin selección */ } }
+        }, 200)
+      })
+
+      // un click fuera cierra el menú ⋯ abierto
+      document.addEventListener('click', (ev) => {
+        if (ev.target.closest('.ld-menu')) return
+        cont.querySelectorAll('.ld-menupanel').forEach((x) => x.remove())
+        cont.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
+      })
+
+      cont.addEventListener('click', async (e) => {
         // barra de filtros (client-side, sin repedir al server)
         const bl = e.target.closest('[data-lente]')
         if (bl) { lente = bl.dataset.lente; render(); return }
@@ -423,9 +563,37 @@
           render(); return
         }
         if (e.target.closest('[data-frios]')) { verFrios = !verFrios; render(); return }
+        if (e.target.closest('.ik-nuevo-lead')) { LD() && LD().nuevoLead(() => recargar()); return }
         // frío / revivir (antes que el click de la card)
         const bf = e.target.closest('.ik-frio, .ik-revivir')
         if (bf) { e.stopPropagation(); accionFrio(bf); return }
+        // WhatsApp del lead: dejarlo navegar, sin tocar nada más
+        if (e.target.closest('.ik-ld-wa')) return
+        // acciones de lead (PanelLeads = las piezas del tablero viejo)
+        const card = e.target.closest('.ik-card')
+        const leadId = card && card.dataset.lead ? Number(card.dataset.lead) : null
+        if (leadId && LD()) {
+          const l = leadDe(leadId)
+          const mover = e.target.closest('.ik-ld-mover')
+          if (mover) {
+            mover.disabled = true
+            await LD().avanzarEtapa(leadId, mover.dataset.etapa, () => recargar())
+            return
+          }
+          if (e.target.closest('.ik-ld-alta') && l) { LD().darDeAlta(l, () => recargar()); return }
+          const menuBtn = e.target.closest('.ik-ld-menu')
+          if (menuBtn) { abrirMenuLead(menuBtn); return }
+          if (e.target.closest('.ik-m-alta') && l) { LD().darDeAlta(l, () => recargar()); return }
+          const mMover = e.target.closest('.ik-m-mover')
+          if (mMover) { await LD().avanzarEtapa(leadId, mMover.dataset.etapa, () => recargar()); return }
+          if (e.target.closest('.ik-m-nota') && l) { modalNota(l); return }
+          if (e.target.closest('.ik-m-acceso') && l) { await LD().accesoCarta(l, () => recargar()); return }
+          if (e.target.closest('.ik-m-convertir') && l) { LD().convertir(l, () => recargar()); return }
+          if (e.target.closest('.ik-m-ddjj')) { LD().ddjj(leadId); return }
+          if (e.target.closest('.ik-m-perdido')) { await LD().marcarPerdido(leadId, () => recargar()); return }
+          if (e.target.closest('.ik-m-borrar') && l) { await LD().borrar(l, () => recargar()); return }
+          return // card de lead: sin navegación, todo pasa por sus botones
+        }
         // chip "Mandar link 20%": directo al modal del débito, sin abrir la ficha
         const btnDeb = e.target.closest('.ik-btn-debito')
         if (btnDeb && window.PanelSocioDetalle) {
@@ -438,19 +606,16 @@
         // badge renovar de un adherido → módulo Suscripciones
         if (e.target.closest('.ik-btn-renovar')) { e.stopPropagation(); P.ir('suscripciones'); return }
         // "+N más" → el módulo que corresponde
-        const mas = e.target.closest('.ik-mas')
+        const mas = e.target.closest('button.ik-mas')
         if (mas) {
           const destino = mas.dataset.mas
-          if (destino === 'leads') return irALeads()
           if (destino === 'suscripciones' && !P.puede('mp_gestionar')) return P.ir('socios')
           return P.ir(destino)
         }
-        // card de lead → tablero de leads
-        if (e.target.closest('.ik-card[data-lead]')) return irALeads()
         // card de socio → ficha 360° en la solapa que toca
-        const card = e.target.closest('.ik-card[data-socio]')
-        if (card && window.PanelSocioDetalle) {
-          return window.PanelSocioDetalle.abrir(Number(card.dataset.socio), () => recargar(), card.dataset.tab)
+        const cardSocio = e.target.closest('.ik-card[data-socio]')
+        if (cardSocio && window.PanelSocioDetalle) {
+          return window.PanelSocioDetalle.abrir(Number(cardSocio.dataset.socio), () => recargar(), cardSocio.dataset.tab)
         }
         // mini-tiles de la fila HOY (navegación heredada)
         const t = e.target.closest('.in-tile[data-ir]')

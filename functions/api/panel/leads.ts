@@ -23,10 +23,10 @@ function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const auth = await requireCap(request, env, 'leads_ver');
-  if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
-
+// El corazón del GET, exportado para que el kanban de Inicio arme su columna
+// de leads con EXACTAMENTE la misma data (espejo KV→D1 incluido) sin
+// duplicar lógica. El caller pone su propio guard de capacidades.
+export async function tableroLeads(env: Env): Promise<Record<string, unknown>[]> {
   // Los binarios `archivo:<email>` conviven con los registros JSON en
   // SOLICITUDES: no son leads, pero sí prueban que ese email adjuntó su
   // credencial (los aspirantes suben el PDF sin pasar por la solicitud web).
@@ -107,7 +107,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       tiene_adjunto: l.tiene_adjunto || (conArchivo ? 1 : 0),
     };
   });
-  return json({ ok: true, leads });
+  return leads;
+}
+
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
+  const auth = await requireCap(request, env, 'leads_ver');
+  if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
+  return json({ ok: true, leads: await tableroLeads(env) });
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {

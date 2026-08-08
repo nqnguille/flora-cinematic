@@ -603,6 +603,12 @@
   // precarga desde la solicitud web y cobro opcional en el mismo acto.
   const ALTA_PASOS = ['Quién es', 'Membresía', 'Listo']
 
+  // Hooks de recarga para el kanban de Inicio: cuando el alta completa o la
+  // conversión salen desde una card de lead, al terminar avisan para que el
+  // tablero se refresque (los setea window.PanelLeads).
+  let altaCb = null
+  let cvCb = null
+
   function altaAbrir() {
     let paso = 1
     let tarifas = []
@@ -941,7 +947,8 @@
             `Hola ${nom}! Te paso la declaración jurada para que puedas pasarte a Flora. Es el papel que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: no se pueden tener las dos modalidades a la vez.\n\nImprimila, firmala y mandanos una foto. Con eso seguimos nosotros el trámite.`)}`
         }
       }
-      muCargar(true)
+      if (cont) muCargar(true)
+      if (altaCb) { try { altaCb() } catch { /* nada */ } altaCb = null }
     }
 
     pintar1()
@@ -1018,8 +1025,8 @@
         return
       }
       if (d.paso === 'revisar') pintarRevisar(d)
-      else if (d.paso === 'falta_diagnostico') { muCargar(true); if (leadCtx) ldCargar(); pintarFalta(d) }
-      else if (d.paso === 'listo') { muCargar(true); if (leadCtx) ldCargar(); pintarListo(d) }
+      else if (d.paso === 'falta_diagnostico') { if (cont) muCargar(true); if (leadCtx && cvCb) { try { cvCb() } catch { /* nada */ } } pintarFalta(d) }
+      else if (d.paso === 'listo') { if (cont) muCargar(true); if (leadCtx && cvCb) { try { cvCb() } catch { /* nada */ } } pintarListo(d) }
       else setMsg('✗ respuesta inesperada del servidor', true)
     }
 
@@ -1357,115 +1364,11 @@
 
 
 
-  /* ============ Embudo de LEADS (ld-): del contacto al socio ============ */
-  // Etapas (decisión 01/08): nuevo → contactado → entrevista → convertido
-  // (+ perdido). Las solicitudes web y los intentos de login entran solos.
-  let LEADS = []
-  let ldFiltro = ''
-  let ldMsgT = null
-  let ldPerdidosAbierto = false
-  let ldFirma = ''        // si nada cambió, no se repinta (el poll no parpadea)
-  let ldArrastrando = false
-  // Avisos de la solapa Leads. El #so-msg del padrón vive en otra solapa
-  // oculta, así que todo esto caía en alert() nativo, que bloquea y no se
-  // puede deshacer. `accion` es el botón opcional de la derecha (Deshacer).
-  function avisoLd(texto, clase, ms, accion) {
-    const el = cont.querySelector('#ld-msg')
-    if (!el) return
-    el.className = 'msg' + (clase ? ' ' + clase : '')
-    el.textContent = texto
-    if (accion) {
-      const b = document.createElement('button')
-      b.type = 'button'
-      b.className = 'btn'
-      b.style.cssText = 'padding:2px 8px;font-size:11px;margin-left:8px'
-      b.textContent = accion.texto
-      b.addEventListener('click', () => { avisoLd(''); accion.hacer() })
-      el.appendChild(b)
-    }
-    clearTimeout(ldMsgT)
-    if (texto) ldMsgT = setTimeout(() => { el.textContent = ''; el.className = 'msg' }, ms || 6000)
-  }
-
-  // El verde queda SOLO para convertidos: en este panel significa dato
-  // positivo (ver panel.css). Las etapas de trabajo van de neutro a cálido
-  // según cuánto avanzaron.
-  const LD_ETAPAS = [
-    ['nuevo', 'Nuevos', 'var(--muted)'],
-    ['contactado', 'Contactados', 'var(--vio)'],
-    ['entrevista', 'Entrevista médica', 'var(--amb)'],
-    ['convertido', 'Convertidos', 'var(--grn)'],
-  ]
-  const LD_VACIO = {
-    nuevo: 'Nadie nuevo por ahora',
-    contactado: 'Ninguno contactado todavía',
-    entrevista: 'Sin entrevistas agendadas',
-    convertido: 'Todavía ninguno',
-  }
-
-  // Cada carga lleva un número: si dos respuestas se cruzan (el poll de 60s y
-  // una acción, por ejemplo), la vieja no pisa a la nueva. Y las tarjetas con
-  // una operación en vuelo mandan sobre lo que traiga el servidor, hasta que
-  // confirme — si no, la tarjeta que acabás de mover salta sola a su lugar
-  // anterior mientras el PATCH todavía viaja.
-  let ldGen = 0
-  const ldEnVuelo = new Map()   // id -> etapa que pusimos nosotros
-
-  async function ldCargar() {
-    const caja = cont.querySelector('#ld-tablero')
-    if (!LEADS.length) caja.innerHTML = '<div class="vacio">⏳ Cargando el embudo…</div>'
-    const mio = ++ldGen
-    let r
-    try {
-      r = await fetch('/api/panel/leads', { credentials: 'include' })
-    } catch {
-      // sin red: si ya hay tablero, se deja como está (no tirar lo que sirve)
-      if (!LEADS.length) caja.innerHTML = '<div class="vacio">Sin conexión. Probá de nuevo.</div>'
-      else avisoLd('Sin conexión — el embudo puede estar desactualizado.', 'err', 6000)
-      return
-    }
-    if (mio !== ldGen) return           // llegó tarde, ya hay una carga más nueva
-    if (!r.ok) {
-      if (!LEADS.length) caja.innerHTML = `<div class="vacio">${P.esc(errHttp(r.status))}</div>`
-      else avisoLd(errHttp(r.status) + ' — el embudo puede estar desactualizado.', 'err', 6000)
-      return
-    }
-    const datos = await r.json().catch(() => ({ leads: [] }))
-    if (mio !== ldGen) return
-    LEADS = datos.leads || []
-    // lo que estamos moviendo gana sobre lo que trae el servidor
-    LEADS.forEach((l) => { if (ldEnVuelo.has(l.id)) l.etapa = ldEnVuelo.get(l.id) })
-    ldRender()
-  }
-
-  /* El embudo respira solo: mientras la pestaña Leads está a la vista, un pago
-     que entra mueve la tarjeta sin tocar F5. Nunca repinta si el dueño está
-     tipeando una nota, y no gasta requests con la pestaña en segundo plano. */
-  function ldVisible() {
-    // El módulo puede no estar montado (ej. pantalla de login): jamás romper.
-    try {
-      const sub = cont.querySelector('#so-leads')
-      return !!sub && !sub.hidden && document.visibilityState === 'visible'
-    } catch { return false }
-  }
-  // Nunca repintar encima de alguien que está trabajando: escribiendo una
-  // nota, con el menú abierto, o arrastrando una tarjeta.
-  function ldOcupado() {
-    const a = document.activeElement
-    if (a && a.classList && a.classList.contains('ld-nota')) return true
-    if (ldArrastrando || ldEnVuelo.size) return true
-    if (cont.querySelector('.ld-menupanel')) return true
-    return false
-  }
-  setInterval(() => {
-    if (!ldVisible() || ldOcupado()) return
-    ldRender(true)                 // refresca la cuenta regresiva sin red
-  }, 30000)
-  setInterval(() => {
-    if (!ldVisible() || ldOcupado()) return
-    ldCargar()                     // trae pagos y leads nuevos
-  }, 60000)
-
+  /* ============ Piezas de LEADS que sobreviven al tablero ============ */
+  // El tablero de la pestaña Leads se FUSIONÓ en el kanban de Inicio
+  // (decisión de Guille 08/08): acá quedan solo los modales y acciones que
+  // el kanban reusa vía window.PanelLeads (abajo de todo). Los endpoints no
+  // cambiaron; lo que se borró es el render viejo y sus listeners.
   function ldBadgeOrigen(l) {
     if (l.origen === 'solicitud_web') return l.intent === 'entrevista'
       ? '<span class="tag tag-deb">pidió entrevista</span>'
@@ -1515,254 +1418,6 @@
     const f = new Date(String(l.turno_fecha).replace(' ', 'T') + 'Z')
     const txt = f.toLocaleString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' })
     return `<div style="color:var(--muted);font-size:12px">🗓 turno ${P.esc(txt)} hs</div>`
-  }
-
-  // El tiempo parado en una etapa es la señal de que algo se está enfriando:
-  // gris hasta una semana, ámbar hasta tres, rojo después.
-  function ldAntiguedad(dias) {
-    const txt = dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`
-    if (dias >= 21) return `<span class="tag tag-mal">${txt} acá</span>`
-    if (dias >= 7) return `<span class="tag tag-deb">${txt} acá</span>`
-    return `<span style="color:var(--muted);font-size:11px">${txt} en esta etapa</span>`
-  }
-
-  // La acción principal cambia según dónde está parado el lead: es lo que
-  // sigue naturalmente, no siempre "dar de alta". Todo lo demás vive en el
-  // menú ⋯ para que la tarjeta no sea una botonera de nueve controles.
-  function ldPrimaria(l) {
-    if (!editar) return ''
-    const b = (cls, txt, extra) => `<button class="btn btn-pri ${cls}" data-id="${l.id}" ${extra || ''} type="button">${txt}</button>`
-    if (l.etapa === 'convertido') {
-      return l.socio_id ? `<button class="btn ld-ficha" data-socio="${l.socio_id}" type="button">Ver ficha →</button>` : ''
-    }
-    if (l.etapa === 'nuevo') return b('ld-mover', '→ Contactados', 'data-etapa="contactado"')
-    if (l.etapa === 'contactado') return b('ld-mover', '→ Entrevista', 'data-etapa="entrevista"')
-    if (l.etapa === 'entrevista') return b('ld-alta', 'Dar de alta')
-    if (l.etapa === 'perdido') return `<button class="btn ld-mover" data-id="${l.id}" data-etapa="nuevo" type="button">Recuperar</button>`
-    return ''
-  }
-
-  // Mover de etapa: la tarjeta se va a su columna nueva al instante y el
-  // servidor confirma después. Si falla, vuelve sola y se avisa. Mientras
-  // viaja, `ldEnVuelo` la protege de que un poll la devuelva a su lugar.
-  async function ldMoverEtapa(id, etapa, opts) {
-    const l = LEADS.find((x) => x.id === Number(id))
-    if (!l || l.etapa === etapa) return
-    const desde = l.etapa
-    const nombreEtapa = etapa === 'perdido' ? 'Perdidos'
-      : (LD_ETAPAS.find(([e]) => e === etapa) || [])[1] || etapa
-    l.etapa = etapa
-    ldEnVuelo.set(l.id, etapa)
-    ldRender(true)
-    let ok = false
-    try {
-      const r = await fetch('/api/panel/leads', {
-        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: Number(id), etapa }),
-      })
-      ok = r.ok
-      if (!ok) { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo mover'), 'err') }
-    } catch { avisoLd('✗ sin conexión: no se pudo mover', 'err') }
-    ldEnVuelo.delete(l.id)
-    if (!ok) { l.etapa = desde; ldRender(true); return }
-    const quien = (l.nombre || l.email || 'el lead').split(' ')[0]
-    if (opts && opts.silencioso) avisoLd(`✔ ${quien} pasó a ${nombreEtapa}`, 'ok', 8000)
-    else {
-      avisoLd(`✔ ${quien} pasó a ${nombreEtapa}`, 'ok', 8000,
-        { texto: 'Deshacer', hacer: () => ldMoverEtapa(id, desde, { silencioso: true }) })
-    }
-  }
-
-  function ldCard(l) {
-    const dias = Math.floor((Date.now() - Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z')) / 86400000)
-    const tel = digitsOnly(l.telefono)
-    const nom = String(l.nombre || '').split(' ')[0]
-    const saludo = nom ? `Hola ${nom}! ` : 'Hola! '
-    const color = (LD_ETAPAS.find(([e]) => e === l.etapa) || [])[2] || 'var(--line2)'
-    const puedeArrastrar = editar && l.etapa !== 'convertido'
-    return `<div class="ld-card" data-id="${l.id}" data-etapa="${P.esc(l.etapa)}" style="--ld-color:${color}">
-      <div class="fila" style="flex-wrap:wrap;gap:6px">
-        ${puedeArrastrar ? '<span class="ld-handle" title="Arrastrar para mover de etapa" aria-hidden="true">⠿</span>' : ''}
-        <b style="font-size:13px">${P.esc(l.nombre || l.email || '(sin nombre)')}</b>${ldBadgeOrigen(l)}${ldChipPago(l)}
-      </div>
-      ${l.email ? `<div class="ld-dato">${P.esc(l.email)}</div>` : ''}
-      ${l.telefono ? `<div class="ld-dato">${P.esc(l.telefono)}</div>` : ''}
-      ${ldChipReprocann(l)}
-      ${ldTurnoLinea(l)}
-      <div style="margin-top:4px">${ldAntiguedad(dias)}</div>
-      ${l.tiene_adjunto ? `<div class="ld-docs">
-        <a class="ld-doc" href="/api/socios/admin/solicitud-adjunto?email=${encodeURIComponent(l.email)}"
-           target="_blank" rel="noopener" aria-label="Ver la credencial REPROCANN que mandó"
-           data-tip="Ver su credencial REPROCANN">${ICON_CARNET}</a>
-        ${editar ? `<button class="ld-doc ld-ddjj" data-id="${l.id}" type="button"
-           aria-label="Armar la declaración jurada" data-tip="Armar la declaración jurada">${ICON_FIRMA}</button>` : ''}
-      </div>` : ''}
-      ${editar ? `<input class="input ld-nota" data-id="${l.id}" value="${P.esc(l.nota || '')}" placeholder="Nota…" style="margin-top:6px;font-size:12px" />` : (l.nota ? `<div style="color:var(--ink2);font-size:12px;margin-top:6px">${P.esc(l.nota)}</div>` : '')}
-      <div class="fila ld-acciones">
-        ${tel ? `<a class="so-wa" target="_blank" rel="noopener" aria-label="Escribirle por WhatsApp" data-tip="Escribirle por WhatsApp"
-          href="https://wa.me/${tel}?text=${encodeURIComponent(saludo + 'Te escribimos de Flora 🌿')}">${ICON_WA}</a>` : ''}
-        ${l.reprocann && l.email && l.etapa !== 'convertido' && P.puede('reprocann_editar')
-    ? `<button class="btn btn-pri ld-convertir" data-id="${l.id}" type="button"
-          title="Abre el asistente con la credencial que ya subió: ficha + certificado + declaración, sin pedirle el PDF de nuevo">🌱 Convertir</button>` : ''}
-        ${ldPrimaria(l)}
-        <span class="pn-sp"></span>
-        ${editar ? `<div class="ld-menu">
-          <button class="btn ld-menubtn" type="button" aria-label="Más acciones" aria-expanded="false">⋯</button>
-        </div>` : ''}
-      </div>
-    </div>`
-  }
-
-  /* Arrastrar una tarjeta de columna. Va con Pointer Events y no con el drag
-     nativo del navegador por dos razones concretas: el drag nativo no existe
-     en touch (Sofi trabaja del celular) y rompe la selección de texto de la
-     nota que vive adentro de la tarjeta.
-     El gesto arranca solo desde la manija ⠿ y recién después de 6px de
-     movimiento, así un toque para scrollear nunca mueve un lead sin querer.
-     Los botones de mover siguen estando: esto es un atajo, no el único
-     camino, porque un arrastre no se puede hacer con el teclado. */
-  function ldArrastre(ev) {
-    const handle = ev.target.closest('.ld-handle')
-    if (!handle || ev.button > 0) return
-    const card = handle.closest('.ld-card')
-    if (!card) return
-    const id = Number(card.dataset.id)
-    const x0 = ev.clientX, y0 = ev.clientY
-    let activo = false, fantasma = null, hueco = null, destino = null
-
-    const limpiar = () => {
-      document.removeEventListener('pointermove', mover)
-      document.removeEventListener('pointerup', soltar)
-      document.removeEventListener('keydown', porEsc)
-      fantasma?.remove(); hueco?.remove()
-      card.classList.remove('ld-arrastrando')
-      cont.querySelectorAll('.ld-destino').forEach((c) => c.classList.remove('ld-destino'))
-      document.body.style.userSelect = ''
-      ldArrastrando = false
-    }
-    const porEsc = (e) => { if (e.key === 'Escape') { destino = null; limpiar() } }
-
-    const arrancar = () => {
-      activo = true; ldArrastrando = true
-      document.body.style.userSelect = 'none'
-      const r = card.getBoundingClientRect()
-      fantasma = card.cloneNode(true)
-      fantasma.classList.add('ld-fantasma')
-      fantasma.style.width = r.width + 'px'
-      document.body.appendChild(fantasma)
-      hueco = document.createElement('div')
-      hueco.className = 'ld-hueco'
-      card.parentElement.insertBefore(hueco, card)
-      card.classList.add('ld-arrastrando')
-      document.addEventListener('keydown', porEsc)
-    }
-
-    const mover = (e) => {
-      if (!activo) {
-        if (Math.abs(e.clientX - x0) < 6 && Math.abs(e.clientY - y0) < 6) return
-        arrancar()
-      }
-      fantasma.style.left = (e.clientX - 120) + 'px'
-      fantasma.style.top = (e.clientY - 22) + 'px'
-      const bajo = document.elementFromPoint(e.clientX, e.clientY)
-      const col = bajo && bajo.closest('.ld-col')
-      cont.querySelectorAll('.ld-destino').forEach((c) => c.classList.remove('ld-destino'))
-      // Convertidos no es destino: convertir es dar de alta, y un lead
-      // "convertido" sin socio queda roto en el embudo.
-      destino = col && col.dataset.col !== 'convertido' ? col.dataset.col : null
-      if (destino) col.classList.add('ld-destino')
-    }
-
-    const soltar = () => {
-      const d = destino
-      limpiar()
-      if (activo && d) ldMoverEtapa(id, d)
-    }
-
-    document.addEventListener('pointermove', mover)
-    document.addEventListener('pointerup', soltar, { once: true })
-  }
-
-  function ldCoincide(l) {
-    if (!ldFiltro) return true
-    const q = ldFiltro.toLowerCase()
-    return [l.nombre, l.email, l.telefono, l.nota].some((v) => String(v || '').toLowerCase().includes(q))
-  }
-  const ldEnEtapa = (l) => Date.parse(String(l.etapa_desde).replace(' ', 'T') + 'Z') || 0
-
-  // Dónde está cada tarjeta ahora, para hacerla volar a su lugar nuevo
-  // después del repintado en vez de teletransportarla.
-  function ldPosiciones() {
-    const m = {}
-    cont.querySelectorAll('.ld-card[data-id]').forEach((el) => { m[el.dataset.id] = el.getBoundingClientRect() })
-    return m
-  }
-  function ldVolar(antes) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    cont.querySelectorAll('.ld-card[data-id]').forEach((el) => {
-      const p = antes[el.dataset.id]
-      if (!p) return
-      const n = el.getBoundingClientRect()
-      const dx = p.left - n.left, dy = p.top - n.top
-      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return
-      const lejos = Math.abs(dx) > 60
-      el.style.transition = 'none'
-      el.style.transform = `translate(${dx}px, ${dy}px)`
-      if (lejos) { el.style.zIndex = '30'; el.style.boxShadow = '0 10px 26px rgba(36,24,51,.28)' }
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = `transform ${lejos ? '.55s' : '.32s'} cubic-bezier(.22,.9,.26,1), box-shadow .55s ease`
-        el.style.transform = ''
-        el.style.boxShadow = ''
-        setTimeout(() => { el.style.transition = ''; el.style.zIndex = '' }, lejos ? 620 : 380)
-      }))
-    })
-  }
-
-  function ldRender(forzar) {
-    const caja = cont.querySelector('#ld-tablero')
-    // firma barata: si el tablero no cambió, no se toca el DOM. Sin esto el
-    // poll repinta cada 30s y se cierran los menús, se pierde el foco de una
-    // nota y cualquier arrastre en curso se corta.
-    const firma = LEADS.map((l) => `${l.id}:${l.etapa}:${l.nota || ''}:${l.pago_estado || ''}:${l.tiene_adjunto ? 1 : 0}${l.reprocann ? 1 : 0}`).join('|')
-      + '#' + ldFiltro + '#' + ldPerdidosAbierto
-    if (!forzar && firma === ldFirma) return
-    ldFirma = firma
-    const antes = ldPosiciones()
-    const por = Object.fromEntries(LD_ETAPAS.map(([e]) => [e, []]))
-    const perdidos = []
-    for (const l of LEADS) {
-      if (!ldCoincide(l)) continue
-      if (l.etapa === 'perdido') perdidos.push(l)
-      else (por[l.etapa] || por.nuevo).push(l)
-    }
-    // En las columnas de trabajo, primero el que lleva más tiempo parado: es
-    // al que hay que perseguir. En convertidos al revés, interesa el último.
-    LD_ETAPAS.forEach(([e]) => {
-      por[e].sort((a, b) => e === 'convertido' ? ldEnEtapa(b) - ldEnEtapa(a) : ldEnEtapa(a) - ldEnEtapa(b))
-    })
-    const convTotal = por.convertido.length
-    por.convertido = por.convertido.slice(0, 5)
-
-    const cnt = cont.querySelector('#ld-cnt')
-    if (cnt) { cnt.hidden = !por.nuevo.length; cnt.textContent = por.nuevo.length || '' }
-    caja.innerHTML = `
-      <div class="ld-tablero" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;align-items:start">
-        ${LD_ETAPAS.map(([etapa, nombre, color]) => `
-          <div class="ld-col" data-col="${etapa}">
-            <div class="fila" style="margin-bottom:6px">
-              <span class="k" style="border-left:3px solid ${color};padding-left:8px">${nombre}</span>
-              <span class="pn-sp"></span><b style="color:var(--muted);font-size:12px">${etapa === 'convertido' ? convTotal : por[etapa].length}</b>
-            </div>
-            ${por[etapa].length ? por[etapa].map(ldCard).join('') : `<div class="vacio" style="padding:14px;font-size:12px">${LD_VACIO[etapa] || 'Vacío'}</div>`}
-            ${etapa === 'convertido' && convTotal > 5 ? `<div style="color:var(--muted);font-size:12px;padding:2px 4px">y ${convTotal - 5} más</div>` : ''}
-          </div>`).join('')}
-      </div>
-      ${perdidos.length ? `<details style="margin-top:14px" ${ldPerdidosAbierto ? 'open' : ''} id="ld-perdidos"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">
-        ${perdidos.length} perdido(s)</summary>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:6px">${perdidos.map(ldCard).join('')}</div></details>` : ''}`
-    const det = caja.querySelector('#ld-perdidos')
-    if (det) det.addEventListener('toggle', () => { ldPerdidosAbierto = det.open })
-    ldVolar(antes)
   }
 
   // Declaración jurada directo desde el lead: el REPROCANN que mandó a la
@@ -1838,16 +1493,19 @@
     })
   }
 
-  async function ldPatch(id, body) {
+  // PATCH genérico de un lead. Devuelve {ok, error} y avisa al caller con
+  // `cb`: el kanban de Inicio decide cómo refrescarse.
+  async function ldPatch(id, body, cb) {
     const r = await fetch('/api/panel/leads', {
       method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: Number(id), ...body }),
     })
-    if (r.ok) ldCargar()
-    else { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo guardar'), 'err') }
+    const d = r.ok ? {} : await r.json().catch(() => ({}))
+    if (r.ok && cb) { try { cb() } catch { /* el refresco nunca rompe la acción */ } }
+    return { ok: r.ok, error: d.error || null }
   }
 
-  function ldNuevo() {
+  function ldNuevo(cb) {
     const ov = P.modal('Lead nuevo', `
       <div style="display:grid;gap:10px">
         <div><label class="lb" for="ld-n-nombre">Nombre</label><input class="input" id="ld-n-nombre" /></div>
@@ -1873,7 +1531,8 @@
       })
       const d = await r.json().catch(() => ({}))
       if (!r.ok) { msg.className = 'msg err'; msg.textContent = '✗ ' + (d.error || 'error'); return }
-      P.cerrarModal(); ldCargar()
+      P.cerrarModal()
+      if (cb) { try { cb() } catch { /* nada */ } }
     })
   }
 
@@ -1885,7 +1544,6 @@
       el.innerHTML = `
         <div class="subs" id="so-subs">
           <button type="button" class="on" data-sub="maestra">Socios</button>
-          ${P.puede('leads_ver') ? '<button type="button" data-sub="leads">Leads<span class="cnt" id="ld-cnt" hidden style="margin-left:6px"></span></button>' : ''}
           ${P.puede('reprocann_editar') ? '<button type="button" data-sub="unificar">Unificar<span class="cnt" id="ru-cnt" hidden style="margin-left:6px"></span></button>' : ''}
         </div>
 
@@ -1924,23 +1582,6 @@
           </div>
         </div>
 
-        <div id="so-leads" hidden>
-          <div class="fila" style="margin-bottom:10px;flex-wrap:wrap">
-            <p class="so-help" style="margin:0;max-width:62ch">El recorrido de cada interesado hasta hacerse socio.
-            Las solicitudes web y los intentos de entrar a la carta aparecen solos como leads nuevos; al darlo de
-            alta, el lead se convierte solo.</p>
-            <span class="pn-sp"></span>
-            ${editar ? '<button class="btn btn-pri" id="ld-nuevo" type="button">+ Lead</button>' : ''}
-          </div>
-          <div class="fila" style="margin-bottom:10px;min-height:22px">
-            <input class="input" id="ld-buscar" type="search" placeholder="Buscar por nombre, mail o teléfono…"
-              style="max-width:280px" autocomplete="off" />
-            <span class="pn-sp"></span>
-            <span class="msg" id="ld-msg" aria-live="polite" style="margin:0"></span>
-          </div>
-          <div id="ld-tablero"><div class="vacio">⏳ Cargando…</div></div>
-        </div>
-
         <div id="so-unificar" hidden>
           <p class="so-help" style="max-width:78ch;margin:0 0 12px">El volcado oficial del portal de REPROCANN
           (cuenta de la ONG): actualiza solo a los vinculados y propone pares para confirmar. Nada se une sin tu click.</p>
@@ -1963,11 +1604,9 @@
         if (!b) return
         el.querySelectorAll('#so-subs button').forEach((x) => x.classList.toggle('on', x === b))
         el.querySelector('#so-maestra').hidden = b.dataset.sub !== 'maestra'
-        el.querySelector('#so-leads').hidden = b.dataset.sub !== 'leads'
         const uni = el.querySelector('#so-unificar')
         if (uni) uni.hidden = b.dataset.sub !== 'unificar'
         if (b.dataset.sub === 'unificar') ruCargar()
-        if (b.dataset.sub === 'leads') ldCargar()
         if (b.dataset.sub === 'maestra') muCargar()
         guardarNav(b.dataset.sub)
       })
@@ -2045,138 +1684,6 @@
         const mp = e.target.closest('.mu-mp')
         if (mp) {
           window.PanelSocioDetalle.modalDebito({ id: Number(mp.dataset.id), nombre: mp.dataset.nombre, telefono: mp.dataset.tel })
-          return
-        }
-        // leads
-        const ldMover = e.target.closest('.ld-mover')
-        if (ldMover) { ldMoverEtapa(ldMover.dataset.id, ldMover.dataset.etapa); return }
-        const ldPerd = e.target.closest('.ld-perdido')
-        if (ldPerd) {
-          // sin confirmación: es reversible y queda el «Deshacer» al lado
-          ldMoverEtapa(ldPerd.dataset.id, 'perdido')
-          return
-        }
-        // menú ⋯ de la tarjeta: se arma al abrirlo, así siempre refleja la
-        // etapa actual del lead
-        const ldMenuBtn = e.target.closest('.ld-menubtn')
-        if (ldMenuBtn) {
-          const cont2 = ldMenuBtn.parentElement
-          const abierto = cont2.querySelector('.ld-menupanel')
-          document.querySelectorAll('.ld-menupanel').forEach((p) => p.remove())
-          document.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
-          if (abierto) return
-          const card = ldMenuBtn.closest('.ld-card')
-          const l = LEADS.find((x) => x.id === Number(card.dataset.id))
-          if (!l) return
-          const op = []
-          if (l.etapa === 'convertido') {
-            // ya es socio: lo único que tiene sentido acá es sacar la tarjeta
-            // del embudo si es basura. La ficha del socio no se toca.
-            op.push(`<button class="btn btn-peligro ld-borrar" data-id="${l.id}" data-convertido="1" type="button">🗑 Sacar del embudo</button>`)
-          } else {
-            LD_ETAPAS.forEach(([e2, nom2]) => {
-              if (e2 === l.etapa || e2 === 'convertido') return
-              op.push(`<button class="btn ld-mover" data-id="${l.id}" data-etapa="${e2}" type="button">Mover a ${nom2}</button>`)
-            })
-            op.push(`<button class="btn ld-alta" data-id="${l.id}" type="button">Dar de alta</button>`)
-            if (l.email) op.push(`<button class="btn ld-acceso" data-id="${l.id}" type="button">Acceso 7 días a la carta</button>`)
-            if (l.etapa !== 'perdido') op.push(`<button class="btn ld-perdido" data-id="${l.id}" type="button">Marcar perdido</button>`)
-            op.push(`<button class="btn btn-peligro ld-borrar" data-id="${l.id}" type="button">🗑 Borrar del todo</button>`)
-          }
-          if (!op.length) return
-          const panel = document.createElement('div')
-          panel.className = 'ld-menupanel'
-          panel.innerHTML = op.join('')
-          cont2.appendChild(panel)
-          ldMenuBtn.setAttribute('aria-expanded', 'true')
-          return
-        }
-        const ldFicha = e.target.closest('.ld-ficha')
-        if (ldFicha) { window.PanelSocioDetalle.abrir(Number(ldFicha.dataset.socio), () => ldCargar()); return }
-
-        const ldBorrar = e.target.closest('.ld-borrar')
-        if (ldBorrar) {
-          const l = LEADS.find((x) => x.id === Number(ldBorrar.dataset.id))
-          if (!l) return
-          const quien = l.nombre || l.email || 'este lead'
-          const yaEsSocio = l.etapa === 'convertido'
-          const texto = yaEsSocio
-            ? `¿Sacar a ${quien} del embudo?\n\nDesaparece esta tarjeta y el rastro de por dónde entró.\n\nSu ficha de socio NO se toca: sigue en el padrón con todo lo suyo.`
-            : `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`
-          if (!(await P.confirmar(texto, yaEsSocio ? 'Sí, sacar' : 'Sí, borrar'))) return
-          const r = await fetch('/api/panel/leads', {
-            method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: l.id, forzar: yaEsSocio }),
-          })
-          if (!r.ok) { const d = await r.json().catch(() => ({})); avisoLd('✗ ' + (d.error || 'no se pudo borrar'), 'err'); return }
-          avisoLd(`✔ ${quien} ${yaEsSocio ? 'salió del embudo' : 'borrado'}`, 'ok')
-          ldCargar()
-          return
-        }
-        const ldDj = e.target.closest('.ld-ddjj')
-        if (ldDj) { e.preventDefault(); ldDdjj(Number(ldDj.dataset.id)); return }
-        // convertir al aspirante con su credencial ya subida: el asistente
-        // cv- arranca en modo lead, sin pedir el PDF de nuevo
-        const ldConv = e.target.closest('.ld-convertir')
-        if (ldConv) {
-          const l = LEADS.find((x) => x.id === Number(ldConv.dataset.id))
-          if (l && l.email) {
-            cvAbrir({
-              email: l.email, nombre: l.nombre || '',
-              telefono: l.telefono || '', reprocann: l.reprocann || null,
-            })
-          }
-          return
-        }
-        // acceso rápido a la carta, sin pasar por Solicitudes: el lead sigue
-        // siendo lead, solo le abrimos la puerta mientras se formaliza
-        const ldAcc = e.target.closest('.ld-acceso')
-        if (ldAcc) {
-          const l = LEADS.find((x) => x.id === Number(ldAcc.dataset.id))
-          if (!l || !l.email) return
-          if (!(await P.confirmar(
-            `¿Darle a ${l.nombre || l.email} acceso de prueba a la carta por 7 días?\n\nLe llega un mail avisándole. Los 7 días arrancan recién en su primer ingreso.`,
-            'Sí, dar acceso'))) return
-          const antes = ldAcc.textContent
-          ldAcc.disabled = true
-          ldAcc.textContent = 'Dando acceso…'
-          const hoy = new Date().toLocaleDateString('es-AR')
-          const res = await saveSocio(l.email, `Acceso de prueba (7 días desde el primer login) · desde Leads`, {
-            name: l.nombre || '', telefono: l.telefono || '', temporal: true, temporal_dias: 7,
-          })
-          if (!res.ok) {
-            ldAcc.disabled = false
-            ldAcc.textContent = '✗ no salió'
-            setTimeout(() => { ldAcc.textContent = antes }, 3000)
-            avisoLd('✗ ' + (res.error || 'no se pudo dar el acceso'), 'err')
-            return
-          }
-          if (res.mailEnviado === false) {
-            avisoLd(`Acceso dado, pero el mail NO salió (${res.mailError || 'sin detalle'}) — avisale vos por WhatsApp.`, 'err', 12000)
-          }
-          // queda rastro en la tarjeta, sin pisar lo que ya estaba anotado.
-          // La marca va adelante: el servidor corta la nota en 300 y así nunca
-          // se pierde justo lo que acabamos de hacer.
-          const marca = `Acceso carta 7 días (${hoy})`
-          ldPatch(l.id, { nota: (marca + (l.nota ? ' · ' + l.nota : '')).slice(0, 300) })
-          return
-        }
-        const ldAlta = e.target.closest('.ld-alta')
-        if (ldAlta) {
-          const l = LEADS.find((x) => x.id === Number(ldAlta.dataset.id))
-          if (!l) return
-          const pre = {
-            nombre: l.nombre || '', email: l.email || '', telefono: l.telefono || '', nota: l.nota || '',
-          }
-          // El DNI lo cargó al inscribirse pero vive en su solicitud, no en el
-          // lead. Traerlo evita tener que pedírselo de nuevo — y sin DNI no se
-          // puede armar la declaración jurada.
-          try {
-            const rd = await fetch(`/api/panel/declaracion?lead_id=${l.id}`, { credentials: 'include' })
-            if (rd.ok) { const dd = await rd.json(); if (dd.lead?.dni) pre.documento = dd.lead.dni }
-          } catch { /* sin DNI se completa a mano, el alta sigue igual */ }
-          sessionStorage.setItem('so-alta-prefill', JSON.stringify(pre))
-          altaAbrir()
           return
         }
         // papelera: selección múltiple y acciones
@@ -2258,34 +1765,6 @@
         }
       })
 
-      // la nota del lead se guarda al salir del campo
-      el.addEventListener('change', (e) => {
-        const nota = e.target.closest('.ld-nota')
-        if (nota) ldPatch(nota.dataset.id, { nota: nota.value })
-      })
-      const ldBtn = el.querySelector('#ld-nuevo')
-      if (ldBtn) ldBtn.addEventListener('click', ldNuevo)
-
-      // arrastrar tarjetas entre columnas (solo desde la manija)
-      el.addEventListener('pointerdown', ldArrastre)
-      // buscador del embudo: filtra lo que ya está en memoria, sin red
-      const ldBuscar = el.querySelector('#ld-buscar')
-      if (ldBuscar) ldBuscar.addEventListener('input', () => {
-        ldFiltro = ldBuscar.value.trim()
-        ldRender()
-      })
-      // un click en cualquier lado cierra el menú ⋯ abierto
-      document.addEventListener('click', (ev) => {
-        if (ev.target.closest('.ld-menu')) return
-        el.querySelectorAll('.ld-menupanel').forEach((p) => p.remove())
-        el.querySelectorAll('.ld-menubtn').forEach((b) => b.setAttribute('aria-expanded', 'false'))
-      })
-      // con la pestaña oculta no tiene sentido seguir pidiendo; al volver,
-      // se refresca de una para no mirar datos viejos
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && ldVisible() && !ldOcupado()) ldCargar()
-      })
-
       // badge de pares pendientes de Unificar, sin abrir la pestaña
       if (editar) {
         fetch('/api/panel/reprocann/unificar', { credentials: 'include' })
@@ -2300,11 +1779,16 @@
       }
 
       muCargar()
-      if (P.puede('leads_ver')) ldCargar()   // pinta el tablero de fondo y el badge de nuevos
-      // volver al sub-tab donde estaba (regla F5 de la casa)
+      // volver al sub-tab donde estaba (regla F5 de la casa). La pestaña
+      // Leads ya no existe: su tablero vive en el kanban de Inicio, así que
+      // un `sub:'leads'` guardado manda para allá.
       try {
         const nav = JSON.parse(sessionStorage.getItem('so-nav') || '{}')
-        if (nav.sub && nav.sub !== 'maestra') {
+        if (nav.sub === 'leads') {
+          nav.sub = 'maestra'
+          sessionStorage.setItem('so-nav', JSON.stringify(nav))
+          P.ir('inicio')
+        } else if (nav.sub && nav.sub !== 'maestra') {
           const b = el.querySelector(`#so-subs button[data-sub="${nav.sub}"]`)
           if (b) b.click()
         }
@@ -2313,4 +1797,86 @@
       } catch { /* nada */ }
     },
   })
+
+  /* ============ API pública: window.PanelLeads ============ */
+  // El kanban de Inicio absorbió el tablero de Leads (decisión 08/08). Estas
+  // son las piezas vivas del embudo: los modales existentes (alta completa,
+  // + Lead, conversión, DDJJ) y las acciones sueltas del viejo menú ⋯, sin
+  // nada de render. Todo callback `cb` es "refrescate": lo pone el kanban.
+  window.PanelLeads = {
+    // + Lead (alta manual): mismo modal de siempre
+    nuevoLead: (cb) => ldNuevo(cb),
+
+    // Alta completa desde un lead: precarga la ficha (y trae el DNI de su
+    // solicitud, que no vive en el lead) y abre el asistente de siempre.
+    async darDeAlta(lead, cb) {
+      const pre = { nombre: lead.nombre || '', email: lead.email || '', telefono: lead.telefono || '', nota: lead.nota || '' }
+      try {
+        const rd = await fetch(`/api/panel/declaracion?lead_id=${lead.id}`, { credentials: 'include' })
+        if (rd.ok) { const dd = await rd.json(); if (dd.lead?.dni) pre.documento = dd.lead.dni }
+      } catch { /* sin DNI se completa a mano, el alta sigue igual */ }
+      sessionStorage.setItem('so-alta-prefill', JSON.stringify(pre))
+      altaCb = cb || null
+      altaAbrir()
+    },
+
+    // Convertir al aspirante con su credencial ya subida (asistente cv-)
+    convertir(lead, cb) {
+      if (!lead || !lead.email) return
+      cvCb = cb || null
+      cvAbrir({ email: lead.email, nombre: lead.nombre || '', telefono: lead.telefono || '', reprocann: lead.reprocann || null })
+    },
+
+    // Declaración jurada directo desde el lead (modal existente)
+    ddjj: (id) => ldDdjj(id),
+
+    // Acciones del embudo (el menú ⋯ del kanban las llama)
+    avanzarEtapa: (id, etapa, cb) => ldPatch(id, { etapa }, cb),
+    marcarPerdido: (id, cb) => ldPatch(id, { etapa: 'perdido' }, cb),
+    guardarNota: (id, nota, cb) => ldPatch(id, { nota: String(nota || '').slice(0, 300) }, cb),
+
+    async borrar(lead, cb) {
+      const quien = lead.nombre || lead.email || 'este lead'
+      const yaEsSocio = lead.etapa === 'convertido'
+      const texto = yaEsSocio
+        ? `¿Sacar a ${quien} del embudo?\n\nDesaparece esta tarjeta y el rastro de por dónde entró.\n\nSu ficha de socio NO se toca: sigue en el padrón con todo lo suyo.`
+        : `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`
+      if (!(await P.confirmar(texto, yaEsSocio ? 'Sí, sacar' : 'Sí, borrar'))) return { ok: false, cancelado: true }
+      const r = await fetch('/api/panel/leads', {
+        method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: lead.id, forzar: yaEsSocio }),
+      })
+      const d = r.ok ? {} : await r.json().catch(() => ({}))
+      if (r.ok && cb) { try { cb() } catch { /* nada */ } }
+      return { ok: r.ok, error: d.error || null }
+    },
+
+    // Acceso de prueba a la carta por 7 días, sin dejar de ser lead
+    async accesoCarta(lead, cb) {
+      if (!lead.email) return { ok: false, error: 'sin email' }
+      if (!(await P.confirmar(
+        `¿Darle a ${lead.nombre || lead.email} acceso de prueba a la carta por 7 días?\n\nLe llega un mail avisándole. Los 7 días arrancan recién en su primer ingreso.`,
+        'Sí, dar acceso'))) return { ok: false, cancelado: true }
+      const hoy = new Date().toLocaleDateString('es-AR')
+      const res = await saveSocio(lead.email, 'Acceso de prueba (7 días desde el primer login) · desde Leads', {
+        name: lead.nombre || '', telefono: lead.telefono || '', temporal: true, temporal_dias: 7,
+      })
+      if (!res.ok) return { ok: false, error: res.error || 'no se pudo dar el acceso' }
+      // rastro en la nota, la marca adelante (el server corta en 300)
+      const marca = `Acceso carta 7 días (${hoy})`
+      await ldPatch(lead.id, { nota: (marca + (lead.nota ? ' · ' + lead.nota : '')).slice(0, 300) }, cb)
+      return { ok: true, mailEnviado: res.mailEnviado !== false, mailError: res.mailError || null }
+    },
+
+    whatsappDe(lead) {
+      const tel = digitsOnly(lead.telefono)
+      if (!tel) return null
+      const nom = String(lead.nombre || '').split(' ')[0]
+      const saludo = nom ? `Hola ${nom}! ` : 'Hola! '
+      return `https://wa.me/${tel}?text=${encodeURIComponent(saludo + 'Te escribimos de Flora 🌿')}`
+    },
+
+    // Helpers de render que las cards del kanban reusan tal cual
+    ui: { badgeOrigen: ldBadgeOrigen, chipPago: ldChipPago, chipReprocann: ldChipReprocann, turnoLinea: ldTurnoLinea },
+  }
 })()

@@ -4,11 +4,13 @@
 // y acá los montos solo viajan si el rol puede verlos.
 import { requireRolAsignado, puede } from './_rol';
 import { PASOS } from './reprocann/_pasos';
+import { tableroLeads } from './leads';
 
 interface Env {
   DB: D1Database;
   PEDIDOS: KVNamespace;
   INTENTOS: KVNamespace;
+  SOLICITUDES: KVNamespace;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
 }
@@ -154,32 +156,23 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
     if (verLeads) {
       try {
-        // Solo lectura de la tabla: el espejo KV→D1 lo hace el tablero de
-        // Leads al abrirse; acá no se escribe nada.
-        const filas = await env.DB.prepare(
-          `SELECT id, nombre, email, telefono, etapa, creado, tiene_adjunto, frio
-             FROM leads WHERE etapa IN ('nuevo', 'contactado', 'entrevista')
-            ORDER BY creado DESC LIMIT 200`,
-        ).all<{ id: number; nombre: string | null; email: string | null; telefono: string | null; etapa: string; creado: string; tiene_adjunto: number; frio: string | null }>();
+        // Mismo motor que el viejo tablero de Leads (leads.ts): espejo KV→D1
+        // de solicitudes e intentos incluido, más la superposición del modo
+        // aspirante (reprocann leído, teléfono, adjunto). Desde acá salen las
+        // cards de LEADS (nuevo+contactado) y las de lead en ENTREVISTA.
+        const todos = await tableroLeads(env);
+        const enJuego = todos.filter((l) => l.etapa === 'nuevo' || l.etapa === 'contactado' || l.etapa === 'entrevista');
         // Los fríos viajan APARTE y no consumen el tope de 30 de los vivos:
         // así un frío nunca desplaza del tablero a una card viva.
-        const vivosL: Record<string, unknown>[] = filas.results.filter((l) => !l.frio);
-        const friosL: Record<string, unknown>[] = filas.results.filter((l) => !!l.frio);
-        const items = vivosL.slice(0, TOPE_COL);
-        // la credencial que el aspirante ya subió vive en KV INTENTOS: se
-        // superpone solo a las cards vivas visibles (lecturas acotadas y en
-        // paralelo; los fríos salen atenuados, sin este detalle)
-        await Promise.all(items.map(async (l) => {
-          if (!l.email) return;
-          try {
-            const cr = await env.INTENTOS.get(String(l.email).toLowerCase(), 'json') as Record<string, unknown> | null;
-            if (!cr) return;
-            if (cr.reprocann && typeof cr.reprocann === 'object') l.reprocann = cr.reprocann;
-            if (!l.telefono && cr.telefono) l.telefono = String(cr.telefono);
-          } catch { /* sin KV la card sale igual */ }
-        }));
+        const vivosL = enJuego.filter((l) => !l.frio);
+        const friosL = enJuego.filter((l) => !!l.frio);
+        // primero el que lleva más tiempo parado en su etapa (es al que hay
+        // que perseguir), como ordenaba el tablero viejo
+        const enEtapa = (l: Record<string, unknown>) => Date.parse(String(l.etapa_desde || l.creado || '').replace(' ', 'T') + 'Z') || 0;
+        vivosL.sort((a, b) => enEtapa(a) - enEtapa(b));
+        friosL.sort((a, b) => String(b.frio || '').localeCompare(String(a.frio || '')));
         kanban.leads = {
-          total: vivosL.length, items,
+          total: vivosL.length, items: vivosL.slice(0, TOPE_COL),
           frios: { total: friosL.length, items: friosL.slice(0, TOPE_COL) },
         };
       } catch { kanban.leads = null; }

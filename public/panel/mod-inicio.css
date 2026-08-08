@@ -122,6 +122,26 @@ button.ik-chip:focus-visible { outline: 2px solid var(--vio); outline-offset: 2p
 .ik-fria { opacity: .58; filter: grayscale(.5) }
 .ik-fria:hover { opacity: .9; filter: grayscale(.15) }
 
+/* ---------- cards de LEAD (tablero viejo fusionado acá) ---------- */
+.ik-filtros .ik-buscar { max-width: 230px; height: 30px; font-size: 12.5px; padding: 4px 10px }
+.ik-filtros .ik-nuevo-lead { padding: 5px 12px; font-size: 12px }
+.ik-lead .ik-nota { color: var(--ink2) }
+.ik-lead .ik-chips .tag { font-size: 10px }
+.ik-acciones { align-items: center; width: 100% }
+.ik-qa2 {
+  display: inline-grid; place-items: center; width: 24px; height: 24px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--card);
+  font-size: 12px; text-decoration: none; cursor: pointer;
+  transition: transform .15s var(--ease);
+}
+.ik-qa2:hover { transform: scale(1.12) }
+.ik-menu .ld-menubtn { padding: 2px 8px; font-size: 12px }
+.ik-mas-info {
+  text-align: center; color: var(--muted); cursor: default;
+  border-style: solid; background: none;
+}
+.ik-mas-info:hover { background: none }
+
 /* badge destacado de ENTREVISTA: consulta agendada en el consultorio */
 .ik-prox {
   display: inline-flex; align-items: center; gap: 3px;
