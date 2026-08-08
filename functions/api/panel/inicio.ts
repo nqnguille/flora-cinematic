@@ -34,10 +34,11 @@ interface FilaSweep {
   id: number; nombre: string; telefono: string | null;
   reprocann_estado: string; reprocann_actualizado: string | null;
   reprocann_vence: string | null; debito_no_insistir: number;
-  vence_dias: number | null;
+  vence_dias: number | null; frio: string | null;
   med_en_tratamiento: number | null; med_proxima_consulta: string | null;
   dec_estado: string | null; dec_generada: string | null; dec_firmada: string | null;
   sus_estado: string | null; sus_tier: string | null; sus_racha: number | null; sus_fin: string | null;
+  sus_act: string | null; sus_creado: string | null;
   memb_tier: string | null; memb_modalidad: string | null;
 }
 
@@ -136,13 +137,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   // ---- Kanban del viaje del socio ----
   // Cada columna viaja solo si el rol puede ver esos datos (mismo criterio
   // que el resto del endpoint): leads con leads_ver, socios con padron_ver.
+  // Cada columna: vivos (total + tope 30) y fríos aparte (su propio total y
+  // tope): el front los oculta por defecto y los muestra con el chip "Fríos".
+  type ColKanban = {
+    total: number; items: Record<string, unknown>[];
+    frios: { total: number; items: Record<string, unknown>[] };
+  } | null;
   let kanban: {
-    leads: { total: number; items: Record<string, unknown>[] } | null;
-    entrevista: { total: number; items: Record<string, unknown>[] } | null;
-    firmas: { total: number; items: Record<string, unknown>[] } | null;
-    ministerio: { total: number; items: Record<string, unknown>[] } | null;
-    vinculados: { total: number; items: Record<string, unknown>[] } | null;
-    adheridos: { total: number; items: Record<string, unknown>[] } | null;
+    leads: ColKanban; entrevista: ColKanban; firmas: ColKanban;
+    ministerio: ColKanban; vinculados: ColKanban; adheridos: ColKanban;
   } | null = null;
   const verSocios = puede(rol, 'padron_ver');
   const verLeads = puede(rol, 'leads_ver');
@@ -154,13 +157,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         // Solo lectura de la tabla: el espejo KV→D1 lo hace el tablero de
         // Leads al abrirse; acá no se escribe nada.
         const filas = await env.DB.prepare(
-          `SELECT id, nombre, email, telefono, etapa, creado, tiene_adjunto
+          `SELECT id, nombre, email, telefono, etapa, creado, tiene_adjunto, frio
              FROM leads WHERE etapa IN ('nuevo', 'contactado', 'entrevista')
             ORDER BY creado DESC LIMIT 200`,
-        ).all<{ id: number; nombre: string | null; email: string | null; telefono: string | null; etapa: string; creado: string; tiene_adjunto: number }>();
-        const items: Record<string, unknown>[] = filas.results.slice(0, TOPE_COL);
+        ).all<{ id: number; nombre: string | null; email: string | null; telefono: string | null; etapa: string; creado: string; tiene_adjunto: number; frio: string | null }>();
+        // Los fríos viajan APARTE y no consumen el tope de 30 de los vivos:
+        // así un frío nunca desplaza del tablero a una card viva.
+        const vivosL: Record<string, unknown>[] = filas.results.filter((l) => !l.frio);
+        const friosL: Record<string, unknown>[] = filas.results.filter((l) => !!l.frio);
+        const items = vivosL.slice(0, TOPE_COL);
         // la credencial que el aspirante ya subió vive en KV INTENTOS: se
-        // superpone solo a las cards visibles (lecturas acotadas y en paralelo)
+        // superpone solo a las cards vivas visibles (lecturas acotadas y en
+        // paralelo; los fríos salen atenuados, sin este detalle)
         await Promise.all(items.map(async (l) => {
           if (!l.email) return;
           try {
@@ -170,7 +178,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
             if (!l.telefono && cr.telefono) l.telefono = String(cr.telefono);
           } catch { /* sin KV la card sale igual */ }
         }));
-        kanban.leads = { total: filas.results.length, items };
+        kanban.leads = {
+          total: vivosL.length, items,
+          frios: { total: friosL.length, items: friosL.slice(0, TOPE_COL) },
+        };
       } catch { kanban.leads = null; }
     }
 
@@ -180,11 +191,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const sweep = await env.DB.prepare(
         `SELECT s.id, s.nombre, s.telefono, s.reprocann_estado, s.reprocann_actualizado,
                 s.reprocann_vence, s.debito_no_insistir,
-                s.med_en_tratamiento, s.med_proxima_consulta,
+                s.med_en_tratamiento, s.med_proxima_consulta, s.frio,
                 CASE WHEN s.reprocann_vence IS NULL THEN NULL
                      ELSE CAST(julianday(s.reprocann_vence) - julianday('now') AS INTEGER) END AS vence_dias,
                 de.estado AS dec_estado, de.generada AS dec_generada, de.firmada AS dec_firmada,
                 su.estado AS sus_estado, su.tier AS sus_tier, su.racha_meses AS sus_racha, su.fin AS sus_fin,
+                su.actualizado AS sus_act, su.creado AS sus_creado,
                 me.tier AS memb_tier, me.modalidad AS memb_modalidad
            FROM socios s
            LEFT JOIN declaraciones de ON de.id =
@@ -205,6 +217,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const ministerio: Record<string, unknown>[] = [];
       const vinculados: Record<string, unknown>[] = [];
       const adheridos: Record<string, unknown>[] = [];
+      // los fríos de cada columna, aparte: no consumen el tope de los vivos
+      const friosCol: Record<string, Record<string, unknown>[]> = {
+        entrevista: [], firmas: [], ministerio: [], vinculados: [], adheridos: [],
+      };
 
       for (const s of sweep.results) {
         const susViva = !!s.sus_estado;
@@ -214,55 +230,62 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         // médico ya lo cargó, falta la firma del paciente en reprocann.msal).
         const decEnJuego = s.dec_estado === 'generada' || s.dec_estado === 'firmada';
         const ddjjSinDec = !s.dec_estado && (s.reprocann_estado === 'ddjj_pendiente' || s.reprocann_estado === 'ddjj_firmada');
+        // un frío conserva su columna natural pero viaja en la lista aparte
+        const en = (vivosArr: Record<string, unknown>[], col: string) => (s.frio ? friosCol[col] : vivosArr);
         if (decEnJuego || ddjjSinDec) {
-          firmas.push({
+          en(firmas, 'firmas').push({
             id: s.id, nombre: s.nombre, estado: s.reprocann_estado, tipo: 'declaracion',
             dec_estado: s.dec_estado || (s.reprocann_estado === 'ddjj_firmada' ? 'firmada' : 'generada'),
-            dec_generada: s.dec_generada, dec_firmada: s.dec_firmada,
+            dec_generada: s.dec_generada, dec_firmada: s.dec_firmada, frio: s.frio,
           });
           continue;
         }
         if (s.reprocann_estado === 'cargado') {
-          firmas.push({
+          en(firmas, 'firmas').push({
             id: s.id, nombre: s.nombre, estado: 'cargado', tipo: 'consentimiento',
             dec_estado: null, dec_generada: null, dec_firmada: null,
-            actualizado: s.reprocann_actualizado,
+            actualizado: s.reprocann_actualizado, frio: s.frio,
           });
           continue;
         }
         if (ESTADOS_ENTREVISTA.has(s.reprocann_estado)) {
           const proxDias = diasHasta(s.med_proxima_consulta);
-          entrevista.push({
+          en(entrevista, 'entrevista').push({
             id: s.id, nombre: s.nombre, estado: s.reprocann_estado,
             quien: QUIEN_POR_ESTADO.get(s.reprocann_estado) || '—',
             actualizado: s.reprocann_actualizado,
             en_tratamiento: !!s.med_en_tratamiento,
             prox_consulta: s.med_proxima_consulta,
-            prox_dias: proxDias,
+            prox_dias: proxDias, frio: s.frio,
           });
           continue;
         }
         if (ESTADOS_MINISTERIO.has(s.reprocann_estado)) {
-          ministerio.push({
+          en(ministerio, 'ministerio').push({
             id: s.id, nombre: s.nombre, estado: s.reprocann_estado,
             quien: QUIEN_POR_ESTADO.get(s.reprocann_estado) || '—',
             actualizado: s.reprocann_actualizado, vence: s.reprocann_vence, vence_dias: s.vence_dias,
+            frio: s.frio,
           });
           continue;
         }
         if (susViva && s.sus_tier !== 'CUOTA SOCIAL') {
-          adheridos.push({
+          en(adheridos, 'adheridos').push({
             id: s.id, nombre: s.nombre, sus_estado: s.sus_estado,
             tier: s.sus_tier || s.memb_tier || null,
             racha_meses: s.sus_racha || 0, fin: s.sus_fin, fin_dias: diasHasta(s.sus_fin),
+            // "actividad" de un adherido = el último latido de su suscripción
+            actualizado: s.sus_act || s.sus_creado, frio: s.frio,
           });
           continue;
         }
         if ((s.reprocann_estado === 'aprobado' || s.reprocann_estado === 'conversion')
           && !susViva && s.memb_modalidad !== 'debito') {
-          vinculados.push({
+          en(vinculados, 'vinculados').push({
             id: s.id, nombre: s.nombre, telefono: s.telefono, estado: s.reprocann_estado,
             no_insistir: !!s.debito_no_insistir, memb_tier: s.memb_tier, memb_modalidad: s.memb_modalidad,
+            // "actividad" de un vinculado = su último movimiento de trámite
+            actualizado: s.reprocann_actualizado, frio: s.frio,
           });
         }
       }
@@ -296,11 +319,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       adheridos.sort((a, b) => (urgencia(a) - urgencia(b))
         || (Number(a.fin_dias ?? 9999) - Number(b.fin_dias ?? 9999)));
 
-      kanban.entrevista = { total: entrevista.length, items: entrevista.slice(0, TOPE_COL) };
-      kanban.firmas = { total: firmas.length, items: firmas.slice(0, TOPE_COL) };
-      kanban.ministerio = { total: ministerio.length, items: ministerio.slice(0, TOPE_COL) };
-      kanban.vinculados = { total: vinculados.length, items: vinculados.slice(0, TOPE_COL) };
-      kanban.adheridos = { total: adheridos.length, items: adheridos.slice(0, TOPE_COL) };
+      // fríos: los dormidos más recientes primero
+      for (const c of Object.keys(friosCol)) {
+        friosCol[c].sort((a, b) => String(b.frio || '').localeCompare(String(a.frio || '')));
+      }
+      // El tope de 30 va por separado para vivos y fríos: `total` cuenta solo
+      // vivos (mueve el contador grande y el "+N más"); los fríos llevan el suyo.
+      const pack = (vivosArr: Record<string, unknown>[], col: string) => ({
+        total: vivosArr.length, items: vivosArr.slice(0, TOPE_COL),
+        frios: { total: friosCol[col].length, items: friosCol[col].slice(0, TOPE_COL) },
+      });
+      kanban.entrevista = pack(entrevista, 'entrevista');
+      kanban.firmas = pack(firmas, 'firmas');
+      kanban.ministerio = pack(ministerio, 'ministerio');
+      kanban.vinculados = pack(vinculados, 'vinculados');
+      kanban.adheridos = pack(adheridos, 'adheridos');
     }
   }
 

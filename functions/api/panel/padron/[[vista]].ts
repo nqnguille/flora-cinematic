@@ -213,6 +213,14 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
     cambios.push('adhesion_habilitada = ?'); valores.push(dar ? new Date().toISOString() : null);
     cambios.push('adhesion_habilitada_por = ?'); valores.push(dar ? auth.email || null : null);
   }
+  // pasar a frío / revivir (kanban de Inicio, migración 0030): true lo duerme
+  // (queda cuándo y quién lo durmió), false lo revive — mismo patrón que
+  // adhesion_habilitada
+  if ('frio' in body) {
+    const dar = body.frio === true;
+    cambios.push('frio = ?'); valores.push(dar ? new Date().toISOString() : null);
+    cambios.push('frio_por = ?'); valores.push(dar ? auth.email || null : null);
+  }
   // domicilio: lo pide la declaración jurada y es el mismo dato que va a hacer
   // falta el día que entreguemos a domicilio
   if ('domicilio' in body) { cambios.push('domicilio = ?'); valores.push(String(body.domicilio || '').trim().slice(0, 200) || null); }

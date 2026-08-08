@@ -144,6 +144,13 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env }) => {
     cambios.push(`etapa = ?`);
     vals.push(e);
   }
+  // pasar a frío / revivir (kanban de Inicio, migración 0030): true lo duerme
+  // (queda cuándo y quién), false lo revive — mismo patrón que el frío de socios
+  if ('frio' in b) {
+    const dar = b.frio === true;
+    cambios.push('frio = ?'); vals.push(dar ? new Date().toISOString() : null);
+    cambios.push('frio_por = ?'); vals.push(dar ? auth.email || null : null);
+  }
   for (const campo of ['nota', 'telefono', 'nombre']) {
     if (campo in b) { cambios.push(`${campo} = ?`); vals.push(String(b[campo] || '').trim().slice(0, 300) || null); }
   }

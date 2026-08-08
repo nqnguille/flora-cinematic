@@ -87,6 +87,41 @@ button.ik-chip { cursor: pointer; transition: filter .15s var(--ease) }
 button.ik-chip:hover { filter: brightness(.93) }
 button.ik-chip:focus-visible { outline: 2px solid var(--vio); outline-offset: 2px }
 
+/* ---------- barra de filtros (lente + comportamiento + fríos) ---------- */
+.ik-filtros {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin-top: 14px;
+}
+.ik-filtros .ik-cnt {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  background: var(--card2); border-radius: 999px; padding: 1px 6px; margin-left: 2px;
+}
+.ik-filtros .chip.on .ik-cnt { background: rgba(255, 255, 255, .6); color: var(--vio) }
+.ik-filtros-sep { width: 1px; height: 18px; background: var(--line2); margin: 0 4px }
+.ik-chip-frios.on { background: var(--amb-soft); border-color: var(--amb); color: var(--amb) }
+.ik-chip-frios.on .ik-cnt { background: rgba(255, 255, 255, .6); color: var(--amb) }
+
+/* ---------- estancamiento (>14d puntito, >30d el tiempo en ámbar) ---------- */
+.ik-dot { font-style: normal; font-size: 10px; margin-right: 3px; filter: saturate(.8) }
+.ik-hace-viejo { color: var(--amb); font-weight: 600 }
+
+/* ---------- frío / revivir (acción rápida on hover) ---------- */
+.ik-qa {
+  position: absolute; top: 6px; right: 6px;
+  font: inherit; font-size: 12px; line-height: 1;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--card);
+  padding: 3px 5px; cursor: pointer; opacity: 0;
+  transition: opacity .15s var(--ease), transform .15s var(--ease);
+}
+.ik-card { position: relative }
+.ik-card:hover .ik-qa, .ik-qa:focus-visible { opacity: 1 }
+.ik-qa:hover { transform: scale(1.12) }
+@media (hover: none) { .ik-qa { opacity: .8 } }
+
+/* cards frías: la vista del chip "Fríos" las muestra solas y atenuadas */
+.ik-fria { opacity: .58; filter: grayscale(.5) }
+.ik-fria:hover { opacity: .9; filter: grayscale(.15) }
+
 /* badge destacado de ENTREVISTA: consulta agendada en el consultorio */
 .ik-prox {
   display: inline-flex; align-items: center; gap: 3px;
