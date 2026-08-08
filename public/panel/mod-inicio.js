@@ -17,14 +17,13 @@
     sin_iniciar: 'Arrancar el trámite',
     esperando_codigo: 'Pedirle su código',
     codigo_listo: 'Cargarlo con Ezequiel',
-    cargado: 'Espera su firma',
-    observado: 'Resolver su observación',
-    a_vincular: 'Vincularlo a Flora',
-    en_evaluacion: 'Espera al Ministerio',
-    revision_medica: 'Volvió al médico',
     revisar: 'Confirmar en qué anda',
+    observado: 'Objetó algo',
+    a_vincular: 'Nos toca vincular',
+    en_evaluacion: 'Espera al Ministerio',
+    revision_medica: 'Volvió a Ezequiel',
     vencido: 'Renovar el certificado',
-    rechazado: 'Revisar el rechazo',
+    rechazado: 'Rearmar el trámite',
   }
   const NOMBRE_ETAPA_LEAD = { nuevo: 'nuevo', contactado: 'contactado', entrevista: 'entrevista' }
 
@@ -95,25 +94,60 @@
     </div>`
   }
 
-  function cardTramite(s) {
-    const q = s.quien === 'club' ? 'club' : s.quien === 'paciente' ? 'paciente' : s.quien === 'medico' ? 'medico' : 'org'
-    const alerta = s.vence_dias !== null && s.vence_dias !== undefined && s.vence_dias < 45
+  const pelota = (quien) => quien === 'club' ? 'club' : quien === 'paciente' ? 'paciente' : quien === 'medico' ? 'medico' : 'org'
+  const ddmm = (iso) => {
+    const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
+    return m ? `${m[3]}/${m[2]}` : ''
+  }
+
+  // ENTREVISTA: el camino "desde cero" en preparación (con la señal del
+  // consultorio: la próxima consulta agendada, destacada)
+  function cardEntrevista(s) {
+    const q = pelota(s.quien)
+    const conConsulta = s.prox_dias !== null && s.prox_dias !== undefined && s.prox_dias >= 0
     return `<div class="ik-card ik-q-${q}" data-socio="${s.id}" data-tab="tramite">
       ${avatar(s.nombre)}
       <div class="ik-c-body">
-        <b>${P.esc(dosPalabras(s.nombre))}${alerta ? ` <span class="tag tag-mal" data-tip="El certificado vence el ${fFecha(s.vence)}">⚠ ${s.vence_dias < 0 ? 'vencido' : 'vence en ' + s.vence_dias + ' d'}</span>` : ''}</b>
+        <b>${P.esc(dosPalabras(s.nombre))}${conConsulta ? ` <span class="ik-prox" data-tip="Consulta agendada en el consultorio">🩺 próx. ${P.esc(ddmm(s.prox_consulta))}</span>` : ''}</b>
         <div class="ik-sub">${s.actualizado ? P.esc(hace(s.actualizado)) + ' en este paso' : 'sin movimientos'}</div>
         <div class="ik-chips"><span class="ik-chip ik-chip-${q}">${P.esc(ACCION_TRAMITE[s.estado] || s.estado)}</span></div>
       </div>
     </div>`
   }
 
+  // MINISTERIO: la cocina posterior a la firma (y lo que volvió mal)
+  function cardMinisterio(s) {
+    const q = pelota(s.quien)
+    const fallo = s.estado === 'vencido' || s.estado === 'rechazado'
+    const alerta = !fallo && s.vence_dias !== null && s.vence_dias !== undefined && s.vence_dias < 45
+    return `<div class="ik-card ik-q-${q}" data-socio="${s.id}" data-tab="tramite">
+      ${avatar(s.nombre)}
+      <div class="ik-c-body">
+        <b>${P.esc(dosPalabras(s.nombre))}${fallo ? ` <span class="tag tag-mal">${s.estado === 'vencido' ? 'vencido' : 'rechazado'}</span>` : ''}${alerta ? ` <span class="tag tag-mal" data-tip="El certificado vence el ${fFecha(s.vence)}">⚠ vence en ${s.vence_dias} d</span>` : ''}</b>
+        <div class="ik-sub">${s.actualizado ? P.esc(hace(s.actualizado)) + ' en este paso' : 'sin movimientos'}</div>
+        <div class="ik-chips"><span class="ik-chip ik-chip-${q}">${P.esc(ACCION_TRAMITE[s.estado] || s.estado)}</span></div>
+      </div>
+    </div>`
+  }
+
+  // FIRMAS: acá se encuentran los dos ríos (consentimiento del trámite
+  // desde cero + declaración jurada del autocultivador)
   function cardFirma(s) {
+    if (s.tipo === 'consentimiento') {
+      return `<div class="ik-card ik-q-paciente" data-socio="${s.id}" data-tab="tramite">
+        ${avatar(s.nombre)}
+        <div class="ik-c-body">
+          <b>${P.esc(dosPalabras(s.nombre))} <span class="tag tag-auto">Consentimiento</span></b>
+          <div class="ik-sub">${s.actualizado ? `trámite cargado ${P.esc(hace(s.actualizado))}` : 'trámite cargado por el médico'}</div>
+          <div class="ik-chips"><span class="ik-chip ik-chip-paciente">🖋 Falta su consentimiento</span></div>
+        </div>
+      </div>`
+    }
     const firmada = s.dec_estado === 'firmada'
     return `<div class="ik-card ${firmada ? 'ik-q-club' : 'ik-q-paciente'}" data-socio="${s.id}" data-tab="legal">
       ${avatar(s.nombre)}
       <div class="ik-c-body">
-        <b>${P.esc(dosPalabras(s.nombre))}</b>
+        <b>${P.esc(dosPalabras(s.nombre))} <span class="tag tag-auto">Declaración</span></b>
         <div class="ik-sub">${firmada
           ? `firmó ${P.esc(s.dec_firmada ? hace(s.dec_firmada) : '')}`
           : `declaración generada ${P.esc(s.dec_generada ? hace(s.dec_generada) : '')}`}</div>
@@ -155,8 +189,9 @@
   // ---------- columnas ----------
   const COLS = [
     { id: 'leads', emoji: '📥', titulo: 'Leads', vacio: 'Nadie golpeando la puerta hoy.', card: cardLead, mas: 'leads' },
-    { id: 'tramite', emoji: '📋', titulo: 'Trámite', vacio: 'Ningún trámite en el aire.', card: cardTramite, mas: 'socios' },
+    { id: 'entrevista', emoji: '🩺', titulo: 'Entrevista', vacio: 'Nadie preparando su entrada.', card: cardEntrevista, mas: 'socios' },
     { id: 'firmas', emoji: '✍️', titulo: 'Firmas', vacio: 'Nada esperando una firma.', card: cardFirma, mas: 'socios' },
+    { id: 'ministerio', emoji: '🏛️', titulo: 'Ministerio', vacio: 'Nada durmiendo en el Ministerio.', card: cardMinisterio, mas: 'socios' },
     { id: 'vinculados', emoji: '🌿', titulo: 'Vinculados', vacio: 'Sin candidatos al débito.', card: cardVinculado, mas: 'suscripciones' },
     { id: 'adheridos', emoji: '💳', titulo: 'Adheridos', vacio: 'Todavía nadie en débito.', card: cardAdherido, mas: 'suscripciones' },
   ]
