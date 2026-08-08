@@ -67,9 +67,10 @@
   }
   function porEscape(e) { if (e.key === 'Escape') cerrar() }
 
-  async function abrir(id, onCambio) {
+  async function abrir(id, onCambio, tab) {
     alCambiar = onCambio || null
     if (ultimoId !== id) { tabActiva = 'resumen'; ultimoId = id }
+    if (tab) tabActiva = tab // solapa sugerida por quien abre (ej. kanban de Inicio)
     cerrar()
     velo = document.createElement('div'); velo.className = 'pn-drawer-velo'
     caja = document.createElement('aside'); caja.className = 'pn-drawer' + (fichaMax ? ' max' : '')
