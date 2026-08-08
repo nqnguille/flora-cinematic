@@ -7,9 +7,11 @@
 // que no matchea va a una cola de identificación manual (patrón Unificar).
 //
 //   GET  /api/panel/mp/suscripciones     → todas, con último débito
+//   GET  /api/panel/mp/ciclo             → clasificadas por etapa del ciclo (módulo Suscripciones)
 //   GET  /api/panel/mp/cola              → socios activos con membresía SIN débito vivo
 //   GET  /api/panel/mp/identificar       → suscripciones sin socio + candidatos
 //   POST /api/panel/mp/enviar        {socio_id, via}   → manda el link del PLAN
+//   POST /api/panel/mp/renovacion    {suscripcion_id, via, tier?} → link de RENOVACIÓN del 4° mes
 //   POST /api/panel/mp/identificar   {suscripcion_id, socio_id | no_es_socio} → decisión humana
 //   POST /api/panel/mp/sincronizar   {id?}             → descubre + refresca + rescata pagos
 //   POST /api/panel/mp/no-insistir   {socio_id, valor}
@@ -37,6 +39,12 @@ const MP = 'https://api.mercadopago.com';
 // MEDIUM -> Medium, EXTRA LARGE -> Extra Large (para el copy de cara al socio)
 function tierLindo(t: string): string {
   return String(t || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+}
+
+// dd/mm/aaaa para el copy de cara al socio (mismo formato que Panel.fecha)
+function fechaLinda(iso: string): string {
+  const t = String(iso || '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? `${t.slice(8, 10)}/${t.slice(5, 7)}/${t.slice(0, 4)}` : t;
 }
 
 function json(data: unknown, status = 200): Response {
@@ -363,6 +371,114 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     return json({ ok: true, pendientes, pool: pool.results.map((s) => ({ socio_id: s.id, nombre: s.nombre, tier: s.tier })) });
   }
 
+  // El CICLO de vida del débito, para el módulo Suscripciones: cada
+  // suscripción clasificada por etapa. El plan corta solo a las 3 cuotas, así
+  // que el 4° mes es LA oportunidad: acá se ve a quién ofrecerle la
+  // renovación antes del corte, quién se cayó y quién renovó.
+  // NOTA: no pisa la vista `suscripciones` (lista plana que usa Finanzas).
+  if (vista === 'ciclo') {
+    if (!puede(auth.rol, 'mp_gestionar')) return json({ error: 'Sin permiso' }, 403);
+    const hoy = new Date();
+    const hoyIso = hoy.toISOString().slice(0, 10);
+    // los cobros salen el 1° de cada mes: el próximo es el 1° del mes que viene
+    const proximoCobro = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() + 1, 1)).toISOString().slice(0, 10);
+
+    // Cuándo terminó (o termina) una suscripción: el corte del plan (fin) y,
+    // si se canceló sin fin conocido, la última vez que la tocó el sync.
+    // OJO: `actualizado` se pisa en CADA sincronización, por eso `fin` manda.
+    const CAIDA = `COALESCE(su.fin, substr(COALESCE(su.actualizado, su.creado), 1, 10))`;
+    // La fecha del 2° cobro acreditado: un envío del link POSTERIOR a eso ya
+    // es de renovación (el de la primera vez es siempre anterior). Si no hay
+    // 2° cobro registrado, vale la ventana de 35 días antes del fin.
+    const CORTE_RENOV = `COALESCE(
+      (SELECT m2.fecha FROM movimientos m2 WHERE m2.suscripcion_id = su.id
+         AND m2.estado = 'confirmado' ORDER BY m2.fecha LIMIT 1 OFFSET 1),
+      date(COALESCE(su.fin, date('now', '+35 day')), '-35 day'))`;
+
+    const [vivas, caidas, renovadas] = await Promise.all([
+      // vivas: activa/pendiente/pausada cuyo fin no pasó todavía
+      env.DB.prepare(
+        `SELECT su.id, su.socio_id, su.tier, su.monto, su.estado, su.racha_meses, su.fin,
+                substr(su.creado, 1, 10) AS creado, su.origen,
+                s.nombre, s.telefono, s.email, s.debito_no_insistir,
+                (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = su.socio_id
+                   AND e.enviado > ${CORTE_RENOV} ORDER BY e.enviado DESC LIMIT 1) AS renov_enviado,
+                (SELECT e.via FROM envios_debito e WHERE e.socio_id = su.socio_id
+                   AND e.enviado > ${CORTE_RENOV} ORDER BY e.enviado DESC LIMIT 1) AS renov_via
+           FROM suscripciones su JOIN socios s ON s.id = su.socio_id
+          WHERE su.no_es_socio = 0 AND su.estado IN ('activa', 'pendiente', 'pausada')
+            AND (su.fin IS NULL OR su.fin >= date('now'))
+          ORDER BY COALESCE(su.fin, '9999-12-31'), s.nombre`,
+      ).all<Record<string, unknown>>(),
+      // caídas: canceladas o vencidas en los últimos 90 días, SIN una
+      // suscripción nueva posterior del mismo socio — adherencia a recuperar
+      env.DB.prepare(
+        `SELECT su.id, su.socio_id, su.tier, su.monto, su.estado, su.racha_meses, su.fin,
+                ${CAIDA} AS caida,
+                CASE WHEN su.estado = 'cancelada' THEN 'cancelada' ELSE 'vencida' END AS motivo,
+                s.nombre, s.telefono, s.email, s.debito_no_insistir,
+                (SELECT e.enviado FROM envios_debito e WHERE e.socio_id = su.socio_id
+                   AND e.enviado > ${CAIDA} ORDER BY e.enviado DESC LIMIT 1) AS renov_enviado,
+                (SELECT e.via FROM envios_debito e WHERE e.socio_id = su.socio_id
+                   AND e.enviado > ${CAIDA} ORDER BY e.enviado DESC LIMIT 1) AS renov_via
+           FROM suscripciones su JOIN socios s ON s.id = su.socio_id
+          WHERE su.no_es_socio = 0
+            AND (su.estado = 'cancelada' OR (su.fin IS NOT NULL AND su.fin < date('now')))
+            AND ${CAIDA} >= date('now', '-90 day')
+            AND NOT EXISTS (SELECT 1 FROM suscripciones n
+                  WHERE n.socio_id = su.socio_id AND n.id != su.id AND n.no_es_socio = 0
+                    AND n.estado != 'cancelada' AND substr(n.creado, 1, 10) >= ${CAIDA})
+          ORDER BY caida DESC`,
+      ).all<Record<string, unknown>>(),
+      // renovadas: una suscripción nueva (no cancelada) creada después del
+      // fin de una anterior del MISMO socio, en los últimos 90 días
+      env.DB.prepare(
+        `SELECT su.id, su.socio_id, su.tier, su.monto, su.estado, su.racha_meses, su.fin,
+                substr(su.creado, 1, 10) AS desde,
+                s.nombre, s.telefono, s.email,
+                v.tier AS anterior_tier,
+                MAX(COALESCE(v.fin, substr(COALESCE(v.actualizado, v.creado), 1, 10))) AS anterior_fin
+           FROM suscripciones su
+           JOIN suscripciones v ON v.socio_id = su.socio_id AND v.id != su.id AND v.no_es_socio = 0
+                AND (v.estado = 'cancelada' OR (v.fin IS NOT NULL AND v.fin < date('now')))
+                AND substr(su.creado, 1, 10) >= COALESCE(v.fin, substr(COALESCE(v.actualizado, v.creado), 1, 10))
+           JOIN socios s ON s.id = su.socio_id
+          WHERE su.no_es_socio = 0 AND su.estado != 'cancelada'
+            AND substr(su.creado, 1, 10) >= date('now', '-90 day')
+          GROUP BY su.id
+          ORDER BY su.creado DESC`,
+      ).all<Record<string, unknown>>(),
+    ]);
+
+    const activas = vivas.results.filter((r) => r.estado === 'activa' || r.estado === 'pendiente')
+      .map((r) => ({ ...r, cuota: Math.min(3, Number(r.racha_meses) || 0), proximo_cobro: r.estado === 'activa' ? proximoCobro : null }));
+    const pausadas = vivas.results.filter((r) => r.estado === 'pausada');
+    // la oportunidad: 3ª cuota encima (racha >= 2) o fin a menos de 35 días.
+    // La CUOTA SOCIAL queda afuera: es sin límite a propósito, no se renueva.
+    const limite35 = new Date(Date.now() + 35 * 86400000).toISOString().slice(0, 10);
+    const porRenovar = activas.filter((r) => r.tier !== 'CUOTA SOCIAL'
+      && ((Number(r.racha_meses) || 0) >= 2 || (r.fin && String(r.fin) <= limite35)));
+
+    return json({
+      ok: true,
+      configurado: !!env.MP_ACCESS_TOKEN,
+      hoy: hoyIso,
+      proximo_cobro: proximoCobro,
+      totales: {
+        activas: activas.length,
+        monto_mensual: activas.reduce((a, r) => a + (r.estado === 'activa' ? Number(r.monto) || 0 : 0), 0),
+        por_renovar: porRenovar.length,
+        caidas_90d: caidas.results.length,
+        renovadas_90d: renovadas.results.length,
+      },
+      activas,
+      por_renovar: porRenovar,
+      caidas: caidas.results,
+      renovadas: renovadas.results,
+      pausadas,
+    });
+  }
+
   return json({ error: 'Vista desconocida' }, 404);
 };
 
@@ -430,6 +546,56 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
       `INSERT INTO envios_debito (socio_id, tier, mp_plan_id, via, enviado_por) VALUES (?, ?, ?, ?, ?)`,
     ).bind(socioId, tier, plan.plan_id, via, auth.email).run();
     return json({ ok: true, via, link: plan.link, monto: plan.monto, contado: plan.contado, tier });
+  }
+
+  // El link de RENOVACIÓN del 4° mes: mismo link de plan que `enviar`, pero
+  // parte de una suscripción que ya está terminando (o terminó) y el mensaje
+  // es de renovar, no de arrancar. Registra el envío en envios_debito.
+  if (vista === 'renovacion') {
+    const authR = await requireCap(request, env, 'mp_enviar');
+    if (authR.status !== 200) return json({ error: authR.status === 401 ? 'Sin sesión' : 'Sin permiso' }, authR.status);
+    const suscId = Number(body.suscripcion_id);
+    const via = String(body.via);
+    if (!Number.isFinite(suscId)) return json({ error: 'Falta suscripcion_id' }, 400);
+    if (via !== 'whatsapp' && via !== 'email') return json({ error: 'via inválida' }, 400);
+    const su = await env.DB.prepare(
+      `SELECT su.id, su.socio_id, su.tier, su.fin, su.estado,
+              s.nombre, s.email, s.telefono
+         FROM suscripciones su JOIN socios s ON s.id = su.socio_id WHERE su.id = ?`,
+    ).bind(suscId).first<{ id: number; socio_id: number; tier: string | null; fin: string | null; estado: string; nombre: string; email: string | null; telefono: string | null }>();
+    if (!su) return json({ error: 'La suscripción no existe o no tiene socio identificado' }, 404);
+
+    const planes = await planesDebito(env);
+    // el tier puede venir elegido a mano (upgrade/downgrade al renovar);
+    // si no viene, se renueva el mismo plan de la suscripción
+    const tier = String(body.tier || su.tier || '');
+    if (!tier) return json({ error: 'Elegí una membresía para el link' }, 400);
+    const plan = planes[tier];
+    if (!plan || plan.tipo !== 'membresia') return json({ error: `No hay plan de Mercado Pago cargado para ${tier}` }, 400);
+
+    // el copy de renovación: su ciclo de 3 meses con 20% termina/terminó,
+    // renovando sigue con el descuento sin cortes
+    const hoyIso = new Date().toISOString().slice(0, 10);
+    const cuando = !su.fin ? 'está por terminar'
+      : su.fin < hoyIso ? `terminó el ${fechaLinda(su.fin)}`
+      : `termina el ${fechaLinda(su.fin)}`;
+    const montoFmt = '$' + plan.monto.toLocaleString('es-AR');
+    const textoWa = `Hola ${su.nombre ? su.nombre.split(/\s+/)[0] : ''}! Tu ciclo de 3 meses de débito automático con el 20% de descuento ${cuando}. Renovalo acá y seguís con tu plan ${tierLindo(tier)}${plan.gramos ? ` de ${plan.gramos} gramos por mes` : ''} en ${montoFmt}, con el descuento y sin cortes: ${plan.link} Se autoriza una vez desde MercadoPago y podés cancelarlo cuando quieras.`;
+
+    if (via === 'email') {
+      if (!su.email) return json({ error: 'El socio no tiene email' }, 400);
+      const mail = await enviarMailDebito(env, {
+        email: su.email, nombre: su.nombre, tier, monto: plan.monto, contado: plan.contado, gramos: plan.gramos, link: plan.link,
+      });
+      if (!mail.enviado) return json({ error: `El mail no salió (${mail.error}): mandáselo por WhatsApp` }, 502);
+    }
+    await env.DB.prepare(
+      `INSERT INTO envios_debito (socio_id, tier, mp_plan_id, via, enviado_por) VALUES (?, ?, ?, ?, ?)`,
+    ).bind(su.socio_id, tier, plan.plan_id, via, authR.email).run();
+    return json({
+      ok: true, via, tier, link: plan.link, monto: plan.monto, contado: plan.contado,
+      texto_wa: textoWa, telefono: su.telefono || null,
+    });
   }
 
   // La decisión humana sobre una suscripción descubierta sin socio.

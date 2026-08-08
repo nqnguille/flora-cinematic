@@ -1,4 +1,4 @@
-/* Módulo Finanzas (prefijo fz-): Resumen · Cobranza · Movimientos ·
+/* Módulo Finanzas (prefijo fz-): Resumen · Previsión · Cobranza · Movimientos ·
    Gastos fijos · Aportes · Personal. Datos: /api/panel/finanzas/<vista>. */
 (() => {
   'use strict'
@@ -27,7 +27,7 @@
   // ---------- armazón ----------
   function armazon() {
     const tabs = [
-      ['resumen', 'Resumen'], ['cobranza', 'Cobranza'], ['movimientos', 'Movimientos'],
+      ['resumen', 'Resumen'], ['prevision', 'Previsión'], ['cobranza', 'Cobranza'], ['movimientos', 'Movimientos'],
       ['fijos', 'Gastos fijos'], ['debito', 'Débito automático'],
       P.puede('aportes_ver') && ['aportes', 'Aportes'],
       P.puede('personal_ver') && ['personal', 'Personal'],
@@ -67,6 +67,7 @@
     cuerpo.innerHTML = '<div class="vacio">⏳ Cargando…</div>'
     try {
       if (tabActual === 'resumen') await vResumen(cuerpo)
+      else if (tabActual === 'prevision') await vPrevision(cuerpo)
       else if (tabActual === 'cobranza') await vCobranza(cuerpo)
       else if (tabActual === 'movimientos') await vMovimientos(cuerpo)
       else if (tabActual === 'fijos') await vFijos(cuerpo)
@@ -153,6 +154,70 @@
     if (!el) return
     el.innerHTML = n && P.puede('finanzas_aprobar')
       ? `<span class="tag tag-deb">${n} pendiente${n > 1 ? 's' : ''} de tu visto bueno</span>` : ''
+  }
+
+  // ---------- Previsión (débitos que salen el día 1) ----------
+  async function vPrevision(cuerpo) {
+    const { prevision: pv } = await get('prevision')
+    const quien = (d) => d.socio ? P.esc(d.socio) : `<i style="color:var(--muted)">${P.esc(d.mp_payer_email || 'sin identificar')}</i>`
+    const fFin = (f) => f ? `${f.slice(8, 10)}/${f.slice(5, 7)}/${f.slice(0, 4)}` : '—'
+    const comTxt = pv.comisionPct ? `~${String(pv.comisionPct).replace('.', ',')}% de MP` : 'sin comisión calculada'
+
+    const tarjeta = (m, i) => {
+      const esHoy = i === 0
+      const pct = esHoy && m.avancePct != null ? Math.min(100, m.avancePct) : 0
+      return `<div class="card ${esHoy ? 'fz-pv-hoy' : ''}">
+        <span class="k">${mesLindo(m.mes)}${esHoy ? ' · en curso' : ''}</span>
+        <div class="kpi-v">${P.fmt(m.bruto)}</div>
+        <div class="kpi-d">neto estimado <b>${P.fmt(m.neto)}</b> (${comTxt}) · ${m.suscripciones} débito${m.suscripciones === 1 ? '' : 's'}</div>
+        ${esHoy ? `<div class="fz-pv-bar" role="img" aria-label="Cobrado ${m.avancePct ?? 0}% de lo proyectado"><i style="width:${pct}%"></i></div>
+        <div class="kpi-d">ya entró por MP <b>${P.fmt(m.cobradoMp || 0)}</b> · ${m.avancePct ?? 0}% de lo proyectado</div>` : ''}
+      </div>`
+    }
+
+    const detalleMes = (m) => `
+      <details class="fz-pv-det"><summary>${mesLindo(m.mes)} · ${m.suscripciones} débito${m.suscripciones === 1 ? '' : 's'} · ${P.fmt(m.bruto)}</summary>
+      ${m.detalle.length ? `<table class="tabla"><thead><tr>
+        <th>Socio</th><th>Membresía</th><th class="r">Monto</th><th class="r">Cuota</th><th>Termina</th>
+      </tr></thead><tbody>${m.detalle.map((d) => `<tr>
+        <td>${quien(d)}${d.estado === 'pendiente' ? ' <span class="tag tag-deb">esperando autorización</span>' : ''}</td>
+        <td style="color:var(--ink2)">${P.esc(d.tier || '—')}</td>
+        <td class="r" style="font-weight:600">${P.fmt(d.monto)}</td>
+        <td class="r">${d.tier === 'CUOTA SOCIAL' ? '∞' : `${d.cuota_ciclo}/3`}</td>
+        <td style="color:var(--ink2)">${fFin(d.fin)}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="vacio">Ningún débito llega a este mes.</div>'}</details>`
+
+    cuerpo.innerHTML = `
+      <p class="so-help" style="margin:0 0 12px;max-width:78ch">Los débitos de los planes salen el <b>día 1</b> de cada mes.
+      La proyección suma las suscripciones activas y las que esperan autorización; el neto descuenta la comisión real de
+      Mercado Pago (${pv.comisionBase.movimientos} cobro${pv.comisionBase.movimientos === 1 ? '' : 's'} reales de referencia).</p>
+      <div class="grid3">${pv.meses.map(tarjeta).join('')}</div>
+
+      ${pv.renovaciones.length ? `<div class="card fz-pv-renov" style="margin-top:10px">
+        <span class="k">Renovaciones a conseguir (${pv.renovaciones.length})</span>
+        <p class="so-help">Estos débitos terminan dentro de la ventana: cada uno es plata que se cae si nadie lo renueva.</p>
+        ${pv.renovaciones.map((s) => `<div class="fila fz-pv-fila">
+          <span><b>${quien(s)}</b> <span style="color:var(--muted);font-size:12px">${P.esc(s.tier || '—')}</span></span>
+          <span class="pn-sp"></span>
+          <span style="font-weight:600">${P.fmt(s.monto)}/mes</span>
+          <span class="tag tag-deb">termina el ${fFin(s.fin)}</span>
+        </div>`).join('')}
+        <div class="fz-tot"><span>si ninguna se renueva</span><span>−${P.fmt(pv.renovaciones.reduce((t, s) => t + s.monto, 0))}/mes</span></div>
+      </div>` : `<div class="card" style="margin-top:10px;border-left:3px solid var(--grn)"><span class="k">Renovaciones</span>
+        <div class="kpi-d" style="margin-top:6px">Ningún débito termina en los próximos 3 meses.</div></div>`}
+
+      ${pv.pausadas.length ? `<div class="card" style="margin-top:10px;border-left:3px solid var(--dan)">
+        <span class="k">Plata en riesgo · pausados en MP (${pv.pausadas.length})</span>
+        <p class="so-help">Suscripciones pausadas: no entran a la proyección hasta que se reactiven.</p>
+        ${pv.pausadas.map((s) => `<div class="fila fz-pv-fila">
+          <span><b>${quien(s)}</b> <span style="color:var(--muted);font-size:12px">${P.esc(s.tier || '—')}</span></span>
+          <span class="pn-sp"></span>
+          <span style="font-weight:600">${P.fmt(s.monto)}/mes</span>
+        </div>`).join('')}
+      </div>` : ''}
+
+      <div class="card" style="margin-top:10px;padding-bottom:8px"><span class="k">Detalle por mes</span>
+        <div style="margin-top:6px">${pv.meses.map(detalleMes).join('')}</div></div>`
   }
 
   // ---------- Cobranza ----------

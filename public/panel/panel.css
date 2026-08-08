@@ -832,3 +832,15 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
   display: inline-block; white-space: normal; line-height: 1.5;
   max-width: 100%; overflow-wrap: anywhere;
 }
+
+/* ── Finanzas · Previsión (fz-pv): proyección de los débitos del día 1 ── */
+.fz-pv-hoy { border-color: var(--vio); background: linear-gradient(180deg, var(--vio-soft), transparent 70%), var(--card); }
+.fz-pv-bar { height: 8px; margin-top: 12px; border-radius: 4px; background: var(--card2); border: 1px solid var(--line); overflow: hidden; }
+.fz-pv-bar i { display: block; height: 100%; background: var(--grn); border-radius: 4px; transition: width .4s var(--ease); }
+.fz-pv-renov { border-left: 3px solid var(--amb); }
+.fz-pv-fila { padding: 8px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.fz-pv-det { border-top: 1px solid var(--line); }
+.fz-pv-det:first-child { border-top: 0; }
+.fz-pv-det summary { cursor: pointer; padding: 10px 2px; font-size: 13px; color: var(--ink2); list-style-position: inside; }
+.fz-pv-det summary:hover { color: var(--ink); }
+.fz-pv-det[open] summary { color: var(--ink); font-weight: 600; }

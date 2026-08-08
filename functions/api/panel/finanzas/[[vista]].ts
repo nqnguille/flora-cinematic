@@ -243,6 +243,123 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     });
   }
 
+  if (vista === 'prevision') {
+    // Previsión de débito automático: los planes de MP quedaron configurados
+    // para cobrar el día 1 de cada mes (decisión 08/2026). Proyecta el mes
+    // corriente + 2, con la comisión REAL promedio de MP (neto vs bruto de
+    // los últimos movimientos, nunca hardcodeada).
+    const hoy = new Date().toISOString().slice(0, 10);
+    const meses: string[] = [];
+    {
+      const a = Number(hoy.slice(0, 4)), m0 = Number(hoy.slice(5, 7));
+      for (let i = 0; i < 3; i++) {
+        const t = a * 12 + (m0 - 1) + i;
+        meses.push(`${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`);
+      }
+    }
+
+    const [susc, comReciente, cobradoMes] = await Promise.all([
+      env.DB.prepare(
+        `SELECT su.socio_id, su.tier, su.monto, su.racha_meses, su.estado, su.fin,
+                su.mp_payer_email, s.nombre AS socio_nombre
+           FROM suscripciones su LEFT JOIN socios s ON s.id = su.socio_id
+          WHERE su.no_es_socio = 0 AND su.estado IN ('activa','pendiente','pausada')
+          ORDER BY su.monto DESC`,
+      ).all(),
+      env.DB.prepare(
+        `SELECT SUM(bruto) AS bruto, SUM(neto) AS neto, COUNT(*) AS n FROM movimientos
+          WHERE medio = 'mp' AND tipo = 'ingreso' AND estado = 'confirmado'
+            AND bruto IS NOT NULL AND bruto > 0 AND fecha >= date(?, '-120 days')`,
+      ).bind(hoy).first<{ bruto: number | null; neto: number | null; n: number }>(),
+      env.DB.prepare(
+        `SELECT SUM(neto) AS neto, COUNT(*) AS n FROM movimientos
+          WHERE medio = 'mp' AND tipo = 'ingreso' AND estado = 'confirmado'
+            AND substr(fecha,1,7) = ?`,
+      ).bind(meses[0]).first<{ neto: number | null; n: number }>(),
+    ]);
+
+    // Comisión promedio real; si en 120 días no hubo cobros MP con bruto,
+    // cae a todo el histórico. Sin datos: 0 (y el front avisa que es bruto).
+    let comBruto = comReciente?.bruto ?? 0;
+    let comNeto = comReciente?.neto ?? 0;
+    let comN = comReciente?.n ?? 0;
+    let comVentanaDias: number | null = 120;
+    if (!comBruto) {
+      const total = await env.DB.prepare(
+        `SELECT SUM(bruto) AS bruto, SUM(neto) AS neto, COUNT(*) AS n FROM movimientos
+          WHERE medio = 'mp' AND tipo = 'ingreso' AND estado = 'confirmado'
+            AND bruto IS NOT NULL AND bruto > 0`,
+      ).first<{ bruto: number | null; neto: number | null; n: number }>();
+      comBruto = total?.bruto ?? 0; comNeto = total?.neto ?? 0; comN = total?.n ?? 0;
+      comVentanaDias = null;
+    }
+    const comisionPct = comBruto > 0 ? Math.round((1 - comNeto / comBruto) * 10000) / 100 : 0;
+    const factor = 1 - comisionPct / 100;
+
+    type Susc = {
+      socio_id: number | null; tier: string | null; monto: number; racha_meses: number;
+      estado: string; fin: string | null; mp_payer_email: string | null; socio_nombre: string | null;
+    };
+    const filas = susc.results as Susc[];
+    const dia1 = (m: string) => `${m}-01`;
+
+    const mesesOut = meses.map((m, i) => {
+      // Entra al mes todo débito activo o esperando autorización cuyo fin
+      // (si tiene) no corta antes del día 1, que es cuando sale el cobro.
+      const detalle = filas
+        .filter((s) => (s.estado === 'activa' || s.estado === 'pendiente') && (!s.fin || s.fin >= dia1(m)))
+        .map((s) => ({
+          socio: s.socio_nombre || null,
+          mp_payer_email: s.mp_payer_email,
+          tier: s.tier,
+          monto: s.monto,
+          estado: s.estado,
+          cuota: s.racha_meses + i + 1,                    // cuota que le tocaría acreditar
+          cuota_ciclo: ((s.racha_meses + i) % 3) + 1,      // posición en el ciclo de 3 del 20%
+          fin: s.fin,
+        }));
+      const bruto = detalle.reduce((t, d) => t + d.monto, 0);
+      const neto = Math.round(bruto * factor);
+      const esCorriente = i === 0;
+      const cobrado = esCorriente ? (cobradoMes?.neto ?? 0) : null;
+      return {
+        mes: m,
+        bruto,
+        neto,
+        suscripciones: detalle.length,
+        cobradoMp: cobrado,
+        avancePct: esCorriente && neto > 0 ? Math.round(((cobrado ?? 0) / neto) * 100) : null,
+        detalle,
+      };
+    });
+
+    const riesgo = (s: Susc) => ({
+      socio: s.socio_nombre || null,
+      mp_payer_email: s.mp_payer_email,
+      tier: s.tier,
+      monto: s.monto,
+      fin: s.fin,
+    });
+    // Terminan dentro de la ventana: cada una es una renovación a conseguir.
+    const renovaciones = filas
+      .filter((s) => s.estado === 'activa' && s.fin && s.fin >= dia1(meses[0]) && s.fin <= `${meses[2]}-31`)
+      .sort((a, b) => (a.fin! < b.fin! ? -1 : 1))
+      .map(riesgo);
+    const pausadas = filas.filter((s) => s.estado === 'pausada').map(riesgo);
+
+    return json({
+      ok: true,
+      prevision: {
+        generado: hoy,
+        comisionPct,
+        comisionBase: { movimientos: comN, ventanaDias: comVentanaDias },
+        meses: mesesOut,
+        renovaciones,
+        pausadas,
+      },
+    });
+  }
+
   return json({ error: 'Vista desconocida' }, 404);
 };
 

@@ -1,0 +1,56 @@
+/* Módulo Suscripciones (prefijo su-). Sobrio, sobre los tokens de panel.css:
+   tarjetas de trabajo para las renovaciones y caídas, tabla simple para las
+   activas. No pisa nada de panel.css. */
+
+.su-toolbar { margin-bottom: 14px }
+
+/* los 3 números grandes de arriba */
+.su-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+@media (max-width: 860px) { .su-kpis { grid-template-columns: 1fr } }
+
+.su-h {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  margin: 26px 0 4px;
+}
+.su-sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; max-width: 640px }
+.su-h + div { margin-top: 10px }
+
+/* tarjetas de trabajo (por renovar / caídas / pausadas) */
+.su-cards { display: grid; gap: 10px }
+.su-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.su-card.su-off { opacity: .6 }
+.su-main { min-width: 0; display: grid; gap: 6px }
+.su-datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--ink2);
+  font-size: 13px;
+}
+.su-datos b { color: var(--ink) }
+.su-acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.su-acciones .btn { white-space: nowrap }
+
+/* tablas (activas / renovadas): que scrolleen ellas, no la página */
+.su-tabla-wrap {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+  overflow-x: auto;
+}
+.su-tabla-wrap .tabla { min-width: 640px }

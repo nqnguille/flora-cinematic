@@ -22,6 +22,7 @@ const v = Date.now().toString(36)
     <title>Panel del club — Flora</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href={`/panel/panel.css?v=${v}`} />
+    <link rel="stylesheet" href={`/panel/mod-suscripciones.css?v=${v}`} />
   </head>
   <body>
     <!-- login -->
@@ -76,6 +77,9 @@ const v = Date.now().toString(36)
         <button type="button" data-sec="finanzas" data-nom="Finanzas" data-cap="finanzas_ver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"></path></svg>
         </button>
+        <button type="button" data-sec="suscripciones" data-nom="Suscripciones" data-cap="mp_gestionar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12.6A8.5 8.5 0 1 1 18 6.3"></path><path d="M18.5 2.5v4h-4"></path></svg>
+        </button>
         <button type="button" data-sec="notificaciones" data-nom="Avisos" data-cap="avisos_editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9Z"></path><path d="M10.3 20a2 2 0 0 0 3.4 0"></path></svg>
         </button>
@@ -105,6 +109,7 @@ const v = Date.now().toString(36)
           <section class="pn-sec" id="sec-catalogo"></section>
           <section class="pn-sec" id="sec-membresias"></section>
           <section class="pn-sec" id="sec-finanzas"></section>
+          <section class="pn-sec" id="sec-suscripciones"></section>
           <section class="pn-sec" id="sec-notificaciones"></section>
           <section class="pn-sec" id="sec-ajustes"></section>
         </main>
@@ -119,6 +124,7 @@ const v = Date.now().toString(36)
     <!-- módulos reales primero (primero-gana), placeholders al final cubren lo que falte -->
     <script src={`/panel/mod-inicio.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-finanzas.js?v=${v}`} is:inline></script>
+    <script src={`/panel/mod-suscripciones.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-socio-detalle.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-socios.js?v=${v}`} is:inline></script>
     <script src={`/panel/mod-reservas.js?v=${v}`} is:inline></script>
