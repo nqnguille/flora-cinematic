@@ -14,6 +14,8 @@ interface Env {
   CERTIFICADOS: KVNamespace;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
+  // Medidor central de consumo de IA. Opcional: sin token no se mide y listo.
+  CONSUMO_TOKEN?: string;
 }
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB: certificados reales pesan < 1 MB
@@ -47,7 +49,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   return json({ ok: true, existe: !!meta, meta: meta || null });
 };
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
   const auth = await requireCap(request, env, 'reprocann_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
 
@@ -57,14 +59,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!Number.isFinite(socioId)) return json({ error: 'Falta socio_id' }, 400);
 
   const socio = await env.DB.prepare(`SELECT nombre FROM socios WHERE id = ?`).bind(socioId).first<{ nombre: string }>();
-  if (!socio) return json({ error: 'El socio no existe' }, 404);
+  if (!socio) return json({ error: 'El paciente no existe' }, 404);
 
   // Releer un certificado ya guardado: para los subidos antes de la lectura
   // automática o cuando el cupo diario de visión estaba agotado.
   if ((body as Record<string, unknown>).releer) {
     const pdf = await env.CERTIFICADOS.get(`cert:${socioId}`, 'arrayBuffer');
-    if (!pdf) return json({ error: 'Este socio no tiene certificado guardado' }, 404);
-    const leido = await completarDesdePdf(env, socioId, pdf);
+    if (!pdf) return json({ error: 'Este paciente no tiene certificado guardado' }, 404);
+    const leido = await completarDesdePdf(env, socioId, pdf, waitUntil);
     return json({ ok: true, leido, releido: true });
   }
 
@@ -96,7 +98,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // VACÍOS, nunca pisa lo que alguien escribió a mano. El diagnóstico no se
   // guarda en socios (es dato clínico): viaja en la respuesta para que el
   // panel lo ofrezca como sugerencia al generar la declaración.
-  const leido = await completarDesdePdf(env, socioId, bytes.buffer as ArrayBuffer);
+  const leido = await completarDesdePdf(env, socioId, bytes.buffer as ArrayBuffer, waitUntil);
 
   return json({ ok: true, bytes: bytes.length, leido });
 };
@@ -104,10 +106,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 // Lee el PDF y completa SOLO los campos vacíos de la ficha. Compartida entre
 // la subida y el "releer" (para certificados guardados antes de que existiera
 // la lectura automática, o cuando el cupo de visión estaba agotado).
-async function completarDesdePdf(env: Env, socioId: number, pdf: ArrayBuffer): Promise<Record<string, string>> {
+async function completarDesdePdf(env: Env, socioId: number, pdf: ArrayBuffer,
+                                 esperar?: (p: Promise<unknown>) => void): Promise<Record<string, string>> {
   const leido: Record<string, string> = {};
   try {
-    const datos = await leerCertificado(pdf, env.AI);
+    const datos = await leerCertificado(pdf, env.AI, { env, esperar });
     const campos: Array<[string, string | number | undefined]> = [
       ['documento', datos.dni], ['domicilio', datos.domicilio],
       ['localidad', datos.localidad], ['provincia', datos.provincia],

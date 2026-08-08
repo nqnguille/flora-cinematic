@@ -260,7 +260,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `INSERT INTO movimientos (fecha, tipo, categoria, concepto, socio_id, neto, medio, estado, gramos, origen, cargado_por)
        VALUES (date('now'), 'ingreso', 'membresia', ?, ?, ?, ?, 'confirmado', ?, 'manual', ?)`,
     ).bind(
-      tier !== 'NINGUNA' ? `${tier} — alta` : 'Alta de socio',
+      tier !== 'NINGUNA' ? `${tier} — alta` : 'Alta de paciente',
       socioId, monto, medio, tier !== 'NINGUNA' ? GRAMOS[tier] : null, auth.email,
     ).run();
     movimientoId = Number(r.meta.last_row_id);

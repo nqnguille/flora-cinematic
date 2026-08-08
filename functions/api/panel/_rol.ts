@@ -26,8 +26,8 @@ export function esRolValido(v: unknown): v is Rol {
 // y descripción de cada rol, en el orden en que se ofrecen.
 export const ROLES_META: { rol: Rol; etiqueta: string; descripcion: string }[] = [
   { rol: 'dueno', etiqueta: 'Presidente', descripcion: 'Ve y hace todo: aprueba movimientos, ve sueldos y aportes, gestiona accesos' },
-  { rol: 'operacion', etiqueta: 'Operación', descripcion: 'Maneja el día a día completo: socios, REPROCANN, leads, links de pago, carta, catálogo, mostrador y carga de gastos. Sin sueldos, sin aportes y sin visto bueno' },
-  { rol: 'socio_proyecto', etiqueta: 'Socio del proyecto', descripcion: 'Ve todo el proyecto (finanzas, aportes, socios, leads — sueldos tapados) y puede cargar gastos, que esperan el visto bueno del presidente' },
+  { rol: 'operacion', etiqueta: 'Operación', descripcion: 'Maneja el día a día completo: pacientes, REPROCANN, leads, links de pago, carta, catálogo, mostrador y carga de gastos. Sin sueldos, sin aportes y sin visto bueno' },
+  { rol: 'socio_proyecto', etiqueta: 'Socio del proyecto', descripcion: 'Ve todo el proyecto (finanzas, aportes, pacientes, leads — sueldos tapados) y puede cargar gastos, que esperan el visto bueno del presidente' },
   { rol: 'medico', etiqueta: 'Médico', descripcion: 'Ve el padrón y gestiona REPROCANN. Sin finanzas' },
   { rol: 'mostrador', etiqueta: 'Mostrador', descripcion: 'Carga retiros, cobros y reservas del día. Sin balances' },
   { rol: 'tesorero', etiqueta: 'Tesorero', descripcion: 'Ve y carga finanzas y aportes. Sin padrón ni operación diaria' },

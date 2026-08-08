@@ -14,7 +14,7 @@
 
   const FAMILIAS = [
     ['transaccional', 'Del momento', 'Salen cuando pasa algo concreto: una reserva lista, un pago que entra.'],
-    ['recordatorio', 'Por tiempo', 'Salen solos cuando se acerca una fecha. Son los que hoy no existen y el socio espera.'],
+    ['recordatorio', 'Por tiempo', 'Salen solos cuando se acerca una fecha. Son los que hoy no existen y el paciente espera.'],
     ['club', 'Del club', 'Novedades. Son los únicos que se parecen a publicidad, tratalos con cuidado.'],
   ]
 
@@ -139,7 +139,7 @@
     init(el) {
       cont = el
       el.innerHTML = `
-        <p class="so-help" style="max-width:74ch;margin:0 0 12px">Lo que le llega al socio y por dónde.
+        <p class="so-help" style="max-width:74ch;margin:0 0 12px">Lo que le llega al paciente y por dónde.
         Cada aviso nace apagado: prendelo cuando el texto te convenza. Antes de prenderlo, mandátelo a vos
         con el botón de prueba y mirá cómo se lee.</p>
         <div class="fila" style="margin-bottom:14px">

@@ -268,7 +268,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     try { recDestino = JSON.parse(rawDestino); } catch { /* valor legado "ok" */ }
     if (typeof recDestino !== 'object' || recDestino === null) recDestino = {};
     if (recDestino.temporal) {
-      return Response.json({ ok: false, error: 'ese socio tiene acceso de prueba: todavía no puede reservar' }, { status: 400 });
+      return Response.json({ ok: false, error: 'ese paciente tiene acceso de prueba: todavía no puede reservar' }, { status: 400 });
     }
     destino = { email: paraSocio, name: recDestino.name || paraSocio, mostrador: socio.email };
   }

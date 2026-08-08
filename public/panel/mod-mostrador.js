@@ -48,7 +48,7 @@
       cuerpo.innerHTML = `
         <div class="card" style="max-width:560px;margin:0 auto;text-align:center;padding:34px 28px">
           <span class="k">¿A quién atendés?</span>
-          <input class="input" id="mo-q" placeholder="Nombre o email del socio…" autocomplete="off"
+          <input class="input" id="mo-q" placeholder="Nombre o email del paciente…" autocomplete="off"
                  style="margin-top:14px;font-size:15px;padding:12px 14px" />
           <div id="mo-resultados" style="margin-top:10px;text-align:left"></div>
         </div>`
@@ -80,7 +80,7 @@
     const saldoColor = saldo.saldo > 0 ? 'var(--grn)' : 'var(--amb)'
     cuerpo.innerHTML = `
       <div class="fila" style="margin-bottom:10px">
-        <button class="btn" id="mo-volver" type="button">‹ Otro socio</button>
+        <button class="btn" id="mo-volver" type="button">‹ Otro paciente</button>
         <div class="fila"><span class="av">${P.esc(P.iniciales(socio.nombre))}</span>
           <b style="font-size:15px">${P.esc(socio.nombre)}</b>
           ${socio.numero ? `<span class="tag tag-off">#${socio.numero}</span>` : ''}

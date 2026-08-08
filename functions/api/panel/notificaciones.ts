@@ -97,7 +97,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   };
   const asunto = '[prueba] ' + interpolar(ev.asunto || ev.nombre, vars);
   const cuerpo = interpolar(ev.cuerpo || '', vars)
-    + '\n\n—\nEsto es una prueba que pediste desde el panel. Los socios no la recibieron.';
+    + '\n\n—\nEsto es una prueba que pediste desde el panel. Los pacientes no la recibieron.';
   const r = await enviarMail(env, auth.email, asunto, cuerpo);
   return r.ok ? json({ ok: true, a: auth.email }) : json({ error: r.motivo || 'no se pudo mandar' }, 502);
 };

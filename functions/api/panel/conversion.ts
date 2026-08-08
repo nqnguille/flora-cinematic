@@ -41,6 +41,8 @@ interface Env {
   AI: Ai;
   SESSION_SECRET: string;
   SUPER_ADMIN_EMAILS?: string;
+  // Medidor central de consumo de IA. Opcional: sin token no se mide y listo.
+  CONSUMO_TOKEN?: string;
 }
 
 const MAX_BYTES = 8 * 1024 * 1024; // mismo tope que certificado.ts
@@ -220,7 +222,7 @@ async function convertir(
   return json({ ok: true, paso: 'listo', socio: respuestaSocio, declaracion_id: res.declaracion_id, ya_firmada: false });
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
   const auth = await requireCap(request, env, 'reprocann_editar');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
 
@@ -281,7 +283,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (b.socio_id != null && b.socio_id !== '' && Number.isFinite(socioId) && socioId > 0) {
     const socio = await env.DB.prepare(`SELECT ${CAMPOS_SOCIO} FROM socios WHERE id = ?`)
       .bind(socioId).first<SocioRow>();
-    if (!socio) return json({ error: 'El socio no existe' }, 404);
+    if (!socio) return json({ error: 'El paciente no existe' }, 404);
     const datos: DatosPdf = { domicilio: String(b.domicilio || '').trim().slice(0, 200) || null };
     return convertir(env, auth, socio, {
       bytes, datos, diagnostico,
@@ -346,7 +348,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!bytes) return json({ error: 'Falta el PDF del certificado' }, 400);
 
   let leido: DatosCertificado = {};
-  try { leido = await leerCertificado(bytes.buffer as ArrayBuffer, env.AI); } catch { /* PDF ilegible: se revisa a mano */ }
+  try { leido = await leerCertificado(bytes.buffer as ArrayBuffer, env.AI, { env, esperar: waitUntil }); } catch { /* PDF ilegible: se revisa a mano */ }
   const { texto: _texto, ...leidoSinTexto } = leido;
 
   // lo que aspirante.ts ya había leído del mismo PDF suple lo que esta

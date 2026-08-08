@@ -74,7 +74,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!item) return json({ error: 'Elegí un plan' }, 400);
 
   const socio = await env.DB.prepare(`SELECT id, nombre FROM socios WHERE id = ?`).bind(socioId).first<{ id: number; nombre: string }>();
-  if (!socio) return json({ error: 'El socio no existe' }, 404);
+  if (!socio) return json({ error: 'El paciente no existe' }, 404);
 
   const plan = await env.DB.prepare(
     `SELECT p.item, p.plan_gramos_mes, p.plan_meses, p.contado

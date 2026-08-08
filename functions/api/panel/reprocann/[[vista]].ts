@@ -446,7 +446,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     // Si el socio ya tiene OTRO documento cargado, no se pisa: el conflicto
     // queda en señales y la sync futura entra por el vínculo, no por el DNI.
     const socio = await env.DB.prepare(`SELECT documento, nombre FROM socios WHERE id = ?`).bind(socioId).first<{ documento: string | null; nombre: string }>();
-    if (!socio) return json({ error: 'Socio inexistente' }, 404);
+    if (!socio) return json({ error: 'Paciente inexistente' }, 404);
     const otroConEseDni = await env.DB.prepare(`SELECT nombre FROM socios WHERE documento = ? AND id != ?`).bind(dni, socioId).first<{ nombre: string }>();
 
     await env.DB.prepare(
@@ -467,7 +467,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     return json({
       ok: true, confirmado: true,
       avisoDni: otroConEseDni ? `El DNI del portal ya pertenece a ${otroConEseDni.nombre} en el padrón — no se copió, revisalo` :
-        (socio.documento && socio.documento !== dni ? 'El socio tenía otro DNI cargado — se conservó el suyo' : null),
+        (socio.documento && socio.documento !== dni ? 'El paciente tenía otro DNI cargado — se conservó el suyo' : null),
     });
   }
 

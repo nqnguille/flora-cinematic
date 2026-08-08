@@ -227,7 +227,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const socio = await env.DB.prepare(
     `SELECT id, nombre, documento, domicilio, localidad, provincia, reprocann_estado FROM socios WHERE id = ?`,
   ).bind(socioId).first<DatosSocio & { id: number; reprocann_estado: string }>();
-  if (!socio) return json({ error: 'El socio no existe' }, 404);
+  if (!socio) return json({ error: 'El paciente no existe' }, 404);
 
   // ver el documento de una declaración ya generada, para reimprimir
   if (url.searchParams.get('ver')) {
@@ -408,14 +408,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const socio = await env.DB.prepare(
     `SELECT id, nombre, documento, domicilio, localidad, provincia FROM socios WHERE id = ?`,
   ).bind(socioId).first<DatosSocio & { id: number }>();
-  if (!socio) return json({ error: 'El socio no existe' }, 404);
+  if (!socio) return json({ error: 'El paciente no existe' }, 404);
 
   // el domicilio puede llegar en la misma llamada (se completa al generar)
   const domicilio = 'domicilio' in body ? String(body.domicilio || '').trim().slice(0, 200) : (socio.domicilio || '');
   const localidad = 'localidad' in body ? String(body.localidad || '').trim().slice(0, 80) : (socio.localidad || '');
   const provincia = 'provincia' in body ? String(body.provincia || '').trim().slice(0, 80) : (socio.provincia || '');
-  if (!domicilio) return json({ error: 'Falta el domicilio del socio' }, 400);
-  if (!socio.documento) return json({ error: 'El socio no tiene DNI cargado: sin eso la declaración no sirve' }, 400);
+  if (!domicilio) return json({ error: 'Falta el domicilio del paciente' }, 400);
+  if (!socio.documento) return json({ error: 'El paciente no tiene DNI cargado: sin eso la declaración no sirve' }, 400);
 
   if ('domicilio' in body || 'localidad' in body || 'provincia' in body) {
     await env.DB.prepare(

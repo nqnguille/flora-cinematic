@@ -105,7 +105,7 @@
     return `<div class="mb-edit">
       ${esNuevo ? `<div class="campo"><label class="lb">Nombre del plan</label>
         <input class="input mb-c" data-c="item" placeholder="PLAN 15x12" value="" />
-        <p class="ct-help" style="margin:4px 0 0">Como lo van a ver en la ficha del socio y en la cobranza.</p></div>` : ''}
+        <p class="ct-help" style="margin:4px 0 0">Como lo van a ver en la ficha del paciente y en la cobranza.</p></div>` : ''}
       ${esPlan ? `<div class="grid2" style="gap:10px">
           <div class="campo"><label class="lb">Gramos por mes</label>
             <input class="input mb-c" data-c="plan_gramos_mes" type="number" min="1" step="1" value="${p.plan_gramos_mes ?? ''}" /></div>

@@ -117,7 +117,7 @@
               <div class="fila"><button class="btn btn-pri" type="submit">Dar acceso</button><span id="aj-msg" class="msg"></span></div>
             </form>
             <p style="color:var(--muted);font-size:12px;margin:14px 0 0">Esto controla quién entra a ESTE panel.
-            Los pacientes de la carta se gestionan en Socios, no acá.</p>
+            Los pacientes de la carta se gestionan en Pacientes, no acá.</p>
           </div>
         </div>`
       el.querySelector('#aj-form').addEventListener('submit', alta)

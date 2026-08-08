@@ -139,7 +139,7 @@ async function despachar(
 ): Promise<{ ok: boolean; motivo?: string; proveedorId?: string }> {
   const v = { nombre: String(quien.nombre || '').split(' ')[0] || 'hola', ...vars };
   if (canal === 'mail') {
-    if (!quien.email) return { ok: false, motivo: 'el socio no tiene mail' };
+    if (!quien.email) return { ok: false, motivo: 'el paciente no tiene mail' };
     return enviarMail(env, quien.email, interpolar(ev.asunto || ev.nombre, v), interpolar(ev.cuerpo || '', v));
   }
   if (canal === 'push') {

@@ -278,7 +278,7 @@
   function muTabla(lista, conCheck) {
     return `<div class="so-scroll"><table class="tabla"><thead><tr>
       ${conCheck ? '<th style="width:30px"><input type="checkbox" id="mu-check-all" title="Marcar todas" /></th>' : ''}
-      <th>Socio</th><th>Membresía</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
+      <th>Paciente</th><th>Membresía</th><th>REPROCANN</th><th>Carta</th><th>Últ. retiro</th><th class="r"></th>
     </tr></thead><tbody>${lista.map((x) => muFila(x, conCheck)).join('')}</tbody></table></div>`
   }
 
@@ -392,7 +392,7 @@
       const dormidos = lista.filter((s) => !s.sinFicha && s._score < 3)
       const soloCarta = lista.filter((s) => s.sinFicha)
       caja.innerHTML = `
-        ${activos.length ? muTabla(activos) : '<div class="vacio">Sin socios activos.</div>'}
+        ${activos.length ? muTabla(activos) : '<div class="vacio">Sin pacientes activos.</div>'}
         ${dormidos.length ? `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">
           ${dormidos.length} ficha(s) dormida(s) — sin membresía ni retiros recientes</summary>
           ${P.puede('papelera_gestionar') ? `<div class="fila" style="margin:8px 0 0">
@@ -633,7 +633,7 @@
         <div style="display:grid;gap:10px">
           <div><label class="lb" for="al-email">Email de Google</label>
             <input class="input" id="al-email" type="email" value="${P.esc(datos.email)}"
-              placeholder="socio@gmail.com" autocomplete="off" />
+              placeholder="paciente@gmail.com" autocomplete="off" />
             <p class="so-help" id="al-precarga" style="margin:6px 0 0"></p></div>
           <div class="grid2">
             <div><label class="lb" for="al-nombre">Nombre y apellido</label>
@@ -930,7 +930,7 @@
               <button class="btn btn-pri" id="al-ddjj-ver" type="button">Abrir para imprimir</button>
               ${datos.telefono ? `<a class="btn" id="al-ddjj-wa" target="_blank" rel="noopener" href="#" style="margin-left:6px">Mandar por WhatsApp</a>` : ''}
             </div>`
-          : `<p class="msg err" style="margin-top:10px">El socio quedó dado de alta, pero la declaración no salió
+          : `<p class="msg err" style="margin-top:10px">El paciente quedó dado de alta, pero la declaración no salió
               (${P.esc(ddjj.error)}). Generala desde su ficha.</p>`) : ''}
         <div class="pn-mod-acciones">
           ${datos.telefono ? `<a class="btn ${faltaCodigo ? 'btn-pri' : ''}" href="${P.esc(wa)}" target="_blank" rel="noopener">${faltaCodigo ? 'Pedirle el código' : 'Saludar por WhatsApp'}</a>` : ''}
@@ -1259,7 +1259,7 @@
       <div class="card" style="margin-bottom:14px">
         <span class="k">Volcado del portal</span>
         <p class="so-help" style="margin:6px 0 8px">Pegá el JSON de trámites del portal de REPROCANN (cuenta de la ONG)
-        o subí el archivo. Cada carga actualiza sola a los ${d.vinculados} socio(s) ya vinculados y propone pares nuevos.
+        o subí el archivo. Cada carga actualiza sola a los ${d.vinculados} paciente(s) ya vinculados y propone pares nuevos.
         ${d.ultimaCarga ? `Última carga: ${P.esc(d.ultimaCarga.slice(0, 16).replace('T', ' '))}.` : 'Todavía no se cargó ninguno.'}</p>
         <div class="fila" style="flex-wrap:wrap;gap:6px">
           <textarea class="input" id="ru-json" rows="2" placeholder='Pegar acá el JSON…' style="flex:1;min-width:220px;font-size:12px;font-family:var(--font-ui)"></textarea>
@@ -1283,7 +1283,7 @@
           : `<div style="padding:9px 0;border-top:1px solid var(--line)">
               <div><b>${P.esc(g.persona.nombre + ' ' + g.persona.apellido)}</b>
                 <span style="color:var(--muted)">· DNI ${P.esc(g.dni)}</span> ${ruEstado(g.persona.estado)}</div>
-              <div class="so-help" style="margin:4px 0 6px">¿Cuál de estos socios es?</div>
+              <div class="so-help" style="margin:4px 0 6px">¿Cuál de estos pacientes es?</div>
               ${g.candidatos.map((c) => `<div class="fila" style="padding:4px 0">
                 <span>${P.esc(c.socio.nombre)}${c.socio.email ? ` <span style="color:var(--muted);font-size:11px">${P.esc(c.socio.email)}</span>` : ''} ${ruChips(c.senales)}</span>
                 <span class="pn-sp"></span>
@@ -1295,12 +1295,12 @@
       </div>` : ''}
 
       ${!simples.length && !revisar.length ? `<div class="card" style="margin-bottom:14px"><div class="vacio">
-        No hay pares pendientes${d.vinculados ? ` — ${d.vinculados} socio(s) vinculados se actualizan solos con cada volcado` : ''}.</div></div>` : ''}
+        No hay pares pendientes${d.vinculados ? ` — ${d.vinculados} paciente(s) vinculados se actualizan solos con cada volcado` : ''}.</div></div>` : ''}
 
       ${d.sinMatch.length ? `<details class="card" style="margin-bottom:14px">
         <summary style="cursor:pointer;font-weight:600;font-size:13px">Sin match en el padrón (${d.sinMatch.length})</summary>
-        <p class="so-help" style="margin-top:6px">Trámites de la ONG cuya persona no se parece a ningún socio.
-        Con «Dar de alta» se abre el alta de socio ya precargada con su nombre y DNI oficiales.</p>
+        <p class="so-help" style="margin-top:6px">Trámites de la ONG cuya persona no se parece a ningún paciente.
+        Con «Dar de alta» se abre el alta de paciente ya precargada con su nombre y DNI oficiales.</p>
         <table class="tabla"><thead><tr><th>Persona</th><th>DNI</th><th>Trámite</th><th>Vence</th><th class="r"></th></tr></thead>
         <tbody>${d.sinMatch.map((p) => `<tr>
           <td><b>${P.esc(p.nombre + ' ' + p.apellido)}</b>${p.renovacion ? ' <span class="tag tag-off">renovación</span>' : ''}</td>
@@ -1839,7 +1839,7 @@
       const quien = lead.nombre || lead.email || 'este lead'
       const yaEsSocio = lead.etapa === 'convertido'
       const texto = yaEsSocio
-        ? `¿Sacar a ${quien} del embudo?\n\nDesaparece esta tarjeta y el rastro de por dónde entró.\n\nSu ficha de socio NO se toca: sigue en el padrón con todo lo suyo.`
+        ? `¿Sacar a ${quien} del embudo?\n\nDesaparece esta tarjeta y el rastro de por dónde entró.\n\nSu ficha de paciente NO se toca: sigue en el padrón con todo lo suyo.`
         : `¿Borrar a ${quien} del todo?\n\nSe va la tarjeta, su solicitud y el archivo que hubiera subido. No se puede recuperar.\n\nSi es alguien real que no cerró, mejor marcalo como Perdido.`
       if (!(await P.confirmar(texto, yaEsSocio ? 'Sí, sacar' : 'Sí, borrar'))) return { ok: false, cancelado: true }
       const r = await fetch('/api/panel/leads', {

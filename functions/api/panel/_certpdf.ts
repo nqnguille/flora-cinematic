@@ -9,6 +9,16 @@
 // vacío y los campos manuales siguen mandando: esto completa, nunca bloquea.
 import { extractText, extractImages, getDocumentProxy } from 'unpdf';
 import { encode as encodePng } from 'fast-png';
+import { reportarConsumo, type EnvMedidor } from '../_medidor';
+
+/**
+ * Con qué anotar lo que gasta la lectura por visión.
+ *
+ * Es OPCIONAL y va aparte del `ai` a propósito: hay llamadores que leen el PDF
+ * sin IA (declaracion.ts, que sólo mira la capa de texto) y no tienen nada que
+ * anotar. Quien pueda medir, mide; el que no, lee igual.
+ */
+export type Medicion = { env: EnvMedidor; esperar?: (p: Promise<unknown>) => void };
 
 export interface DatosCertificado {
   dni?: string;
@@ -48,7 +58,7 @@ function despuesDe(lineas: string[], etiquetas: RegExp): string | null {
   return null;
 }
 
-export async function leerCertificado(bytes: ArrayBuffer, ai?: Ai): Promise<DatosCertificado> {
+export async function leerCertificado(bytes: ArrayBuffer, ai?: Ai, medir?: Medicion): Promise<DatosCertificado> {
   let texto = '';
   let pdf: Awaited<ReturnType<typeof getDocumentProxy>> | null = null;
   try {
@@ -64,7 +74,7 @@ export async function leerCertificado(bytes: ArrayBuffer, ai?: Ai): Promise<Dato
   // pide a la IA de visión de Cloudflare que lea las imágenes embebidas.
   if (!porTexto.dni && !porTexto.vence && ai && pdf) {
     try {
-      const porImagen = await leerDeImagenes(pdf, ai);
+      const porImagen = await leerDeImagenes(pdf, ai, medir);
       return { ...porImagen, ...sinVacios(porTexto) };
     } catch (e) { console.error('certpdf: fallo la lectura por imagen:', e); /* la IA nunca rompe la subida */ }
   }
@@ -99,7 +109,7 @@ const PROMPT_CREDENCIAL =
 // "Vinculado a ONG"...), que no es un diagnóstico médico: se descarta.
 const RE_NO_DIAGNOSTICO = /autocultivo|cultivo|vinculaci[oó]n|vinculad[oa]|\bong\b|reprocann/i;
 
-async function leerDeImagenes(pdf: NonNullable<Awaited<ReturnType<typeof getDocumentProxy>>>, ai: Ai): Promise<DatosCertificado> {
+async function leerDeImagenes(pdf: NonNullable<Awaited<ReturnType<typeof getDocumentProxy>>>, ai: Ai, medir?: Medicion): Promise<DatosCertificado> {
   const out: DatosCertificado = {};
   const candidatas: Array<{ png: Uint8Array }> = [];
   for (let pagina = 1; pagina <= Math.min(pdf.numPages, 2); pagina++) {
@@ -137,7 +147,26 @@ async function leerDeImagenes(pdf: NonNullable<Awaited<ReturnType<typeof getDocu
         ],
       }],
       max_tokens: 512,
-    })) as { response?: string; description?: string; choices?: Array<{ message?: { content?: string } }> };
+    })) as { response?: string; description?: string; choices?: Array<{ message?: { content?: string } }>;
+              usage?: { prompt_tokens?: number; completion_tokens?: number } };
+    // Se anota ANTES de mirar si la respuesta sirvió. Una candidata que no era
+    // la credencial se paga igual, y es justo el gasto que conviene ver: si el
+    // filtro de imágenes deja pasar basura, acá se nota como tres llamadas por
+    // certificado en vez de una.
+    if (medir) {
+      reportarConsumo(
+        medir.env,
+        {
+          tarea: 'certificado',
+          proveedor: 'workers-ai',
+          modelo: '@cf/mistralai/mistral-small-3.1-24b-instruct',
+          entrada: Number(r.usage?.prompt_tokens) || 0,
+          salida: Number(r.usage?.completion_tokens) || 0,
+          meta: { candidatas: candidatas.length, px: c.png.length },
+        },
+        medir.esperar
+      );
+    }
     const crudo = r.response || r.description || r.choices?.[0]?.message?.content || '';
     const m = String(crudo).match(/\{[\s\S]*\}/);
     if (!m) continue;

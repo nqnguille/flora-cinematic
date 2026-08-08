@@ -21,6 +21,8 @@ interface Env {
   SESSION_SECRET: string;
   NOTIFY_TOKEN?: string;
   AI?: Ai;
+  // Medidor central de consumo de IA. Opcional: sin token no se mide y listo.
+  CONSUMO_TOKEN?: string;
 }
 
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
@@ -73,7 +75,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   });
 };
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
   const email = await readSessionEmail(request.headers.get('Cookie'), env.SESSION_SECRET);
   if (!email) return json({ error: 'Sin sesión' }, 401);
   const esSocio = await env.SOCIOS.get(email.toLowerCase());
@@ -130,7 +132,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let diagnostico = '';
   let advertencia: string | null = null;
   try {
-    const datos = await leerCertificado(bytes.buffer as ArrayBuffer, env.AI);
+    const datos = await leerCertificado(bytes.buffer as ArrayBuffer, env.AI, { env, esperar: waitUntil });
     // Guardia de identidad: si el PDF trae un DNI y la ficha YA tiene otro,
     // acá hay un certificado ajeno o una ficha mal cargada. El PDF ya quedó
     // guardado (evidencia), pero no se completa nada ni se genera la DDJJ:

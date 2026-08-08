@@ -8,6 +8,8 @@ interface Env {
   AI: Ai;
   GOOGLE_CLIENT_ID: string;
   NOTIFY_TOKEN?: string;
+  // Medidor central de consumo de IA. Opcional: sin token no se mide y listo.
+  CONSUMO_TOKEN?: string;
 }
 
 const NOTIFY_URL = 'https://gates-analytics.nqnguille.workers.dev/api/notify';
@@ -26,7 +28,7 @@ const MAX_B64_CHARS = Math.ceil(MAX_BYTES / 3) * 4 + 64;
 // lectura del certificado haya podido sacar — queda como lead "listo para
 // convertir". Si la lectura falla o el cupo de Workers AI está agotado, NO es
 // error: el archivo ya está guardado y el panel lo relee después.
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
   let credential = '';
   let pdfB64 = '';
   let telefono = '';
@@ -140,7 +142,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // pasa nada: el flujo sigue y el panel relee cuando lo convierte.
   let datos: DatosCertificado = {};
   try {
-    datos = await leerCertificado(buf, env.AI);
+    datos = await leerCertificado(buf, env.AI, { env, esperar: waitUntil });
   } catch (e) {
     console.error('aspirante: fallo leerCertificado:', e);
     datos = {};

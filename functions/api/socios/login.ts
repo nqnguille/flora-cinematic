@@ -144,7 +144,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       }
     }
     return Response.json(
-      { ok: false, error: 'tu cuenta de Google no está en la lista de socios verificados' },
+      { ok: false, error: 'tu cuenta de Google todavía no está en el padrón del club' },
       { status: 403 }
     );
   }

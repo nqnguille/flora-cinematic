@@ -273,7 +273,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!puede(auth.rol, 'papelera_gestionar')) return json({ error: 'Sin permiso' }, 403);
     const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Number.isFinite) : [];
     const accion = String(body.accion);
-    if (!ids.length) return json({ error: 'Sin socios seleccionados' }, 400);
+    if (!ids.length) return json({ error: 'Sin pacientes seleccionados' }, 400);
     if (accion !== 'mandar' && accion !== 'restaurar') return json({ error: 'Acción inválida' }, 400);
     const marcas = ids.map(() => '?').join(',');
     await env.DB.prepare(
@@ -314,7 +314,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!puede(auth.rol, 'padron_editar')) return json({ error: 'Sin permiso' }, 403);
     const socioId = Number(body.socio_id);
     const sug = await env.DB.prepare(`SELECT * FROM sugerencias_email WHERE socio_id = ?`).bind(socioId).first<{ email: string }>();
-    if (!sug) return json({ error: 'No hay sugerencia para ese socio' }, 404);
+    if (!sug) return json({ error: 'No hay sugerencia para ese paciente' }, 404);
     if (body.aceptar) {
       const otro = await env.DB.prepare(`SELECT nombre FROM socios WHERE email = ? AND id != ?`).bind(sug.email, socioId).first<{ nombre: string }>();
       if (otro) return json({ error: `Ese email ya es de ${otro.nombre}` }, 409);

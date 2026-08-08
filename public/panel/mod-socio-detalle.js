@@ -366,7 +366,7 @@
           ${editar ? `<section class="sd-bl sd-bl--peligro"><h3 class="sd-bl-t">Zona peligrosa</h3>
           <p class="so-help" style="margin:2px 0 0">Acciones que cambian el acceso del paciente. Se pueden revertir, pero se notan.</p>
           <div class="fila" style="margin-top:10px;flex-wrap:wrap">
-            <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar socio'}</button>
+            <button class="btn" id="sd-estado" type="button">${s.estado === 'activo' ? 'Marcar inactivo' : 'Reactivar paciente'}</button>
             ${P.puede('papelera_gestionar') ? `<button class="btn ${s.papelera ? '' : 'btn-peligro'}" id="sd-papelera" type="button">${s.papelera ? 'Restaurar de la papelera' : '🗑 Mandar a la papelera'}</button>` : ''}
             ${d.carta.acceso && P.puede('carta_gestionar') ? '<button class="btn btn-peligro" id="sd-quitar-carta" type="button">Quitar acceso a la carta</button>' : ''}
           </div>
@@ -851,7 +851,7 @@
     // al socio a esperando_codigo (sale del embudo de autocultivo) y recién
     // ahí se le puede habilitar el débito.
     zona.querySelector('#sd-dj-verificar')?.addEventListener('click', async (e) => {
-      if (!(await P.confirmar('Vas a dar por buena la DDJJ firmada: el socio deja el autocultivo y sigue el trámite normal. ¿Confirmás?', 'Sí, verificar'))) return
+      if (!(await P.confirmar('Vas a dar por buena la DDJJ firmada: el paciente deja el autocultivo y sigue el trámite normal. ¿Confirmás?', 'Sí, verificar'))) return
       e.target.disabled = true
       decir('⏳ verificando…')
       const r = await fetch('/api/panel/declaracion', {

@@ -193,7 +193,7 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   // pierde el rastro de por dónde entró esa persona. Igual pedimos `forzar`
   // para que nadie lo haga de casualidad desde otro cliente.
   if (lead.etapa === 'convertido' && b.forzar !== true) {
-    return json({ error: 'Ese lead ya es socio: confirmá que querés borrar igual el rastro del embudo.' }, 409);
+    return json({ error: 'Ese lead ya es paciente: confirmá que querés borrar igual el rastro del embudo.' }, 409);
   }
 
   await env.DB.prepare(`DELETE FROM leads WHERE id = ?`).bind(id).run();

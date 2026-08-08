@@ -519,7 +519,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
                 ORDER BY m.desde DESC LIMIT 1) AS tier
          FROM socios s WHERE s.id = ?`,
     ).bind(socioId).first<{ id: number; nombre: string; email: string | null; reprocann_estado: string | null; tier: string | null }>();
-    if (!socio) return json({ error: 'El socio no existe' }, 404);
+    if (!socio) return json({ error: 'El paciente no existe' }, 404);
     // el 20% es para quien ya hizo la entrevista y tiene el trámite subido;
     // con `igual: true` el presidente decide mandarlo lo mismo (el modal ya
     // le mostró la advertencia)
@@ -536,7 +536,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!plan || plan.tipo !== 'membresia') return json({ error: `No hay plan de Mercado Pago cargado para ${tier}` }, 400);
 
     if (via === 'email') {
-      if (!socio.email) return json({ error: 'El socio no tiene email' }, 400);
+      if (!socio.email) return json({ error: 'El paciente no tiene email' }, 400);
       const mail = await enviarMailDebito(env, {
         email: socio.email, nombre: socio.nombre, tier, monto: plan.monto, contado: plan.contado, gramos: plan.gramos, link: plan.link,
       });
@@ -563,7 +563,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
               s.nombre, s.email, s.telefono
          FROM suscripciones su JOIN socios s ON s.id = su.socio_id WHERE su.id = ?`,
     ).bind(suscId).first<{ id: number; socio_id: number; tier: string | null; fin: string | null; estado: string; nombre: string; email: string | null; telefono: string | null }>();
-    if (!su) return json({ error: 'La suscripción no existe o no tiene socio identificado' }, 404);
+    if (!su) return json({ error: 'La suscripción no existe o no tiene paciente identificado' }, 404);
 
     const planes = await planesDebito(env);
     // el tier puede venir elegido a mano (upgrade/downgrade al renovar);
@@ -583,7 +583,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     const textoWa = `Hola ${su.nombre ? su.nombre.split(/\s+/)[0] : ''}! Tu ciclo de 3 meses de débito automático con el 20% de descuento ${cuando}. Renovalo acá y seguís con tu plan ${tierLindo(tier)}${plan.gramos ? ` de ${plan.gramos} gramos por mes` : ''} en ${montoFmt}, con el descuento y sin cortes: ${plan.link} Se autoriza una vez desde MercadoPago y podés cancelarlo cuando quieras.`;
 
     if (via === 'email') {
-      if (!su.email) return json({ error: 'El socio no tiene email' }, 400);
+      if (!su.email) return json({ error: 'El paciente no tiene email' }, 400);
       const mail = await enviarMailDebito(env, {
         email: su.email, nombre: su.nombre, tier, monto: plan.monto, contado: plan.contado, gramos: plan.gramos, link: plan.link,
       });
@@ -764,7 +764,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!su) return json({ error: 'No existe' }, 404);
     if (su.origen === 'plan') return json({ error: 'El monto lo maneja el plan en Mercado Pago — cambialo desde el panel de MP' }, 400);
     if (su.estado !== 'activa') return json({ error: 'Solo se ajusta el monto de un débito activo' }, 400);
-    if (!su.tier_actual) return json({ error: 'El socio no tiene membresía vigente' }, 400);
+    if (!su.tier_actual) return json({ error: 'El paciente no tiene membresía vigente' }, 400);
     const precio = await env.DB.prepare(
       `SELECT p.debito FROM precios p JOIN listas_precios lp ON lp.id = p.lista_id
         WHERE p.item = ? AND p.tipo = 'membresia' AND p.debito IS NOT NULL
