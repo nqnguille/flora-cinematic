@@ -1,7 +1,9 @@
 import { readSessionEmail } from './_session';
+import { situacionDelSocio } from './_planes';
 import { esMostrador } from './_mostrador';
 
 interface Env {
+  DB: D1Database;
   SESSION_SECRET: string;
   GENETICAS: KVNamespace;
   SOCIOS: KVNamespace;
@@ -36,5 +38,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   // acá, sin sumarle otro pedido de red al arranque del TV.
   const mostrador = await esMostrador(env.GENETICAS, email);
 
-  return Response.json({ ok: true, geneticas: activas, mostrador });
+  // el tier viaja para que la carta esconda los pre-rolls fuera de SMALL
+  // (regla 08/08/2026); sin membresía va null y la carta muestra todo
+  let tier: string | null = null;
+  try { tier = (await situacionDelSocio(env as unknown as Parameters<typeof situacionDelSocio>[0], email)).tier; } catch { /* sin tier, carta completa */ }
+
+  return Response.json({ ok: true, geneticas: activas, mostrador, tier });
 };

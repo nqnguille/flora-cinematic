@@ -204,8 +204,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
     }
 
     // Formatos de una genética; por compatibilidad, sin dato = ['flor'].
+    // Regla 08/08/2026: los pre-rolls van solo con membresía SMALL; con otro
+    // tier se esconden en toda la carta (pills, sellos, filtro y carrito).
+    let sinPrerolls = false
     function formatosDe(g) {
-      return Array.isArray(g.formatos) && g.formatos.length ? g.formatos : ['flor']
+      const fs = Array.isArray(g.formatos) && g.formatos.length ? g.formatos : ['flor']
+      return sinPrerolls ? fs.filter((f) => f !== 'preroll') : fs
     }
 
     let allGeneticas = []
@@ -1308,6 +1312,7 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
       try { localStorage.setItem('flora-socio-hint', '1') } catch (e) {}
       const data = await res.json()
       esMostrador = data.mostrador === true
+      sinPrerolls = !!(data.tier && data.tier !== 'SMALL')
       document.getElementById('gn-content').classList.toggle('es-mostrador', esMostrador)
       showContent(data.geneticas || [])
       soltarPortero()

@@ -1,11 +1,13 @@
 import { readSessionEmail } from './_session';
 import { esMostrador } from './_mostrador';
+import { situacionDelSocio } from './_planes';
 
 interface Env {
   SESSION_SECRET: string;
   SOCIOS: KVNamespace;
   GENETICAS: KVNamespace;
   PEDIDOS: KVNamespace;
+  DB: D1Database;
   NOTIFY_TOKEN?: string;
 }
 
@@ -106,6 +108,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
 // Valida y normaliza ítems crudos (genéticas flor/preroll + productos del portal).
 // Devuelve { items } o { error }.
+// Regla de negocio (08/08/2026): los pre-rolls van solo con la membresía
+// SMALL: en los demás tiers los costos no cierran. Sin membresía (paga
+// aparte / contado) no aplica el freno.
+async function gateTierPrerolls(env: Env, email: string, items: any[]): Promise<string | null> {
+  if (!items.some((i) => i?.formato === 'preroll')) return null;
+  try {
+    const situacion = await situacionDelSocio(env as unknown as Parameters<typeof situacionDelSocio>[0], email);
+    if (situacion.tier && situacion.tier !== 'SMALL') {
+      return `Los pre-rolls están disponibles solo con la membresía SMALL (la tuya es ${situacion.tier}).`;
+    }
+  } catch { /* si la consulta falla, no se frena la reserva */ }
+  return null;
+}
+
 async function validarItems(env: Env, rawItems: any[]): Promise<{ items?: any[]; error?: string }> {
   const rawCat = await env.GENETICAS.get('catalogo');
   const catalogo: any[] = rawCat ? JSON.parse(rawCat) : [];
@@ -192,6 +208,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   const v = await validarItems(env, rawItems);
   if (v.error) return Response.json({ ok: false, error: v.error }, { status: 400 });
+  const gate1 = await gateTierPrerolls(env, pedido.email, v.items!);
+  if (gate1) return Response.json({ ok: false, error: gate1 }, { status: 400 });
 
   pedido.items = v.items;
   if (body?.nota != null) pedido.nota = String(body.nota).slice(0, 400);
@@ -308,6 +326,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const v = await validarItems(env, rawItems);
   if (v.error) return Response.json({ ok: false, error: v.error }, { status: 400 });
   const items = v.items!;
+  const gate2 = await gateTierPrerolls(env, destino.email, items);
+  if (gate2) return Response.json({ ok: false, error: gate2 }, { status: 400 });
 
   const now = new Date().toISOString();
 

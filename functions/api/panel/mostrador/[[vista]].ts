@@ -109,10 +109,27 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     const items = Array.isArray(body.items) ? body.items as { item?: string; nombre?: string; gramos?: number; unidades?: number; clase?: string }[] : [];
     const nota = body.nota ? String(body.nota).slice(0, 300) : null;
     if (!Number.isFinite(socioId) || !items.length) return json({ error: 'Faltan socio o ítems' }, 400);
+    // Regla de negocio (08/08/2026): los pre-rolls solo se entregan con
+    // membresía SMALL, y cada uno vale 1 g del saldo (en los otros tiers los
+    // costos no cierran). La clase 'preroll' la manda el mostrador o se
+    // detecta por nombre para las cargas viejas.
+    const esPreroll = (it: { clase?: string; nombre?: string; item?: string }) =>
+      it.clase === 'preroll' || /pre.?rol/i.test(String(it.nombre || it.item || ''));
+    if (items.some(esPreroll)) {
+      const memb = await env.DB.prepare(
+        `SELECT tier FROM membresias WHERE socio_id = ? AND (hasta IS NULL OR hasta > date('now')) AND modalidad != 'plan'
+          ORDER BY desde DESC LIMIT 1`,
+      ).bind(socioId).first<{ tier: string }>();
+      if (memb && memb.tier !== 'SMALL') {
+        return json({ error: `Los pre-rolls van solo con la membresía SMALL (esta es ${memb.tier}): en los otros planes los costos no cierran.` }, 400);
+      }
+    }
     const hoy = new Date().toISOString().slice(0, 10);
     for (const it of items) {
-      const gramos = it.gramos != null ? Number(it.gramos) : null;
+      let gramos = it.gramos != null ? Number(it.gramos) : null;
       const unidades = it.unidades != null ? Number(it.unidades) : null;
+      // preroll: descuenta del saldo como 1 g por unidad
+      if (esPreroll(it) && (gramos == null || gramos <= 0) && unidades) gramos = unidades;
       if ((gramos == null || gramos <= 0 || gramos > 200) && (unidades == null || unidades <= 0 || unidades > 50)) {
         return json({ error: `Cantidad inválida en ${it.nombre || it.item}` }, 400);
       }
