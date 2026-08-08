@@ -91,6 +91,10 @@ export interface DatosSocio {
 // Arma el texto final. Devuelve los párrafos ya resueltos: es lo que se
 // imprime y lo que se hashea, así el hash prueba exactamente qué firmó.
 export function armarTexto(p: Plantilla, s: DatosSocio, diagnostico: string, fecha: Date) {
+  // La fecha del documento es la de ARGENTINA (UTC-3, sin horario de verano),
+  // no la UTC del servidor: una declaración generada a las 22:00 de Neuquén
+  // no puede decir la fecha de mañana.
+  fecha = new Date(fecha.getTime() - 3 * 60 * 60 * 1000);
   const domicilioCompleto = [s.domicilio, s.localidad, s.provincia].filter(Boolean).join(', ');
   const vars: Record<string, string> = {
     nombre: s.nombre || '',
