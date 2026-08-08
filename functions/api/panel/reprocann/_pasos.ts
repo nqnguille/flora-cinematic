@@ -14,12 +14,16 @@ export const PASOS: { id: string; nombre: string; quien: string; ayuda: string }
   { id: 'aprobado', nombre: 'Aprobado', quien: '—', ayuda: 'Certificado vigente.' },
   { id: 'autocultivo', nombre: 'Autocultivo', quien: 'club', ayuda: 'Cultiva por su cuenta. Se le puede ofrecer pasarse a Flora con una declaración jurada.' },
   // Desvío de conversión: sale de 'autocultivo' y, verificada la declaración,
-  // pasa a 'conversion' (el resto es gestión interna del club, no del socio). Son las modalidades excluyentes de la Res. 1780/2025:
+  // pasa a 'conversion' = vinculado por declaración (terminal por ahora). Son las modalidades excluyentes de la Res. 1780/2025:
   // para vincularse a Flora tiene que renunciar al autocultivo, y eso se
   // documenta con la declaración jurada firmada.
   { id: 'ddjj_pendiente', nombre: 'Declaración pendiente', quien: 'paciente', ayuda: 'Le generamos la declaración jurada para pasarse a Flora: falta que la firme y nos la mande.' },
   { id: 'ddjj_firmada', nombre: 'Declaración firmada', quien: 'club', ayuda: 'Ya firmó: hay que dar de baja su autocultivo y arrancar la vinculación con Flora.' },
-  { id: 'conversion', nombre: 'En conversión', quien: 'club', ayuda: 'Declaración verificada: ya puede adherirse. Nos queda la cocina del Ministerio (baja del autocultivo, código nuevo y alta con Ezequiel), sin molestarlo.' },
+  // Estado TERMINAL hoy: el sistema del organismo no permite re-vincular a un
+  // autocultivador ya aprobado, así que la renuncia firmada y verificada ES la
+  // vinculación (la única posible). Si REPROCANN algún día habilita el cambio,
+  // acá arrancaría el trámite formal.
+  { id: 'conversion', nombre: 'Vinculado por declaración', quien: '—', ayuda: 'Renuncia al autocultivo firmada y verificada: hoy es la única vinculación que permite el sistema del organismo. Su credencial sigue vigente y el club guarda la declaración como respaldo.' },
   { id: 'revisar', nombre: 'A revisar', quien: 'club', ayuda: 'Viene del Excel sin dato claro: hay que confirmar en qué anda.' },
   { id: 'rechazado', nombre: 'Rechazado', quien: 'club', ayuda: 'El organismo lo rechazó.' },
   { id: 'vencido', nombre: 'Vencido', quien: 'club', ayuda: 'El certificado venció: hay que renovar.' },

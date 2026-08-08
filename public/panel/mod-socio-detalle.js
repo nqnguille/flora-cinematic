@@ -114,7 +114,7 @@
       const rc = s.reprocann_estado
       filas.push(rc === 'aprobado' ? cumFila('ok', 'Vinculado a Flora como cultivadora')
         : rc === 'autocultivo' ? cumFila('warn', 'Figura como autocultivo', 'no vinculado a Flora')
-        : rc === 'conversion' ? cumFila('warn', 'En conversión a Flora', 'baja + alta nueva en curso')
+        : rc === 'conversion' ? cumFila('ok', 'Vinculado a Flora por declaración jurada', 'renuncia firmada y verificada')
         : rc === 'en_evaluacion' ? cumFila('warn', 'Vinculación en evaluación del Ministerio')
         : cumFila('pend', 'Vinculación con Flora', 'trámite en curso'))
       filas.push(`<div class="sd-cum" id="sd-cum-ddjj">${['autocultivo', 'ddjj_pendiente', 'ddjj_firmada', 'conversion'].includes(rc) ? '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo (art. 4° ter inc. c)</span><span class="sd-cum-det">⏳</span>' : '<span class="sd-cum-ico">·</span><span>Renuncia al autocultivo</span><span class="sd-cum-det">no aplica: vinculación directa</span>'}</div>`)
