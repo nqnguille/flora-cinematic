@@ -16,6 +16,7 @@
 //   POST   {declaracion_id, archivo_base64, archivo_tipo} → adjunta la firmada
 //   DELETE {declaracion_id}         → anula
 import { requireCap } from './_rol';
+import { asegurarMembresiaDebito } from '../mp/webhook';
 import { leerCertificado } from './_certpdf';
 
 interface Env {
@@ -343,7 +344,29 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `UPDATE socios SET reprocann_estado = 'conversion', reprocann_actualizado = datetime('now')
         WHERE id = ? AND reprocann_estado IN ('autocultivo', 'ddjj_pendiente', 'ddjj_firmada')`,
     ).bind(dec.socio_id).run();
-    return json({ ok: true, verificada: true });
+    // Si se adhirió al débito MIENTRAS la declaración estaba pendiente, el
+    // gate le frenó la membresía (correcto). Verificada la renuncia, el gate
+    // se abre acá mismo: membresía de débito + retro-enganche de sus pagos.
+    let membresia_activada: string | null = null;
+    try {
+      const su = await env.DB.prepare(
+        `SELECT id, tier FROM suscripciones
+          WHERE socio_id = ? AND estado = 'activa' AND tier IS NOT NULL AND tier != 'CUOTA SOCIAL'
+          ORDER BY id DESC LIMIT 1`,
+      ).bind(dec.socio_id).first<{ id: number; tier: string }>();
+      if (su) {
+        const envMp = env as unknown as Parameters<typeof asegurarMembresiaDebito>[0];
+        const gramos = await asegurarMembresiaDebito(envMp, dec.socio_id, su.tier);
+        if (gramos !== null) {
+          membresia_activada = su.tier;
+          await env.DB.prepare(
+            `UPDATE movimientos SET socio_id = COALESCE(socio_id, ?), gramos = COALESCE(gramos, ?)
+              WHERE suscripcion_id = ? AND categoria = 'membresia'`,
+          ).bind(dec.socio_id, gramos, su.id).run();
+        }
+      }
+    } catch { /* la verificación nunca falla por esto; el webhook lo cubre al próximo pago */ }
+    return json({ ok: true, verificada: true, membresia_activada });
   }
 
   const diagnostico = String(body.diagnostico || '').trim();
