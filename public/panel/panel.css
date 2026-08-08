@@ -824,3 +824,11 @@ label.lb { display: block; font-size: 12px; font-weight: 600; color: var(--ink2)
   background: color-mix(in srgb, var(--vio) 7%, transparent);
 }
 .cv-ok { font-family: var(--font-display); font-size: 26px; color: var(--grn); }
+
+/* Chip del lead con REPROCANN leído (tablero de Leads): el texto es largo
+   («autocultivo · 9 plantas · vence 12/05/2027»), así que puede partir línea
+   sin desbordar la tarjeta. */
+.cv-lead-chip {
+  display: inline-block; white-space: normal; line-height: 1.5;
+  max-width: 100%; overflow-wrap: anywhere;
+}

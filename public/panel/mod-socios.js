@@ -957,9 +957,9 @@
   // El mismo mensaje de waDdjj (mod-socio-detalle.js): invita a firmar desde
   // su cuenta, sin imprimir nada. wa.me quiere el número internacional: a los
   // celulares argentinos de 10 cifras se les antepone 549.
-  function cvWa(nombre, telefono) {
+  function cvTxtFirma(nombre) {
     const nom = String(nombre || '').split(' ')[0]
-    const txt = `Hola ${nom}! Ya está lista tu declaración jurada para pasarte a Flora. `
+    return `Hola ${nom}! Ya está lista tu declaración jurada para pasarte a Flora. `
       + `Es el paso que pide el registro cuando alguien deja el autocultivo y se vincula a una asociación: `
       + `no se pueden tener las dos modalidades a la vez.\n\n`
       + `La podés firmar directo desde tu cuenta, sin imprimir nada:\n`
@@ -967,13 +967,25 @@
       + `2. En "Mi cuenta" vas a ver la tarjeta DECLARACIÓN JURADA\n`
       + `3. Leela y firmala con tu nombre y tu DNI\n\n`
       + `Con eso seguimos nosotros el trámite. Cualquier duda antes de firmar, escribime.`
+  }
+  function cvWa(nombre, telefono) {
     let tel = digitsOnly(telefono)
     if (tel.length === 10) tel = '549' + tel
-    return `https://wa.me/${tel}?text=${encodeURIComponent(txt)}`
+    return `https://wa.me/${tel}?text=${encodeURIComponent(cvTxtFirma(nombre))}`
+  }
+  // Sin teléfono, el mismo texto va por mail: es la cuenta de Google con la
+  // que va a entrar a firmar, así que el mail siempre existe en modo lead.
+  function cvMailto(nombre, email) {
+    return `mailto:${email}?subject=${encodeURIComponent('Tu declaración jurada para pasarte a Flora')}`
+      + `&body=${encodeURIComponent(cvTxtFirma(nombre))}`
   }
 
-  function cvAbrir() {
+  // `lead` (opcional) = modo lead: { email, nombre, telefono, reprocann }.
+  // El aspirante ya subió su credencial desde el portal — el asistente
+  // arranca leyéndola del servidor, sin pedir el PDF de nuevo.
+  function cvAbrir(lead) {
     let pdfB64 = null            // se reenvía con la confirmación (el server no lo retiene)
+    let leadCtx = lead || null   // si se sube otro PDF a mano, el modo lead se apaga
     let socioIdPend = null       // socio ya resuelto, esperando diagnóstico/domicilio
 
     const ov = P.modal('Convertir autocultivador', '<div id="cv-cuerpo"></div>')
@@ -1006,9 +1018,24 @@
         return
       }
       if (d.paso === 'revisar') pintarRevisar(d)
-      else if (d.paso === 'falta_diagnostico') { muCargar(true); pintarFalta(d) }
-      else if (d.paso === 'listo') { muCargar(true); pintarListo(d) }
+      else if (d.paso === 'falta_diagnostico') { muCargar(true); if (leadCtx) ldCargar(); pintarFalta(d) }
+      else if (d.paso === 'listo') { muCargar(true); if (leadCtx) ldCargar(); pintarListo(d) }
       else setMsg('✗ respuesta inesperada del servidor', true)
+    }
+
+    // De dónde sale el PDF en cada POST: del lead (ya subido al portal) o
+    // del base64 que se arrastró acá.
+    const cvFuente = () => (leadCtx ? { lead_email: leadCtx.email } : { pdf_base64: pdfB64 })
+
+    /* Paso 1 del modo lead: no hay nada que subir, se lee lo que ya mandó */
+    function pintarLeyendoLead() {
+      cuerpo.innerHTML = `
+        <p class="so-help" style="margin:0 0 12px">
+          <b>${P.esc(leadCtx.nombre || leadCtx.email)}</b> ya subió su credencial REPROCANN desde el portal.
+          Se usa esa: con su DNI se busca o se crea la ficha, el certificado queda guardado y sale la
+          declaración jurada para que la firme con su cuenta (${P.esc(leadCtx.email)}).</p>
+        <p class="msg" id="cv-msg" style="margin:10px 0 0" aria-live="polite"></p>`
+      cvPost({ lead_email: leadCtx.email })
     }
 
     /* Paso 1: el PDF del certificado */
@@ -1080,7 +1107,8 @@
               <input class="input" id="cv-diag" maxlength="300" value="${P.esc(L.diagnostico || '')}"
                 placeholder="…acredita la existencia de ___" /></div>
             <div><label class="lb" for="cv-tel">Teléfono</label>
-              <input class="input" id="cv-tel" type="tel" placeholder="+54 9 299…" /></div>
+              <input class="input" id="cv-tel" type="tel" placeholder="+54 9 299…"
+                value="${P.esc((leadCtx && leadCtx.telefono) || '')}" /></div>
           </div>
         </div>
         <div class="pn-mod-acciones">
@@ -1088,14 +1116,16 @@
           <button class="btn btn-pri" id="cv-conf" type="button">Confirmar y seguir</button>
         </div>
         <p class="msg" id="cv-msg" style="margin:8px 0 0" aria-live="polite"></p>`
-      cuerpo.querySelector('#cv-otra').addEventListener('click', () => { pdfB64 = null; pintarSubir() })
+      // «Otro PDF» apaga el modo lead: si el de la credencial subida no
+      // sirve, se sigue con el circuito manual de siempre.
+      cuerpo.querySelector('#cv-otra').addEventListener('click', () => { pdfB64 = null; leadCtx = null; pintarSubir() })
       cuerpo.querySelector('#cv-conf').addEventListener('click', (ev) => {
         const val = (sel) => { const el = cuerpo.querySelector(sel); return el ? el.value.trim() : '' }
         const documento = val('#cv-dni').replace(/\D/g, '')
         if (!val('#cv-nombre')) { setMsg('✗ Falta el nombre', true); return }
         if (documento.length < 7 || documento.length > 8) { setMsg('✗ El DNI tiene 7 u 8 números', true); return }
         cvPost({
-          pdf_base64: pdfB64, confirmar_creacion: true,
+          ...cvFuente(), confirmar_creacion: true,
           nombre: val('#cv-nombre'), documento,
           domicilio: val('#cv-dom'), localidad: val('#cv-loc'), provincia: val('#cv-prov'),
           vence: val('#cv-vence'), diagnostico: val('#cv-diag'), telefono: val('#cv-tel'),
@@ -1139,9 +1169,12 @@
       })
     }
 
-    /* Paso final: resumen + WhatsApp de firma + ficha */
+    /* Paso final: resumen + WhatsApp de firma + ficha. En modo lead, si no
+       hay teléfono, el mismo texto sale por mail a su cuenta de Google. */
     function pintarListo(d) {
       const s = d.socio || {}
+      const tel = s.telefono || (leadCtx && leadCtx.telefono) || ''
+      const mail = s.email || (leadCtx && leadCtx.email) || ''
       cuerpo.innerHTML = `
         <div style="text-align:center;padding:6px 0 4px">
           <div class="cv-ok">✓ Listo</div>
@@ -1152,11 +1185,13 @@
             : 'La declaración jurada quedó generada. Falta que la firme desde su cuenta en el portal.'}</p>
         </div>
         <div class="pn-mod-acciones">
-          ${!d.ya_firmada && s.telefono ? `<a class="btn btn-pri" href="${P.esc(cvWa(s.nombre, s.telefono))}"
+          ${!d.ya_firmada && tel ? `<a class="btn btn-pri" href="${P.esc(cvWa(s.nombre, tel))}"
             target="_blank" rel="noopener" title="Abre el chat con el mensaje escrito: lo invita a firmar desde su cuenta.">Mandarle el WhatsApp de firma</a>` : ''}
-          ${!d.ya_firmada && !s.telefono ? '<span class="so-help">Sin teléfono en la ficha: avisale vos que firme en floraong.ar/socios/</span>' : ''}
+          ${!d.ya_firmada && !tel ? `<span class="so-help">Sin teléfono en la ficha${mail ? ':' : ': avisale vos que firme en floraong.ar/socios/'}</span>` : ''}
+          ${!d.ya_firmada && !tel && mail ? `<a class="btn btn-pri" href="${P.esc(cvMailto(s.nombre, mail))}"
+            title="Abre tu mail con el mismo mensaje: lo invita a firmar desde su cuenta.">Mandarle el mail de firma</a>` : ''}
           <button class="btn" id="cv-ficha" type="button">Abrir ficha</button>
-          <button class="btn ${d.ya_firmada || !s.telefono ? 'btn-pri' : ''}" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
+          <button class="btn ${d.ya_firmada || (!tel && !mail) ? 'btn-pri' : ''}" onclick="Panel.cerrarModal()" type="button">Cerrar</button>
         </div>`
       cuerpo.querySelector('#cv-ficha').addEventListener('click', () => {
         P.cerrarModal()
@@ -1164,7 +1199,8 @@
       })
     }
 
-    pintarSubir()
+    if (leadCtx) pintarLeyendoLead()
+    else pintarSubir()
   }
 
 
@@ -1457,6 +1493,23 @@
     return ''
   }
 
+  /* La credencial REPROCANN ya leída del aspirante (modo aspirante del
+     portal): el chip resume lo que se sabe y habilita convertirlo sin
+     volver a pedirle el PDF. */
+  const ldFechaCorta = (v) => {
+    const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v || '')
+  }
+  function ldChipReprocann(l) {
+    const rc = l.reprocann
+    if (!rc) return ''
+    const partes = []
+    if (rc.modalidad) partes.push(rc.modalidad)
+    if (rc.plantas !== undefined && rc.plantas !== null) partes.push(`${rc.plantas} plantas`)
+    if (rc.vence) partes.push(`vence ${ldFechaCorta(rc.vence)}`)
+    return `<div style="margin-top:4px"><span class="tag tag-ok cv-lead-chip">🌱 REPROCANN ✓${partes.length ? ' ' + P.esc(partes.join(' · ')) : ''}</span></div>`
+  }
+
   function ldTurnoLinea(l) {
     if (!l.turno_fecha) return ''
     const f = new Date(String(l.turno_fecha).replace(' ', 'T') + 'Z')
@@ -1534,6 +1587,7 @@
       </div>
       ${l.email ? `<div class="ld-dato">${P.esc(l.email)}</div>` : ''}
       ${l.telefono ? `<div class="ld-dato">${P.esc(l.telefono)}</div>` : ''}
+      ${ldChipReprocann(l)}
       ${ldTurnoLinea(l)}
       <div style="margin-top:4px">${ldAntiguedad(dias)}</div>
       ${l.tiene_adjunto ? `<div class="ld-docs">
@@ -1547,6 +1601,9 @@
       <div class="fila ld-acciones">
         ${tel ? `<a class="so-wa" target="_blank" rel="noopener" aria-label="Escribirle por WhatsApp" data-tip="Escribirle por WhatsApp"
           href="https://wa.me/${tel}?text=${encodeURIComponent(saludo + 'Te escribimos de Flora 🌿')}">${ICON_WA}</a>` : ''}
+        ${l.reprocann && l.email && l.etapa !== 'convertido' && P.puede('reprocann_editar')
+    ? `<button class="btn btn-pri ld-convertir" data-id="${l.id}" type="button"
+          title="Abre el asistente con la credencial que ya subió: ficha + certificado + declaración, sin pedirle el PDF de nuevo">🌱 Convertir</button>` : ''}
         ${ldPrimaria(l)}
         <span class="pn-sp"></span>
         ${editar ? `<div class="ld-menu">
@@ -1666,7 +1723,7 @@
     // firma barata: si el tablero no cambió, no se toca el DOM. Sin esto el
     // poll repinta cada 30s y se cierran los menús, se pierde el foco de una
     // nota y cualquier arrastre en curso se corta.
-    const firma = LEADS.map((l) => `${l.id}:${l.etapa}:${l.nota || ''}:${l.pago_estado || ''}`).join('|')
+    const firma = LEADS.map((l) => `${l.id}:${l.etapa}:${l.nota || ''}:${l.pago_estado || ''}:${l.tiene_adjunto ? 1 : 0}${l.reprocann ? 1 : 0}`).join('|')
       + '#' + ldFiltro + '#' + ldPerdidosAbierto
     if (!forzar && firma === ldFirma) return
     ldFirma = firma
@@ -2058,6 +2115,19 @@
         }
         const ldDj = e.target.closest('.ld-ddjj')
         if (ldDj) { e.preventDefault(); ldDdjj(Number(ldDj.dataset.id)); return }
+        // convertir al aspirante con su credencial ya subida: el asistente
+        // cv- arranca en modo lead, sin pedir el PDF de nuevo
+        const ldConv = e.target.closest('.ld-convertir')
+        if (ldConv) {
+          const l = LEADS.find((x) => x.id === Number(ldConv.dataset.id))
+          if (l && l.email) {
+            cvAbrir({
+              email: l.email, nombre: l.nombre || '',
+              telefono: l.telefono || '', reprocann: l.reprocann || null,
+            })
+          }
+          return
+        }
         // acceso rápido a la carta, sin pasar por Solicitudes: el lead sigue
         // siendo lead, solo le abrimos la puerta mientras se formaliza
         const ldAcc = e.target.closest('.ld-acceso')

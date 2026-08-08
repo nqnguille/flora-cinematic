@@ -63,6 +63,32 @@ const {
             <button type="button" id="sl-solicitud-open" data-intent="acceso" class="sl-join-btn">Quiero asociarme · ya tengo REPROCANN</button>
             <a href="https://consultorio.floraong.ar/?agendar=1" class="sl-join-btn sl-join-btn-ghost">Todavía no tengo REPROCANN: agendar entrevista</a>
           </div>
+
+          {/* Tercera vía — SOLO aparece tras el 403 del login (la identidad ya
+              vino verificada por Google: se reusa ese mismo credential para
+              subir la credencial REPROCANN sin pedir nada dos veces). El
+              bloque lo destapa el script de abajo cuando detecta el mensaje
+              de "todavía no estás en el padrón". */}
+          <div id="sl-aspirante" class="sl-aspirante" hidden>
+            <button type="button" id="sl-asp-open" class="sl-join-btn sl-asp-open">
+              ¿Ya tenés REPROCANN aprobado como autocultivador?<br />
+              <strong>Subí tu credencial y empezá tu pase a Flora.</strong>
+            </button>
+            <form id="sl-asp-form" class="sl-asp-form" hidden>
+              <p class="sl-asp-lead">Tu cuenta de Google ya está verificada: solo falta tu credencial REPROCANN (PDF).</p>
+              <label class="sl-asp-field">
+                <span>Credencial REPROCANN (PDF)</span>
+                <input type="file" id="sl-asp-file" accept="application/pdf" required />
+              </label>
+              <label class="sl-asp-field">
+                <span>Teléfono <em>(opcional)</em></span>
+                <input type="tel" id="sl-asp-tel" autocomplete="tel" placeholder="WhatsApp para avisarte" />
+              </label>
+              <button type="submit" id="sl-asp-submit" class="sl-asp-submit">Subir mi credencial</button>
+              <p id="sl-asp-msg" class="sl-asp-msg" hidden></p>
+            </form>
+            <p id="sl-asp-ok" class="sl-asp-ok" hidden></p>
+          </div>
         </div>
       )}
     </div>
@@ -75,6 +101,145 @@ const {
     <SolicitudModal />
   )}
 </div>
+
+<script>
+  // ── Vía del aspirante autocultivador ─────────────────────────────────
+  // Cuando el login con Google rebota con 403 ("todavía no estás en el
+  // padrón"), acá se abre la tercera puerta: subir la credencial REPROCANN
+  // en el momento, reusando el MISMO credential de Google del login (la
+  // identidad ya está verificada; no se le pide el email de nuevo).
+  //
+  // El credential lo capturamos envolviendo window.handleGoogleCredential:
+  // cada página del portal lo asigna y se lo pasa a google.accounts.id como
+  // callback, así que un get/set interceptor ve pasar la respuesta de Google
+  // sin tocar ninguna página. (El init de Google corre en window.onload,
+  // después de todos los módulos: el getter ya devuelve el wrapper.)
+  let slAspCredential: string | null = null
+  ;(() => {
+    let pageHandler: ((r: unknown) => void) | null =
+      typeof (window as any).handleGoogleCredential === 'function'
+        ? (window as any).handleGoogleCredential
+        : null
+    const wrapper = (response: any) => {
+      slAspCredential = response?.credential || null
+      if (pageHandler) return pageHandler(response)
+    }
+    try {
+      Object.defineProperty(window, 'handleGoogleCredential', {
+        configurable: true,
+        get: () => wrapper,
+        set: (fn) => { pageHandler = typeof fn === 'function' ? fn : null },
+      })
+    } catch { /* sin intercepción no hay vía aspirante; el login sigue igual */ }
+  })()
+
+  const aspBlock = document.getElementById('sl-aspirante')
+  const loginMsg = document.getElementById('socios-login-msg')
+  if (aspBlock && loginMsg) {
+    const aspOpen = document.getElementById('sl-asp-open') as HTMLButtonElement
+    const aspForm = document.getElementById('sl-asp-form') as HTMLFormElement
+    const aspFile = document.getElementById('sl-asp-file') as HTMLInputElement
+    const aspTel = document.getElementById('sl-asp-tel') as HTMLInputElement
+    const aspSubmit = document.getElementById('sl-asp-submit') as HTMLButtonElement
+    const aspMsg = document.getElementById('sl-asp-msg') as HTMLElement
+    const aspOk = document.getElementById('sl-asp-ok') as HTMLElement
+
+    // El 403 se reconoce por su firma en el mensaje del login: todas las
+    // páginas inyectan ahí el botón .sl-msg-cta de "pedí tu acceso". Un
+    // error genuino (token inválido, red) no destapa nada.
+    const revelar = () => {
+      if (!loginMsg.hidden && loginMsg.querySelector('.sl-msg-cta') && slAspCredential) {
+        aspBlock.hidden = false
+      }
+    }
+    new MutationObserver(revelar).observe(loginMsg, {
+      childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'],
+    })
+    revelar()
+
+    aspOpen.addEventListener('click', () => {
+      aspOpen.hidden = true
+      aspForm.hidden = false
+      aspFile.focus()
+    })
+
+    // Primer nombre desde el payload del propio ID token (base64url) — solo
+    // para el saludo del "¡listo!"; la verificación real la hace el server.
+    function nombreDeCredential(cred: string): string {
+      try {
+        const b64 = cred.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+        const p = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=')))
+        return String(p.given_name || p.name || '').trim().split(/\s+/)[0] || ''
+      } catch { return '' }
+    }
+
+    const fechaHumana = (iso: string) => {
+      const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
+    }
+
+    function errorAsp(texto: string) {
+      aspMsg.textContent = texto
+      aspMsg.hidden = false
+    }
+
+    aspForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      aspMsg.hidden = true
+      if (!slAspCredential) {
+        errorAsp('Se venció la sesión de Google: entrá con Google de nuevo y volvé a intentar.')
+        return
+      }
+      const file = aspFile.files?.[0]
+      if (!file) { errorAsp('Elegí el PDF de tu credencial.'); return }
+      const esPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+      if (!esPdf) { errorAsp('Tiene que ser el PDF de la credencial (no una foto).'); return }
+      if (file.size > 8 * 1024 * 1024) { errorAsp('El PDF supera los 8 MB.'); return }
+
+      aspSubmit.disabled = true
+      aspSubmit.textContent = 'Subiendo…'
+      try {
+        const pdfB64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader()
+          r.onload = () => resolve(String(r.result || ''))
+          r.onerror = () => reject(r.error)
+          r.readAsDataURL(file)
+        })
+        const res = await fetch('/api/socios/aspirante', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            credential: slAspCredential,
+            pdf_base64: pdfB64,
+            telefono: aspTel.value.trim(),
+          }),
+        })
+        const data: any = await res.json().catch(() => ({}))
+        if (res.ok && data.ok) {
+          const nombre = nombreDeCredential(slAspCredential)
+          const l = data.leido || {}
+          const partes = [
+            l.modalidad === 'autocultivo' ? 'Autocultivo' : l.modalidad === 'ong' ? 'Vinculado a ONG' : '',
+            l.vence ? `vence ${fechaHumana(l.vence)}` : '',
+            l.plantas ? `${l.plantas} plantas` : '',
+          ].filter(Boolean).join(' · ')
+          aspOk.textContent = partes
+            ? `¡Listo${nombre ? ' ' + nombre : ''}! Leímos tu credencial ✓ ${partes}. Te contactamos en breve para terminar tu pase.`
+            : `¡Listo${nombre ? ' ' + nombre : ''}! Recibimos tu credencial ✓. Te contactamos en breve para terminar tu pase.`
+          aspForm.hidden = true
+          aspOk.hidden = false
+        } else {
+          errorAsp(data.error || 'No se pudo subir, probá de nuevo.')
+        }
+      } catch {
+        errorAsp('Error de red al subir. Probá de nuevo.')
+      } finally {
+        aspSubmit.disabled = false
+        aspSubmit.textContent = 'Subir mi credencial'
+      }
+    })
+  }
+</script>
 
 <style is:global>
   /* ═══════════════════════════════════════════════
@@ -220,6 +385,56 @@ const {
   .sl-join-btn:hover { background: rgba(60, 180, 146, 0.24); transform: translateY(-1px); }
   .sl-join-btn-ghost { background: none; border-color: rgba(244, 241, 247, 0.2); color: var(--sl-muted); }
   .sl-join-btn-ghost:hover { border-color: rgba(244, 241, 247, 0.4); background: rgba(244, 241, 247, 0.06); color: var(--sl-cream); }
+
+  /* Tercera vía (aspirante autocultivador): mismo ancho de columna que los
+     dos botones de arriba, en violeta para marcar que es OTRO camino — el
+     del que ya tiene el REPROCANN aprobado y entra subiendo su credencial.
+     Compacto a propósito: en mobile el panel es angosto y con scroll justo. */
+  .sl-aspirante { width: min(340px, 100%); margin-inline: auto; display: flex; flex-direction: column; gap: 8px; }
+  .sl-aspirante[hidden] { display: none; }
+  .sl-asp-open {
+    border-color: rgba(183, 157, 230, 0.5); background: rgba(183, 157, 230, 0.12);
+    color: var(--sl-violet); line-height: 1.45; font-weight: 500;
+  }
+  .sl-asp-open:hover { background: rgba(183, 157, 230, 0.2); }
+  .sl-asp-open strong { font-weight: 700; }
+  .sl-asp-open[hidden] { display: none; }
+  .sl-asp-form {
+    display: flex; flex-direction: column; gap: 0.7rem; text-align: left;
+    background: rgba(183, 157, 230, 0.08); border: 1px solid rgba(183, 157, 230, 0.25);
+    border-radius: 16px; padding: 14px;
+  }
+  .sl-asp-form[hidden] { display: none; }
+  .sl-asp-lead { font-size: 0.78rem; color: var(--sl-muted); line-height: 1.5; margin: 0; }
+  .sl-asp-field { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.76rem; color: var(--sl-muted); }
+  .sl-asp-field em { font-style: normal; opacity: 0.75; }
+  .sl-asp-field input[type='file'] {
+    font-size: 0.76rem; color: var(--sl-muted); max-width: 100%;
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(244, 241, 247, 0.18);
+    border-radius: 10px; padding: 0.5em 0.65em;
+  }
+  .sl-asp-field input[type='tel'] {
+    font: inherit; font-size: 0.88rem; color: var(--sl-cream);
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(244, 241, 247, 0.18);
+    border-radius: 10px; padding: 0.55em 0.75em;
+  }
+  .sl-asp-field input:focus-visible { outline: 2px solid var(--sl-violet); outline-offset: 1px; border-color: transparent; }
+  .sl-asp-submit {
+    font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    padding: 0.7em 1em; border-radius: 999px; border: none;
+    background: var(--sl-violet); color: #1a1026;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+  .sl-asp-submit:hover:not(:disabled) { transform: translateY(-1px); }
+  .sl-asp-submit:disabled { opacity: 0.6; cursor: default; }
+  .sl-asp-msg { color: #ff9d9d; font-size: 0.78rem; line-height: 1.45; margin: 0; }
+  .sl-asp-msg[hidden] { display: none; }
+  .sl-asp-ok {
+    font-size: 0.84rem; color: var(--sl-cream); line-height: 1.55; margin: 0;
+    background: rgba(60, 180, 146, 0.12); border: 1px solid rgba(60, 180, 146, 0.4);
+    border-radius: 16px; padding: 12px 14px; text-align: left;
+  }
+  .sl-asp-ok[hidden] { display: none; }
 
   /* Modal "Ya tengo REPROCANN" — estilos en components/SolicitudModal.astro */
 

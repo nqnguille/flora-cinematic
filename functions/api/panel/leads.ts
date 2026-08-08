@@ -27,10 +27,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const auth = await requireCap(request, env, 'leads_ver');
   if (auth.status !== 200) return json({ error: auth.status === 401 ? 'Sin sesión' : 'Sin permiso' }, auth.status);
 
+  // Los binarios `archivo:<email>` conviven con los registros JSON en
+  // SOLICITUDES: no son leads, pero sí prueban que ese email adjuntó su
+  // credencial (los aspirantes suben el PDF sin pasar por la solicitud web).
+  const archivos = new Set<string>();
+  // Lo que el modo aspirante enriqueció en INTENTOS (teléfono + lectura del
+  // REPROCANN) vive solo en KV: se superpone a las filas al final, sin
+  // volcarlo a D1 (la fuente de esos datos sigue siendo el KV).
+  const extras = new Map<string, Record<string, unknown>>();
+
   // 1) espejo de las solicitudes web
   try {
     const sol = await env.SOLICITUDES.list({ limit: 500 });
     for (const k of sol.keys) {
+      if (k.name.startsWith('archivo:')) { archivos.add(k.name.slice('archivo:'.length)); continue; }
       const crudo = await env.SOLICITUDES.get(k.name, 'json') as Record<string, unknown> | null;
       if (!crudo) continue;
       await env.DB.prepare(
@@ -49,11 +59,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     for (const k of intentos.keys) {
       const crudo = await env.INTENTOS.get(k.name, 'json') as Record<string, unknown> | null;
       if (!crudo) continue;
+      // los campos que suma el modo aspirante (aspirante.ts), si existen
+      if (crudo.aspirante || crudo.telefono || crudo.reprocann || crudo.reprocannLeido) {
+        extras.set(k.name.toLowerCase(), {
+          aspirante: crudo.aspirante === true,
+          telefono: crudo.telefono ? String(crudo.telefono) : null,
+          reprocann: crudo.reprocann && typeof crudo.reprocann === 'object' ? crudo.reprocann : null,
+          reprocannLeido: crudo.reprocannLeido || null,
+        });
+      }
       await env.DB.prepare(
-        `INSERT OR IGNORE INTO leads (nombre, email, origen, creado)
-         VALUES (?, ?, 'intento', COALESCE(?, datetime('now')))`,
+        `INSERT OR IGNORE INTO leads (nombre, email, telefono, origen, creado)
+         VALUES (?, ?, ?, 'intento', COALESCE(?, datetime('now')))`,
       ).bind(
-        String(crudo.name || '') || null, k.name,
+        String(crudo.name || '') || null, k.name, String(crudo.telefono || '') || null,
         crudo.firstAttempt ? String(crudo.firstAttempt).replace('T', ' ').slice(0, 19) : null,
       ).run();
     }
@@ -71,7 +90,24 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     `SELECT * FROM leads ORDER BY CASE etapa WHEN 'nuevo' THEN 0 WHEN 'contactado' THEN 1
        WHEN 'entrevista' THEN 2 WHEN 'convertido' THEN 3 ELSE 4 END, etapa_desde DESC`,
   ).all();
-  return json({ ok: true, leads: rows.results });
+  // Superposición de lo que vive en KV sobre cada fila: el teléfono si la
+  // fila no tenía, la lectura del REPROCANN del aspirante y si hay archivo
+  // adjunto (el botón «Convertir» del tablero se habilita con esto).
+  const leads = (rows.results as Record<string, unknown>[]).map((l) => {
+    const email = String(l.email || '').toLowerCase();
+    const ex = email ? extras.get(email) : undefined;
+    const conArchivo = email ? archivos.has(email) : false;
+    if (!ex && !conArchivo) return l;
+    return {
+      ...l,
+      telefono: l.telefono || (ex ? ex.telefono : null) || null,
+      aspirante: ex ? ex.aspirante === true : false,
+      reprocann: ex ? ex.reprocann : null,
+      reprocannLeido: ex ? ex.reprocannLeido : null,
+      tiene_adjunto: l.tiene_adjunto || (conArchivo ? 1 : 0),
+    };
+  });
+  return json({ ok: true, leads });
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
