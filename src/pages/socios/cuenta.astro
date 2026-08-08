@@ -430,6 +430,12 @@ const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID || ''
           <p class="cu-dj-intro">Para que Flora cultive por vos, REPROCANN exige que renuncies al autocultivo. Esa renuncia es esta declaración jurada, ya redactada a tu nombre: leela completa y firmala acá, con tu nombre y tu DNI.</p>
           <button class="cu-cert cu-dj-abrir" id="cu-dj-abrir" type="button"><svg class="fx-ico" viewBox="0 0 24 24" aria-hidden="true"><g class="fx-traz"><rect x="4.2" y="3" width="13.6" height="18" rx="2.2"/></g><g class="fx-lleno"><rect x="7" y="7.6" width="7" height="1.7" rx=".85"/><rect x="7" y="11" width="5.4" height="1.7" rx=".85"/><path d="M13.7 15.2l2.1 2.1 5.6-5.6-2.1-2.1z"/><path d="M12.6 18.4l1.1-3.2 2.1 2.1z"/></g></svg> Leer y firmar<small>Tu firma electrónica queda sellada con fecha, hora y evidencia.</small></button>`
         document.getElementById('cu-dj-abrir').addEventListener('click', () => abrirDdjj(d))
+        // link del mail de aviso: /socios/cuenta/#firmar abre la firma directo
+        if (location.hash === '#firmar') {
+          history.replaceState(null, '', location.pathname)
+          document.getElementById('cu-dj-sec').scrollIntoView({ block: 'center' })
+          abrirDdjj(d)
+        }
       } else if (d.estado === 'firmada') {
         card.innerHTML = `
           <div class="cu-rp-fila"><span class="cu-chip">Firmada · en verificación</span></div>

@@ -17,6 +17,7 @@
 //   DELETE {declaracion_id}         → anula
 import { requireCap } from './_rol';
 import { asegurarMembresiaDebito } from '../mp/webhook';
+import { notificar, type NotifEnv } from '../_notif';
 import { leerCertificado } from './_certpdf';
 
 interface Env {
@@ -430,7 +431,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 // panel, el asistente de conversión y la puerta de autoservicio del portal:
 // un solo lugar para el texto, el hash y el avance de estado.
 export async function generarDeclaracion(
-  env: { DB: D1Database; GENETICAS: KVNamespace },
+  env: { DB: D1Database; GENETICAS: KVNamespace; RESEND_API_KEY?: string },
   socioId: number,
   datos: DatosSocio,
   diagnostico: string,
@@ -449,6 +450,18 @@ export async function generarDeclaracion(
     `UPDATE socios SET reprocann_estado = 'ddjj_pendiente', reprocann_actualizado = datetime('now')
       WHERE id = ? AND reprocann_estado IN ('autocultivo', 'sin_iniciar', 'revisar')`,
   ).bind(socioId).run();
+  // aviso "firmá tu declaración" (mail/push, catálogo ddjj_firmar): con el
+  // link directo a la firma en Mi cuenta. Nunca hace fallar la generación.
+  try {
+    const quien = await env.DB.prepare(`SELECT nombre, email FROM socios WHERE id = ?`)
+      .bind(socioId).first<{ nombre: string; email: string | null }>();
+    if (quien?.email) {
+      await notificar(env as NotifEnv, 'ddjj_firmar',
+        { socioId, nombre: quien.nombre, email: quien.email },
+        { nombre: (quien.nombre || '').split(/\s+/)[0] || 'socio' },
+        { dedup: `ddjj_firmar:${decId}` });
+    }
+  } catch { /* sin aviso no se cae nada: el WhatsApp manual sigue existiendo */ }
   return { declaracion_id: decId, hash, html: documentoHtml(p, texto, hash) };
 }
 

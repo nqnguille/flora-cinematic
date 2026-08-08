@@ -156,7 +156,14 @@ export async function enviarMail(
 ): Promise<{ ok: boolean; motivo?: string; proveedorId?: string }> {
   if (!env.RESEND_API_KEY) return { ok: false, motivo: 'falta la clave de Resend' };
   const parrafos = cuerpo.split('\n').filter(Boolean)
-    .map((p) => `<p style="margin:0 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#2b2338">${escapar(p)}</p>`)
+    .map((p) => {
+      // una línea que es SOLO una URL se convierte en botón: el CTA del aviso
+      const url = p.trim();
+      if (/^https:\/\/\S+$/.test(url)) {
+        return `<div style="margin:22px 0"><a href="${escapar(url)}" style="display:inline-block;background:#6e4fa0;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;text-decoration:none;padding:13px 26px;border-radius:9px">Entrar a mi cuenta</a></div>`;
+      }
+      return `<p style="margin:0 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#2b2338">${escapar(p)}</p>`;
+    })
     .join('');
   const html = `<div style="background:#f6f4f9;padding:28px 16px">
     <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:14px;padding:30px 28px">
