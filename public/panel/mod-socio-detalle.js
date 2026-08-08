@@ -224,6 +224,7 @@
             <span class="pn-sp"></span>
             <a class="btn" id="sd-cert-ver" target="_blank" rel="noopener" hidden>Ver</a>
             ${P.puede('reprocann_editar') ? `
+              <button class="btn" id="sd-cert-releer" type="button" hidden title="Vuelve a leer el PDF guardado y completa los campos vacíos de la ficha">Releer datos</button>
               <button class="btn" id="sd-cert-subir" type="button">Subir</button>
               <button class="btn btn-peligro" id="sd-cert-borrar" type="button" hidden>Quitar</button>
               <input type="file" id="sd-cert-file" accept="application/pdf" hidden />` : ''}
@@ -431,6 +432,8 @@
         if (ver) { ver.hidden = !d.existe; ver.href = `/api/panel/certificado?socio_id=${s.id}&descargar=1` }
         const borrar = caja.querySelector('#sd-cert-borrar')
         if (borrar) borrar.hidden = !d.existe
+        const releer = caja.querySelector('#sd-cert-releer')
+        if (releer) releer.hidden = !d.existe
       } catch { est.textContent = '—' }
     })()
     // el adjunto de la inscripción: solo se muestra si de verdad hay archivo
@@ -463,6 +466,20 @@
       })
       const d = await r.json().catch(() => ({}))
       if (r.ok) { abrir(s.id, alCambiar) } else { est.textContent = '✗ ' + (d.error || 'error ' + r.status) }
+    })
+    caja.querySelector('#sd-cert-releer')?.addEventListener('click', async (e) => {
+      e.target.disabled = true
+      const est = caja.querySelector('#sd-cert-estado')
+      est.textContent = 'releyendo…'
+      const r = await fetch('/api/panel/certificado', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ socio_id: s.id, releer: true }),
+      })
+      const d2 = await r.json().catch(() => ({}))
+      e.target.disabled = false
+      if (!r.ok) { est.textContent = '✗ ' + (d2.error || 'no se pudo'); return }
+      const n = Object.keys(d2.leido || {}).length
+      if (n) { abrir(s.id, alCambiar) } else { est.textContent = 'no encontró datos nuevos (¿cupo de visión agotado? probá más tarde)' }
     })
     caja.querySelector('#sd-cert-borrar')?.addEventListener('click', async () => {
       if (!(await P.confirmar('¿Quitar el certificado PDF de este socio?', 'Sí, quitar'))) return

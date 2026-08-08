@@ -9,6 +9,7 @@ import { requireCap } from './_rol';
 import { leerCertificado } from './_certpdf';
 
 interface Env {
+  AI?: Ai;
   DB: D1Database;
   CERTIFICADOS: KVNamespace;
   SESSION_SECRET: string;
@@ -58,6 +59,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const socio = await env.DB.prepare(`SELECT nombre FROM socios WHERE id = ?`).bind(socioId).first<{ nombre: string }>();
   if (!socio) return json({ error: 'El socio no existe' }, 404);
 
+  // Releer un certificado ya guardado: para los subidos antes de la lectura
+  // automática o cuando el cupo diario de visión estaba agotado.
+  if ((body as Record<string, unknown>).releer) {
+    const pdf = await env.CERTIFICADOS.get(`cert:${socioId}`, 'arrayBuffer');
+    if (!pdf) return json({ error: 'Este socio no tiene certificado guardado' }, 404);
+    const leido = await completarDesdePdf(env, socioId, pdf);
+    return json({ ok: true, leido, releido: true });
+  }
+
   const b64 = String(body.pdf_base64 || '').replace(/^data:application\/pdf;base64,/, '');
   if (!b64) return json({ error: 'Falta el PDF' }, 400);
 
@@ -86,9 +96,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // VACÍOS, nunca pisa lo que alguien escribió a mano. El diagnóstico no se
   // guarda en socios (es dato clínico): viaja en la respuesta para que el
   // panel lo ofrezca como sugerencia al generar la declaración.
-  let leido: Record<string, string> = {};
+  const leido = await completarDesdePdf(env, socioId, bytes.buffer as ArrayBuffer);
+
+  return json({ ok: true, bytes: bytes.length, leido });
+};
+
+// Lee el PDF y completa SOLO los campos vacíos de la ficha. Compartida entre
+// la subida y el "releer" (para certificados guardados antes de que existiera
+// la lectura automática, o cuando el cupo de visión estaba agotado).
+async function completarDesdePdf(env: Env, socioId: number, pdf: ArrayBuffer): Promise<Record<string, string>> {
+  const leido: Record<string, string> = {};
   try {
-    const datos = await leerCertificado(bytes.buffer as ArrayBuffer);
+    const datos = await leerCertificado(pdf, env.AI);
     const campos: Array<[string, string | number | undefined]> = [
       ['documento', datos.dni], ['domicilio', datos.domicilio],
       ['localidad', datos.localidad], ['provincia', datos.provincia],
@@ -97,18 +116,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ];
     for (const [col, val] of campos) {
       if (!val) continue;
-      const r = await env.DB.prepare(
-        `UPDATE socios SET ${col} = ?, actualizado = datetime('now') WHERE id = ? AND (${col} IS NULL OR ${col} = '')`,
-      ).bind(val, socioId).run();
-      if (r.meta.changes) leido[col] = String(val);
+      try {
+        const r = await env.DB.prepare(
+          `UPDATE socios SET ${col} = ?, actualizado = datetime('now') WHERE id = ? AND (${col} IS NULL OR ${col} = '')`,
+        ).bind(val, socioId).run();
+        if (r.meta.changes) leido[col] = String(val);
+      } catch { /* p. ej. DNI duplicado de otra ficha: se saltea solo ese campo */ }
     }
     if (datos.diagnostico) leido.diagnostico = datos.diagnostico;
     if (datos.modalidad) leido.modalidad = datos.modalidad;
-    if (datos.codigo) leido.codigo = datos.codigo;
-  } catch { /* leer el PDF nunca rompe la subida */ }
-
-  return json({ ok: true, bytes: bytes.length, leido });
-};
+  } catch { /* leer el PDF nunca rompe nada */ }
+  return leido;
+}
 
 export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   const auth = await requireCap(request, env, 'reprocann_editar');
